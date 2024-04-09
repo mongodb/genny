@@ -503,267 +503,461 @@ scale 10. Using an 'executionStats' explain causes each command to run its execu
 documents remain, which ensures that the query executes in its entirety.
 
 
-## TPCH Denormalized Phases
-### Q1
-#### Owner
+
+## TPCH Workloads
+
+### TPCH Denormalized Phases
+#### Q1
+##### Owner
 @mongodb/product-query
-#### Description
+##### Description
 Run TPC-H query 1 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-### Q10
-#### Owner
+#### Q10
+##### Owner
 @mongodb/product-query
-#### Description
+##### Description
 Run TPC-H query 10 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-### Q11
-#### Owner
+#### Q11
+##### Owner
 @mongodb/product-query
-#### Description
+##### Description
 Run TPC-H query 11 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-### Q12
-#### Owner
+#### Q12
+##### Owner
 @mongodb/product-query
-#### Description
+##### Description
 Run TPC-H query 12 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-### Q13
-#### Owner
+#### Q13
+##### Owner
 @mongodb/product-query
-#### Description
+##### Description
 Run TPC-H query 13 gainst the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-### Q14
-#### Owner
+#### Q14
+##### Owner
 @mongodb/product-query
-#### Description
+##### Description
 Run TPC-H query 14 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-### Q15
-#### Owner
+#### Q15
+##### Owner
 @mongodb/product-query
-#### Description
+##### Description
 Run TPC-H query 15 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-### Q16
-#### Owner
+#### Q16
+##### Owner
 @mongodb/product-query
-#### Description
+##### Description
 Run TPC-H query 16 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-### Q17
-#### Owner
+#### Q17
+##### Owner
 @mongodb/product-query
-#### Description
+##### Description
 Run TPC-H query 17 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-### Q18
-#### Owner
+#### Q18
+##### Owner
 @mongodb/product-query
-#### Description
+##### Description
 Run TPC-H query 18 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-### Q19
-#### Owner
+#### Q19
+##### Owner
 @mongodb/product-query
-#### Description
+##### Description
 Run TPC-H query 19 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-### Q2
-#### Owner
+#### Q2
+##### Owner
 @mongodb/product-query
-#### Description
+##### Description
 Run TPC-H query 2 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-### Q20
-#### Owner
+#### Q20
+##### Owner
 @mongodb/product-query
-#### Description
+##### Description
 Run TPC-H query 20 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-### Q21
-#### Owner
+#### Q21
+##### Owner
 @mongodb/product-query
-#### Description
+##### Description
 Run TPC-H query 21 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-### Q22
-#### Owner
+#### Q22
+##### Owner
 @mongodb/product-query
-#### Description
+##### Description
 Run TPC-H query 22 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q3
-#### Owner
+### Q3
+##### Owner
 @mongodb/product-query
-#### Description
+##### Description
 Run TPC-H query 3 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-### Q4
-#### Owner
+#### Q4
+##### Owner
 @mongodb/product-query
-#### Description
+##### Description
 Run TPC-H query 4 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-### Q5
-#### Owner
+#### Q5
+##### Owner
 @mongodb/product-query
-#### Description
+##### Description
 Run TPC-H query 5 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-### Q6
-#### Owner
+#### Q6
+##### Owner
 @mongodb/product-query
-#### Description
+##### Description
 Run TPC-H query 6 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-### Q7
-#### Owner
+#### Q7
+##### Owner
 @mongodb/product-query
-#### Description
+##### Description
 Run TPC-H query 7 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-### Q8
-#### Owner
+#### Q8
+##### Owner
 @mongodb/product-query
-#### Description
+##### Description
 Run TPC-H query 8 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-### Q9
-#### Owner
+#### Q9
+##### Owner
 @mongodb/product-query
-#### Description
+##### Description
 Run TPC-H query 9 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## TotalLineitemRevenue
-### Owner
+### TotalLineitemRevenue
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run an internal TPC-H query to sum up total price across all lineitems against the denormalized
 schema for scale 10. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## TotalOrderRevenue
-### Owner
+### TotalOrderRevenue
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run an internal TPC-H query to sum up total price across all orders against the denormalized
 schema for scale 10. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
-## TPCH Normalized Phases
-### Q1
-#### Owner
+### TPCH Normalized Phases
+#### Q1
+##### Owner
 @mongodb/product-query
-#### Description
+##### Description
 Run TPC-H query 1 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-### Q10
-#### Owner
+#### Q10
+##### Owner
 @mongodb/product-query
-#### Description
+##### Description
 Run TPC-H query 10 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-### Q11
-#### Owner
+#### Q11
+##### Owner
 @mongodb/product-query
-#### Description
+##### Description
 Run TPC-H query 11 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-### Q12
-#### Owner
+#### Q12
+##### Owner
 @mongodb/product-query
-#### Description
+##### Description
 Run TPC-H query 12 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-### Q13
-#### Owner
+#### Q13
+##### Owner
 @mongodb/product-query
-#### Description
+##### Description
 Run TPC-H query 13 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
+
+
+
+#### Q14
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 14 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+#### Q15
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 15 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+#### Q16
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 16 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+#### Q17
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 17 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+#### Q18
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 18 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+#### Q19
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 19 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+#### Q2
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 2 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema.
+
+
+
+#### Q20
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 20 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+#### Q21
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 21 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+#### Q22
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 22 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+#### Q3
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 3 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+#### Q4
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 4 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+#### Q5
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 5 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+#### Q6
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 6 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+#### Q7
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 7 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+#### Q8
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 8 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+#### Q9
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 9 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+### TPCH Denormalized Scale 1
+#### Q1
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 1 against the denormalized schema for scale 1.
+
+
+
+#### Q10
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 10 against the denormalized schema for scale 1.
+
+
+
+#### Q11
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 11 against the denormalized schema for scale 1.
+
+
+
+#### Q12
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 12 against the denormalized schema for scale 1.
+
+
+
+#### Q13
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 13 against the denormalized schema for scale 1.
 
 
 
@@ -771,151 +965,744 @@ documents remain, which ensures that the query executes in its entirety.
 #### Owner
 @mongodb/product-query
 #### Description
-Run TPC-H query 14 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
+Run TPC-H query 14 against the denormalized schema for scale 1.
 
 
 
-### Q15
+#### Q15
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 15 against the denormalized schema for scale 1.
+
+
+
+#### Q16
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 16 against the denormalized schema for scale 1.
+
+
+
+#### Q17
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 17 against the denormalized schema for scale 1.
+
+
+
+#### Q18
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 18 against the denormalized schema for scale 1.
+
+
+
+#### Q19
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 19 against the denormalized schema for scale 1.
+
+
+
+#### Q2
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 2 against the denormalized schema for scale 1.
+
+
+
+#### Q20
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 20 against the denormalized schema for scale 1.
+
+
+
+#### Q21
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 21 against the denormalized schema for scale 1.
+
+
+
+#### Q22
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 22 against the denormalized schema for scale 1.
+
+
+
+#### Q3
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 3 against the denormalized schema for scale 1.
+
+
+
+#### Q4
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 4 against the denormalized schema for scale 1.
+
+
+
+#### Q5
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 5 against the denormalized schema for scale 1.
+
+
+
+#### Q6
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 6 against the denormalized schema for scale 1.
+
+
+
+#### Q7
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 7 against the denormalized schema for scale 1.
+
+
+
+#### Q8
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 8 against the denormalized schema for scale 1.
+
+
+
+#### Q9
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 9 against the denormalized schema for scale 1.
+
+
+
+### validate
 #### Owner
 @mongodb/product-query
 #### Description
-Run TPC-H query 15 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
+Validate TPC_H denormalized queries for scale 1. Note that numeric comparison is not exact in this workload;
+the AssertiveActor only ensures that any two values of numeric type are approximately equal according to a hard-coded limit.
 
 
 
-### Q16
+### AvgAcctBal
 #### Owner
 @mongodb/product-query
 #### Description
-Run TPC-H query 16 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
+Run an artifical TPC-H query to get the average customer account balance against the denormalized
+schema for scale 10.
 
 
 
-### Q17
+### AvgItemCost
 #### Owner
 @mongodb/product-query
 #### Description
-Run TPC-H query 17 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
+Run an artifical TPC-H query to get the average cost of item sold against the denormalized schema
+for scale 10.
 
 
 
-### Q18
+### BiggestOrders
 #### Owner
 @mongodb/product-query
 #### Description
-Run TPC-H query 18 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
+Run an artifical TPC-H query to get the biggest EUROPE orders against the denormalized schema for
+scale 10.
+
+
+### TPCH Denormalized Scale 10
+#### Q1
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 1 against the denormalized schema for scale 10.
 
 
 
-### Q19
+#### Q10
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 10 against the denormalized schema for scale 10.
+
+
+
+#### Q11
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 11 against the denormalized schema for scale 10.
+
+
+
+#### Q12
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 12 against the denormalized schema for scale 10.
+
+
+
+#### Q13
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 13 against the denormalized schema for scale 10.
+
+
+
+#### Q14
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 14 against the denormalized schema for scale 10.
+
+
+
+#### Q15
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 15 against the denormalized schema for scale 10.
+
+
+
+#### Q16
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 16 against the denormalized schema for scale 10.
+
+
+
+#### Q17
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 17 against the denormalized schema for scale 10.
+
+
+
+#### Q18
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 18 against the denormalized schema for scale 10.
+
+
+
+#### Q19
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 19 against the denormalized schema for scale 10.
+
+
+
+#### Q2
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 2 against the denormalized schema for scale 10.
+
+
+
+#### Q20
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 20 against the denormalized schema for scale 10.
+
+
+
+#### Q21
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 21 against the denormalized schema for scale 10.
+
+
+
+#### Q22
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 22 against the denormalized schema for scale 10.
+
+
+
+#### Q3
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 3 against the denormalized schema for scale 10.
+
+
+
+#### Q4
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 4 against the denormalized schema for scale 10.
+
+
+
+#### Q5
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 5 against the denormalized schema for scale 10.
+
+
+
+#### Q6
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 6 against the denormalized schema for scale 10.
+
+
+
+#### Q7
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 7 against the denormalized schema for scale 10.
+
+
+
+#### Q8
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 8 against the denormalized schema for scale 10.
+
+
+
+#### Q9
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 9 against the denormalized schema for scale 10.
+
+
+
+### TotalLineitemRevenue
 #### Owner
 @mongodb/product-query
 #### Description
-Run TPC-H query 19 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
+Run an artifical TPC-H query to sum up total price across all lineitems against the denormalized
+schema for scale 10.
 
 
 
-### Q2
+### TotalOrderRevenue
 #### Owner
 @mongodb/product-query
 #### Description
-Run TPC-H query 2 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema.
+Run an artifical TPC-H query to sum up total price across all orders against the denormalized
+schema for scale 10.
 
 
 
-### Q20
+### validate
 #### Owner
 @mongodb/product-query
 #### Description
-Run TPC-H query 20 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
+The test control for TPC-H expects a validate.yml file to exist in all TPC-H scales.
+We don't need validation on scale 10, so this is just a Nop.
+
+
+### TPCH Normalized Scale 1
+#### Q1
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 1 against the normalized schema for scale 1.
 
 
 
-### Q21
+#### Q10
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 10 against the normalized schema for scale 1.
+
+
+
+#### Q11
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 11 against the normalized schema for scale 1.
+
+
+
+#### Q12
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 12 against the normalized schema for scale 1.
+
+
+
+#### Q13
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 13 against the normalized schema for scale 1.
+
+
+
+#### Q14
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 14 against the normalized schema for scale 1.
+
+
+
+#### Q15
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 15 against the normalized schema for scale 1.
+
+
+
+#### Q16
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 16 against the normalized schema for scale 1.
+
+
+
+#### Q17
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 17 against the normalized schema for scale 1.
+
+
+
+#### Q18
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 18 against the normalized schema for scale 1.
+
+
+
+#### Q19
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 19 against the normalized schema for scale 1.
+
+
+
+#### Q2
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 2 against the normalized schema for scale 1.
+
+
+
+#### Q20
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 20 against the normalized schema for scale 1.
+
+
+
+#### Q21
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 21 against the normalized schema for scale 1.
+
+
+
+#### Q22
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 22 against the normalized schema for scale 1.
+
+
+
+#### Q3
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 3 against the normalized schema for scale 1.
+
+
+
+#### Q4
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 4 against the normalized schema for scale 1.
+
+
+
+#### Q5
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 5 against the normalized schema for scale 1.
+
+
+
+#### Q6
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 6 against the normalized schema for scale 1.
+
+
+
+#### Q7
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 7 against the normalized schema for scale 1.
+
+
+
+#### Q8
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 8 against the normalized schema for scale 1.
+
+
+
+#### Q9
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 9 against the normalized schema for scale 1.
+
+
+
+### validate
 #### Owner
 @mongodb/product-query
 #### Description
-Run TPC-H query 21 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
+Validate TPC_H normalized queries for scale 1. Note that numeric comparison is not exact in this workload;
+the AssertiveActor only ensures that any two values of numeric type are approximately equal according to a hard-coded limit.
+
+
+### TPCH Normalized Scale 10
+#### Q1
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 1 against the normalized schema for scale 10.
 
 
 
-### Q22
+#### Q10
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 10 against the normalized schema for scale 10.
+
+
+
+#### Q11
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 11 against the normalized schema for scale 10.
+
+
+
+#### Q12
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 12 against the normalized schema for scale 10.
+
+
+
+#### Q13
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 13 against the normalized schema for scale 10.
+
+
+
+#### Q14
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 14 against the normalized schema for scale 10.
+
+
+
+#### Q15
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 15 against the normalized schema for scale 10.
+
+
+
+#### Q16
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 16 against the normalized schema for scale 10.
+
+
+
+#### Q17
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 17 against the normalized schema for scale 10.
+
+
+
+#### Q18
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 18 against the normalized schema for scale 10.
+
+
+
+#### Q19
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 19 against the normalized schema for scale 10.
+
+
+
+#### Q2
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 2 against the normalized schema for scale 10.
+
+
+
+#### Q20
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 20 against the normalized schema for scale 10.
+
+
+
+#### Q21
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 21 against the normalized schema for scale 10.
+
+
+
+#### Q22
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 22 against the normalized schema for scale 10.
+
+
+
+#### Q3
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 3 against the normalized schema for scale 10.
+
+
+
+#### Q4
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 4 against the normalized schema for scale 10.
+
+
+
+#### Q5
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 5 against the normalized schema for scale 10.
+
+
+
+#### Q6
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 6 against the normalized schema for scale 10.
+
+
+
+#### Q7
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 7 against the normalized schema for scale 10.
+
+
+
+#### Q8
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 8 against the normalized schema for scale 10.
+
+
+
+#### Q9
+##### Owner
+@mongodb/product-query
+##### Description
+Run TPC-H query 9 against the normalized schema for scale 10.
+
+
+
+### validate
 #### Owner
 @mongodb/product-query
 #### Description
-Run TPC-H query 22 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-### Q3
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 3 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-### Q4
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 4 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-### Q5
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 5 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-### Q6
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 6 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-### Q7
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 7 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-### Q8
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 8 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-### Q9
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 9 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
+The test control for TPC-H expects a validate.yml file to exist in all TPC-H scales.
+We don't need validation on scale 10, so this is just a Nop.
 
 
 
@@ -5730,790 +6517,6 @@ assigned to them.
 
 #### Keywords
 streams
-
-## TPCH Denormalized Scale 1
-### Q1
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 1 against the denormalized schema for scale 1.
-
-
-
-### Q10
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 10 against the denormalized schema for scale 1.
-
-
-
-### Q11
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 11 against the denormalized schema for scale 1.
-
-
-
-### Q12
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 12 against the denormalized schema for scale 1.
-
-
-
-### Q13
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 13 against the denormalized schema for scale 1.
-
-
-
-## Q14
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 14 against the denormalized schema for scale 1.
-
-
-
-### Q15
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 15 against the denormalized schema for scale 1.
-
-
-
-### Q16
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 16 against the denormalized schema for scale 1.
-
-
-
-### Q17
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 17 against the denormalized schema for scale 1.
-
-
-
-### Q18
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 18 against the denormalized schema for scale 1.
-
-
-
-### Q19
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 19 against the denormalized schema for scale 1.
-
-
-
-### Q2
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 2 against the denormalized schema for scale 1.
-
-
-
-### Q20
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 20 against the denormalized schema for scale 1.
-
-
-
-### Q21
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 21 against the denormalized schema for scale 1.
-
-
-
-### Q22
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 22 against the denormalized schema for scale 1.
-
-
-
-### Q3
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 3 against the denormalized schema for scale 1.
-
-
-
-### Q4
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 4 against the denormalized schema for scale 1.
-
-
-
-### Q5
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 5 against the denormalized schema for scale 1.
-
-
-
-### Q6
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 6 against the denormalized schema for scale 1.
-
-
-
-### Q7
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 7 against the denormalized schema for scale 1.
-
-
-
-### Q8
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 8 against the denormalized schema for scale 1.
-
-
-
-### Q9
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 9 against the denormalized schema for scale 1.
-
-
-
-## validate
-### Owner
-@mongodb/product-query
-### Description
-Validate TPC_H denormalized queries for scale 1. Note that numeric comparison is not exact in this workload;
-the AssertiveActor only ensures that any two values of numeric type are approximately equal according to a hard-coded limit.
-
-
-
-## AvgAcctBal
-### Owner
-@mongodb/product-query
-### Description
-Run an artifical TPC-H query to get the average customer account balance against the denormalized
-schema for scale 10.
-
-
-
-## AvgItemCost
-### Owner
-@mongodb/product-query
-### Description
-Run an artifical TPC-H query to get the average cost of item sold against the denormalized schema
-for scale 10.
-
-
-
-## BiggestOrders
-### Owner
-@mongodb/product-query
-### Description
-Run an artifical TPC-H query to get the biggest EUROPE orders against the denormalized schema for
-scale 10.
-
-
-## TPCH Denormalized Scale 10
-### Q1
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 1 against the denormalized schema for scale 10.
-
-
-
-### Q10
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 10 against the denormalized schema for scale 10.
-
-
-
-### Q11
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 11 against the denormalized schema for scale 10.
-
-
-
-### Q12
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 12 against the denormalized schema for scale 10.
-
-
-
-### Q13
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 13 against the denormalized schema for scale 10.
-
-
-
-### Q14
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 14 against the denormalized schema for scale 10.
-
-
-
-### Q15
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 15 against the denormalized schema for scale 10.
-
-
-
-### Q16
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 16 against the denormalized schema for scale 10.
-
-
-
-### Q17
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 17 against the denormalized schema for scale 10.
-
-
-
-### Q18
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 18 against the denormalized schema for scale 10.
-
-
-
-### Q19
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 19 against the denormalized schema for scale 10.
-
-
-
-### Q2
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 2 against the denormalized schema for scale 10.
-
-
-
-### Q20
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 20 against the denormalized schema for scale 10.
-
-
-
-### Q21
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 21 against the denormalized schema for scale 10.
-
-
-
-### Q22
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 22 against the denormalized schema for scale 10.
-
-
-
-### Q3
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 3 against the denormalized schema for scale 10.
-
-
-
-### Q4
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 4 against the denormalized schema for scale 10.
-
-
-
-### Q5
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 5 against the denormalized schema for scale 10.
-
-
-
-### Q6
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 6 against the denormalized schema for scale 10.
-
-
-
-### Q7
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 7 against the denormalized schema for scale 10.
-
-
-
-### Q8
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 8 against the denormalized schema for scale 10.
-
-
-
-### Q9
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 9 against the denormalized schema for scale 10.
-
-
-
-## TotalLineitemRevenue
-### Owner
-@mongodb/product-query
-### Description
-Run an artifical TPC-H query to sum up total price across all lineitems against the denormalized
-schema for scale 10.
-
-
-
-## TotalOrderRevenue
-### Owner
-@mongodb/product-query
-### Description
-Run an artifical TPC-H query to sum up total price across all orders against the denormalized
-schema for scale 10.
-
-
-
-## validate
-### Owner
-@mongodb/product-query
-### Description
-The test control for TPC-H expects a validate.yml file to exist in all TPC-H scales.
-We don't need validation on scale 10, so this is just a Nop.
-
-
-## TPCH Normalized Scale 1
-### Q1
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 1 against the normalized schema for scale 1.
-
-
-
-### Q10
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 10 against the normalized schema for scale 1.
-
-
-
-### Q11
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 11 against the normalized schema for scale 1.
-
-
-
-### Q12
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 12 against the normalized schema for scale 1.
-
-
-
-### Q13
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 13 against the normalized schema for scale 1.
-
-
-
-### Q14
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 14 against the normalized schema for scale 1.
-
-
-
-### Q15
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 15 against the normalized schema for scale 1.
-
-
-
-### Q16
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 16 against the normalized schema for scale 1.
-
-
-
-### Q17
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 17 against the normalized schema for scale 1.
-
-
-
-### Q18
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 18 against the normalized schema for scale 1.
-
-
-
-### Q19
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 19 against the normalized schema for scale 1.
-
-
-
-### Q2
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 2 against the normalized schema for scale 1.
-
-
-
-### Q20
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 20 against the normalized schema for scale 1.
-
-
-
-### Q21
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 21 against the normalized schema for scale 1.
-
-
-
-### Q22
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 22 against the normalized schema for scale 1.
-
-
-
-### Q3
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 3 against the normalized schema for scale 1.
-
-
-
-### Q4
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 4 against the normalized schema for scale 1.
-
-
-
-### Q5
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 5 against the normalized schema for scale 1.
-
-
-
-### Q6
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 6 against the normalized schema for scale 1.
-
-
-
-### Q7
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 7 against the normalized schema for scale 1.
-
-
-
-### Q8
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 8 against the normalized schema for scale 1.
-
-
-
-### Q9
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 9 against the normalized schema for scale 1.
-
-
-
-## validate
-### Owner
-@mongodb/product-query
-### Description
-Validate TPC_H normalized queries for scale 1. Note that numeric comparison is not exact in this workload;
-the AssertiveActor only ensures that any two values of numeric type are approximately equal according to a hard-coded limit.
-
-
-## TPCH Normalized Scale 10
-### Q1
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 1 against the normalized schema for scale 10.
-
-
-
-### Q10
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 10 against the normalized schema for scale 10.
-
-
-
-### Q11
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 11 against the normalized schema for scale 10.
-
-
-
-### Q12
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 12 against the normalized schema for scale 10.
-
-
-
-### Q13
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 13 against the normalized schema for scale 10.
-
-
-
-### Q14
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 14 against the normalized schema for scale 10.
-
-
-
-### Q15
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 15 against the normalized schema for scale 10.
-
-
-
-### Q16
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 16 against the normalized schema for scale 10.
-
-
-
-### Q17
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 17 against the normalized schema for scale 10.
-
-
-
-### Q18
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 18 against the normalized schema for scale 10.
-
-
-
-### Q19
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 19 against the normalized schema for scale 10.
-
-
-
-### Q2
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 2 against the normalized schema for scale 10.
-
-
-
-### Q20
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 20 against the normalized schema for scale 10.
-
-
-
-### Q21
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 21 against the normalized schema for scale 10.
-
-
-
-### Q22
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 22 against the normalized schema for scale 10.
-
-
-
-### Q3
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 3 against the normalized schema for scale 10.
-
-
-
-### Q4
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 4 against the normalized schema for scale 10.
-
-
-
-### Q5
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 5 against the normalized schema for scale 10.
-
-
-
-### Q6
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 6 against the normalized schema for scale 10.
-
-
-
-### Q7
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 7 against the normalized schema for scale 10.
-
-
-
-### Q8
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 8 against the normalized schema for scale 10.
-
-
-
-### Q9
-#### Owner
-@mongodb/product-query
-#### Description
-Run TPC-H query 9 against the normalized schema for scale 10.
-
-
-
-## validate
-### Owner
-@mongodb/product-query
-### Description
-The test control for TPC-H expects a validate.yml file to exist in all TPC-H scales.
-We don't need validation on scale 10, so this is just a Nop.
 
 
 
