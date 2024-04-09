@@ -20,7 +20,7 @@ Encryption:
     Collection: *test_coll
     EncryptionType: queryable
     QueryableEncryptedFields:
-        field1: { type: "int", queries: [{queryType: "rangePreview", min: -2147483648, max: 2147483647, contention: 0, sparsity: 1}] }
+        field1: { type: "int", queries: [{queryType: "range", min: -2147483648, max: 2147483647, contention: 0, sparsity: 1}] }
 
 
 Clients:
