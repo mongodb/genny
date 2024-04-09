@@ -1,0 +1,47 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+
+Actors:
+- Name: Loader
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: test
+    CollectionCount: 1
+    Threads: 1
+    DocumentCount: 100000
+    BatchSize: 1000
+    Indexes:
+    - keys: {key1: 1, key2: 1 }
+    Document:
+      _id: {^Inc: {start: 0}}
+      key1: 0
+      key2: &randomInt {^RandomInt: {min: 0, max: 10000}}
+  - {Nop: true}
+
+- Name: FindCoveredQuery
+  Type: CrudActor
+  Threads: 64
+  Database: test
+  Phases:
+  - {Nop: true}
+  - Name: FindCoveredQuery
+    Duration: 30 seconds
+    # GlobalRate: 1000 per 15 seconds
+    Collection: Collection0
+    Operations:
+    - OperationName: find
+      OperationCommand:
+        Filter:
+          key1: 0
+          key2: {$gt: 0}
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - replica
+      - single-replica
+      - single-replica-classic-query-engine
+      - single-replica-sbe
