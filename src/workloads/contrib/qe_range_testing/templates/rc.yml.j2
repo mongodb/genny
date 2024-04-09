@@ -29,9 +29,9 @@ Encryption:
     EncryptionType: queryable
 
     QueryableEncryptedFields:
-      tm_retail_tx: { type: "long", queries: [{queryType: "rangePreview", min: 0, max: 1000000000000, contention: 4, sparsity: 2, trimFactor: {{ timestamp_tf }}}] }
-      age_hospitals: { type: "int",  queries: [{queryType: "rangePreview", min: 0, max: 55000, contention: {{ age_cf }}, sparsity: 2, trimFactor: 6}] }
-      bnk_bal: { type: "decimal", queries: [{queryType: "rangePreview", min: 0, max: 1000000, precision: 2, contention: {{ balance_cf }}, sparsity: 2, trimFactor: {{ balance_tf }}}] }
+      tm_retail_tx: { type: "long", queries: [{queryType: "range", min: 0, max: 1000000000000, contention: 4, sparsity: 2, trimFactor: {{ timestamp_tf }}}] }
+      age_hospitals: { type: "int",  queries: [{queryType: "range", min: 0, max: 55000, contention: {{ age_cf }}, sparsity: 2, trimFactor: 6}] }
+      bnk_bal: { type: "decimal", queries: [{queryType: "range", min: 0, max: 1000000, precision: 2, contention: {{ balance_cf }}, sparsity: 2, trimFactor: {{ balance_tf }}}] }
 {% endif %}
 
 Clients:

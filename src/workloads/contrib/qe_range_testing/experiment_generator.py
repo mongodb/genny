@@ -863,7 +863,7 @@ def generate_rc_workloads(is_local):
                 use_crypt_shared_lib=True, crypt_shared_lib_path=crypt_path, **kwargs))
 
 def generate_rc_config_file():
-    patch_id = '65b2d7c9c9ec4472fec11393'
+    patch_id = '<patch-id>'
     experiments = [experiment_name(ex) for ex in rc_experiments('.')]
     template = env.get_template("rc-perfconfig.yml.j2")
 

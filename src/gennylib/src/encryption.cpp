@@ -405,7 +405,7 @@ void QueryableEncryptedField::appendEncryptInfo(sub_document subdoc) const {
                         throw InvalidConfigurationException(ss.str());
                     }
                 };
-                if(query.queryType == "rangePreview") {
+                if(query.queryType == "range") {
                     if(query.min) {
                         append_string_as_number_with_correct_type("min", query.min.value());
                     }
