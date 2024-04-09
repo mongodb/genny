@@ -81,6 +81,7 @@ AutoRun:
       - atlas-like-replica.2022-10
       - replica
       - replica-noflowcontrol
+      - replica-80-feature-flags
       - replica-all-feature-flags
     atlas_setup:
       $neq:

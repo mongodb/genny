@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
-Description: >
+Description: |
   The workload inserts a single large document, and tests concurrently updating the same document
   with many threads. This is intended to test the behavior of the server under heave memory pressure
   caused by update operations with a high rate of write conflicts. The update operation is on an

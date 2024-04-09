@@ -140,6 +140,7 @@ Actors:
           { name: "__testMemory", type: "in_memory", options: {} },
           { name: "db", type: "atlas", options: { uri: {^ClientURI: { Name: "Default" }} }}
         ]
+        options: {}
   - Phase: 2
     Nop: true
   - Phase: 3

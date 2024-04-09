@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
-Description: >
+Description: |
   Updates a large range of documents in the collection.
   Multiple secondary indexes are present.
   Update performed with and without a hint.
@@ -28,6 +28,8 @@ AutoRun:
     mongodb_setup:
       $eq:
       - replica
+      - replica-80-feature-flags
       - replica-all-feature-flags
       - standalone
+      - standalone-80-feature-flags
       - standalone-all-feature-flags

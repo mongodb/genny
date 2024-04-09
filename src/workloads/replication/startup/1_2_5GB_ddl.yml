@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: mongodb/server-replication"
-Description: >
+Description: |
   Adds DDL operations to be replayed during startup recovery for the light phase.
   To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.
 
@@ -10,6 +10,7 @@ Description: >
   applied during startup recovery:
 
   Sample logs:
+  ```
   +------------------------------------------------------------------------------------+
   |   1- Alot of "Dropping unknown ident".                                             |
   |   2- Alot of createCollection ops:                                                 |
@@ -44,7 +45,7 @@ Description: >
   |     interceptors to be majority committed",                                        |
   |   }                                                                                |
   +------------------------------------------------------------------------------------+
-
+  ```
 Keywords:
 - startup
 - stopCheckpointing

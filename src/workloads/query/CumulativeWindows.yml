@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
-Description: >
+Description: |
   This test exercises the behavior of multiple '$setWindowFields' stages, each with an
   ["unbounded", "current"] window and a different window function.  Only a single pass over the data
   is needed in this case. The workload consists of the following three phases: collection creation,
@@ -321,10 +321,12 @@ AutoRun:
     mongodb_setup:
       $eq:
       - standalone
+      - standalone-80-feature-flags
       - standalone-all-feature-flags
       - standalone-classic-query-engine
       - standalone-sbe
       - replica
+      - replica-80-feature-flags
       - replica-all-feature-flags
       - shard-lite
     branch_name:

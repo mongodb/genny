@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
-Description: >
+Description: |
   This workload tests $queryStats performance. Specifically, it tests:
     - The general performance metrics of running $queryStats (latency, throughput, etc.)
     - The impact of running $queryStats to collect and report metrics while there are active queries

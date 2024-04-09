@@ -165,9 +165,11 @@ AutoRun:
       $eq:
       - standalone
       - standalone-classic-query-engine
+      - standalone-80-feature-flags
       - standalone-all-feature-flags
       - standalone-sbe
       - replica
+      - replica-80-feature-flags
       - replica-all-feature-flags
     branch_name:
       $neq:

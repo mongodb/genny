@@ -28,7 +28,6 @@ GlobalDefaults:
 Actors:
 - Name: DropCollection
   Type: RunCommand
-  Threads: 1
   Phases:
     OnlyActiveInPhases:
       Active: [0]
@@ -65,10 +64,6 @@ Actors:
       collection: *coll
       docCount: *docCount
       document: {
-        # Genny's random generators appear to be repeatable, so we might as well
-        # make '_id' explicit to make the overall dataset repeatable. Omitting
-        # '_id' would make it auto-generated based on a timestamp.
-        _id: {^Inc: {start: 0}},
         x1: &distribution {^Array: {of: {^RandomDouble: {distribution: uniform, min: 0.0, max: 1.0}}, number: 3}},
         x2: *distribution,
         x3: *distribution,
@@ -272,7 +267,7 @@ Actors:
       PhaseConfig:
         Repeat: 1
 
-- Name: SimpleMultiplannerWith64MultiKeyIndexes
+- Name: MultiplannerWith64MultiKeyIndexes
   LoadConfig:
     Path: "../../../phases/query/Multiplanner.yml"
     Key: QueryTemplate
@@ -361,7 +356,7 @@ Actors:
       database: *db
       collection: *coll
 
-- Name: SimpleMultiplannerWith16MultiKeyIndexes
+- Name: MultiplannerWith16MultiKeyIndexes
   LoadConfig:
     Path: "../../../phases/query/Multiplanner.yml"
     Key: QueryTemplate
@@ -384,7 +379,7 @@ Actors:
       database: *db
       collection: *coll
 
-- Name: SimpleMultiplannerWith2MultiKeyIndexes
+- Name: MultiplannerWith2MultiKeyIndexes
   LoadConfig:
     Path: "../../../phases/query/Multiplanner.yml"
     Key: QueryTemplate
@@ -401,6 +396,7 @@ AutoRun:
     mongodb_setup:
       $eq:
       - standalone-sbe
+      - standalone-80-feature-flags # At time of writing this will enable PM-3591.
       - standalone-all-feature-flags  # At time of writing this will enable PM-3591.
       - standalone-classic-query-engine
     branch_name:

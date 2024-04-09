@@ -15,6 +15,7 @@
         3.  [What is a phase?](#orgb655d69)
         4.  [How do I run a workload?](#org32b8ad3)
     5.  [Outputs](#orgec88ad4)
+        1.  [Analyzing workload output locally](#analyzing-workload-output-locally)
     6.  [Workload Development](#org0e7c476)
 4.  [Further Concepts](#org61c719c)
     1.  [Common Actors](#org78b250a)
@@ -384,7 +385,7 @@ If your workload requires a MongoDB connection (most do), then you can pass it i
 
 ## Outputs
 
-Genny's primary output is time-series data. Every time an Actor performs an operation, such as an insert, a removal, a runcommand, etc, the Actor thread starts a timer. When the operation returns from the server, the operation is recorded as either a success or failure. The duration of the operation, as viewed from the client, is recorded with the operation completion time.
+Genny's primary output is time-series data. Every time an Actor performs an operation, such as an insert, a removal, a runCommand, etc, the Actor thread starts a timer. When the operation returns from the server, the operation is recorded as either a success or failure. The duration of the operation, as viewed from the client, is recorded with the operation completion time.
 
 Genny outputs to `./build/WorkloadOutput`. When running Genny for the first time, you should see two outputs in that directory:
 
@@ -393,8 +394,7 @@ Genny outputs to `./build/WorkloadOutput`. When running Genny for the first time
 
 If you run Genny and the `CedarMetrics` directory already exists, it will be moved to `CedarMetrics-<current_time>` to avoid overwriting results. The preprocessed workload will be deposited into the `workload` directory, possibly overwriting the existing one. (Or you may end up with multiple workloads in the directory, if they have different names. This has no impact on execution.)
 
-You can use the `export` command that Genny provides to export outputted FTDC to CSV.
-For example, to export the results of the Insert operation in the InsertRemove workload as CSV data:
+You can use the `export` command that Genny provides to export outputted FTDC to CSV. For example, to export the results of the Insert operation in the InsertRemove workload as CSV data:
 
 ```bash
 ./run-genny export build/WorkloadOutput/CedarMetrics/InsertRemoveTest.Insert.ftdc -o insert.csv
@@ -402,9 +402,15 @@ For example, to export the results of the Insert operation in the InsertRemove w
 
 You can also use the `translate` subcommand to convert results to a [t2-readable](https://github.com/10gen/t2/) format.
 
-If you are running Genny through DSI in Evergreen, the FTDC contents are rolled up into summary statistics like `OperationThroughput` and such, viewable in the Evergreen perf UI. 
+If you are running Genny through DSI in Evergreen, the FTDC contents are rolled up into summary statistics like `OperationThroughput` and such, viewable in the Evergreen perf UI.
 
-If you are running Genny locally, you can use `src/workloads/contrib/analysis/test_result_summary.py` to print a summary of the most recent run (or any `CedarMetrics` directory) to the console. For example,
+<a id="analyzing-workload-output-locally"></a>
+
+### Analyzing workload output locally
+
+If you are running Genny locally, you can use `src/workloads/contrib/analysis/test_result_summary.py` to print a summary of the most recent run (or any `CedarMetrics` directory) to the console. This script has its own Python dependencies which must be installed as a prerequisite (preferably in a Python virtual environment). The dependencies are captured in [src/workloads/contrib/analysis/requirements.txt](https://github.com/mongodb/genny/blob/master/src/workloads/contrib/analysis/requirements.txt). See [this README](https://github.com/mongodb/genny/blob/master/src/workloads/contrib/analysis/README.md) for more detailed instructions.
+
+After installing the required Python packages, the tool can be run as in the following example:
 
 ```
 python src/workloads/contrib/analysis/test_result_summary.py -m throughput timers.dur -a ".*Sleep.*" -b 3
@@ -451,20 +457,28 @@ Try using `python test_result_summary.py --help` for more options.
 
     Note the current [issue](#orgb084b49) running resmoke-test. Also, note that there is no schema-checking of the yaml.
 
-3.  (Optional) To double-check which Actors run in each Phase, run your workload in dry-run mode with `debug` log level.
+3. Update workload documentation.
+
+    ```bash
+    ./run-genny generate-docs
+    ```
+
+    If changes have been made to the workload name, description, owners, or keywords you need to generate documentation for the workload. Include the generated documentation with your commit.
+
+4.  (Optional) To double-check which Actors run in each Phase, run your workload in dry-run mode with `debug` log level.
 This would set up the workload and print it as a list of Phases with the Actors that run in each Phase, then quit:
 
     ```bash
     ./run-genny workload --dry-run --verbosity debug src/workloads/[workload_dir/workload_name.yml]
     ```
 
-4.  (Optional) If you can run your system under test locally, you can test against it as a sanity-check:
+5.  (Optional) If you can run your system under test locally, you can test against it as a sanity-check:
 
     ```bash
     ./run-genny workload -u [connection_uri] src/workloads/[workload_dir/workload_name.yml]
     ```
 
-5.  (Optional) If you are using DSI, you can run your workload through it by copying or symlinking your Genny directory into your DSI workdir. See [Running DSI Locally](go/running-dsi-locally) for details:
+6.  (Optional) If you are using DSI, you can run your workload through it by copying or symlinking your Genny directory into your DSI workdir. See [Running DSI Locally](go/running-dsi-locally) for details:
 
 	```bash
 	./run-dsi onboarding  # introductory DSI command; see link above for details
@@ -474,7 +488,7 @@ This would set up the workload and print it as a list of Phases with the Actors 
 	vim bootstrap.yml
 	```
 
-6.  Before merging, you should run your workload in realistic situations in CI and check the resultant metrics. For Genny workloads run through DSI using [AutoRun](#org2b04b49), you can create a patch using the following:
+7.  Before merging, you should run your workload in realistic situations in CI and check the resultant metrics. For Genny workloads run through DSI using [AutoRun](#org2b04b49), you can create a patch using the following:
 
 	```bash
 	cd ~/[path_to_evg_project_repo]

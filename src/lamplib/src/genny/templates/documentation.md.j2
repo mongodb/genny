@@ -1,0 +1,12 @@
+# Workload Documenation
+{% for workload in workloads %}
+## {{ workload.name }}
+### Owner
+{{ workload.owner }}
+### Description
+{{ workload.description }}
+{% if workload.keywords %}  
+### Keywords
+{{ workload.keywords|join(", ") }} 
+{% endif %}
+{% endfor %}

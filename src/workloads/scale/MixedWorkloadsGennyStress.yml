@@ -29,7 +29,7 @@ Keywords:
 dbname: &dbname mix
 DocumentCount: &NumDocs 1024
 CollectionCount: &NumColls 512
-PhaseDuration: &PhaseDuration 45 minutes
+PhaseDuration: &PhaseDuration 15 minutes
 StringLength: &StringLength 950
 Filter: &filter {id: {^RandomInt: {min: 0, max: *NumDocs}}}
 Document: &doc

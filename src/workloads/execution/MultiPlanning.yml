@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
-Description: >
+Description: |
  Create collection with multiple indexes and run queries with different selectivity on different
  indexes to test how efficiently multi planning can choose the most selective index.
 
@@ -120,6 +120,7 @@ AutoRun:
     mongodb_setup:
       $eq:
         - standalone
+        - standalone-80-feature-flags
         - standalone-all-feature-flags
         - standalone-classic-query-engine
         - standalone-query-stats

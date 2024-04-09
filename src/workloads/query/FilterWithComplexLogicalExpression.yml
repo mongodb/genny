@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
-Description: >
+Description: |
   This workload stresses the query execution engine by running queries with complex logical
   expressions that never match a document in the collection.
   Each workload name consists of several parts: '{SyntaxType}{PredicateType}'.
@@ -37,6 +37,7 @@ AutoRun:
     mongodb_setup:
       $eq:
       - standalone
+      - standalone-80-feature-flags
       - standalone-all-feature-flags
       - standalone-classic-query-engine
       - standalone-query-stats

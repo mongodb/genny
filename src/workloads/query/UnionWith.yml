@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
-Description: >
+Description: |
   This workload exercises '$unionWith' with two or more collections in multiple scenarios, including
   collections of high overlap, disjoint collections, multiple sequential unions, nested unions, and
   unions with complex subpipelines. These tests are run on standalones, replica sets, and sharded
@@ -260,6 +260,7 @@ AutoRun:
       - atlas
       - atlas-like-replica.2022-10
       - replica
+      - replica-80-feature-flags
       - replica-all-feature-flags
       - shard-lite
       - standalone

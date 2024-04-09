@@ -1,9 +1,19 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query-execution"
-Description: >
+Description: |
   Create collection with multiple indexes and run queries for which multi planner needs to read a lot
   of data in order to pick the best plan.
 
+  First CrudActor QueryWithMultiplanning will use queries specifically design to trick tie
+  breaking heuristics, so that if the planner doesn't reach enough data, it will pick the wrong
+  index.
+
+  Second CrudActor QueryWithMultiplanningAndTieBreakingHeuristics will use queries for which tie
+  breaking heuristics are guessing the correct index.
+    In both cases, heuristics lead us to pick the (flag_a, flag_b) index.  In the first case, this is a bad choice:
+    the two boolean predicates select 25% of documents while the int_a predicate is much narrower.
+    In the second case, we still choose the (flag_a, flag_b) index, but this time it is the correct choice,
+    because the int_a predicate matches >50% of documents.
 Keywords:
   - indexes
 
@@ -14,7 +24,7 @@ Actors:
     Phases:
       OnlyActiveInPhases:
         Active: [0]
-        NopInPhasesUpTo: &MaxPhase 3
+        NopInPhasesUpTo: &MaxPhase 5
         PhaseConfig:
           Repeat: 1
           Database: &Database test
@@ -102,12 +112,51 @@ Actors:
                   },
                   { $group: { _id: "$int_a", sum_b: { $sum: "$int_b" } } },
                 ]
+      - *Nop
+      - *Nop
+  - Name: QueryWithMultiplanningAndTieBreakingHeuristics
+    Type: CrudActor
+    Database: *Database
+    Threads: 4
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - Repeat: 100
+        Collection: *Collection
+        Operations:
+          - OperationName: find
+            OperationCommand:
+              Filter:
+                flag_a: *randomBit
+                int_a: { $gte: 1, $lte: 7}
+                int_b: { $gte: 1900000 }
+      - Repeat: 100
+        Collection: *Collection
+        Operations:
+          - OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                [
+                  {
+                    $match:
+                      {
+                        flag_a: *randomBit,
+                        int_a: { $gte: 1, $lte: 6 },
+                        int_b: { $gte: 1900000 },
+                      },
+                  },
+                  { $group: { _id: "$int_a", sum_b: { $sum: "$int_b" } } },
+                ]
+
 
 AutoRun:
   - When:
       mongodb_setup:
         $eq:
           - standalone
+          - standalone-80-feature-flags
           - standalone-all-feature-flags
           - standalone-classic-query-engine
           - standalone-sbe
