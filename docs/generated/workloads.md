@@ -4256,11 +4256,11 @@ Measures the performance of running dbcheck's modes and its effect on crud opera
 ### Keywords
 dbcheck, collections, indexes, crud
 
-
+## Replication Startup
 ## 1_0_5GB
-### Owner
+#### Owner
 mongodb/server-replication"
-### Description
+#### Description
 Loads the data for the light phase.
 To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.
 
@@ -4283,14 +4283,14 @@ Sample logs:
 ```
 
 
-### Keywords
+#### Keywords
 startup, collections, indexes, defaultWC
 
 
-## 1_1_5GB_crud
-### Owner
+### 1_1_5GB_crud
+#### Owner
 mongodb/server-replication"
-### Description
+#### Description
 Adds CRUD operations to be replayed during startup recovery for the light phase.
 To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.
 
@@ -4326,14 +4326,14 @@ Sample logs:
 ```
 
 
-### Keywords
+#### Keywords
 startup, stopCheckpointing, updates
 
 
-## 1_2_5GB_ddl
-### Owner
+### 1_2_5GB_ddl
+#### Owner
 mongodb/server-replication"
-### Description
+#### Description
 Adds DDL operations to be replayed during startup recovery for the light phase.
 To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.
 
@@ -4381,14 +4381,14 @@ Sample logs:
 ```
 
 
-### Keywords
+#### Keywords
 startup, stopCheckpointing, collections, indexes
 
 
-## 1_3_5GB_index
-### Owner
+### 1_3_5GB_index
+#### Owner
 mongodb/server-replication"
-### Description
+#### Description
 Initiates an index build to be continued during startup recovery for the light load phase.
 To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.
 
@@ -4455,14 +4455,14 @@ Sample logs:
 ```
 
 
-### Keywords
+#### Keywords
 startup, hangIndexBuild, collections, indexes, stepdown, stepup
 
 
-## 2_0_50GB
-### Owner
+### 2_0_50GB
+#### Owner
 mongodb/server-replication"
-### Description
+#### Description
 Loads the data for the heavy phase.
 To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.
 
@@ -4485,14 +4485,14 @@ Sample logs:
 ```
 
 
-### Keywords
+#### Keywords
 startup, collections, indexes
 
 
-## 2_1_50GB_crud
-### Owner
+### 2_1_50GB_crud
+#### Owner
 mongodb/server-replication"
-### Description
+#### Description
 Adds CRUD operations to be replayed during startup recovery for the heavy phase.
 To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.
 
@@ -4528,14 +4528,14 @@ Sample logs:
 ```
 
 
-### Keywords
+#### Keywords
 startup, stopCheckpointing, updates
 
 
-## 2_2_50GB_ddl
-### Owner
+### 2_2_50GB_ddl
+#### Owner
 mongodb/server-replication"
-### Description
+#### Description
 Adds DDL operations to be replayed during startup recovery for the heavy phase.
 To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.
 
@@ -4583,14 +4583,14 @@ Sample logs:
 ```
 
 
-### Keywords
+#### Keywords
 startup, stopCheckpointing, collections, indexes
 
 
-## 2_3_50GB_index
-### Owner
+### 2_3_50GB_index
+#### Owner
 mongodb/server-replication"
-### Description
+#### Description
 Initiates an index build to be continued during startup recovery for the heavy load phase.
 To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.
 
@@ -4657,14 +4657,14 @@ Sample logs:
 ```
 
 
-### Keywords
+#### Keywords
 startup, hangIndexBuild, collections, indexes, stepdown, stepup
 
 
-## 3_0_Reads
-### Owner
+### 3_0_Reads
+#### Owner
 mongodb/server-replication"
-### Description
+#### Description
 Issues dummy reads against both databases used in the light and the heavy phases.
  To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.
 
@@ -5528,11 +5528,11 @@ See phases/sharding/multi_updates/MultiUpdatesTemplate.yml.
 ### Description
 See phases/sharding/multi_updates/MultiUpdatesTemplate.yml.
 
-
+## Streams
 ## AddFields
-### Owner
+#### Owner
 @10gen/altas-streams
-### Description
+#### Description
 Pipeline: Memory -> ... 20 $addField ... -> Tumbling Window
 Input Documents: 8M
 BatchSize: 1k
@@ -5542,14 +5542,14 @@ The goal is to test the performance of both $addField and streaming pipelines wi
 many stages.
 
 
-### Keywords
+#### Keywords
 streams
 
 
-## LargeHoppingWindow
-### Owner
+### LargeHoppingWindow
+#### Owner
 @10gen/altas-streams
-### Description
+#### Description
 Pipeline: Memory -> Hopping Window (Group) -> Memory
 Input Documents: 1.6M
 BatchSize: 1k
@@ -5563,14 +5563,14 @@ of this workload tests the flush throughput when the window is closed and all th
 are flushed to the sink.
 
 
-### Keywords
+#### Keywords
 streams
 
 
-## LargeTumblingWindow
-### Owner
+### LargeTumblingWindow
+#### Owner
 @10gen/altas-streams
-### Description
+#### Description
 Pipeline: Memory -> Tumbling Window (Group) -> Memory
 Input Documents: 3.2M
 BatchSize: 1k
@@ -5583,14 +5583,14 @@ part of this workload tests the flush throughput when the window is closed and a
 are flushed to the sink.
 
 
-### Keywords
+#### Keywords
 streams
 
 
-## LargeWindowMixed
-### Owner
+### LargeWindowMixed
+#### Owner
 @10gen/altas-streams
-### Description
+#### Description
 Pipeline: Memory -> Tumbling Window (Group) -> Memory
 Input Documents: 16M
 BatchSize: 1k
@@ -5602,14 +5602,14 @@ Each window will ingest 1.6M documents, with ~400k unique keys, so each window o
 output atmost 400k documents.
 
 
-### Keywords
+#### Keywords
 streams
 
 
-## LargeWindowUniqueAndExistingKeys
-### Owner
+### LargeWindowUniqueAndExistingKeys
+#### Owner
 @10gen/altas-streams
-### Description
+#### Description
 Pipeline: Memory -> Tumbling Window (Group) -> Memory
 Documents: 16M
 BatchSize: 1k
@@ -5622,14 +5622,14 @@ documents will all have an existing auction ID will measure the performance of t
 every document results in updating an existing key in the window.
 
 
-### Keywords
+#### Keywords
 streams
 
 
-## Passthrough
-### Owner
+### Passthrough
+#### Owner
 @10gen/altas-streams
-### Description
+#### Description
 Pipeline: Memory -> Project -> Memory
 Documents: 8M
 BatchSize: 1k
@@ -5638,14 +5638,14 @@ Simulates the scenario where the input and output of documents for a stream proc
 one-to-one ratio. This applies a simple projection on incoming documents (currency conversion).
 
 
-### Keywords
+#### Keywords
 streams
 
 
-## Passthrough_ChangeStreamSource
-### Owner
+### Passthrough_ChangeStreamSource
+#### Owner
 @10gen/altas-streams
-### Description
+#### Description
 Pipeline: Mongo Change Stream -> Project -> Memory
 Documents: 800k
 BatchSize: 1k
@@ -5656,14 +5656,14 @@ The difference with this workload versus Passthrough.yml is that this uses a mon
 as the source rather than the in-memory source operator.
 
 
-### Keywords
+#### Keywords
 streams
 
 
-## Passthrough_MongoSink
-### Owner
+### Passthrough_MongoSink
+#### Owner
 @10gen/altas-streams
-### Description
+#### Description
 Pipeline: Memory -> Project -> MongoDB
 Documents: 800k
 BatchSize: 1k
@@ -5674,14 +5674,14 @@ The difference with this workload versus Passthrough.yml is that this uses a $me
 rather than the no-op sink operator.
 
 
-### Keywords
+#### Keywords
 streams
 
 
-## Search
-### Owner
+### Search
+#### Owner
 @10gen/altas-streams
-### Description
+#### Description
 Pipeline: Memory -> Match -> Project -> Memory
 Input Documents: 8M
 BatchSize: 1k
@@ -5692,14 +5692,14 @@ are ingested but the $match stage will only match against ~0.3% of the ingested
 documents.
 
 
-### Keywords
+#### Keywords
 streams
 
 
-## StreamsLookup
-### Owner
+### StreamsLookup
+#### Owner
 @10gen/altas-streams
-### Description
+#### Description
 Pipeline: Memory -> Lookup -> AddField -> Window (Group) -> Memory
 Input Documents: 8M
 BatchSize: 1k
@@ -5710,14 +5710,14 @@ and then propagated to a tumbling window which groups by a foreign column that w
 from the $lookup (join) on the foreign mongoDB collection.
 
 
-### Keywords
+#### Keywords
 streams
 
 
-## TopKPerWindow
-### Owner
+### TopKPerWindow
+#### Owner
 @10gen/altas-streams
-### Description
+#### Description
 Pipeline: Memory -> Tumbling Window (Group, Sort, Limit 1k) -> Memory
 Input Documents: 8M
 BatchSize: 1k
@@ -5728,7 +5728,7 @@ the top 1k aggregated documents by price. All 8M documents will have a random UR
 assigned to them.
 
 
-### Keywords
+#### Keywords
 streams
 
 ## TPCH Denormalized Scale 1
