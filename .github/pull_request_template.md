@@ -28,18 +28,6 @@ form is [here].
 
 ### Merging and Linting
 
-Once (1) your PR is approved by a CODEOWNER and (2) all your CI tests
-pass, you can initiate a merge by entering a comment on your PR with the
-text
-
-    evergreen merge
-
-This kicks your PR into the [evergreen commit queue]. Evergreen will
-automatically squash-merge your commit after checking that you have PR
-approval and that the CI tests all pass.
-
-[evergreen commit queue]: https://github.com/evergreen-ci/evergreen/wiki/Commit-Queue
-
 We currently have a manual linting stage required if you're
 adding/modifying a workload YAML document. Evergreen will verify that
 this has been run.
@@ -47,4 +35,13 @@ this has been run.
 ```bash
 ./run-genny generate-docs
 ```
+
+Once (1) your PR is approved by a CODEOWNER and (2) all your CI tests
+pass, you can initiate a merge by clicking "Add to merge queue".
+This kicks your PR into the [Github Merge Queue]. Github will
+automatically squash-merge your commit after checking that Evergreen's
+CI tasks have returned a successful status.
+
+[Github Merge Queue]: https://docs.devprod.prod.corp.mongodb.com/evergreen/Project-Configuration/Merge-Queue
+
 --->

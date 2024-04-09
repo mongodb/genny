@@ -3,13 +3,13 @@
 This page describes the details of developing in Genny: How to run tests, debug, sanitizers, etc.
 For information on how to write actors and workloads, see [Using Genny](./using.md).
 
-## Commit Queue
+## Merge Queue Queue
 
-Genny uses the [Evergreen Commit-Queue][cq]. When you have received approval
-for your PR, simply comment `evergreen merge` and your PR will automatically
+Genny uses the [Github Merge Queue][merge queue]. When you have received approval
+for your PR, simply click `Add to Merge Queue` and your PR will automatically
 be tested and merged.
 
-[cq]: https://github.com/evergreen-ci/evergreen/wiki/Commit-Queue
+[merge queue]: https://docs.devprod.prod.corp.mongodb.com/evergreen/Project-Configuration/Merge-Queue
 
 
 ## Running Genny Self-Tests
