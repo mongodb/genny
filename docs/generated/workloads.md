@@ -93,9 +93,9 @@ comparisons in performance when mass deletions are performed over different size
 The mass deletion namespace is test.Collection0
 The concurrent writes namespace is test.concurrentWritesColl
 
-  
+
 ### Keywords
-RunCommand, Loader, LoggingActor, CrudActor, insert, delete, batch, deleteMany, latency 
+RunCommand, Loader, LoggingActor, CrudActor, insert, delete, batch, deleteMany, latency
 
 
 ## TimeSeriesUpdatesAndDeletes
@@ -123,9 +123,9 @@ Runs a workload that updates a large range of documents.
 Multiple secondary indexes are present.
 Update performed with and without a hint.
 
-  
+
 ### Keywords
-RunCommand, Loader, LoggingActor, CrudActor, insert, update, latency 
+RunCommand, Loader, LoggingActor, CrudActor, insert, update, latency
 
 
 ## ValidateCmd
@@ -204,9 +204,9 @@ Defines complex, randomly generated CNF and DNF queries used in 'CollScanComplex
 This workload tests the performance of collection scan queries against a collection containing
 documents with a large number of fields.
 
-  
+
 ### Keywords
-Loader, CrudActor, QuiesceActor, insert, find 
+Loader, CrudActor, QuiesceActor, insert, find
 
 
 ## CollScanOnMixedDataTypes
@@ -227,9 +227,9 @@ of predicates defined by actual selectivities matches the ordering defined by he
 Similarly, an 'indistinguishable' case means that heuristic CE defines the same selectivity for all predicates
 in the query. For this workload, the important metrics to look at are OperationThroughput and all latency measurements.
 
-  
+
 ### Keywords
-Loader, CrudActor, QuiesceActor, insert, find 
+Loader, CrudActor, QuiesceActor, insert, find
 
 
 ## CollScanProjection
@@ -271,9 +271,9 @@ Each workload name consists of several parts: '{SyntaxType}{PredicateType}'.
   - 'MissingPathSuffix' means query is searching a path whose suffix cannot be found in the
   document
 
-  
+
 ### Keywords
-Loader, CrudActor, QuiesceActor, insert, find 
+Loader, CrudActor, QuiesceActor, insert, find
 
 
 ## GetBsonDate
@@ -319,9 +319,9 @@ Defines common configurations for 'LookupSBEPushdown' and 'LookupSBEPushdownMisc
 This workload tests a set of filters in the match language. The actors below offer basic
 performance coverage for said filters.
 
-  
+
 ### Keywords
-Loader, CrudActor, QuiesceActor, insert, find 
+Loader, CrudActor, QuiesceActor, insert, find
 
 
 ## Multiplanner
@@ -339,9 +339,9 @@ This file defines templates to use in multiplanner performance tests.
 This workload stresses the query execution engine by running queries over a set of paths which
 share a common prefix. Crucially, these queries never match a document in the collection.
 
-  
+
 ### Keywords
-Loader, CrudActor, QuiesceActor, insert, find 
+Loader, CrudActor, QuiesceActor, insert, find
 
 
 ## RunLargeArithmeticOp
@@ -422,9 +422,9 @@ interesting behavior, such as reads getting faster because of a write regression
 starved by writes. The origin of the test was as a reproduction for BF-2385 in which reads were
 starved out by writes.
 
-  
+
 ### Keywords
-scale, insertOne, insert, findOne, find, updateOne, update, deleteOne, delete 
+scale, insertOne, insert, findOne, find, updateOne, update, deleteOne, delete
 
 
 ## SetClusterParameterTemplate
@@ -469,9 +469,9 @@ and DocumentUpdater.UpdateOne should be used to evaluate performance when
 updating all documents per command and a single document per command
 respectively.
 
-  
+
 ### Keywords
-AdminCommand, MonotonicSingleLoader, CrudActor, updateMany, sharding 
+AdminCommand, MonotonicSingleLoader, CrudActor, updateMany, sharding
 
 
 ## AvgAcctBal
@@ -503,200 +503,200 @@ scale 10. Using an 'executionStats' explain causes each command to run its execu
 documents remain, which ensures that the query executes in its entirety.
 
 
-
-## Q1
-### Owner
+## TPCH Denormalized Phases
+### Q1
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 1 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q10
-### Owner
+### Q10
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 10 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q11
-### Owner
+### Q11
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 11 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q12
-### Owner
+### Q12
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 12 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q13
-### Owner
+### Q13
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 13 gainst the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q14
-### Owner
+### Q14
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 14 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q15
-### Owner
+### Q15
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 15 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q16
-### Owner
+### Q16
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 16 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q17
-### Owner
+### Q17
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 17 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q18
-### Owner
+### Q18
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 18 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q19
-### Owner
+### Q19
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 19 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q2
-### Owner
+### Q2
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 2 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q20
-### Owner
+### Q20
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 20 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q21
-### Owner
+### Q21
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 21 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q22
-### Owner
+### Q22
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 22 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
 ## Q3
-### Owner
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 3 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q4
-### Owner
+### Q4
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 4 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q5
-### Owner
+### Q5
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 5 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q6
-### Owner
+### Q6
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 6 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q7
-### Owner
+### Q7
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 7 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q8
-### Owner
+### Q8
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 8 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q9
-### Owner
+### Q9
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 9 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
@@ -721,199 +721,199 @@ schema for scale 10. Using an 'executionStats' explain causes each command to ru
 documents remain, which ensures that the query executes in its entirety.
 
 
-
-## Q1
-### Owner
+## TPCH Normalized Phases
+### Q1
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 1 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q10
-### Owner
+### Q10
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 10 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q11
-### Owner
+### Q11
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 11 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q12
-### Owner
+### Q12
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 12 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q13
-### Owner
+### Q13
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 13 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q14
-### Owner
+### Q14
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 14 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q15
-### Owner
+### Q15
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 15 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q16
-### Owner
+### Q16
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 16 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q17
-### Owner
+### Q17
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 17 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q18
-### Owner
+### Q18
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 18 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q19
-### Owner
+### Q19
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 19 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q2
-### Owner
+### Q2
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 2 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema.
 
 
 
-## Q20
-### Owner
+### Q20
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 20 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q21
-### Owner
+### Q21
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 21 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q22
-### Owner
+### Q22
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 22 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q3
-### Owner
+### Q3
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 3 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q4
-### Owner
+### Q4
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 4 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q5
-### Owner
+### Q5
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 5 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q6
-### Owner
+### Q6
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 6 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q7
-### Owner
+### Q7
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 7 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q8
-### Owner
+### Q8
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 8 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## Q9
-### Owner
+### Q9
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 9 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
@@ -928,9 +928,9 @@ can be achieved by change event application (CEA). The workload starts Mongosync
 on a cluster with an empty initial dataset, waits for it to transition to
 CEA and then starts inserting documents on the source cluster.
 
-  
+
 ### Keywords
-c2c, replication, cluster to cluster sync, change event application, CEA 
+c2c, replication, cluster to cluster sync, change event application, CEA
 
 
 ## CollectionCopy
@@ -940,9 +940,9 @@ c2c, replication, cluster to cluster sync, change event application, CEA
 This workload is a short version load used to test Mongosync Collection Copy stage performance.
 The workload starts Mongosync on a cluster with an preloaded initial dataset.
 
-  
+
 ### Keywords
-c2c, replication, collection copy, cluster to cluster sync 
+c2c, replication, collection copy, cluster to cluster sync
 
 
 ## MongosyncScripts
@@ -1028,7 +1028,7 @@ Models the QE acceptance criteria workload.
 ### Owner
 @10gen/server-security
 ### Description
-This workload evaluates the performance of Queryable Encryption against the established “Queryable Encryption Performance Release Criteria.” 
+This workload evaluates the performance of Queryable Encryption against the established “Queryable Encryption Performance Release Criteria.”
 
 
 
@@ -1422,9 +1422,9 @@ removes the same document from a collection in a loop. Each instance of the acto
 document, indexed by an integer _id field. The actor records the latency of each insert and each
 remove.
 
-  
+
 ### Keywords
-InsertRemove, docs 
+InsertRemove, docs
 
 
 ## Loader
@@ -1458,9 +1458,9 @@ In this mode of operation the loader Actor will:
     evenly into Actor.Threads.
     * raise an InvalidConfiguration exception if Phase.Threads is set.
 
-  
+
 ### Keywords
-docs, loader 
+docs, loader
 
 
 ## LoggingActorExample
@@ -1524,9 +1524,9 @@ long lived collections.
 ### Description
 Loads a large set of documents with a random value assinged to `field`.
 
-  
+
 ### Keywords
-insert 
+insert
 
 
 ## MoveRandomChunkToRandomShard
@@ -1535,9 +1535,9 @@ insert
 ### Description
 Shards a test collection and does a random move chunk.
 
-  
+
 ### Keywords
-sharding, moveChunk 
+sharding, moveChunk
 
 
 ## ParallelInsert
@@ -1774,9 +1774,9 @@ or write operations.
 This test synthetically lowers the number of concurrent operations allowed to represent a
 saturated server.
 
-  
+
 ### Keywords
-stress, indexes, InsertRemove 
+stress, indexes, InsertRemove
 
 
 ## BackgroundTTLDeletions
@@ -1790,9 +1790,9 @@ Previously this test was part of a legacy suite of workloads used to test called
 This is a port of the test in order to have better analytics with some minor changes to be
 more correct.
 
-  
+
 ### Keywords
-ttl, stress, indexes, insertMany, CrudActor 
+ttl, stress, indexes, insertMany, CrudActor
 
 
 ## BackgroundValidateCmd
@@ -1813,9 +1813,9 @@ validation concurrently.
 ### Description
 Run basic workload on a collection clustered by {_id: 1}.
 
-  
+
 ### Keywords
-indexes, clustered 
+indexes, clustered
 
 
 ## ClusteredCollectionLargeRecordIds
@@ -1824,9 +1824,9 @@ indexes, clustered
 ### Description
 Run basic workload on a collection clustered by {_id: 1} with large RecordId's (~130 bytes).
 
-  
+
 ### Keywords
-indexes, clustered 
+indexes, clustered
 
 
 ## CreateBigIndex
@@ -1843,9 +1843,9 @@ that this test was originally two separate files, CreateIndex.yml and CreateBigI
 but was merged into one as part of PERF-3574. CreateIndex.yml itself was originally CreateIndex.yml
 and CreateIndexSharded.yml, but was merged into one as part of PERF-4347.
 
-  
+
 ### Keywords
-indexes, sharding 
+indexes, sharding
 
 
 ## MixedMultiDeletesBatched
@@ -1854,9 +1854,9 @@ indexes, sharding
 ### Description
 Deletes a range of documents using the BATCHED_DELETE query exec stage both in isolation and while performing writes on another collection. Tests deletes on documents of size ~1KB then deletes on documents of ~10MB.
 
-  
+
 ### Keywords
-RunCommand, Loader, LoggingActor, CrudActor, insert, delete, batch, deleteMany, latency 
+RunCommand, Loader, LoggingActor, CrudActor, insert, delete, batch, deleteMany, latency
 
 
 ## MixedMultiDeletesBatchedWithSecondaryIndexes
@@ -1869,9 +1869,9 @@ mass deletion is issued to measure the impact of additional work per document de
 concurrent write latency. Tests deletes on documents of size ~1KB then deletes on documents of
 ~10MB.
 
-  
+
 ### Keywords
-RunCommand, Loader, LoggingActor, CrudActor, insert, delete, batch, deleteMany, latency 
+RunCommand, Loader, LoggingActor, CrudActor, insert, delete, batch, deleteMany, latency
 
 
 ## MixedMultiDeletesDocByDoc
@@ -1882,9 +1882,9 @@ Deletes a range of documents using the DELETE query exec stage both in isolation
 performing writes on another collection. Tests deletes on documents of size ~1KB then deletes on
 documents of ~10MB.
 
-  
+
 ### Keywords
-RunCommand, Loader, LoggingActor, CrudActor, insert, delete, batch, deleteMany, latency 
+RunCommand, Loader, LoggingActor, CrudActor, insert, delete, batch, deleteMany, latency
 
 
 ## MixedMultiDeletesDocByDocWithSecondaryIndexes
@@ -1897,9 +1897,9 @@ mass deletion is issued to measure the impact of additional work per document de
 concurrent write latency. Tests deletes on documents of size ~1KB then deletes on documents of
 ~10MB.
 
-  
+
 ### Keywords
-RunCommand, Loader, LoggingActor, CrudActor, insert, delete, batch, deleteMany, latency 
+RunCommand, Loader, LoggingActor, CrudActor, insert, delete, batch, deleteMany, latency
 
 
 ## MultiPlanning
@@ -1909,9 +1909,9 @@ RunCommand, Loader, LoggingActor, CrudActor, insert, delete, batch, deleteMany, 
 Create collection with multiple indexes and run queries with different selectivity on different
 indexes to test how efficiently multi planning can choose the most selective index.
 
-  
+
 ### Keywords
-indexes 
+indexes
 
 
 ## PingCommand
@@ -1984,9 +1984,9 @@ alternate for a couple repetitions.
 
 In this workload, we try to ensure that reads and writes do not overlap much.
 
-  
+
 ### Keywords
-sinusoidal, execution control, insertMany, find, CrudActor 
+sinusoidal, execution control, insertMany, find, CrudActor
 
 
 ## TimeSeriesArbitraryUpdate
@@ -2026,9 +2026,9 @@ Updates a large range of documents in the collection.
 Multiple secondary indexes are present.
 Update performed with and without a hint.
 
-  
+
 ### Keywords
-RunCommand, Loader, LoggingActor, CrudActor, insert, update, latency, secondary indexes 
+RunCommand, Loader, LoggingActor, CrudActor, insert, update, latency, secondary indexes
 
 
 ## UserAcquisition
@@ -2046,9 +2046,9 @@ This workload inserts ~1GB of documents, creates various indexes on the data, an
 validate command. We created this workload to see the performance benefits of improvements
 to the validate command, including background validation.
 
-  
+
 ### Keywords
-RunCommand, Loader, validate 
+RunCommand, Loader, validate
 
 
 ## ValidateCmdFull
@@ -2059,9 +2059,9 @@ This workload inserts ~1GB of documents, creates various indexes on the data, an
 validate command. We created this workload to see the performance benefits of improvements
 to the validate command, including background validation.
 
-  
+
 ### Keywords
-RunCommand, Loader, validate 
+RunCommand, Loader, validate
 
 
 ## Flushing
@@ -2078,7 +2078,7 @@ The workload runs a single CrudActor targeting:
   - {w:majority} insert options, configurable via the Options parameter.
 The default documents have a very simple / flat structure as follows:
   - _id: ObjectId
-  - x: a ~1KB fixed string 
+  - x: a ~1KB fixed string
   - id: 'User%07d' incrementing field.
 There are no additional indexes (just _id).
 The important ftdc metrics to look at are:
@@ -2088,9 +2088,9 @@ The important ftdc metrics to look at are:
   - ss wt log log sync time duration
   - ss wt transaction transaction checkpoint currently running
 
-  
+
 ### Keywords
-Flushing, IO, bulk insert, stress, checkpoint, journal 
+Flushing, IO, bulk insert, stress, checkpoint, journal
 
 
 ## ConnectionPoolStress
@@ -2117,9 +2117,9 @@ The workload performs the following steps:
   - Phase 1
     - Execute a find command for GlobalConnectionDuration seconds in GlobalConnectionThreads threads.
 
-  
+
 ### Keywords
-reproducer, connections, secondaryPreferred, sharding, latency 
+reproducer, connections, secondaryPreferred, sharding, latency
 
 
 ## ConnectionsBuildup
@@ -2131,9 +2131,9 @@ low performance with secondaryPreferred reads. This workload was originally two 
 ConnectionsBuildup.yml and ConnectionsBuildupNoSharding.yml. It was merged into a single file when
 "OnlyRunInInstance: sharded" became an option.
 
-  
+
 ### Keywords
-reproducer, connections, secondaryPreferred, sharding 
+reproducer, connections, secondaryPreferred, sharding
 
 
 ## MongosLatency
@@ -2164,9 +2164,9 @@ Test latencies for a classic transaction of moving money from one account to ano
 different write concern, read concern, sessions and transactions.  Based on
 http://henrikingo.github.io/presentations/Highload%202018%20-%20The%20cost%20of%20MongoDB%20ACID%20transactions%20in%20theory%20and%20practice/index.html#/step-24
 
-  
+
 ### Keywords
-transactions, sessions, write concern, read concern 
+transactions, sessions, write concern, read concern
 
 
 ## CommitLatencySingleUpdate
@@ -2175,9 +2175,9 @@ transactions, sessions, write concern, read concern
 ### Description
 Single threaded updates to measure commit latency for various write concern.
 
-  
+
 ### Keywords
-latency, write concern 
+latency, write concern
 
 
 ## SecondaryAllowed
@@ -2224,9 +2224,9 @@ Numbers on the 'standalone-all-feature-flags' environment are for
 the SBE aggregation expressions and numbers on the 'standalone' environment
 for the classic aggregation expressions.
 
-  
+
 ### Keywords
-aggregate, sbe 
+aggregate, sbe
 
 
 ## AggregationsOutput
@@ -2258,9 +2258,9 @@ branching factor of 10 elements
   - 'MissingPathSuffix' means query is searching a path whose suffix cannot be found in the
 document
 
-  
+
 ### Keywords
-Loader, CrudActor, QuiesceActor, insert, find 
+Loader, CrudActor, QuiesceActor, insert, find
 
 
 ## BooleanSimplifier
@@ -2489,9 +2489,9 @@ that can be simplified by the optimizer against a small collection (100 document
 ### Description
 This workload measures performance for diagnostic top command.
 
-  
+
 ### Keywords
-top, command, admin, stats 
+top, command, admin, stats
 
 
 ## ColumnStoreIndex
@@ -2507,9 +2507,9 @@ The workload consists of the following phases and actors:
   3. Warm up cache again for regular scans.
   4. Run queries without columnstore indexes.
 
-  
+
 ### Keywords
-columnstore, analytics 
+columnstore, analytics
 
 
 ## ConstantFoldArithmetic
@@ -2554,9 +2554,9 @@ size).
 We would like to be able to correlate the results of this workload with the similar one that uses
 nested data (CsiFragmentedInsertsNested.yml). Please make sure to update both when making changes.
 
-  
+
 ### Keywords
-columnstore, insert 
+columnstore, insert
 
 
 ## CsiFragmentedInsertsNested
@@ -2571,9 +2571,9 @@ As the approach in this workload is the same as in 'CsiFragmentedInsertsFlat.yml
 of data used by the loader (and not comparing to the wildcard index), comments are intentionally
 omitted, please refer to the "flat" workload for the details.
 
-  
+
 ### Keywords
-columnstore, insert 
+columnstore, insert
 
 
 ## CsiHeavyDiskUsage
@@ -2599,9 +2599,9 @@ The purpose of this workload is to compare the insert performance in the followi
    replace all other indexes in production, but it could replace some and knowing its relative
    performance cost could help make that decision.
 
-  
+
 ### Keywords
-columnstore, analytics, scale, insert 
+columnstore, analytics, scale, insert
 
 
 ## CumulativeWindows
@@ -2887,9 +2887,9 @@ Each workload name consists of several parts: '{SyntaxType}{PredicateType}'.
   - 'MissingPathSuffix' means query is searching a path whose suffix cannot be found in the
   document
 
-  
+
 ### Keywords
-Loader, CrudActor, QuiesceActor, insert, find 
+Loader, CrudActor, QuiesceActor, insert, find
 
 
 ## FilterWithComplexLogicalExpressionMedium
@@ -2914,9 +2914,9 @@ Each workload name consists of several parts: '{SyntaxType}{PredicateType}'.
   - 'MissingPathSuffix' means query is searching a path whose suffix cannot be found in the
   document
 
-  
+
 ### Keywords
-Loader, CrudActor, QuiesceActor, insert, find 
+Loader, CrudActor, QuiesceActor, insert, find
 
 
 ## FilterWithComplexLogicalExpressionSmall
@@ -2941,9 +2941,9 @@ Each workload name consists of several parts: '{SyntaxType}{PredicateType}'.
   - 'MissingPathSuffix' means query is searching a path whose suffix cannot be found in the
   document
 
-  
+
 ### Keywords
-Loader, CrudActor, QuiesceActor, insert, find 
+Loader, CrudActor, QuiesceActor, insert, find
 
 
 ## GraphLookup
@@ -2996,9 +2996,9 @@ This workloads covers $group queries with distinct-like semantics, meaning that 
 is selected from each group. Depending on the details of the query and available indexes, the query might
 be optimized to use DISTINCT_SCAN plan.
 
-  
+
 ### Keywords
-Distinct, Group, First, Last, Top, Bottom, timeseries, aggregate 
+Distinct, Group, First, Last, Top, Bottom, timeseries, aggregate
 
 
 ## GroupSpillToDisk
@@ -3007,9 +3007,9 @@ Distinct, Group, First, Last, Top, Bottom, timeseries, aggregate
 ### Description
 Runs $group queries which are designed to require spilling to disk.
 
-  
+
 ### Keywords
-Loader, CrudActor, QuiesceActor, insert, aggregate, group, spill 
+Loader, CrudActor, QuiesceActor, insert, aggregate, group, spill
 
 
 ## GroupStagesOnComputedFields
@@ -3020,9 +3020,9 @@ The queries in this workload exercise group stage(s) after other stages ($addFie
 on computed date fields. The queries are motivated by the work on the SBE prefix pushdown project
 that enables the execution of $addFields, $match, and $sort in SBE.
 
-  
+
 ### Keywords
-aggregate, sbe 
+aggregate, sbe
 
 
 ## InWithVariedArraySize
@@ -3034,9 +3034,9 @@ for $in to the plan cache key since there is a possible explodeForSort optimizat
 internalQueryMaxScansToExplode that limits the maximum number of explode for sort index scans.
 This workload measures performance for $in in both these cases, with and without indexes.
 
-  
+
 ### Keywords
-in, cache, parametrization, classic, sbe 
+in, cache, parametrization, classic, sbe
 
 
 ## LimitSkip
@@ -3046,9 +3046,9 @@ in, cache, parametrization, classic, sbe
 This workload measures performance for $limit and $skip when different constants are supplied as
 arguments.
 
-  
+
 ### Keywords
-limit, skip, cache, parametrization, classic, sbe 
+limit, skip, cache, parametrization, classic, sbe
 
 
 ## Lookup
@@ -3123,9 +3123,9 @@ The workload consists of the following phases and actors:
      environment
      - 'NLJLookup' actor
 
-  
+
 ### Keywords
-lookup, aggregate, sbe 
+lookup, aggregate, sbe
 
 
 ## LookupOnly
@@ -3153,9 +3153,9 @@ The workload consists of the following phases and actors:
   3. Runs and measures the lookup performance
      - 'LookupOnlyXXX' actors
 
-  
+
 ### Keywords
-lookup, aggregate 
+lookup, aggregate
 
 
 ## LookupSBEPushdown
@@ -3202,9 +3202,9 @@ The workload consists of the following phases and actors:
   7. Runs and measures the SBE INLJ lookups and the classic INLJ lookups
      - 'INLJLookup' actor
 
-  
+
 ### Keywords
-lookup, aggregate, sbe 
+lookup, aggregate, sbe
 
 
 ## LookupSBEPushdownINLJMisc
@@ -3243,9 +3243,9 @@ The workload consists of the following phases and actors:
   4. Runs and measures the miscellaneous lookups.
      - 'INLJLookupMisc' actor
 
-  
+
 ### Keywords
-lookup, aggregate, sbe 
+lookup, aggregate, sbe
 
 
 ## LookupUnwind
@@ -3275,9 +3275,9 @@ The workload consists of the following phases and actors:
   3. Runs and measures the lookup/unwind performance
      - 'LookupUnwindXXX' actors
 
-  
+
 ### Keywords
-lookup, unwind, aggregate 
+lookup, unwind, aggregate
 
 
 ## LookupWithOnlyUnshardedColls
@@ -3306,9 +3306,9 @@ The workload consists of the following phases:
 This workload tests a set of filters in the match language. The actors below offer basic
 performance coverage for said filters.
 
-  
+
 ### Keywords
-Loader, CrudActor, QuiesceActor, insert, find 
+Loader, CrudActor, QuiesceActor, insert, find
 
 
 ## MatchFiltersMedium
@@ -3318,9 +3318,9 @@ Loader, CrudActor, QuiesceActor, insert, find
 This workload tests a set of filters in the match language. The actors below offer basic
 performance coverage for said filters.
 
-  
+
 ### Keywords
-Loader, CrudActor, QuiesceActor, insert, find 
+Loader, CrudActor, QuiesceActor, insert, find
 
 
 ## MatchFiltersSmall
@@ -3330,9 +3330,9 @@ Loader, CrudActor, QuiesceActor, insert, find
 This workload tests a set of filters in the match language. The actors below offer basic
 performance coverage for said filters.
 
-  
+
 ### Keywords
-Loader, CrudActor, QuiesceActor, insert, find 
+Loader, CrudActor, QuiesceActor, insert, find
 
 
 ## MatchWithLargeExpression
@@ -3343,9 +3343,9 @@ This workload tests the performance of expression search for parameter re-use du
 Before September 2023, parameter re-use had O(n^2) complexity due to using a vector for looking up equivalent expressions.
 SERVER-79092 fixed this issue by switching over to a map once the amount of expressions reaches a threshold (currently 50).
 
-  
+
 ### Keywords
-Loader, CrudActor, QuiesceActor, insert, Aggregation, matcher, expressions 
+Loader, CrudActor, QuiesceActor, insert, Aggregation, matcher, expressions
 
 
 ## MetricSecondaryIndexTimeseriesCollection
@@ -3384,9 +3384,9 @@ During development we did not see significant differences in runtime between var
 distributions, and therefore scoped down this test to create a normal distribution and a dataset
 created from 5 different distributions.
 
-  
+
 ### Keywords
-group, percentile 
+group, percentile
 
 
 ## PercentilesExpr
@@ -3397,9 +3397,9 @@ Run tests for $percentile expression over variously sized input arrays. We creat
 for each array size as putting the fields into the same document might be impacted by how much
 bson needs to be parsed to access the field but we want to make sure we compare apples to apples.
 
-  
+
 ### Keywords
-group, percentile 
+group, percentile
 
 
 ## PercentilesWindow
@@ -3421,9 +3421,9 @@ We compare the speed of $percentile over these windows with $minN.
 We do not test different percentile values here, since those are tested in a micro-benchmark, and
 do not show significant differences.
 
-  
+
 ### Keywords
-setWindowFields, percentile 
+setWindowFields, percentile
 
 
 ## PercentilesWindowSpillToDisk
@@ -3441,9 +3441,9 @@ and since there is no unique behavior for $percentile in this case, it was not t
 We can use an index to control whether or not the $sort will spill, and we change the size of the
 partition to control whether or not the $_internalSetWindowsFields will spill.
 
-  
+
 ### Keywords
-setWindowFields, percentile, spill 
+setWindowFields, percentile, spill
 
 
 ## PipelineUpdate
@@ -3464,9 +3464,9 @@ had a quadratic $project parsing algorithm which would take hours for the larges
 search through all currently parsed fields rather than a map lookup. It should now take milliseconds to parse.
 This issue was fixed by SERVER-78580, and discovered by SERVER-62509.
 
-  
+
 ### Keywords
-Project, Parsing, Aggregation 
+Project, Parsing, Aggregation
 
 
 ## QueryStats
@@ -3535,9 +3535,9 @@ The workload consists of the following phases and actors:
 
 The DSI test_control will drop caches inbetween each test to measure cold cache performance.
 
-  
+
 ### Keywords
-columnstore, analytics, SSB 
+columnstore, analytics, SSB
 
 
 ## SetWindowFieldsUnbounded
@@ -3682,9 +3682,9 @@ The phases are:
 The queries in this workload exercise group stage(s) after other stages ($addFields, $match, $sort)
 on computed date fields on a timeseries collection.
 
-  
+
 ### Keywords
-timeseries, aggregate, sbe 
+timeseries, aggregate, sbe
 
 
 ## TimeSeriesLastpoint
@@ -3749,9 +3749,9 @@ with different meta values.
 This test exercises the behavior of complex customer reports on top of time-series collections containing
 telemetry data from arbitrary machines.
 
-  
+
 ### Keywords
-timeseries, aggregate, group 
+timeseries, aggregate, group
 
 
 ## TimeseriesBlockProcessing
@@ -3763,22 +3763,22 @@ processing. At the moment, only queries with a $match prefix are eligible for bl
 The dataset used for this workload has uniformly random data so bucket level filtering is
 ineffective. This stresses turning buckets into blocks and running block based operations on them.
 
-  
+
 ### Keywords
-timeseries, aggregate 
+timeseries, aggregate
 
 
 ## TimeseriesCount
 ### Owner
 @mongodb/query
 ### Description
-The queries in this workload exercise group stage that uses the $count accumulator and the $count 
-aggregation stage. On FCV greater than or equal to 7.1 $group using $count is optimized to remove 
+The queries in this workload exercise group stage that uses the $count accumulator and the $count
+aggregation stage. On FCV greater than or equal to 7.1 $group using $count is optimized to remove
 the $unpack stage.
 
-  
+
 ### Keywords
-timeseries, aggregate, group 
+timeseries, aggregate, group
 
 
 ## TimeseriesEnum
@@ -3787,24 +3787,24 @@ timeseries, aggregate, group
 ### Description
 The queries in this workload exercise group stage that uses an enum like field for the grouping.
 
-  
+
 ### Keywords
-timeseries, aggregate, group 
+timeseries, aggregate, group
 
 
 ## TimeseriesFixedBucketing
 ### Owner
 @mongodb/query-integration
 ### Description
-This test exercises the behavior of the time series optimization when the collection has 
-fixed buckets. This workload uses tsbs data that is imported in the dsi configuration. See 
+This test exercises the behavior of the time series optimization when the collection has
+fixed buckets. This workload uses tsbs data that is imported in the dsi configuration. See
 'configurations/test_control/test_control.fixed_bucketing.yml' for all the details.
 The data is set up with the fixed bucketing parameters set to 3600 and the timeField is "time"
 and the metaField is "tags". There are 20736000 documents in the collection.
 
-  
+
 ### Keywords
-timeseries, aggregate, group 
+timeseries, aggregate, group
 
 
 ## TimeseriesStressUnpacking
@@ -3818,18 +3818,18 @@ should see the runtime for each query increase based on the number of buckets an
 We also compare the runtime of queries that project all fields explicitly vs returning the original
 document "as is" with no projections defined.
 
-  
+
 ### Keywords
-timeseries, aggregate 
+timeseries, aggregate
 
 
 ## TimeseriesTsbsExpressionQuery
 ### Owner
 @mongodb/query
 ### Description
-This workload runs different math expressions on time-series optimizations with the tsbs dataset. 
-During development, This workload runs queries from the tsbs_query benchmark in Genny. It allows us 
-to cross-check the results of the TSBS benchmarks, collect additional measurements, profile individual 
+This workload runs different math expressions on time-series optimizations with the tsbs dataset.
+During development, This workload runs queries from the tsbs_query benchmark in Genny. It allows us
+to cross-check the results of the TSBS benchmarks, collect additional measurements, profile individual
 queries, and extend some of the queries as needed. The data is preloaded by the dsi configuration. See
 'configurations/test_control/test_control.tsbs_query_genny.yml' for all  the details. There are 20736000
 documents in the collection. There are some differences between the queries in this workload and tsbs,
@@ -3840,9 +3840,9 @@ value from randomized generation.
 2. TSBS randomizes which measurement fields to group by, we do not randomize these fields. Since all the fields
 are random integers between 0-100 we don't expect different fields to have significant runtime differences.
 
-  
+
 ### Keywords
-timeseries, aggregate, group, sort 
+timeseries, aggregate, group, sort
 
 
 ## TimeseriesTsbsOptimizations
@@ -3867,9 +3867,9 @@ You need to verify how many buckets are hit for each measurement field predicate
 9. Predicates of bucket at a time window of 1 hour is expected to hit 0.2% of buckets.
 10. The earliest date is  "2016-01-01T00:00:00Z" and the latest date is "2016-01-24T23:59:50Z".
 
-  
+
 ### Keywords
-timeseries, aggregate, group, sort 
+timeseries, aggregate, group, sort
 
 
 ## TimeseriesTsbsQuery
@@ -3889,9 +3889,9 @@ value from randomized generation.
 2. TSBS randomizes which measurement fields to group by, we do not randomize these fields. Since all the fields
 are random integers between 0-100 we don't expect different fields to have significant runtime differences.
 
-  
+
 ### Keywords
-timeseries, aggregate, group, sort 
+timeseries, aggregate, group, sort
 
 
 ## UnionWith
@@ -3913,9 +3913,9 @@ This test exercises a simple [$unwind, $group] aggregation pipeline to enable pe
 comparison between the Classic and SBE execution engines when pushing $unwind down to SBE is
 enabled (whole pipeline runs in SBE) versus disabled (whole pipeline runs in Classic engine).
 
-  
+
 ### Keywords
-unwind, group, aggregate 
+unwind, group, aggregate
 
 
 ## UpdateLargeDocuments
@@ -3945,9 +3945,9 @@ Numbers on the 'standalone-all-feature-flags' environment are for
 the SBE variadic aggregation expressions and numbers on the 'standalone'
 environment for the classic variadic aggregation expressions.
 
-  
+
 ### Keywords
-aggregate, sbe 
+aggregate, sbe
 
 
 ## WindowWithComplexPartitionExpression
@@ -4037,7 +4037,7 @@ The goal of this test is to exercise multiplanning. We create as many indexes as
 @mongodb/query
 ### Description
 The goal of this test is to exercise multiplanning. We create as many compound indexes as possible, each
-comprising of tenantId and another field. We then run a query with an equality predicate on tenantId and 
+comprising of tenantId and another field. We then run a query with an equality predicate on tenantId and
 other predicates a small number of fields, so we get all the plans that use relevant indexes.
 
 We expect classic to have better latency and throughput than SBE on this workload,
@@ -4081,9 +4081,9 @@ breaking heuristics are guessing the correct index.
   In the second case, we still choose the (flag_a, flag_b) index, but this time it is the correct choice,
   because the int_a predicate matches >50% of documents.
 
-  
+
 ### Keywords
-indexes 
+indexes
 
 
 ## MultikeyIndexes
@@ -4091,8 +4091,8 @@ indexes
 @mongodb/query
 ### Description
 The goal of this test is to exercise multiplanning with multikey indexes. We create many indexes and
-run a query that makes all of them eligible, so we get as many competing plans as possible. Because 
-an IXSCAN of a multikey index has to deduplicate RIDs, a lot of space will be used. The classic 
+run a query that makes all of them eligible, so we get as many competing plans as possible. Because
+an IXSCAN of a multikey index has to deduplicate RIDs, a lot of space will be used. The classic
 multi-planner will behave more optimally than the SBE multiplanner because it will cut off execution
 when the one good plan reaches the end.
 
@@ -4252,9 +4252,9 @@ mongodb/server-replication"
 ### Description
 Measures the performance of running dbcheck's modes and its effect on crud operations.
 
-  
+
 ### Keywords
-dbcheck, collections, indexes, crud 
+dbcheck, collections, indexes, crud
 
 
 ## 1_0_5GB
@@ -4282,9 +4282,9 @@ Sample logs:
 +-------------------------------------------------------------------------------------------+
 ```
 
-  
+
 ### Keywords
-startup, collections, indexes, defaultWC 
+startup, collections, indexes, defaultWC
 
 
 ## 1_1_5GB_crud
@@ -4325,9 +4325,9 @@ Sample logs:
 +--------------------------------------------------------+
 ```
 
-  
+
 ### Keywords
-startup, stopCheckpointing, updates 
+startup, stopCheckpointing, updates
 
 
 ## 1_2_5GB_ddl
@@ -4380,9 +4380,9 @@ Sample logs:
 +------------------------------------------------------------------------------------+
 ```
 
-  
+
 ### Keywords
-startup, stopCheckpointing, collections, indexes 
+startup, stopCheckpointing, collections, indexes
 
 
 ## 1_3_5GB_index
@@ -4454,9 +4454,9 @@ Sample logs:
 +-----------------------------------------------------------------+
 ```
 
-  
+
 ### Keywords
-startup, hangIndexBuild, collections, indexes, stepdown, stepup 
+startup, hangIndexBuild, collections, indexes, stepdown, stepup
 
 
 ## 2_0_50GB
@@ -4484,9 +4484,9 @@ Sample logs:
 +-------------------------------------------------------------------------------------------+
 ```
 
-  
+
 ### Keywords
-startup, collections, indexes 
+startup, collections, indexes
 
 
 ## 2_1_50GB_crud
@@ -4527,9 +4527,9 @@ Sample logs:
 +--------------------------------------------------------+
 ```
 
-  
+
 ### Keywords
-startup, stopCheckpointing, updates 
+startup, stopCheckpointing, updates
 
 
 ## 2_2_50GB_ddl
@@ -4582,9 +4582,9 @@ Sample logs:
 +------------------------------------------------------------------------------------+
 ```
 
-  
+
 ### Keywords
-startup, stopCheckpointing, collections, indexes 
+startup, stopCheckpointing, collections, indexes
 
 
 ## 2_3_50GB_index
@@ -4656,9 +4656,9 @@ Sample logs:
 +-----------------------------------------------------------------+
 ```
 
-  
+
 ### Keywords
-startup, hangIndexBuild, collections, indexes, stepdown, stepup 
+startup, hangIndexBuild, collections, indexes, stepdown, stepup
 
 
 ## 3_0_Reads
@@ -4668,9 +4668,9 @@ mongodb/server-replication"
 Issues dummy reads against both databases used in the light and the heavy phases.
  To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.
 
-  
+
 ### Keywords
-startup, reads 
+startup, reads
 
 
 ## BigUpdate
@@ -4682,9 +4682,9 @@ It loads data into a large number of collections, with 9 indexes on each collect
 the data, a fraction of the collections are queried, and a smaller fraction of collections are
 updated.
 
-  
+
 ### Keywords
-stress, collections, indexes, update, find, coldData 
+stress, collections, indexes, update, find, coldData
 
 
 ## BigUpdate10k
@@ -4696,9 +4696,9 @@ number of collections, with 9 indexes on each collection. After loading the data
 the collections are queried, and a smaller fraction of collections are updated. This is the larger
 version of the test, using 10k collections and 10k documents per collection.
 
-  
+
 ### Keywords
-stress, collections, indexes, update, find, coldData 
+stress, collections, indexes, update, find, coldData
 
 
 ## BulkLoading
@@ -4721,9 +4721,9 @@ It tests the following scenarios:
 
 - BulkWrite Upserts, ~30GB data in the db, many connections, with index
 
-  
+
 ### Keywords
-bulk insert, bulk write, indexes, upsert, stress 
+bulk insert, bulk write, indexes, upsert, stress
 
 
 ## CollScan
@@ -4732,9 +4732,9 @@ bulk insert, bulk write, indexes, upsert, stress
 ### Description
 This workload loads 10M rows into a collection, then executes collection scans in a single thread.
 
-  
+
 ### Keywords
-collection scan 
+collection scan
 
 
 ## ContentionTTLDeletions
@@ -4744,9 +4744,9 @@ collection scan
 This workload tests the impact of background TTL deletions in a heavily modified collection with
 concurrent crud operations on a second collection to simulate extreme ticket contention.
 
-  
+
 ### Keywords
-ttl, stress, indexes, insertMany, CrudActor 
+ttl, stress, indexes, insertMany, CrudActor
 
 
 ## CreateDropView
@@ -4756,9 +4756,9 @@ ttl, stress, indexes, insertMany, CrudActor
 This workload loads a collection with documents and then repeatedly
 create and drops a view on that collection.
 
-  
+
 ### Keywords
-view, create, drop 
+view, create, drop
 
 
 ## CursorStormMongos
@@ -4771,12 +4771,12 @@ result of mongos running out of memory.
 
 To achieve this, many threads are spawned to run an unfiltered find on a collection.
 The number and size of documents in that collection are tuned such, that the mongos is able
-to exhaust cursors on shards when pre-filling its buffers [<16MB per shard]. As a result, 
+to exhaust cursors on shards when pre-filling its buffers [<16MB per shard]. As a result,
 memory pressure on the shards remains low, while it's kept large on the mongos.
 
-  
+
 ### Keywords
-scale, memory stress, cursor storm, mongos, fail, oom, out of memory 
+scale, memory stress, cursor storm, mongos, fail, oom, out of memory
 
 
 ## InCacheSnapshotReads
@@ -4804,9 +4804,9 @@ removes the same document from a collection in a loop. Each instance of the acto
 document, indexed by an integer _id field. The actor records the latency of each insert and each
 remove.
 
-  
+
 ### Keywords
-docs, actorInsertRemove, insert, delete 
+docs, actorInsertRemove, insert, delete
 
 
 ## LargeIndexedIns
@@ -4856,9 +4856,9 @@ See LargeScaleSerial.yml for a general overview of what this workload does. The 
 difference here is that the update is parallel with the long-running query and
 multi-collection scan. This adds some concurrent write load.
 
-  
+
 ### Keywords
-collections, oltp, update, query, scale 
+collections, oltp, update, query, scale
 
 
 ## LargeScaleSerial
@@ -4881,9 +4881,9 @@ records around (hence the rate-limiting). The queries run in parallel with a ful
 collection scan, which represents a conventional performance-sensitive OLTP workload
 that shouldn't be too affected by the long-running queries.
 
-  
+
 ### Keywords
-collections, oltp, query, scale 
+collections, oltp, query, scale
 
 
 ## LoadTest
@@ -4922,9 +4922,9 @@ We will run this against standalone nodes and single-node replica sets as well a
 sets to determine if any performance changes are due to replication overhead changes (if only
 3-node replica sets are affected) or some other reason.
 
-  
+
 ### Keywords
-RunCommand, Loader, CrudActor, updateMany, update, replication, oplogSourceOverhead 
+RunCommand, Loader, CrudActor, updateMany, update, replication, oplogSourceOverhead
 
 
 ## MassDeleteRegression
@@ -4955,9 +4955,9 @@ The metrics to monitor are:
   * The Operation Throughput
   * "ss connections active": the number of connections.
 
-  
+
 ### Keywords
-scale, insertMany, find 
+scale, insertMany, find
 
 
 ## MixedWorkloadsGenny
@@ -4972,9 +4972,9 @@ interesting behavior, such as reads getting faster because of a write regression
 starved by writes. The origin of the test was as a reproduction for BF-2385 in which reads were
 starved out by writes.
 
-  
+
 ### Keywords
-scale, insertOne, insert, findOne, find, updateOne, update, deleteOne, delete 
+scale, insertOne, insert, findOne, find, updateOne, update, deleteOne, delete
 
 
 ## MixedWorkloadsGennyRateLimited
@@ -4988,9 +4988,9 @@ updateOne, and deleteOne. Previously, each type of operation ran in a dedicated 
 high CPU utilization of around 90%. The Update operation was found to cause the highest CPU usage.
 Rate Limits were added to maintain CPU utlization at 30-40%, along with using a higher thread level and decreasing phase number count from 4 to 1.
 
-  
+
 ### Keywords
-scale, insertOne, insert, findOne, find, updateOne, update, deleteOne, delete, rateLimited, globalRate 
+scale, insertOne, insert, findOne, find, updateOne, update, deleteOne, delete, rateLimited, globalRate
 
 
 ## MixedWorkloadsGennyStress
@@ -5009,9 +5009,9 @@ starved out by writes.
 This more stressful version of the test only runs one test phase, using 1024 threads per operation
 for 45 minutes.
 
-  
+
 ### Keywords
-scale, insertOne, insert, findOne, find, updateOne, update, deleteOne, delete 
+scale, insertOne, insert, findOne, find, updateOne, update, deleteOne, delete
 
 
 ## MixedWorkloadsGennyStressWithScans
@@ -5031,9 +5031,9 @@ were starved out by writes.
 This more stressful version of the test only runs one test phase, using 1024 threads per operation
 for 45 minutes.
 
-  
+
 ### Keywords
-scale, insertOne, insert, findOne, find, updateOne, update, deleteOne, delete, aggregate, scan 
+scale, insertOne, insert, findOne, find, updateOne, update, deleteOne, delete, aggregate, scan
 
 
 ## MixedWrites
@@ -5053,9 +5053,9 @@ Requires at least 3-node replset.
 ### Description
 The workload tests the server under a "multi-plan storm" which results in unbounded growth of the deduplicated set of RecordIds during an index scan. The same query requiring a multi-plan is executed by many threads, each of them triggering a multi-plan. Each of the plans in the multi-plan, on each thread, is index scanning a large number of documents, while maintaining a RecordId set. This causes the memory footprint to increase until the server is eventually OOM killed.
 
-  
+
 ### Keywords
-CrudActor, indexes, Loader, memory, planning, scale, stress 
+CrudActor, indexes, Loader, memory, planning, scale, stress
 
 
 ## MultiPlanStormSortSkip
@@ -5064,9 +5064,9 @@ CrudActor, indexes, Loader, memory, planning, scale, stress
 ### Description
 The workload tests the server under a "multi-plan storm" situation, by letting many threads execute a query, which triggers a multi-plan. The large number of indexes on the test collection lets the planner generate numerous candidate plans. Normally, plans involving a sorter would quickly loose,  but using a large "skip" attribute with the command delays the end of the best plan contest significantly. This eventually makes the system run out-of-memory, due to each of the plans performing a sort on a  large number of documents.
 
-  
+
 ### Keywords
-memory stress, multi-planning, sort, skip, oom, out of memory 
+memory stress, multi-planning, sort, skip, oom, out of memory
 
 
 ## NegativeScalingLoadStress
@@ -5080,9 +5080,9 @@ mimic the behvaiour reported in HELP-44821. Key metrics to observe here are oper
 cpu kernel usage and cpu user usage. If we see high CPU kernel usage plus low ops/s, we may be observing
 negative scaling. This workload is not scheduled to run at this time and is intended for adhoc use.
 
-  
+
 ### Keywords
-scale, insertOne, insert, findOne, find 
+scale, insertOne, insert, findOne, find
 
 
 ## OutOfCacheScanner
@@ -5122,9 +5122,9 @@ spilling to disk. The threads would therefore each cause a close-to-max amount o
 memory to be used. Increasing the number of threads should cause the host(s) that
 process the operations to fail due to out-of-memory errors.
 
-  
+
 ### Keywords
-scale, memory stress, aggregate, sort, insert, fail, oom, out of memory 
+scale, memory stress, aggregate, sort, insert, fail, oom, out of memory
 
 
 ## ReplaceMillionDocsInSeparateTxns
@@ -5134,9 +5134,9 @@ scale, memory stress, aggregate, sort, insert, fail, oom, out of memory
 This workload is developed to test the amount of time it takes to remove and re-insert one
 million documents, with a fixed transaction batch size of one hundred.
 
-  
+
 ### Keywords
-transactions, stress, time 
+transactions, stress, time
 
 
 ## ScanWithLongLived
@@ -5167,9 +5167,9 @@ database, then creates 7 indexes, before inserting documents as fast as it can. 
 between the different phases is how many of the indexes are unique. It first does 0 unique
 secondary indexes, then 1, 2, up to 7.
 
-  
+
 ### Keywords
-insert, unique indexes 
+insert, unique indexes
 
 
 ## UpdateMillionDocsInTxn
@@ -5181,9 +5181,9 @@ a single replica set transaction. At the moment, the average time taken raises a
 limit, so until we add a way to manually increase a transaction's lifetime, we must raise the
 lifetime of all transactions.
 
-  
+
 ### Keywords
-transactions, stress, time 
+transactions, stress, time
 
 
 ## UpdateSingleLargeDocumentWith10kThreads
@@ -5196,9 +5196,9 @@ caused by update operations with a high rate of write conflicts. The update oper
 integer field, the command itself is relatively small, so most of the memory pressure should come
 from the query subsystem.
 
-  
+
 ### Keywords
-CrudActor, Loader, memory, scale, stress, updateOne, WriteConflict 
+CrudActor, Loader, memory, scale, stress, updateOne, WriteConflict
 
 
 ## GennyOverhead
@@ -5269,9 +5269,9 @@ The inserted documents have the following form:
 
 The collection is sharded on {oldKey: 'hashed'}. The metrics to watchout for here are P50, P99 operation latencies and overall throughput.
 
-  
+
 ### Keywords
-RunCommand, sharded, Loader, insert, update, updateOne, batch, latency 
+RunCommand, sharded, Loader, insert, update, updateOne, batch, latency
 
 
 ## BulkWriteBatchedUpdateOneWithoutShardKeyWithId
@@ -5292,9 +5292,9 @@ The inserted documents have the following form:
 
 The collection is sharded on {oldKey: 'hashed'}.  The metrics to watchout for here are P50, P99 operation latencies and overall throughput.
 
-  
+
 ### Keywords
-CrudActor, sharded, Loader, insert, update, updateOne, batch, bulkWrite, latency 
+CrudActor, sharded, Loader, insert, update, updateOne, batch, bulkWrite, latency
 
 
 ## DistinctCommands
@@ -5306,9 +5306,9 @@ The main metrics to look at for this test are the throughput for the finds and
 distincts that are run during the test. After SERVER-43096, the throughput
 is much higher for both of these actors.
 
-  
+
 ### Keywords
-Distinct, Large Strings 
+Distinct, Large Strings
 
 
 ## MongosMerging
@@ -5320,9 +5320,9 @@ will be merged on a mongos node. This workload reproduces a SERVER-29446,
 and results in an error when run that says the $sample stage could not
 find a non-duplicate document.
 
-  
+
 ### Keywords
-Aggregations, Mongos, Sample, Unwind, Sort 
+Aggregations, Mongos, Sample, Unwind, Sort
 
 
 ## MultiShardTransactions
@@ -5409,16 +5409,16 @@ The collection is initially sharded on {oldKey: 'hashed'} and then resharded on 
 ### Owner
 @mongodb/sharding
 ### Description
-This test measures the time for a sharded cluster to reshard a collection from one shard to two 
-shards then to three shards. It was added August 2023 as part of PM-2322, to demonstrate planned 
-resharding performance improvements. Note that the goal of this test is to show the performance 
+This test measures the time for a sharded cluster to reshard a collection from one shard to two
+shards then to three shards. It was added August 2023 as part of PM-2322, to demonstrate planned
+resharding performance improvements. Note that the goal of this test is to show the performance
 gain on this setup rather than the performance difference on different kinds of data type.
 
-The test expects the target cluster is created using ebs snapshot with 1 billion 1KB records and 
-has 3 shards, named shard-00, shard-01, shard-02. The collection has 10 indexes including 
+The test expects the target cluster is created using ebs snapshot with 1 billion 1KB records and
+has 3 shards, named shard-00, shard-01, shard-02. The collection has 10 indexes including
 _id index, single-key index and compound index. The whole dataset is on 1 shard at the beginning.
-ReshardCollection should use same-key resharding and use shardDistribution parameter to reshard 
-into 2 shards then 3 shards. There will be random CRUD operations during resharding but should 
+ReshardCollection should use same-key resharding and use shardDistribution parameter to reshard
+into 2 shards then 3 shards. There will be random CRUD operations during resharding but should
 run at a very low rate.
 
 The workload consists of 3 phases:
@@ -5426,11 +5426,11 @@ The workload consists of 3 phases:
   2. Running read and write operations on the collection while it is being resharded to 2 shards.
   3. Running read and write operations on the collection while it is being resharded to 3 shards.
 
-All documents are generated through genny' data loader where the integer and length of short 
-string fields are randomly generated. The fields are designed like to form different combinations 
-of indexes. The goal of having 10 indexes is to test resharding performance with indexes and the 
+All documents are generated through genny' data loader where the integer and length of short
+string fields are randomly generated. The fields are designed like to form different combinations
+of indexes. The goal of having 10 indexes is to test resharding performance with indexes and the
 number 10 comes from design, which is arbitrary from testing perspective.
-  
+
 The inserted documents have the following form:
 
     {
@@ -5458,9 +5458,9 @@ The indexes are:
       {num2:1, str2: 1}
     ]
 
-  
+
 ### Keywords
-resharding, indexes, replication, collection copy 
+resharding, indexes, replication, collection copy
 
 
 ## WouldChangeOwningShardBatchWrite
@@ -5541,9 +5541,9 @@ Simulates a long pipeline with 20 $addField stages funneled into a tumbling wind
 The goal is to test the performance of both $addField and streaming pipelines with
 many stages.
 
-  
+
 ### Keywords
-streams 
+streams
 
 
 ## LargeHoppingWindow
@@ -5562,9 +5562,9 @@ workload tests the ingestion throughput when the window is open and never closes
 of this workload tests the flush throughput when the window is closed and all the group documents
 are flushed to the sink.
 
-  
+
 ### Keywords
-streams 
+streams
 
 
 ## LargeTumblingWindow
@@ -5582,9 +5582,9 @@ of this workload tests the ingestion throughput when the window is open and neve
 part of this workload tests the flush throughput when the window is closed and all the group documents
 are flushed to the sink.
 
-  
+
 ### Keywords
-streams 
+streams
 
 
 ## LargeWindowMixed
@@ -5601,9 +5601,9 @@ seconds on a tumbling window with an interval of 1 second and an allow lateness 
 Each window will ingest 1.6M documents, with ~400k unique keys, so each window on close will
 output atmost 400k documents.
 
-  
+
 ### Keywords
-streams 
+streams
 
 
 ## LargeWindowUniqueAndExistingKeys
@@ -5621,9 +5621,9 @@ scenario where every document results in inserting a new key into the window. Th
 documents will all have an existing auction ID will measure the performance of the scenario where
 every document results in updating an existing key in the window.
 
-  
+
 ### Keywords
-streams 
+streams
 
 
 ## Passthrough
@@ -5637,9 +5637,9 @@ BatchSize: 1k
 Simulates the scenario where the input and output of documents for a stream processor is a
 one-to-one ratio. This applies a simple projection on incoming documents (currency conversion).
 
-  
+
 ### Keywords
-streams 
+streams
 
 
 ## Passthrough_ChangeStreamSource
@@ -5655,9 +5655,9 @@ one-to-one ratio. This applies a simple projection on incoming documents (curren
 The difference with this workload versus Passthrough.yml is that this uses a mongo change stream
 as the source rather than the in-memory source operator.
 
-  
+
 ### Keywords
-streams 
+streams
 
 
 ## Passthrough_MongoSink
@@ -5673,9 +5673,9 @@ one-to-one ratio. This applies a simple projection on incoming documents (curren
 The difference with this workload versus Passthrough.yml is that this uses a $merge MongoDB sink
 rather than the no-op sink operator.
 
-  
+
 ### Keywords
-streams 
+streams
 
 
 ## Search
@@ -5691,9 +5691,9 @@ small portion of the ingested documents. In this specific case, 8M documents
 are ingested but the $match stage will only match against ~0.3% of the ingested
 documents.
 
-  
+
 ### Keywords
-streams 
+streams
 
 
 ## StreamsLookup
@@ -5709,9 +5709,9 @@ Simulates the scenario where incoming data needs to be merged with a foreign mon
 and then propagated to a tumbling window which groups by a foreign column that was fetched
 from the $lookup (join) on the foreign mongoDB collection.
 
-  
+
 ### Keywords
-streams 
+streams
 
 
 ## TopKPerWindow
@@ -5727,47 +5727,47 @@ groups by a large key (URL), then sorts by the aggregated price, and only emits
 the top 1k aggregated documents by price. All 8M documents will have a random URL
 assigned to them.
 
-  
+
 ### Keywords
-streams 
+streams
 
-
-## Q1
-### Owner
+## TPCH Denormalized Scale 1
+### Q1
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 1 against the denormalized schema for scale 1.
 
 
 
-## Q10
-### Owner
+### Q10
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 10 against the denormalized schema for scale 1.
 
 
 
-## Q11
-### Owner
+### Q11
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 11 against the denormalized schema for scale 1.
 
 
 
-## Q12
-### Owner
+### Q12
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 12 against the denormalized schema for scale 1.
 
 
 
-## Q13
-### Owner
+### Q13
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 13 against the denormalized schema for scale 1.
 
 
@@ -5780,130 +5780,130 @@ Run TPC-H query 14 against the denormalized schema for scale 1.
 
 
 
-## Q15
-### Owner
+### Q15
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 15 against the denormalized schema for scale 1.
 
 
 
-## Q16
-### Owner
+### Q16
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 16 against the denormalized schema for scale 1.
 
 
 
-## Q17
-### Owner
+### Q17
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 17 against the denormalized schema for scale 1.
 
 
 
-## Q18
-### Owner
+### Q18
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 18 against the denormalized schema for scale 1.
 
 
 
-## Q19
-### Owner
+### Q19
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 19 against the denormalized schema for scale 1.
 
 
 
-## Q2
-### Owner
+### Q2
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 2 against the denormalized schema for scale 1.
 
 
 
-## Q20
-### Owner
+### Q20
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 20 against the denormalized schema for scale 1.
 
 
 
-## Q21
-### Owner
+### Q21
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 21 against the denormalized schema for scale 1.
 
 
 
-## Q22
-### Owner
+### Q22
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 22 against the denormalized schema for scale 1.
 
 
 
-## Q3
-### Owner
+### Q3
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 3 against the denormalized schema for scale 1.
 
 
 
-## Q4
-### Owner
+### Q4
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 4 against the denormalized schema for scale 1.
 
 
 
-## Q5
-### Owner
+### Q5
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 5 against the denormalized schema for scale 1.
 
 
 
-## Q6
-### Owner
+### Q6
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 6 against the denormalized schema for scale 1.
 
 
 
-## Q7
-### Owner
+### Q7
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 7 against the denormalized schema for scale 1.
 
 
 
-## Q8
-### Owner
+### Q8
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 8 against the denormalized schema for scale 1.
 
 
 
-## Q9
-### Owner
+### Q9
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 9 against the denormalized schema for scale 1.
 
 
@@ -5943,179 +5943,179 @@ Run an artifical TPC-H query to get the biggest EUROPE orders against the denorm
 scale 10.
 
 
-
-## Q1
-### Owner
+## TPCH Denormalized Scale 10
+### Q1
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 1 against the denormalized schema for scale 10.
 
 
 
-## Q10
-### Owner
+### Q10
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 10 against the denormalized schema for scale 10.
 
 
 
-## Q11
-### Owner
+### Q11
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 11 against the denormalized schema for scale 10.
 
 
 
-## Q12
-### Owner
+### Q12
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 12 against the denormalized schema for scale 10.
 
 
 
-## Q13
-### Owner
+### Q13
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 13 against the denormalized schema for scale 10.
 
 
 
-## Q14
-### Owner
+### Q14
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 14 against the denormalized schema for scale 10.
 
 
 
-## Q15
-### Owner
+### Q15
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 15 against the denormalized schema for scale 10.
 
 
 
-## Q16
-### Owner
+### Q16
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 16 against the denormalized schema for scale 10.
 
 
 
-## Q17
-### Owner
+### Q17
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 17 against the denormalized schema for scale 10.
 
 
 
-## Q18
-### Owner
+### Q18
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 18 against the denormalized schema for scale 10.
 
 
 
-## Q19
-### Owner
+### Q19
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 19 against the denormalized schema for scale 10.
 
 
 
-## Q2
-### Owner
+### Q2
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 2 against the denormalized schema for scale 10.
 
 
 
-## Q20
-### Owner
+### Q20
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 20 against the denormalized schema for scale 10.
 
 
 
-## Q21
-### Owner
+### Q21
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 21 against the denormalized schema for scale 10.
 
 
 
-## Q22
-### Owner
+### Q22
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 22 against the denormalized schema for scale 10.
 
 
 
-## Q3
-### Owner
+### Q3
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 3 against the denormalized schema for scale 10.
 
 
 
-## Q4
-### Owner
+### Q4
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 4 against the denormalized schema for scale 10.
 
 
 
-## Q5
-### Owner
+### Q5
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 5 against the denormalized schema for scale 10.
 
 
 
-## Q6
-### Owner
+### Q6
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 6 against the denormalized schema for scale 10.
 
 
 
-## Q7
-### Owner
+### Q7
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 7 against the denormalized schema for scale 10.
 
 
 
-## Q8
-### Owner
+### Q8
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 8 against the denormalized schema for scale 10.
 
 
 
-## Q9
-### Owner
+### Q9
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 9 against the denormalized schema for scale 10.
 
 
@@ -6146,179 +6146,179 @@ The test control for TPC-H expects a validate.yml file to exist in all TPC-H sca
 We don't need validation on scale 10, so this is just a Nop.
 
 
-
-## Q1
-### Owner
+## TPCH Normalized Scale 1
+### Q1
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 1 against the normalized schema for scale 1.
 
 
 
-## Q10
-### Owner
+### Q10
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 10 against the normalized schema for scale 1.
 
 
 
-## Q11
-### Owner
+### Q11
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 11 against the normalized schema for scale 1.
 
 
 
-## Q12
-### Owner
+### Q12
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 12 against the normalized schema for scale 1.
 
 
 
-## Q13
-### Owner
+### Q13
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 13 against the normalized schema for scale 1.
 
 
 
-## Q14
-### Owner
+### Q14
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 14 against the normalized schema for scale 1.
 
 
 
-## Q15
-### Owner
+### Q15
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 15 against the normalized schema for scale 1.
 
 
 
-## Q16
-### Owner
+### Q16
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 16 against the normalized schema for scale 1.
 
 
 
-## Q17
-### Owner
+### Q17
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 17 against the normalized schema for scale 1.
 
 
 
-## Q18
-### Owner
+### Q18
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 18 against the normalized schema for scale 1.
 
 
 
-## Q19
-### Owner
+### Q19
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 19 against the normalized schema for scale 1.
 
 
 
-## Q2
-### Owner
+### Q2
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 2 against the normalized schema for scale 1.
 
 
 
-## Q20
-### Owner
+### Q20
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 20 against the normalized schema for scale 1.
 
 
 
-## Q21
-### Owner
+### Q21
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 21 against the normalized schema for scale 1.
 
 
 
-## Q22
-### Owner
+### Q22
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 22 against the normalized schema for scale 1.
 
 
 
-## Q3
-### Owner
+### Q3
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 3 against the normalized schema for scale 1.
 
 
 
-## Q4
-### Owner
+### Q4
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 4 against the normalized schema for scale 1.
 
 
 
-## Q5
-### Owner
+### Q5
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 5 against the normalized schema for scale 1.
 
 
 
-## Q6
-### Owner
+### Q6
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 6 against the normalized schema for scale 1.
 
 
 
-## Q7
-### Owner
+### Q7
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 7 against the normalized schema for scale 1.
 
 
 
-## Q8
-### Owner
+### Q8
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 8 against the normalized schema for scale 1.
 
 
 
-## Q9
-### Owner
+### Q9
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 9 against the normalized schema for scale 1.
 
 
@@ -6331,179 +6331,179 @@ Validate TPC_H normalized queries for scale 1. Note that numeric comparison is n
 the AssertiveActor only ensures that any two values of numeric type are approximately equal according to a hard-coded limit.
 
 
-
-## Q1
-### Owner
+## TPCH Normalized Scale 10
+### Q1
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 1 against the normalized schema for scale 10.
 
 
 
-## Q10
-### Owner
+### Q10
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 10 against the normalized schema for scale 10.
 
 
 
-## Q11
-### Owner
+### Q11
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 11 against the normalized schema for scale 10.
 
 
 
-## Q12
-### Owner
+### Q12
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 12 against the normalized schema for scale 10.
 
 
 
-## Q13
-### Owner
+### Q13
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 13 against the normalized schema for scale 10.
 
 
 
-## Q14
-### Owner
+### Q14
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 14 against the normalized schema for scale 10.
 
 
 
-## Q15
-### Owner
+### Q15
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 15 against the normalized schema for scale 10.
 
 
 
-## Q16
-### Owner
+### Q16
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 16 against the normalized schema for scale 10.
 
 
 
-## Q17
-### Owner
+### Q17
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 17 against the normalized schema for scale 10.
 
 
 
-## Q18
-### Owner
+### Q18
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 18 against the normalized schema for scale 10.
 
 
 
-## Q19
-### Owner
+### Q19
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 19 against the normalized schema for scale 10.
 
 
 
-## Q2
-### Owner
+### Q2
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 2 against the normalized schema for scale 10.
 
 
 
-## Q20
-### Owner
+### Q20
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 20 against the normalized schema for scale 10.
 
 
 
-## Q21
-### Owner
+### Q21
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 21 against the normalized schema for scale 10.
 
 
 
-## Q22
-### Owner
+### Q22
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 22 against the normalized schema for scale 10.
 
 
 
-## Q3
-### Owner
+### Q3
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 3 against the normalized schema for scale 10.
 
 
 
-## Q4
-### Owner
+### Q4
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 4 against the normalized schema for scale 10.
 
 
 
-## Q5
-### Owner
+### Q5
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 5 against the normalized schema for scale 10.
 
 
 
-## Q6
-### Owner
+### Q6
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 6 against the normalized schema for scale 10.
 
 
 
-## Q7
-### Owner
+### Q7
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 7 against the normalized schema for scale 10.
 
 
 
-## Q8
-### Owner
+### Q8
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 8 against the normalized schema for scale 10.
 
 
 
-## Q9
-### Owner
+### Q9
+#### Owner
 @mongodb/product-query
-### Description
+#### Description
 Run TPC-H query 9 against the normalized schema for scale 10.
 
 
@@ -6523,9 +6523,9 @@ We don't need validation on scale 10, so this is just a Nop.
 ### Description
 Workload to Benchmark the effect of LongLivedTransactions on an Update workload.
 
-  
+
 ### Keywords
-transactions, long lived, snapshot, update 
+transactions, long lived, snapshot, update
 
 
 ## LLTMixed
@@ -6547,9 +6547,9 @@ Duration:      Short|Medium|Long
 Type of test:  Baseline|Benchmark
 Baseline without scans, benchmark with scans
 
-  
+
 ### Keywords
-transactions, longLived, snapshot, insert, find, update, delete 
+transactions, longLived, snapshot, insert, find, update, delete
 
 
 ## LLTMixedSmall
