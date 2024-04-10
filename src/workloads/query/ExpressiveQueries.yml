@@ -118,6 +118,10 @@ Actors:
         createIndexes: Collection0
         indexes:
         - key:
+            address.state: 1
+            policies.policyType: 1
+            policies.insured_person.smoking: 1
+            gender: 1
             dob: 1
           name: usefulIndex
   - *Nop
@@ -138,11 +142,19 @@ Actors:
       OperationName: find
       OperationCommand:
         Filter: &filter {
+          gender: "Female",
           dob: {
             # Currently, using generator is the only way to generate date value with the appropriate BSON type.
             # TODO: PERF-2084 Use ^Date instead.
             $gte: {^RandomDate: {min: "1990-01-01", max: "1990-01-01T00:00:00.001"}},
             $lte: {^RandomDate: {min: "1990-12-31", max: "1990-12-31T00:00:00.001"}}
+          },
+          address.state: "UT",
+          policies: {
+            $elemMatch: {
+              policyType: "life",
+              insured_person.smoking: 1
+            }
           }
         }
   - Repeat: 100
