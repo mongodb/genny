@@ -230,4 +230,4 @@ AutoRun:
       - atlas-like-replica-query-stats.2023-09
     branch_name:
       $gte:
-        v7.0
+        v6.0
