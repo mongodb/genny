@@ -20,6 +20,9 @@
 # Workload Configuration
 /src/workloads    @mongodb/performance
 /src/phases       @mongodb/performance
+# There is a list of workloads in this file that needs to be kept up to date
+src/lamplib/src/genny/tasks/dry_run.py @mongodb/performance
+
 
 # Genny Core Components
 /cmake            @mongodb/devprod-performance-infrastructure
