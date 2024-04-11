@@ -4827,6 +4827,41 @@ it uses a ^Once generator to generate the arrays once during initialization.
 
 
 
+## LargeIndexedInsMatchingDocuments
+### Owner
+@mongodb/product-perf
+### Description
+This is an indexed $in workload that matches documents in a collection.
+This workload is intended to test a more representative workload
+
+An extremely common usecase for users is to fetch objects and hydrate with follow up $in query
+
+For example:
+The first query fetches an Author object
+{
+  type: "author",
+  name: "Tyler",
+  posts: [ObjectId(1), ObjectId(2), ObjectId(3)],
+}
+
+The second query fetches the related, but not embedded/denormalized objects
+
+{ $in: [ObjectId(1), ObjectId(2), ObjectId(3)] }
+
+This workload focuses on the second query of this use case matching documents
+using arrays of integers that are generated to be used for the $in queries.
+
+The important metrics for this workload are:
+  * FindBlogPostsById.find and FindBlogPostsByAuthor.find
+    * DocumentThroughput # Documents matched for the entire duration of the phase.
+    * OperationThroughput # how many queries per second were achieved.
+  Since this workload finds all the documents in the query the DocumentThroughput should be equal to `OperationThroughput * filterArraySize`
+
+  
+### Keywords
+Loader, CrudActor, find, $in, matching documents using $in 
+
+
 ## LargeScaleLongLived
 ### Owner
 Storage Engines
