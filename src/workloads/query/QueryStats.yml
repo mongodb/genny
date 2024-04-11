@@ -228,6 +228,7 @@ AutoRun:
     mongodb_setup:
       $eq:
       - atlas-like-replica-query-stats.2023-09
+      - replica-query-stats-rate-limit
     branch_name:
       $gte:
         v6.0
