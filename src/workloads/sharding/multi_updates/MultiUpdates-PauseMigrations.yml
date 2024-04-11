@@ -18,4 +18,5 @@ AutoRun:
     mongodb_setup:
       $eq:
       # TODO SERVER-73555: Run on all variants in MultiUpdates.yml, but only in branches where the feature flag is enabled.
+      - shard-lite-80-feature-flags
       - shard-lite-all-feature-flags

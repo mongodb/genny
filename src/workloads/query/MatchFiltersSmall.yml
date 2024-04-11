@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
-Description: >
+Description: |
   This workload tests a set of filters in the match language. The actors below offer basic
   performance coverage for said filters.
 
@@ -24,6 +24,7 @@ AutoRun:
       - atlas
       - replica
       - standalone
+      - standalone-80-feature-flags
       - standalone-all-feature-flags
       - standalone-classic-query-engine
       - standalone-query-stats

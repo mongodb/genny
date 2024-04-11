@@ -23,7 +23,7 @@ GlobalDefaults:
     andValues: {resultCount: *resultCount, docCount: *docCount}}}
 
   maxPhase: &maxPhase 7
-  queryRepeats: &queryRepeats 1000
+  queryRepeats: &queryRepeats 500
 
 Actors:
 - Name: DropCollection
@@ -65,10 +65,6 @@ Actors:
       collection: *coll
       docCount: *docCount
       document: {
-        # Genny's random generators appear to be repeatable, so we might as well
-        # make '_id' explicit to make the overall dataset repeatable. Omitting
-        # '_id' would make it auto-generated based on a timestamp.
-        _id: {^Inc: {start: 0}},
         unindexed: &distribution {^RandomDouble: {distribution: uniform, min: 0.0, max: 1.0}},
         x1: *distribution,
         x2: *distribution,
@@ -403,6 +399,7 @@ AutoRun:
     mongodb_setup:
       $eq:
       - standalone-sbe
+      - standalone-80-feature-flags # At time of writing this will enable PM-3591.
       - standalone-all-feature-flags  # At time of writing this will enable PM-3591.
       - standalone-classic-query-engine
     branch_name:

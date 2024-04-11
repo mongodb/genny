@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/security"
-Description: >-
+Description: |-
     Invoke replSetTestEgress command on replica set members.
     Command synchronously establishes temporary connections between cluster nodes.
 

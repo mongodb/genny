@@ -18,7 +18,8 @@ AutoRun:
       - replica
       - single-replica
       - standalone
-      - standalone-all-feature-flags 
+      - standalone-80-feature-flags
+      - standalone-all-feature-flags
       - standalone-classic-query-engine
       - standalone-heuristic-bonsai
       - standalone-sampling-bonsai

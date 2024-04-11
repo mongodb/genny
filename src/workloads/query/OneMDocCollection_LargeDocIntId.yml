@@ -115,10 +115,12 @@ AutoRun:
 - When:
     mongodb_setup:
       $eq:
+      - standalone-80-feature-flags
       - standalone-all-feature-flags
       - standalone
       - standalone-query-stats
       - shard
+      - shard-80-feature-flags
       - shard-query-stats
       - shard-lite
       - single-replica

@@ -3,7 +3,7 @@ Owner: "@mongodb/query"
 Description: |
   The goal of this test is to exercise multiplanning. We create as many indexes as possible, and run
   a query that makes all of them eligible, so we get as many competing plans as possible. We also
-  add a sort stage on an unindexed field, ensuring that every plan is a blocking plan. Because all 
+  add a sort stage on an unindexed field, ensuring that every plan is a blocking plan. Because all
   plans are blocking and return as many documents as possible, multiplanning will hit "max works"
   instead of EOF of numToReturn. This maximizes the overhead of multiplanning on both classic and SBE.
 
@@ -19,7 +19,7 @@ GlobalDefaults:
   docCount: &docCount 1e5
 
   maxPhase: &maxPhase 7
-  queryRepeats: &queryRepeats 1000
+  queryRepeats: &queryRepeats 50
 
 Actors:
 - Name: DropCollection
@@ -61,10 +61,6 @@ Actors:
       collection: *coll
       docCount: *docCount
       document: {
-        # Genny's random generators appear to be repeatable, so we might as well
-        # make '_id' explicit to make the overall dataset repeatable. Omitting
-        # '_id' would make it auto-generated based on a timestamp.
-        _id: {^Inc: {start: 0}},
         x1: &distribution {^RandomDouble: {distribution: uniform, min: 0.0, max: 1.0}},
         x2: *distribution,
         x3: *distribution,
@@ -397,6 +393,7 @@ AutoRun:
     mongodb_setup:
       $eq:
       - standalone-sbe
+      - standalone-80-feature-flags # At time of writing this will enable PM-3591.
       - standalone-all-feature-flags  # At time of writing this will enable PM-3591.
       - standalone-classic-query-engine
     branch_name:

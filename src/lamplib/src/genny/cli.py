@@ -572,11 +572,27 @@ def self_test(ctx: click.Context):
 
 
 @cli.command(name="lint-yaml", help="Run pylint on all workload and phase yamls")
+@click.option(
+    "--format/--no-format",
+    "lint_format",
+    is_flag=True,
+    help="Do not lint the yaml formatting.",
+    default=False,
+    type=bool,
+)
 @click.pass_context
-def lint_yaml(ctx: click.Context):
+def lint_yaml(ctx: click.Context, lint_format: bool):
     from genny.tasks import yaml_linter
 
-    yaml_linter.main(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"])
+    yaml_linter.main(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], lint_format=lint_format)
+
+
+@cli.command(name="generate-docs", help="Generate documentation for all workloads.")
+@click.pass_context
+def generate_docs(ctx: click.Context):
+    from genny.tasks import documentation_generator
+
+    documentation_generator.main(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"])
 
 
 @cli.command(

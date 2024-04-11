@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
-Description: >
+Description: |
   This test exercises the behavior of '$setWindowFields' with sliding windows. Both time and
   position based windows are tested. In an attempt to reduce noise, the collection size has been
   kept sufficiently small so that neither the partitioning nor the sorting, in the case of time
@@ -773,10 +773,12 @@ AutoRun:
     mongodb_setup:
       $eq:
       - standalone
+      - standalone-80-feature-flags
       - standalone-all-feature-flags
       - standalone-classic-query-engine
       - standalone-sbe
       - replica
+      - replica-80-feature-flags
       - replica-all-feature-flags
       - shard-lite
     branch_name:

@@ -55,210 +55,212 @@ Actors:
       collection: *coll
 
 - Name: CreateDataset
-  LoadConfig:
-    Path: "../../../phases/query/Multiplanner.yml"
-    Key: InsertTemplate
-    Parameters:
-      database: *db
-      threads: 1
-      active: [1]
-      nopInPhasesUpTo: *maxPhase
-      repeat: 1
-      collection: *coll
-      docCount: *docCount
-      document: {
-        _id: {^FastRandomString: {length: 512}},
-        x1: &distribution {^RandomDouble: {distribution: uniform, min: 0.0, max: 1.0}},
-        x2: *distribution,
-        x3: *distribution,
-        x4: *distribution,
-        x5: *distribution,
-        x6: *distribution,
-        x7: *distribution,
-        x8: *distribution,
-        x9: *distribution,
-        x10: *distribution,
-        x11: *distribution,
-        x12: *distribution,
-        x13: *distribution,
-        x14: *distribution,
-        x15: *distribution,
-        x16: *distribution,
-        x17: *distribution,
-        x18: *distribution,
-        x19: *distribution,
-        x20: *distribution,
-        x21: *distribution,
-        x22: *distribution,
-        x23: *distribution,
-        x24: *distribution,
-        x25: *distribution,
-        x26: *distribution,
-        x27: *distribution,
-        x28: *distribution,
-        x29: *distribution,
-        x30: *distribution,
-        x31: *distribution,
-        x32: *distribution,
-        x33: *distribution,
-        x34: *distribution,
-        x35: *distribution,
-        x36: *distribution,
-        x37: *distribution,
-        x38: *distribution,
-        x39: *distribution,
-        x40: *distribution,
-        x41: *distribution,
-        x42: *distribution,
-        x43: *distribution,
-        x44: *distribution,
-        x45: *distribution,
-        x46: *distribution,
-        x47: *distribution,
-        x48: *distribution,
-        x49: *distribution,
-        x50: *distribution,
-        x51: *distribution,
-        x52: *distribution,
-        x53: *distribution,
-        x54: *distribution,
-        x55: *distribution,
-        x56: *distribution,
-        x57: *distribution,
-        x58: *distribution,
-        x59: *distribution,
-        x60: *distribution,
-        x61: *distribution,
-        x62: *distribution,
-        x63: *distribution
-      }
-      indexes:
-      - keys: {x1: 1}
-        options: {name: index1}
-      - keys: {x2: 1}
-        options: {name: index2}
-      - keys: {x3: 1}
-        options: {name: index3}
-      - keys: {x4: 1}
-        options: {name: index4}
-      - keys: {x5: 1}
-        options: {name: index5}
-      - keys: {x6: 1}
-        options: {name: index6}
-      - keys: {x7: 1}
-        options: {name: index7}
-      - keys: {x8: 1}
-        options: {name: index8}
-      - keys: {x9: 1}
-        options: {name: index9}
-      - keys: {x10: 1}
-        options: {name: index10}
-      - keys: {x11: 1}
-        options: {name: index11}
-      - keys: {x12: 1}
-        options: {name: index12}
-      - keys: {x13: 1}
-        options: {name: index13}
-      - keys: {x14: 1}
-        options: {name: index14}
-      - keys: {x15: 1}
-        options: {name: index15}
-      - keys: {x16: 1}
-        options: {name: index16}
-      - keys: {x17: 1}
-        options: {name: index17}
-      - keys: {x18: 1}
-        options: {name: index18}
-      - keys: {x19: 1}
-        options: {name: index19}
-      - keys: {x20: 1}
-        options: {name: index20}
-      - keys: {x21: 1}
-        options: {name: index21}
-      - keys: {x22: 1}
-        options: {name: index22}
-      - keys: {x23: 1}
-        options: {name: index23}
-      - keys: {x24: 1}
-        options: {name: index24}
-      - keys: {x25: 1}
-        options: {name: index25}
-      - keys: {x26: 1}
-        options: {name: index26}
-      - keys: {x27: 1}
-        options: {name: index27}
-      - keys: {x28: 1}
-        options: {name: index28}
-      - keys: {x29: 1}
-        options: {name: index29}
-      - keys: {x30: 1}
-        options: {name: index30}
-      - keys: {x31: 1}
-        options: {name: index31}
-      - keys: {x32: 1}
-        options: {name: index32}
-      - keys: {x33: 1}
-        options: {name: index33}
-      - keys: {x34: 1}
-        options: {name: index34}
-      - keys: {x35: 1}
-        options: {name: index35}
-      - keys: {x36: 1}
-        options: {name: index36}
-      - keys: {x37: 1}
-        options: {name: index37}
-      - keys: {x38: 1}
-        options: {name: index38}
-      - keys: {x39: 1}
-        options: {name: index39}
-      - keys: {x40: 1}
-        options: {name: index40}
-      - keys: {x41: 1}
-        options: {name: index41}
-      - keys: {x42: 1}
-        options: {name: index42}
-      - keys: {x43: 1}
-        options: {name: index43}
-      - keys: {x44: 1}
-        options: {name: index44}
-      - keys: {x45: 1}
-        options: {name: index45}
-      - keys: {x46: 1}
-        options: {name: index46}
-      - keys: {x47: 1}
-        options: {name: index47}
-      - keys: {x48: 1}
-        options: {name: index48}
-      - keys: {x49: 1}
-        options: {name: index49}
-      - keys: {x50: 1}
-        options: {name: index50}
-      - keys: {x51: 1}
-        options: {name: index51}
-      - keys: {x52: 1}
-        options: {name: index52}
-      - keys: {x53: 1}
-        options: {name: index53}
-      - keys: {x54: 1}
-        options: {name: index54}
-      - keys: {x55: 1}
-        options: {name: index55}
-      - keys: {x56: 1}
-        options: {name: index56}
-      - keys: {x57: 1}
-        options: {name: index57}
-      - keys: {x58: 1}
-        options: {name: index58}
-      - keys: {x59: 1}
-        options: {name: index59}
-      - keys: {x60: 1}
-        options: {name: index60}
-      - keys: {x61: 1}
-        options: {name: index61}
-      - keys: {x62: 1}
-        options: {name: index62}
-      - keys: {x63: 1}
-        options: {name: index63}
+  Type: Loader
+  Threads: 4
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *maxPhase
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        MultipleThreadsPerCollection: true
+        CollectionCount: 1
+        DocumentCount: *docCount
+        BatchSize: 1000
+        Document: {
+          _id: {^FastRandomString: {length: 512}},
+          x1: &distribution {^RandomDouble: {distribution: uniform, min: 0.0, max: 1.0}},
+          x2: *distribution,
+          x3: *distribution,
+          x4: *distribution,
+          x5: *distribution,
+          x6: *distribution,
+          x7: *distribution,
+          x8: *distribution,
+          x9: *distribution,
+          x10: *distribution,
+          x11: *distribution,
+          x12: *distribution,
+          x13: *distribution,
+          x14: *distribution,
+          x15: *distribution,
+          x16: *distribution,
+          x17: *distribution,
+          x18: *distribution,
+          x19: *distribution,
+          x20: *distribution,
+          x21: *distribution,
+          x22: *distribution,
+          x23: *distribution,
+          x24: *distribution,
+          x25: *distribution,
+          x26: *distribution,
+          x27: *distribution,
+          x28: *distribution,
+          x29: *distribution,
+          x30: *distribution,
+          x31: *distribution,
+          x32: *distribution,
+          x33: *distribution,
+          x34: *distribution,
+          x35: *distribution,
+          x36: *distribution,
+          x37: *distribution,
+          x38: *distribution,
+          x39: *distribution,
+          x40: *distribution,
+          x41: *distribution,
+          x42: *distribution,
+          x43: *distribution,
+          x44: *distribution,
+          x45: *distribution,
+          x46: *distribution,
+          x47: *distribution,
+          x48: *distribution,
+          x49: *distribution,
+          x50: *distribution,
+          x51: *distribution,
+          x52: *distribution,
+          x53: *distribution,
+          x54: *distribution,
+          x55: *distribution,
+          x56: *distribution,
+          x57: *distribution,
+          x58: *distribution,
+          x59: *distribution,
+          x60: *distribution,
+          x61: *distribution,
+          x62: *distribution,
+          x63: *distribution
+        }
+        Indexes:
+        - keys: {x1: 1}
+          options: {name: index1}
+        - keys: {x2: 1}
+          options: {name: index2}
+        - keys: {x3: 1}
+          options: {name: index3}
+        - keys: {x4: 1}
+          options: {name: index4}
+        - keys: {x5: 1}
+          options: {name: index5}
+        - keys: {x6: 1}
+          options: {name: index6}
+        - keys: {x7: 1}
+          options: {name: index7}
+        - keys: {x8: 1}
+          options: {name: index8}
+        - keys: {x9: 1}
+          options: {name: index9}
+        - keys: {x10: 1}
+          options: {name: index10}
+        - keys: {x11: 1}
+          options: {name: index11}
+        - keys: {x12: 1}
+          options: {name: index12}
+        - keys: {x13: 1}
+          options: {name: index13}
+        - keys: {x14: 1}
+          options: {name: index14}
+        - keys: {x15: 1}
+          options: {name: index15}
+        - keys: {x16: 1}
+          options: {name: index16}
+        - keys: {x17: 1}
+          options: {name: index17}
+        - keys: {x18: 1}
+          options: {name: index18}
+        - keys: {x19: 1}
+          options: {name: index19}
+        - keys: {x20: 1}
+          options: {name: index20}
+        - keys: {x21: 1}
+          options: {name: index21}
+        - keys: {x22: 1}
+          options: {name: index22}
+        - keys: {x23: 1}
+          options: {name: index23}
+        - keys: {x24: 1}
+          options: {name: index24}
+        - keys: {x25: 1}
+          options: {name: index25}
+        - keys: {x26: 1}
+          options: {name: index26}
+        - keys: {x27: 1}
+          options: {name: index27}
+        - keys: {x28: 1}
+          options: {name: index28}
+        - keys: {x29: 1}
+          options: {name: index29}
+        - keys: {x30: 1}
+          options: {name: index30}
+        - keys: {x31: 1}
+          options: {name: index31}
+        - keys: {x32: 1}
+          options: {name: index32}
+        - keys: {x33: 1}
+          options: {name: index33}
+        - keys: {x34: 1}
+          options: {name: index34}
+        - keys: {x35: 1}
+          options: {name: index35}
+        - keys: {x36: 1}
+          options: {name: index36}
+        - keys: {x37: 1}
+          options: {name: index37}
+        - keys: {x38: 1}
+          options: {name: index38}
+        - keys: {x39: 1}
+          options: {name: index39}
+        - keys: {x40: 1}
+          options: {name: index40}
+        - keys: {x41: 1}
+          options: {name: index41}
+        - keys: {x42: 1}
+          options: {name: index42}
+        - keys: {x43: 1}
+          options: {name: index43}
+        - keys: {x44: 1}
+          options: {name: index44}
+        - keys: {x45: 1}
+          options: {name: index45}
+        - keys: {x46: 1}
+          options: {name: index46}
+        - keys: {x47: 1}
+          options: {name: index47}
+        - keys: {x48: 1}
+          options: {name: index48}
+        - keys: {x49: 1}
+          options: {name: index49}
+        - keys: {x50: 1}
+          options: {name: index50}
+        - keys: {x51: 1}
+          options: {name: index51}
+        - keys: {x52: 1}
+          options: {name: index52}
+        - keys: {x53: 1}
+          options: {name: index53}
+        - keys: {x54: 1}
+          options: {name: index54}
+        - keys: {x55: 1}
+          options: {name: index55}
+        - keys: {x56: 1}
+          options: {name: index56}
+        - keys: {x57: 1}
+          options: {name: index57}
+        - keys: {x58: 1}
+          options: {name: index58}
+        - keys: {x59: 1}
+          options: {name: index59}
+        - keys: {x60: 1}
+          options: {name: index60}
+        - keys: {x61: 1}
+          options: {name: index61}
+        - keys: {x62: 1}
+          options: {name: index62}
+        - keys: {x63: 1}
+          options: {name: index63}
 
 - Name: Quiesce
   Type: QuiesceActor
@@ -400,6 +402,7 @@ AutoRun:
     mongodb_setup:
       $eq:
       - standalone-sbe
+      - standalone-80-feature-flags # At time of writing this will enable PM-3591.
       - standalone-all-feature-flags  # At time of writing this will enable PM-3591.
       - standalone-classic-query-engine
     branch_name:

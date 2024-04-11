@@ -185,8 +185,10 @@ AutoRun:
     mongodb_setup:
       $eq:
       - shard
+      - shard-80-feature-flags
       - shard-heuristic-bonsai
       - shard-lite
+      - shard-lite-80-feature-flags
       - shard-lite-all-feature-flags
     branch_name:
       $neq:

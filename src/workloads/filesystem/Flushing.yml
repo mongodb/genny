@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-perf"
-Description: >
+Description: |
   Run large insertMany's to stress checkpointing, journal flush and dirty memory with {w:majority}.
   The workload runs a single CrudActor targeting:
     - 'test' database, configurable via the Database parameter.

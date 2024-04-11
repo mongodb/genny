@@ -120,6 +120,7 @@ AutoRun:
       # - standalone-all-feature-flags
       # - standalone-sbe
       - replica
+      - replica-80-feature-flags
       - replica-all-feature-flags
     branch_name:
       $neq:
