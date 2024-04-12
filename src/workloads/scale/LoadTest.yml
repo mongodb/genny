@@ -53,7 +53,7 @@ Actors:
         Database: admin
         Operations:
         - OperationName: RunCommand
-          OperationCommand: { profile: 0, slowms: 1000, sampleRate: 0.1 }
+          OperationCommand: { profile: 0, slowms: 5000000, sampleRate: 0.01 }
 
 - Name: InitialNoIndexes
   Type: Loader
