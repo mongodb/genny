@@ -152,7 +152,7 @@ Actors:
     Database: admin
     Operations:
     - OperationName: RunCommand
-      OperationCommand: { profile: 2, slowms: 100, sampleRate: 1 }
+      OperationCommand: { profile: 2, slowms: -1, sampleRate: 1 }
   - *Nop
 
 AutoRun:
