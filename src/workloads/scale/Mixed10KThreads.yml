@@ -23,8 +23,6 @@ Keywords:
 dbname: &dbname mixed_10k
 DocumentCount: &NumDocs 10000
 CollectionCount: &NumColls 1
-Limit: &limit 100
-
 NumPhases: &NumPhases 2
 Document: &doc
   a: {^RandomInt: {min: 0, max: *NumDocs}}
