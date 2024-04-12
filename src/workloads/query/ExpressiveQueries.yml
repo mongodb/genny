@@ -83,6 +83,7 @@ Actors:
       ]}}}}
   - &Nop {Nop: true}
   - *Nop
+  - *nop
 
 - Name: CreateIndex
   Type: RunCommand
@@ -105,6 +106,7 @@ Actors:
             dob: 1
           name: usefulIndex
   - *Nop
+  - *nop
 
 - Name: RunQueries
   Type: CrudActor
@@ -112,6 +114,7 @@ Actors:
   Phases:
   - *Nop
   - *Nop
+  - *nop
   - Repeat: 1
     Duration: 1 minutes
     Database: *DB
@@ -138,6 +141,19 @@ Actors:
         }
         Options:
           Projection: &projection {_id: 0, firstname: 1, lastname: 1, dob: 1}
+
+- Name: LogLevel
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *nop
+  - *nop
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand: { profile: 2, slowms: 100, sampleRate: 1 }
+  - *nop
 
 AutoRun:
 - When:
