@@ -4944,7 +4944,8 @@ PERF-2075 to find the cause of SERVER-48522
 ### Description
 This workload consists of a situation where the server is being contacted by 10k different
 clients to simulate an extreme case of overload in the server. Both reads and writes happen
-at the same time in balanced fashion.
+at the same time in balanced fashion. Find operations are limited to return 10 documents to
+avoid slow decline in performance as more documents are inserted
 
 The metrics to monitor are:
   * ErrorsTotal / ErrorRate: The total number of errors and rate of errors encountered by the workload. Networking
