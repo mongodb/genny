@@ -39,6 +39,10 @@ Clients:
       socketTimeoutMS: -1
       maxPoolSize: 400
       MaxTime: 5 minute
+      connectTimeoutMS: 3_600_000
+      cursor: {MaxTimeMS: 500000}  # The default batch size
+      WriteConcern:
+        TimeoutMillis: 500000
 
 Actors:
 - Name: InitialNoIndexes
