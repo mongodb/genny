@@ -38,6 +38,7 @@ Clients:
     QueryOptions:
       socketTimeoutMS: -1
       maxPoolSize: 400
+      MaxTime: 5 minute
 
 Actors:
 
