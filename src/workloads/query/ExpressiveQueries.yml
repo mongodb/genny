@@ -112,8 +112,7 @@ Actors:
   Phases:
   - *Nop
   - *Nop
-  - Repeat: 1
-    Duration: 1 minutes
+  - Repeat: 10
     Database: *DB
     Collection: Collection0
     Operations:
