@@ -19,14 +19,13 @@ Actors:
 
 - Name: InsertData
   Type: Loader
-  Threads: 4
+  Threads: 1
   Phases:
   - Repeat: 1
     Database: &DB test
     MultipleThreadsPerCollection: true
     CollectionCount: 1  # Collection name will be Collection0, this is not configurable.
-    DocumentCount: 1e6
-    BatchSize: 1000
+    DocumentCount: 100
     Document:
       region: {^RandomInt: {min: 0, max: 1999}}
       firstname: &firstname {^FastRandomString: {length: {^RandomInt: {min: 3, max: 10}}}}
