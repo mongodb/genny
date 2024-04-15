@@ -3915,8 +3915,7 @@ it uses a ^Once generator to generate the arrays once during initialization.
 
 
 
-<<<<<<< HEAD
-## LargeIndexedInsMatchingDocuments
+## [LargeIndexedInsMatchingDocuments](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/LargeIndexedInsMatchingDocuments.yml)
 ### Owner
 @mongodb/product-perf
 ### Description
@@ -3951,10 +3950,7 @@ The important metrics for this workload are:
 Loader, CrudActor, find, $in, matching documents using $in 
 
 
-## LargeScaleLongLived
-=======
 ## [LargeScaleLongLived](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/LargeScaleLongLived.yml)
->>>>>>> d9bc52e3 (DEVPROD-6041 Documentation generation improvements.)
 ### Owner
 Storage Engines
 ### Description
@@ -4175,8 +4171,7 @@ Requires at least 3-node replset.
 
 
 
-<<<<<<< HEAD
-## MultiPlanStormRecordIdDedupIdxScan
+## [MultiPlanStormRecordIdDedupIdxScan](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/MultiPlanStormRecordIdDedupIdxScan.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -4187,7 +4182,7 @@ The workload tests the server under a "multi-plan storm" which results in unboun
 CrudActor, indexes, Loader, memory, planning, scale, stress 
 
 
-## MultiPlanStormSortSkip
+## [MultiPlanStormSortSkip](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/MultiPlanStormSortSkip.yml)
 ### Owner
 @mongodb/query
 ### Description
@@ -4198,10 +4193,7 @@ The workload tests the server under a "multi-plan storm" situation, by letting m
 memory stress, multi-planning, sort, skip, oom, out of memory 
 
 
-## NegativeScalingLoadStress
-=======
 ## [NegativeScalingLoadStress](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/NegativeScalingLoadStress.yml)
->>>>>>> d9bc52e3 (DEVPROD-6041 Documentation generation improvements.)
 ### Owner
 @mongodb/product-perf
 ### Description
