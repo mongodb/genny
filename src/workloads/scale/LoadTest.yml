@@ -89,6 +89,8 @@ Actors:
         Document: *Doc
         DocumentCount: *FinalDocumentCount
         BatchSize: *LoadBatchSize
+        MaxTime: 10 minute
+
 
 - Name: QuiescePhase
   Type: QuiesceActor
@@ -133,4 +135,3 @@ AutoRun:
     branch_name:
       $neq:
       - v4.0
-      
