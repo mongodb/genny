@@ -89,8 +89,7 @@ Actors:
         Document: *Doc
         DocumentCount: *FinalDocumentCount
         BatchSize: *LoadBatchSize
-        MaxTime: 10 minute
-
+        ThrowOnFailure: false
 
 - Name: QuiescePhase
   Type: QuiesceActor
