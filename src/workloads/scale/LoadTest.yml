@@ -38,9 +38,6 @@ Clients:
     QueryOptions:
       socketTimeoutMS: -1
       maxPoolSize: 400
-      MaxTime: 5 minute
-      connectTimeoutMS: 3_600_000
-      cursor: {MaxTimeMS: 500000}  # The default batch size
 
 Actors:
 - Name: InitialNoIndexes
@@ -136,3 +133,4 @@ AutoRun:
     branch_name:
       $neq:
       - v4.0
+      
