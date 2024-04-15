@@ -26,6 +26,7 @@ Actors:
     MultipleThreadsPerCollection: true
     CollectionCount: 1  # Collection name will be Collection0, this is not configurable.
     DocumentCount: 100
+    BatchSize: 10
     Document:
       region: {^RandomInt: {min: 0, max: 1999}}
       firstname: &firstname {^FastRandomString: {length: {^RandomInt: {min: 3, max: 10}}}}
