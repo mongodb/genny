@@ -40,6 +40,21 @@ Clients:
       maxPoolSize: 400
 
 Actors:
+- Name: setDefaultConfigCommandTimeoutMS
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Operation:
+          OperationName: RunCommand
+          OperationCommand:
+            setParameter: 1
+            defaultConfigCommandTimeoutMS: 50000 # 50 seconds
+
 - Name: InitialNoIndexes
   Type: Loader
   Threads: *LoadThreads
@@ -97,7 +112,7 @@ Actors:
   Database: *dbname
   Phases:
     OnlyActiveInPhases:
-      Active: [0, 2, 4]
+      Active: [2, 4]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
