@@ -112,7 +112,8 @@ Actors:
   Phases:
   - *Nop
   - *Nop
-  - Repeat: 1000
+  - Repeat: 1000  # This query is very fast, so we need to run it more times than others.
+    Duration: 5 minutes
     Database: *DB
     Collection: Collection0
     Operations:
