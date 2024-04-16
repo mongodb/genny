@@ -40,16 +40,18 @@ Clients:
       maxPoolSize: 400
 
 Actors:
-- Name: setDefaultConfigCommandTimeoutMS
-  Type: AdminCommand
+- Name: SelectDeleteExecutor
+  Type: RunCommand
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
+      Active: [1]
+      NopInPhasesUpTo: *NumPhases
       PhaseConfig:
         Repeat: 1
+        Database: admin
         Operation:
+          OperationMetricsName: SelectDeleteExecutor
           OperationName: RunCommand
           OperationCommand:
             setParameter: 1
