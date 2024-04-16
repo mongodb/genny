@@ -46,7 +46,7 @@ Actors:
   Phases:
     OnlyActiveInPhases:
       Active: [1]
-      NopInPhasesUpTo: *NumPhases
+      NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: 1
         Database: admin
