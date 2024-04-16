@@ -1,0 +1,26 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-query"
+Description: |
+  Run TPC-H query 22 against the denormalized schema for scale 10.
+
+Clients:
+  Default:
+    QueryOptions:
+      socketTimeoutMS: -1
+
+Actors:
+- Name: TPCHDenormalizedQuery22Explain
+  Type: RunCommand
+  Database: tpch
+  Phases:
+  - Nop: true
+
+# TODO: PERF-2995 uncomment
+# Error message: document constructed by $facet is 104857668 bytes, which exceeds the limit of 104857600 bytes
+# - Name: TPCHDenormalizedQuery22Explain
+#   Type: RunCommand
+#   Database: tpch
+#   Phases:
+#   - LoadConfig:
+#       Path: ../../../../phases/tpch/normalized/Q22_normalized.yml
+#       Key: TPCHDenormalizedQuery22Explain

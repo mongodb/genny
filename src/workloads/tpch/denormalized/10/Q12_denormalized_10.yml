@@ -1,0 +1,18 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-query"
+Description: |
+  Run TPC-H query 12 against the denormalized schema for scale 10.
+
+Clients:
+  Default:
+    QueryOptions:
+      socketTimeoutMS: -1
+
+Actors:
+- Name: TPCHDenormalizedQuery12Explain
+  Type: RunCommand
+  Database: tpch
+  Phases:
+  - LoadConfig:
+      Path: ../../../../phases/tpch/denormalized/Q12_denormalized.yml
+      Key: TPCHDenormalizedQuery12Explain

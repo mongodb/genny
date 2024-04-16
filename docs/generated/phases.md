@@ -481,7 +481,7 @@ respectively.
 AdminCommand, MonotonicSingleLoader, CrudActor, updateMany, sharding 
 
 
-## [AvgAcctBal](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/AvgAcctBal.yml)
+## [AvgAcctBal_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/AvgAcctBal_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -491,7 +491,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [AvgItemCost](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/AvgItemCost.yml)
+## [AvgItemCost_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/AvgItemCost_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -501,7 +501,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [BiggestOrders](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/BiggestOrders.yml)
+## [BiggestOrders_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/BiggestOrders_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -511,16 +511,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q1](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q1.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 1 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## [Q10](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q10.yml)
+## [Q10_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q10_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -529,7 +520,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q11](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q11.yml)
+## [Q11_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q11_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -538,7 +529,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q12](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q12.yml)
+## [Q12_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q12_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -547,7 +538,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q13](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q13.yml)
+## [Q13_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q13_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -556,7 +547,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q14](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q14.yml)
+## [Q14_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q14_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -565,7 +556,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q15](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q15.yml)
+## [Q15_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q15_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -574,7 +565,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q16](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q16.yml)
+## [Q16_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q16_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -583,7 +574,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q17](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q17.yml)
+## [Q17_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q17_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -592,7 +583,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q18](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q18.yml)
+## [Q18_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q18_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -601,7 +592,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q19](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q19.yml)
+## [Q19_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q19_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -610,16 +601,16 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q2](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q2.yml)
+## [Q1_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q1_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
-Run TPC-H query 2 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+Run TPC-H query 1 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q20](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q20.yml)
+## [Q20_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q20_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -628,7 +619,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q21](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q21.yml)
+## [Q21_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q21_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -637,7 +628,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q22](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q22.yml)
+## [Q22_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q22_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -646,7 +637,16 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q3](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q3.yml)
+## [Q2_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q2_denormalized.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 2 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+## [Q3_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q3_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -655,7 +655,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q4](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q4.yml)
+## [Q4_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q4_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -664,7 +664,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q5](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q5.yml)
+## [Q5_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q5_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -673,7 +673,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q6](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q6.yml)
+## [Q6_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q6_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -682,7 +682,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q7](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q7.yml)
+## [Q7_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q7_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -691,7 +691,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q8](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q8.yml)
+## [Q8_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q8_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -700,7 +700,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q9](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q9.yml)
+## [Q9_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q9_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -709,7 +709,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [TotalLineitemRevenue](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/TotalLineitemRevenue.yml)
+## [TotalLineitemRevenue_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/TotalLineitemRevenue_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -719,7 +719,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [TotalOrderRevenue](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/TotalOrderRevenue.yml)
+## [TotalOrderRevenue_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/TotalOrderRevenue_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -729,16 +729,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q1](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q1.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 1 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## [Q10](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q10.yml)
+## [Q10_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q10_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -747,7 +738,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q11](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q11.yml)
+## [Q11_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q11_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -756,7 +747,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q12](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q12.yml)
+## [Q12_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q12_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -765,7 +756,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q13](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q13.yml)
+## [Q13_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q13_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -774,7 +765,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q14](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q14.yml)
+## [Q14_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q14_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -783,7 +774,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q15](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q15.yml)
+## [Q15_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q15_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -792,7 +783,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q16](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q16.yml)
+## [Q16_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q16_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -801,7 +792,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q17](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q17.yml)
+## [Q17_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q17_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -810,7 +801,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q18](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q18.yml)
+## [Q18_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q18_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -819,7 +810,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q19](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q19.yml)
+## [Q19_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q19_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -828,15 +819,16 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q2](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q2.yml)
+## [Q1_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q1_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
-Run TPC-H query 2 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema.
+Run TPC-H query 1 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q20](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q20.yml)
+## [Q20_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q20_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -845,7 +837,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q21](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q21.yml)
+## [Q21_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q21_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -854,7 +846,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q22](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q22.yml)
+## [Q22_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q22_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -863,7 +855,15 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q3](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q3.yml)
+## [Q2_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q2_normalized.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 2 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema.
+
+
+
+## [Q3_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q3_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -872,7 +872,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q4](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q4.yml)
+## [Q4_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q4_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -881,7 +881,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q5](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q5.yml)
+## [Q5_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q5_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -890,7 +890,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q6](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q6.yml)
+## [Q6_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q6_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -899,7 +899,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q7](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q7.yml)
+## [Q7_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q7_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -908,7 +908,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q8](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q8.yml)
+## [Q8_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q8_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
@@ -917,7 +917,7 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
-## [Q9](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q9.yml)
+## [Q9_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q9_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description

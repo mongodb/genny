@@ -1,0 +1,50 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-query"
+Description: |
+  Run TPC-H query 7 against the denormalized schema for scale 1.
+
+Clients:
+  Default:
+    QueryOptions:
+      socketTimeoutMS: -1
+
+Actors:
+
+# At the start of the workload, the mongod will have been restarted and all caches will have been cleared.
+# This is when we start the cold data run. We use 'executionStats' here to cause each command to run its
+# execution plan until no documents remain, which ensures that the query executes in its entirety.
+# This is also configured to log an explain for the query plan to help debug regressions.
+- Name: TPCHDenormalizedQuery7Cold
+  Type: RunCommand
+  Database: &db tpch
+  Phases:
+  - LoadConfig:
+      Path: ../../../../phases/tpch/denormalized/Q7_denormalized.yml
+      Key: TPCHDenormalizedQuery7Explain
+  - &Nop {Nop: true}
+  - *Nop
+
+# After the cold run, we need to warm up our caches. This is necessary since running aggregations
+# with explain normally does not result in caching of plans.
+- Name: TPCHDenormalizedQuery7Warmup
+  Type: RunCommand
+  Database: *db
+  Phases:
+  - *Nop
+  - LoadConfig:
+      Path: ../../../../phases/tpch/denormalized/Q7_denormalized.yml
+      Key: TPCHDenormalizedQuery7Warmup
+  - *Nop
+
+# After the cold run, our caches should be warmed up.
+- Name: TPCHDenormalizedQuery7Hot
+  Type: RunCommand
+  Database: *db
+  Phases:
+  - *Nop
+  - *Nop
+  - LoadConfig:
+      Path: ../../../../phases/tpch/denormalized/Q7_denormalized.yml
+      Key: TPCHDenormalizedQuery7
+      Parameters:
+        Repeat: 3
