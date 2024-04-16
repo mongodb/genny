@@ -784,22 +784,6 @@ It was merged into a single file when "OnlyRunInInstance: sharded" became an opt
 
 
 
-## [medical_workload-diagnosis-100-0-unencrypted](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/medical_workload-diagnosis-100-0-unencrypted.yml)
-### Owner
-@10gen/server-security
-### Description
-Models the Queryable Encryption acceptance criteria workloads
-
-
-
-## [medical_workload-diagnosis-100-0](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/medical_workload-diagnosis-100-0.yml)
-### Owner
-@10gen/server-security
-### Description
-Models the Queryable Encryption acceptance criteria workloads
-
-
-
 ## [medical_workload-diagnosis-50-50-unencrypted](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/medical_workload-diagnosis-50-50-unencrypted.yml)
 ### Owner
 @10gen/server-security
@@ -809,6 +793,22 @@ Models the Queryable Encryption acceptance criteria workloads
 
 
 ## [medical_workload-diagnosis-50-50](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/medical_workload-diagnosis-50-50.yml)
+### Owner
+@10gen/server-security
+### Description
+Models the Queryable Encryption acceptance criteria workloads
+
+
+
+## [medical_workload-diagnosis-100-0-unencrypted](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/medical_workload-diagnosis-100-0-unencrypted.yml)
+### Owner
+@10gen/server-security
+### Description
+Models the Queryable Encryption acceptance criteria workloads
+
+
+
+## [medical_workload-diagnosis-100-0](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/medical_workload-diagnosis-100-0.yml)
 ### Owner
 @10gen/server-security
 ### Description
@@ -3761,20 +3761,6 @@ Issues dummy reads against both databases used in the light and the heavy phases
 startup, reads 
 
 
-## [BigUpdate](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/BigUpdate.yml)
-### Owner
-@mongodb/product-perf
-### Description
-This workload is developed as a general stress test of the server.
-It loads data into a large number of collections, with 9 indexes on each collection. After loading
-the data, a fraction of the collections are queried, and a smaller fraction of collections are
-updated.
-
-  
-### Keywords
-stress, collections, indexes, update, find, coldData 
-
-
 ## [BigUpdate10k](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/BigUpdate10k.yml)
 ### Owner
 @mongodb/product-perf
@@ -3783,6 +3769,20 @@ This workload is developed as a general stress test of the server. It loads data
 number of collections, with 9 indexes on each collection. After loading the data, a fraction of
 the collections are queried, and a smaller fraction of collections are updated. This is the larger
 version of the test, using 10k collections and 10k documents per collection.
+
+  
+### Keywords
+stress, collections, indexes, update, find, coldData 
+
+
+## [BigUpdate](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/BigUpdate.yml)
+### Owner
+@mongodb/product-perf
+### Description
+This workload is developed as a general stress test of the server.
+It loads data into a large number of collections, with 9 indexes on each collection. After loading
+the data, a fraction of the collections are queried, and a smaller fraction of collections are
+updated.
 
   
 ### Keywords
@@ -4856,6 +4856,78 @@ assigned to them.
 streams 
 
 
+## [Q1_denormalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q1_denormalized_1.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 1 against the denormalized schema for scale 1.
+
+
+
+## [Q2_denormalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q2_denormalized_1.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 2 against the denormalized schema for scale 1.
+
+
+
+## [Q3_denormalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q3_denormalized_1.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 3 against the denormalized schema for scale 1.
+
+
+
+## [Q4_denormalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q4_denormalized_1.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 4 against the denormalized schema for scale 1.
+
+
+
+## [Q5_denormalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q5_denormalized_1.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 5 against the denormalized schema for scale 1.
+
+
+
+## [Q6_denormalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q6_denormalized_1.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 6 against the denormalized schema for scale 1.
+
+
+
+## [Q7_denormalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q7_denormalized_1.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 7 against the denormalized schema for scale 1.
+
+
+
+## [Q8_denormalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q8_denormalized_1.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 8 against the denormalized schema for scale 1.
+
+
+
+## [Q9_denormalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q9_denormalized_1.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 9 against the denormalized schema for scale 1.
+
+
+
 ## [Q10_denormalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q10_denormalized_1.yml)
 ### Owner
 @mongodb/product-query
@@ -4936,14 +5008,6 @@ Run TPC-H query 19 against the denormalized schema for scale 1.
 
 
 
-## [Q1_denormalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q1_denormalized_1.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 1 against the denormalized schema for scale 1.
-
-
-
 ## [Q20_denormalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q20_denormalized_1.yml)
 ### Owner
 @mongodb/product-query
@@ -4965,70 +5029,6 @@ Run TPC-H query 21 against the denormalized schema for scale 1.
 @mongodb/product-query
 ### Description
 Run TPC-H query 22 against the denormalized schema for scale 1.
-
-
-
-## [Q2_denormalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q2_denormalized_1.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 2 against the denormalized schema for scale 1.
-
-
-
-## [Q3_denormalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q3_denormalized_1.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 3 against the denormalized schema for scale 1.
-
-
-
-## [Q4_denormalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q4_denormalized_1.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 4 against the denormalized schema for scale 1.
-
-
-
-## [Q5_denormalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q5_denormalized_1.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 5 against the denormalized schema for scale 1.
-
-
-
-## [Q6_denormalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q6_denormalized_1.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 6 against the denormalized schema for scale 1.
-
-
-
-## [Q7_denormalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q7_denormalized_1.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 7 against the denormalized schema for scale 1.
-
-
-
-## [Q8_denormalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q8_denormalized_1.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 8 against the denormalized schema for scale 1.
-
-
-
-## [Q9_denormalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/1/Q9_denormalized_1.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 9 against the denormalized schema for scale 1.
 
 
 
@@ -5065,6 +5065,78 @@ for scale 10.
 ### Description
 Run an artifical TPC-H query to get the biggest EUROPE orders against the denormalized schema for
 scale 10.
+
+
+
+## [Q1_denormalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q1_denormalized_10.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 1 against the denormalized schema for scale 10.
+
+
+
+## [Q2_denormalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q2_denormalized_10.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 2 against the denormalized schema for scale 10.
+
+
+
+## [Q3_denormalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q3_denormalized_10.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 3 against the denormalized schema for scale 10.
+
+
+
+## [Q4_denormalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q4_denormalized_10.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 4 against the denormalized schema for scale 10.
+
+
+
+## [Q5_denormalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q5_denormalized_10.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 5 against the denormalized schema for scale 10.
+
+
+
+## [Q6_denormalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q6_denormalized_10.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 6 against the denormalized schema for scale 10.
+
+
+
+## [Q7_denormalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q7_denormalized_10.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 7 against the denormalized schema for scale 10.
+
+
+
+## [Q8_denormalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q8_denormalized_10.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 8 against the denormalized schema for scale 10.
+
+
+
+## [Q9_denormalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q9_denormalized_10.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 9 against the denormalized schema for scale 10.
 
 
 
@@ -5148,14 +5220,6 @@ Run TPC-H query 19 against the denormalized schema for scale 10.
 
 
 
-## [Q1_denormalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q1_denormalized_10.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 1 against the denormalized schema for scale 10.
-
-
-
 ## [Q20_denormalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q20_denormalized_10.yml)
 ### Owner
 @mongodb/product-query
@@ -5177,70 +5241,6 @@ Run TPC-H query 21 against the denormalized schema for scale 10.
 @mongodb/product-query
 ### Description
 Run TPC-H query 22 against the denormalized schema for scale 10.
-
-
-
-## [Q2_denormalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q2_denormalized_10.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 2 against the denormalized schema for scale 10.
-
-
-
-## [Q3_denormalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q3_denormalized_10.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 3 against the denormalized schema for scale 10.
-
-
-
-## [Q4_denormalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q4_denormalized_10.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 4 against the denormalized schema for scale 10.
-
-
-
-## [Q5_denormalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q5_denormalized_10.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 5 against the denormalized schema for scale 10.
-
-
-
-## [Q6_denormalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q6_denormalized_10.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 6 against the denormalized schema for scale 10.
-
-
-
-## [Q7_denormalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q7_denormalized_10.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 7 against the denormalized schema for scale 10.
-
-
-
-## [Q8_denormalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q8_denormalized_10.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 8 against the denormalized schema for scale 10.
-
-
-
-## [Q9_denormalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/denormalized/10/Q9_denormalized_10.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 9 against the denormalized schema for scale 10.
 
 
 
@@ -5268,6 +5268,78 @@ schema for scale 10.
 ### Description
 The test control for TPC-H expects a validate.yml file to exist in all TPC-H scales.
 We don't need validation on scale 10, so this is just a Nop.
+
+
+
+## [Q1_normalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q1_normalized_1.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 1 against the normalized schema for scale 1.
+
+
+
+## [Q2_normalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q2_normalized_1.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 2 against the normalized schema for scale 1.
+
+
+
+## [Q3_normalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q3_normalized_1.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 3 against the normalized schema for scale 1.
+
+
+
+## [Q4_normalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q4_normalized_1.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 4 against the normalized schema for scale 1.
+
+
+
+## [Q5_normalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q5_normalized_1.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 5 against the normalized schema for scale 1.
+
+
+
+## [Q6_normalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q6_normalized_1.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 6 against the normalized schema for scale 1.
+
+
+
+## [Q7_normalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q7_normalized_1.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 7 against the normalized schema for scale 1.
+
+
+
+## [Q8_normalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q8_normalized_1.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 8 against the normalized schema for scale 1.
+
+
+
+## [Q9_normalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q9_normalized_1.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 9 against the normalized schema for scale 1.
 
 
 
@@ -5351,14 +5423,6 @@ Run TPC-H query 19 against the normalized schema for scale 1.
 
 
 
-## [Q1_normalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q1_normalized_1.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 1 against the normalized schema for scale 1.
-
-
-
 ## [Q20_normalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q20_normalized_1.yml)
 ### Owner
 @mongodb/product-query
@@ -5383,76 +5447,84 @@ Run TPC-H query 22 against the normalized schema for scale 1.
 
 
 
-## [Q2_normalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q2_normalized_1.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 2 against the normalized schema for scale 1.
-
-
-
-## [Q3_normalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q3_normalized_1.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 3 against the normalized schema for scale 1.
-
-
-
-## [Q4_normalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q4_normalized_1.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 4 against the normalized schema for scale 1.
-
-
-
-## [Q5_normalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q5_normalized_1.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 5 against the normalized schema for scale 1.
-
-
-
-## [Q6_normalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q6_normalized_1.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 6 against the normalized schema for scale 1.
-
-
-
-## [Q7_normalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q7_normalized_1.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 7 against the normalized schema for scale 1.
-
-
-
-## [Q8_normalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q8_normalized_1.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 8 against the normalized schema for scale 1.
-
-
-
-## [Q9_normalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/Q9_normalized_1.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 9 against the normalized schema for scale 1.
-
-
-
 ## [validate_normalized_1](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/1/validate_normalized_1.yml)
 ### Owner
 @mongodb/product-query
 ### Description
 Validate TPC_H normalized queries for scale 1. Note that numeric comparison is not exact in this workload;
 the AssertiveActor only ensures that any two values of numeric type are approximately equal according to a hard-coded limit.
+
+
+
+## [Q1_normalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q1_normalized_10.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 1 against the normalized schema for scale 10.
+
+
+
+## [Q2_normalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q2_normalized_10.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 2 against the normalized schema for scale 10.
+
+
+
+## [Q3_normalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q3_normalized_10.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 3 against the normalized schema for scale 10.
+
+
+
+## [Q4_normalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q4_normalized_10.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 4 against the normalized schema for scale 10.
+
+
+
+## [Q5_normalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q5_normalized_10.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 5 against the normalized schema for scale 10.
+
+
+
+## [Q6_normalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q6_normalized_10.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 6 against the normalized schema for scale 10.
+
+
+
+## [Q7_normalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q7_normalized_10.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 7 against the normalized schema for scale 10.
+
+
+
+## [Q8_normalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q8_normalized_10.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 8 against the normalized schema for scale 10.
+
+
+
+## [Q9_normalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q9_normalized_10.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 9 against the normalized schema for scale 10.
 
 
 
@@ -5536,14 +5608,6 @@ Run TPC-H query 19 against the normalized schema for scale 10.
 
 
 
-## [Q1_normalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q1_normalized_10.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 1 against the normalized schema for scale 10.
-
-
-
 ## [Q20_normalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q20_normalized_10.yml)
 ### Owner
 @mongodb/product-query
@@ -5565,70 +5629,6 @@ Run TPC-H query 21 against the normalized schema for scale 10.
 @mongodb/product-query
 ### Description
 Run TPC-H query 22 against the normalized schema for scale 10.
-
-
-
-## [Q2_normalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q2_normalized_10.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 2 against the normalized schema for scale 10.
-
-
-
-## [Q3_normalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q3_normalized_10.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 3 against the normalized schema for scale 10.
-
-
-
-## [Q4_normalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q4_normalized_10.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 4 against the normalized schema for scale 10.
-
-
-
-## [Q5_normalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q5_normalized_10.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 5 against the normalized schema for scale 10.
-
-
-
-## [Q6_normalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q6_normalized_10.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 6 against the normalized schema for scale 10.
-
-
-
-## [Q7_normalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q7_normalized_10.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 7 against the normalized schema for scale 10.
-
-
-
-## [Q8_normalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q8_normalized_10.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 8 against the normalized schema for scale 10.
-
-
-
-## [Q9_normalized_10](https://www.github.com/mongodb/genny/blob/master/src/workloads/tpch/normalized/10/Q9_normalized_10.yml)
-### Owner
-@mongodb/product-query
-### Description
-Run TPC-H query 9 against the normalized schema for scale 10.
 
 
 

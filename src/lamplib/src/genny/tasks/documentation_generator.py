@@ -1,8 +1,8 @@
 from os import path
 import os
 from pathlib import PurePosixPath
-from re import S
 from typing import NamedTuple
+from natsort import natsorted
 
 from jinja2 import Environment, PackageLoader
 import structlog
@@ -41,7 +41,7 @@ def generate_workload_documentation(genny_repo_root, input_dir, output_file, doc
         for yaml_path in get_workload_files(workload_dirs)
     ]
     # Sort workloads by path to ensure consistent ordering.
-    workloads.sort(key=lambda workload: workload.path)
+    workloads = natsorted(workloads, key=lambda workload: workload.path)
 
     SLOG.info("Workloads found.", count=len(workloads))
 
