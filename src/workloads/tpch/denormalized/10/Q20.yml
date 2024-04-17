@@ -1,0 +1,25 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-query"
+Description: |
+  Run TPC-H query 20 against the denormalized schema for scale 10.
+
+Clients:
+  Default:
+    QueryOptions:
+      socketTimeoutMS: -1
+
+Actors:
+- Name: TPCHDenormalizedQuery20Explain
+  Type: RunCommand
+  Database: tpch
+  Phases:
+  - Nop: true
+
+# TODO: PERF-2995 uncomment
+# - Name: TPCHDenormalizedQuery20Explain
+#   Type: RunCommand
+#   Database: tpch
+#   Phases:
+#   - LoadConfig:
+#       Path: ../../../../phases/tpch/denormalized/Q20_denormalized.yml
+#       Key: TPCHDenormalizedQuery20Explain

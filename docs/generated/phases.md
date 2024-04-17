@@ -481,12 +481,32 @@ respectively.
 AdminCommand, MonotonicSingleLoader, CrudActor, updateMany, sharding 
 
 
+## [AvgAcctBal](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/AvgAcctBal.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run an internal TPC-H query to get the average customer account balance against the denormalized
+schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
 ## [AvgAcctBal_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/AvgAcctBal_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
 Run an internal TPC-H query to get the average customer account balance against the denormalized
 schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+## [AvgItemCost](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/AvgItemCost.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run an internal TPC-H query to get the average cost of item sold against the denormalized schema
+for scale 10. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
@@ -501,12 +521,31 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+## [BiggestOrders](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/BiggestOrders.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run an internal TPC-H query to get the biggest EUROPE orders against the denormalized schema for
+scale 10. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
 ## [BiggestOrders_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/BiggestOrders_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
 Run an internal TPC-H query to get the biggest EUROPE orders against the denormalized schema for
 scale 10. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+## [Q1](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q1.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 1 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
@@ -520,11 +559,29 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+## [Q2](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q2.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 2 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
 ## [Q2_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q2_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
 Run TPC-H query 2 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+## [Q3](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q3.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 3 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
@@ -538,11 +595,29 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+## [Q4](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q4.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 4 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
 ## [Q4_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q4_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
 Run TPC-H query 4 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+## [Q5](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q5.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 5 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
@@ -556,11 +631,29 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+## [Q6](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q6.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 6 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
 ## [Q6_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q6_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
 Run TPC-H query 6 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+## [Q7](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q7.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 7 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
@@ -574,11 +667,29 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+## [Q8](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q8.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 8 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
 ## [Q8_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q8_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
 Run TPC-H query 8 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+## [Q9](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q9.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 9 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
@@ -592,11 +703,29 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+## [Q10](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q10.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 10 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
 ## [Q10_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q10_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
 Run TPC-H query 10 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+## [Q11](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q11.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 11 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
@@ -610,11 +739,29 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+## [Q12](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q12.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 12 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
 ## [Q12_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q12_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
 Run TPC-H query 12 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+## [Q13](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q13.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 13 gainst the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
@@ -628,11 +775,29 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+## [Q14](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q14.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 14 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
 ## [Q14_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q14_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
 Run TPC-H query 14 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+## [Q15](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q15.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 15 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
@@ -646,11 +811,29 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+## [Q16](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q16.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 16 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
 ## [Q16_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q16_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
 Run TPC-H query 16 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+## [Q17](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q17.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 17 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
@@ -664,11 +847,29 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+## [Q18](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q18.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 18 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
 ## [Q18_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q18_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
 Run TPC-H query 18 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+## [Q19](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q19.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 19 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
@@ -682,11 +883,29 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+## [Q20](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q20.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 20 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
 ## [Q20_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q20_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
 Run TPC-H query 20 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+## [Q21](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q21.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 21 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
@@ -700,6 +919,15 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+## [Q22](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q22.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 22 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
 ## [Q22_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q22_denormalized.yml)
 ### Owner
 @mongodb/product-query
@@ -709,11 +937,31 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+## [TotalLineitemRevenue](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/TotalLineitemRevenue.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run an internal TPC-H query to sum up total price across all lineitems against the denormalized
+schema for scale 10. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
 ## [TotalLineitemRevenue_denormalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/TotalLineitemRevenue_denormalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
 Run an internal TPC-H query to sum up total price across all lineitems against the denormalized
+schema for scale 10. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+## [TotalOrderRevenue](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/TotalOrderRevenue.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run an internal TPC-H query to sum up total price across all orders against the denormalized
 schema for scale 10. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
@@ -729,12 +977,29 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+## [Q1](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q1.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 1 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
 ## [Q1_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q1_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
 Run TPC-H query 1 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
+
+
+
+## [Q2](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q2.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 2 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema.
 
 
 
@@ -746,11 +1011,29 @@ Run TPC-H query 2 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v
 
 
 
+## [Q3](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q3.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 3 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
 ## [Q3_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q3_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
 Run TPC-H query 3 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+## [Q4](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q4.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 4 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
@@ -764,11 +1047,29 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+## [Q5](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q5.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 5 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
 ## [Q5_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q5_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
 Run TPC-H query 5 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+## [Q6](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q6.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 6 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
@@ -782,11 +1083,29 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+## [Q7](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q7.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 7 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
 ## [Q7_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q7_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
 Run TPC-H query 7 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+## [Q8](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q8.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 8 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
@@ -800,11 +1119,29 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+## [Q9](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q9.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 9 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
 ## [Q9_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q9_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
 Run TPC-H query 9 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+## [Q10](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q10.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 10 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
@@ -818,11 +1155,29 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+## [Q11](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q11.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 11 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
 ## [Q11_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q11_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
 Run TPC-H query 11 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+## [Q12](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q12.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 12 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
@@ -836,11 +1191,29 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+## [Q13](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q13.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 13 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
 ## [Q13_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q13_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
 Run TPC-H query 13 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+## [Q14](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q14.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 14 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
@@ -854,11 +1227,29 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+## [Q15](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q15.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 15 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
 ## [Q15_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q15_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
 Run TPC-H query 15 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+## [Q16](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q16.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 16 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
@@ -872,11 +1263,29 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+## [Q17](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q17.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 17 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
 ## [Q17_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q17_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
 Run TPC-H query 17 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+## [Q18](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q18.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 18 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
@@ -890,11 +1299,29 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+## [Q19](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q19.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 19 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
 ## [Q19_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q19_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
 Run TPC-H query 19 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+## [Q20](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q20.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 20 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
@@ -908,11 +1335,29 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+## [Q21](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q21.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 21 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
 ## [Q21_normalized](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q21_normalized.yml)
 ### Owner
 @mongodb/product-query
 ### Description
 Run TPC-H query 21 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+documents remain, which ensures that the query executes in its entirety.
+
+
+
+## [Q22](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q22.yml)
+### Owner
+@mongodb/product-query
+### Description
+Run TPC-H query 22 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 
