@@ -32,3 +32,6 @@ src/lamplib/src/genny/tasks/dry_run.py @mongodb/performance
 # Workload-related C++ Components
 /src/value_generators    @mongodb/performance @mongodb/devprod-performance-infrastructure
 
+# Generated files owned by nobody that don't require review. These files are
+# modifiable without review by anybody with write access to the repository.
+/docs/generated/**.md
