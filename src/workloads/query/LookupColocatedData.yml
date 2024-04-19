@@ -24,7 +24,7 @@ GlobalDefaults:
   NumPhases: &NumPhases 23
 
 ActorTemplates:
-# Template for populating the sharded and unsharded collections. 
+# Template for populating the sharded and unsharded collections.
 - TemplateName: LoadDocuments
   Config:
     Name: LoadUnshardedInitialData
@@ -108,7 +108,7 @@ ActorTemplates:
                     from: {^Parameter: {Name: "Coll", Default: "localColl"}},
                     let: {local_field: "$localField"},
                     pipeline: [
-                      {$match: 
+                      {$match:
                         {
                           $expr: {$eq: ['$localField','$$local_field']}
                         }
@@ -370,6 +370,7 @@ AutoRun:
       $eq:
       - shard
       - shard-80-feature-flags
+      - shard-all-feature-flags
       - shard-lite
       - shard-lite-80-feature-flags
       - shard-lite-all-feature-flags

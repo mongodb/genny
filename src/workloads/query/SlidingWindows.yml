@@ -9,7 +9,7 @@ Description: |
 GlobalDefaults:
   Database: &Database test
   Collection: &Collection Collection0
-  MaxPhases: &MaxPhases 44 
+  MaxPhases: &MaxPhases 44
 
 Actors:
 # Clear any pre-existing collection state.
@@ -780,6 +780,7 @@ AutoRun:
       - replica
       - replica-80-feature-flags
       - replica-all-feature-flags
+      - shard
       - shard-lite
     branch_name:
       $neq:

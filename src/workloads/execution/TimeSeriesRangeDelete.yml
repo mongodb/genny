@@ -56,8 +56,10 @@ AutoRun:
 - When:
     mongodb_setup:
       $eq:
+      - shard
       - shard-lite
       - replica
+      - shard-all-feature-flags
       - shard-lite-80-feature-flags
       - shard-lite-all-feature-flags
       - replica-80-feature-flags

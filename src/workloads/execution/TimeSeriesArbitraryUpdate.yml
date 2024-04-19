@@ -58,6 +58,7 @@ AutoRun:
       # TODO (PERF-4726): Enable on these variants.
       # - shard-lite
       # - replica
+      - shard-all-feature-flags
       - shard-lite-80-feature-flags
       - shard-lite-all-feature-flags
       - replica-80-feature-flags
