@@ -1,6 +1,13 @@
-# Workload Documenation
+# {{documentation_type|capitalize}} Documentation
+
+This documentation is generated from the yaml files in the `src/{{documentation_type}}s` directory. The {{documentation_type}}s listed here are limited in scope to the Genny repo.
+
+We parse the `keywords`, `owner`, `description`, and the {{documentation_type}} name from each yaml file to generate this documentation. Clicking on the header of each {{documentation_type}} will take you to its yaml file in the repo.
+
+If you want to update the documentation please update the {{documentation_type}}'s respective yaml file, run `./run-genny generate-docs`, and commit the changes.
+
 {% for workload in workloads %}
-## {{ workload.name }}
+## [{{ workload.name }}]({{workload.github_link}})
 ### Owner
 {{ workload.owner }}
 ### Description
