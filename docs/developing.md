@@ -3,13 +3,13 @@
 This page describes the details of developing in Genny: How to run tests, debug, sanitizers, etc.
 For information on how to write actors and workloads, see [Using Genny](./using.md).
 
-## Commit Queue
+## Merge Queue Queue
 
-Genny uses the [Evergreen Commit-Queue][cq]. When you have received approval
-for your PR, simply comment `evergreen merge` and your PR will automatically
+Genny uses the [Github Merge Queue][merge queue]. When you have received approval
+for your PR, simply click `Add to Merge Queue` and your PR will automatically
 be tested and merged.
 
-[cq]: https://github.com/evergreen-ci/evergreen/wiki/Commit-Queue
+[merge queue]: https://docs.devprod.prod.corp.mongodb.com/evergreen/Project-Configuration/Merge-Queue
 
 
 ## Running Genny Self-Tests
@@ -63,6 +63,62 @@ can manually invoke the test binaries:
 Read more about what parameters you can pass [here][catch2].
 
 [catch2]: https://github.com/catchorg/Catch2/blob/v2.5.0/docs/command-line.md#specifying-which-tests-to-run
+
+### Value Generator Tests
+
+When modifing or creating new value generators it is highly valuable and important to test the implementation with a test case and to provide an example of the generator usage.
+
+#### Authoring Test Cases
+
+The test cases are implemented in src/value_generators/test/DocumentGeneratorTestCases.yml using the following template
+
+```
+ - Name: 
+    GivenTemplate:
+      <template>
+    ThenReturns:
+    - <expected output 1>
+    - <expected output 2>
+    - <expected output 3>
+```
+
+   Note:
+
+   * As we are using the same seeded PRNG, you should append new tests at the end of the file 
+   
+   *  The tests are executed in iterations, one for each of the expected outputs. 
+   For each iteration the `GivenTemplate` is compiled and evaluated with the declared
+   value generators in it. Then the actual and expected outputs are compared.
+   
+   * In the sample above the template will be evaluated 3 times and the test will run in 3 iterations.
+   
+   * Random generators declared in the templates are created only once and reused for all iterations. The produced values are incremental. 
+     When adding a test with random data you may need to run the tests first, validate the results are reasonable and use them as expected values.
+   
+   * Use large numbers for number parameters because short numbers get automatically narrowed to `int32` values whereas number value-generators always produce `int64` values.
+   
+   * In cases where you can't know the output and/or want to ensure the generator executes succesfully, you can ignore the results with 
+      
+      ```
+      - Name: Now
+        GivenTemplate:
+          date: {^Now: {}}
+        ThenExecuteAndIgnore: true
+      ```
+
+*  Testing value generators locally
+
+If you have successfully installed genny with `./run-genny install` you should have a test executable for running locally the value generator tests. Test can be executed with 
+
+```sh
+~/workspace/genny$ cd build/src/value_generators/
+~/workspace/genny/build/src/value_generators$ ./value_generators_test -d yes --order lex -\# '[#DocGenYamlTestCaseRunner]'
+```
+
+#### Providing Value Generator Examples
+
+While tests are usually the best documentation, sometimes they may be too verbose and go into edge cases, so clear and concise examples are prefered.
+Value generator examples are documented in src/workloads/docs/Generators.yml. Please add examples to that file when adding or extending a generator.
 
 
 ### Benchmark Tests
