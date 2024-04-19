@@ -56,7 +56,7 @@ The linting script requires a Github API token. To configure this locally follow
 Alternatively, if you don't want to do the local setup you can run the standalone lint task in Evergreen:
 
 ```sh
-evergreen -p "genny" -t "lint-yaml" -v "" -f -u -y
+evergreen patch -p "genny" -t "t_lint_workloads_standalone" -v "amazon2" -f -u -y
 ```
 
 The lint task is also ran in PR checks and the merge queue, but those take considerably more time than running the task locally or standalone in Evergreen.

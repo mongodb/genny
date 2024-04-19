@@ -462,6 +462,12 @@ Try using `python test_result_summary.py --help` for more options.
     ./run-genny lint-yaml  # Lint all YAML files, 
     ```
 
+    Run the linter in Evergreen with:
+
+    ```bash
+    evergreen patch -p "genny" -t "t_lint_workloads_standalone" -v "amazon2" -f -u -y
+    ```
+
     Note: There is no schema-checking of the yaml.
 
 3. Update workload documentation.
