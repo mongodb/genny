@@ -1,0 +1,149 @@
+SchemaVersion: 2018-07-01
+Owner: "@10gen/server-security"
+Description: |
+  Queryable Encryption Range Experiment 2
+
+GlobalDefaults:
+  Database: &test_db genny_qerangebench_experiment2
+  Collection: &test_coll ContiguousValuesFreqOne
+  ClientName: &test_pool TestPool
+  Nop: &nop {Nop: true}
+  LastPhase: &last_phase {{ experiments|length + 1 }}
+
+{% if encrypt %}
+Encryption:
+  {% if use_crypt_shared_lib %}
+  UseCryptSharedLib: true
+  CryptSharedLibPath: {{ crypt_shared_lib_path }}
+  {% endif %}
+  EncryptedCollections:
+  - Database: *test_db
+    Collection: *test_coll
+    EncryptionType: queryable
+    {% set field_defs = {
+      "f_sint32_1": 'f_sint32_1: { type: "int", queries: [{queryType: "rangePreview", min: -2147483648, max: 2147483647, contention: %d, sparsity: %d}] }' % (contention_factor, sparsity),
+      "f_sint32_2": 'f_sint32_2: { type: "int", queries: [{queryType: "rangePreview", min: 1, max: 100000, contention: %d, sparsity: %d}] }' % (contention_factor, sparsity),
+      "f_bin64_1": 'f_bin64_1: { type: "double", queries: [{queryType: "rangePreview", contention: %d, sparsity: %d}] }' % (contention_factor, sparsity),
+      "f_bin64_2": 'f_bin64_2: { type: "double", queries: [{queryType: "rangePreview", min: -100, max: 100, precision: 4, contention: %d, sparsity: %d}] }' % (contention_factor, sparsity),
+      "f_dec128_1": 'f_dec128_1: { type: "decimal", queries: [{queryType: "rangePreview", contention: %d, sparsity: %d}] }' % (contention_factor, sparsity),
+      "f_dec128_2": 'f_dec128_2: { type: "decimal", queries: [{queryType: "rangePreview", min: -50000000, max: 50000000, precision: 4, contention: %d, sparsity: %d}] }' % (contention_factor, sparsity),
+    } %}
+    QueryableEncryptedFields:
+{% for field in fields %}
+      {{ field_defs[field] }}{% endfor %}
+
+{% endif %}
+Clients:
+  TestPool:
+    QueryOptions:
+      maxPoolSize: 400
+{% if encrypt %}
+    EncryptionOptions:
+      KeyVaultDatabase: "keyvault"
+      KeyVaultCollection: "datakeys"
+      EncryptedCollections:
+      - genny_qerangebench_experiment2.ContiguousValuesFreqOne
+{% endif %}
+
+Actors:
+{% if not encrypt %}
+  - Name: CreateSecondaryIndex
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *last_phase
+        PhaseConfig:
+          Repeat: 1
+          Database: *test_db
+          Operations:
+          - OperationName: RunCommand
+            OperationCommand:
+              createIndexes: *test_coll
+              indexes:
+              {% for field in fields %}
+              - key: { {{ field }}: 1}
+                name: {{ field }}_index
+              {% endfor %}
+{% endif %}
+
+{% for t in range(insert_threads) %}
+  - Name: InsertActor_Thread{{ t }}
+    Type: CrudActor
+    Threads: 1
+    Database: *test_db
+    ClientName: *test_pool
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *last_phase
+        PhaseConfig:
+          Repeat: {{ document_count // insert_threads }}
+          Collection: *test_coll
+          MetricsName: "load"
+          Operations:
+          - OperationName: insertOne
+            OperationMetricsName: inserts
+            OperationCommand:
+              {% set field_inserts = {
+                "f_sint32_1": 'f_sint32_1: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "%s", "sequential": true, "startFromLine": %d}}}}' % (onesfile, t * document_count // insert_threads ),
+                "f_sint32_2": 'f_sint32_2: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "%s", "sequential": true, "startFromLine": %d}}}}' % (onesfile, t * document_count // insert_threads ),
+                "f_bin64_1": 'f_bin64_1: {^ConvertToDouble: {from: {^ChooseFromDataset:{"path": "%s", "sequential": true, "startFromLine": %d}}}}' % (onesfile, t * document_count // insert_threads ),
+                "f_bin64_2": 'f_bin64_2: {^ConvertToDouble: {from: {^ChooseFromDataset:{"path": "%s", "sequential": true, "startFromLine": %d}}}}' % (tenthoufile, t * document_count // insert_threads ),
+                "f_dec128_1": 'f_dec128_1: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "%s", "sequential": true, "startFromLine": %d}}}}' % (onesfile, t * document_count // insert_threads ),
+                "f_dec128_2": 'f_dec128_2: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "%s", "sequential": true, "startFromLine": %d}}}}' % (tenthoufile, t * document_count // insert_threads ),
+              } %}
+              Document:
+{% for field in fields %}
+                {{ field_inserts[field] }}{% endfor %}
+                _id: {^Inc: {start: 0, multiplier: {{ document_count // insert_threads }}}}
+{% endfor %}
+
+
+  - Name: PreDefinedRangeQueryActor
+    Type: CrudActor
+    Threads: 1
+    Database: *test_db
+    ClientName: *test_pool
+    Phases:
+    - *nop
+    - *nop
+{% for experiment in experiments %}
+    - Repeat: {{ query_count }}
+      Collection: *test_coll
+      MetricsName: "query"
+      Operations:
+      - OperationName: find
+        OperationMetricsName: range_query_{{experiment.field_name}}_{{experiment.query_type}}_sel{{experiment.selectivity}}
+        OperationCommand:
+          Filter: { {{experiment.field_name}}: {
+{% if experiment.use_in_query %}
+              $in: {^Array: {
+                distinct: true,
+                number: {{ experiment.selectivity }},
+                of: {^ConvertTo{{experiment.field_type}}: {from: {^ChooseFromDataset:{"path": "{{ experiment.gen_file }}", "sequential": false}}}}}}
+{% else %}
+              $gte: {^ConvertTo{{experiment.field_type}}: {from: {^ChooseFromDataset:{"path": "{{ experiment.min_file }}", "sequential": true}}}},
+              $lte: {^ConvertTo{{experiment.field_type}}: {from: {^ChooseFromDataset:{"path": "{{ experiment.max_file }}", "sequential": true}}}}
+{% endif %}
+            }
+          }
+{% endfor %}
+
+  - Name: LoggingActor0
+    Type: LoggingActor
+    Threads: 1
+    Phases:
+      - *nop
+      - Phase: 1..{{ experiments|length + 1 }}
+        LogEvery: 5 minutes
+        Blocking: None
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - single-replica-fle
+    branch_name:
+      $gte: v7.0

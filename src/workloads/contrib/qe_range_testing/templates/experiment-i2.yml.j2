@@ -1,0 +1,95 @@
+SchemaVersion: 2018-07-01
+Owner: "@10gen/server-security"
+Description: |
+  Queryable Encryption Range Experiment I2
+
+GlobalDefaults:
+  Database: &test_db genny_qerangebench_experimenti2
+  Collection: &test_coll testcoll
+  ClientName: &test_pool TestPool
+  Nop: &nop {Nop: true}
+  InsertPhase: &insertPhase {{ 0 if encrypt else 1 }}
+
+{% if encrypt %}
+Encryption:
+  {% if use_crypt_shared_lib %}
+  UseCryptSharedLib: true
+  CryptSharedLibPath: {{ crypt_shared_lib_path }}
+  {% endif %}
+  EncryptedCollections:
+  - Database: *test_db
+    Collection: *test_coll
+    EncryptionType: queryable
+    QueryableEncryptedFields:
+        field1: { type: {{ "string" if equality else "decimal" }}, queries: [{queryType: {{ "equality" if equality else "rangePreview" }}, min: 0, max: {{ upper_bound }}, precision: {{ precision }}, contention: {{ contention }}, sparsity: {{ sparsity }}, trimFactor: {{ trim_factor|default(0) }}}] }
+{% endif %}
+
+Clients:
+  TestPool:
+    QueryOptions:
+      maxPoolSize: 400
+{% if encrypt %}
+    EncryptionOptions:
+      KeyVaultDatabase: "keyvault"
+      KeyVaultCollection: "datakeys"
+      EncryptedCollections:
+      - genny_qerangebench_experimenti2.testcoll
+{% endif %}
+
+Actors:
+{% if not encrypt %}
+  - Name: CreateSecondaryIndex
+    Type: RunCommand
+    Threads: 1
+    Phases:
+    - Repeat: 1
+      Database: *test_db
+      Operations:
+      - OperationName: RunCommand
+        OperationCommand:
+          createIndexes: *test_coll
+          indexes:
+          - key: {field1: 1}
+            name: field1index
+    - *nop
+{% endif %}
+{% for t in range(insert_threads) %}
+  - Name: InsertActor_Thread{{ t }}
+    Type: CrudActor
+    Threads: 1
+    Database: *test_db
+    ClientName: *test_pool
+    Phases:
+    - *nop
+    - Repeat: {{ document_count // insert_threads }}
+      Collection: *test_coll
+      MetricsName: "load"
+      Operations:
+      - OperationName: insertOne
+        OperationMetricsName: inserts
+        OperationCommand:
+          Document:
+{% if equality %}
+            field1: {^ChooseFromDataset:{"path": "{{ data_path }}", "sequential": true, "startFromLine": {{ t * document_count // insert_threads }}}}
+{% else %}
+            field1: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "{{ data_path }}", "sequential": true, "startFromLine": {{ t * document_count // insert_threads }}}}}}
+{% endif %}
+            _id: {^Inc: {start: 0, multiplier: {{ document_count // insert_threads }}}}
+{% endfor %}
+
+
+  - Name: LoggingActor0
+    Type: LoggingActor
+    Threads: 1
+    Phases:
+      - *nop
+      - LogEvery: 5 minutes
+        Blocking: None
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - single-replica-fle
+    branch_name:
+      $gte: v7.0

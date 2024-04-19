@@ -1,0 +1,64 @@
+SchemaVersion: 2018-07-01
+Owner: "@10gen/server-security"
+Description: |
+  Queryable Encryption Range Experiment 1 -- Local Storage Footprint Test
+
+{% if use_encryption %}
+Encryption:
+  {% if use_crypt_shared_lib %}
+  UseCryptSharedLib: true
+  CryptSharedLibPath: {{ crypt_shared_lib_path }}
+  {% endif %}
+  EncryptedCollections:
+  - Database: genny_qerangebench_experiment1
+    Collection: OneFieldOneValue
+    EncryptionType: queryable
+
+    QueryableEncryptedFields:
+      field1: { type: "int", queries: [{queryType: "rangePreview", min: 0, max: {{ upper_bound }}, contention: {{ contention_factor }}, sparsity: {{ sparsity }}}] }
+
+Clients:
+  MyPool:
+    QueryOptions:
+      maxPoolSize: 400
+    EncryptionOptions:
+      KeyVaultDatabase: "keyvault"
+      KeyVaultCollection: "datakeys"
+      EncryptedCollections:
+      - genny_qerangebench_experiment1.OneFieldOneValue
+{% else %}
+Clients:
+  MyPool:
+    QueryOptions:
+      maxPoolSize: 400
+{% endif %}
+
+Actors:
+  - Name: InsertActor
+    Type: CrudActor
+    Threads: {{ insert_threads }}
+    Database: &db genny_qerangebench_experiment1
+    ClientName: &pool MyPool
+    Phases:
+    - Repeat: 1
+      Collection: &coll OneFieldOneValue
+      Operations:
+      - OperationName: drop
+    - Repeat: {{ document_count // insert_threads }}
+      Collection: *coll
+      MetricsName: "load"
+      Operations:
+      - OperationName: insertOne
+        OperationMetricsName: inserts
+        OperationCommand:
+          Document:
+            field1: 0
+            _id: {^Inc: {start: -100000, multiplier: 50000}}
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - single-replica-fle
+    branch_name:
+      $gte: v7.0

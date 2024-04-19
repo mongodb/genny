@@ -1,0 +1,119 @@
+SchemaVersion: 2018-07-01
+Owner: "@10gen/server-security"
+Description: |
+  Queryable Encryption Range Experiment Q3
+
+GlobalDefaults:
+  Database: &test_db genny_qerangebench_experiment_q3
+  Collection: &test_coll OneFieldSmallSupport
+  ClientName: &test_pool TestPool
+  Nop: &nop {Nop: true}
+
+{% if encrypt %}
+Encryption:
+  {% if use_crypt_shared_lib %}
+  UseCryptSharedLib: true
+  CryptSharedLibPath: {{ crypt_shared_lib_path }}
+  {% endif %}
+  EncryptedCollections:
+  - Database: *test_db
+    Collection: *test_coll
+    EncryptionType: queryable
+    QueryableEncryptedFields:
+        field1: { type: "int", queries: [{queryType: "rangePreview", min: 0, max: {{ max }}, contention: {{ contention }}, sparsity: {{ sparsity }}, trimFactor: {{ trimFactor }}}] }
+{% endif %}
+
+Clients:
+  TestPool:
+    QueryOptions:
+      maxPoolSize: 400
+{% if encrypt %}
+    EncryptionOptions:
+      KeyVaultDatabase: "keyvault"
+      KeyVaultCollection: "datakeys"
+      EncryptedCollections:
+      - genny_qerangebench_experiment_q3.OneFieldSmallSupport
+{% endif %}
+
+Actors:
+{% if not encrypt %}
+  - Name: CreateSecondaryIndex
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: 2
+        PhaseConfig:
+          Repeat: 1
+          Database: *test_db
+          Operations:
+          - OperationName: RunCommand
+            OperationCommand:
+              createIndexes: *test_coll
+              indexes:
+              - key: { field1: 1}
+                name: field1_index
+{% endif %}
+
+{% for t in range(insert_threads) %}
+  - Name: InsertActor_Thread{{ t }}
+    Type: CrudActor
+    Threads: 1
+    Database: *test_db
+    ClientName: *test_pool
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: 2
+        PhaseConfig:
+          Repeat: {{ document_count // insert_threads }}
+          Collection: *test_coll
+          MetricsName: "load"
+          Operations:
+          - OperationName: insertOne
+            OperationMetricsName: inserts
+            OperationCommand:
+              Document:
+                field1: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "{{ insert_file }}", "sequential": true, "startFromLine": {{ t * document_count // insert_threads }}}}}}
+                _id: {^Inc: {start: 0, multiplier: {{ document_count // insert_threads }}}}
+{% endfor %}
+
+
+  - Name: PreDefinedRangeQueryActor
+    Type: CrudActor
+    Threads: 1
+    Database: *test_db
+    ClientName: *test_pool
+    Phases:
+    - *nop
+    - *nop
+    - Repeat: {{ query_count }}
+      Collection: *test_coll
+      MetricsName: "query"
+      Operations:
+      - OperationName: find
+        OperationMetricsName: range_query
+        OperationCommand:
+          Filter: 
+            field1: {
+              $gte: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "{{ min_file }}", "sequential": true}}}},
+              $lte: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "{{ max_file }}", "sequential": true}}}}
+            }
+
+  - Name: LoggingActor0
+    Type: LoggingActor
+    Threads: 1
+    Phases:
+      - *nop
+      - Phase: 1..2
+        LogEvery: 5 minutes
+        Blocking: None
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - single-replica-fle
+    branch_name:
+      $gte: v7.0

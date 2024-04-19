@@ -92,7 +92,7 @@ Encryption:
       patient_id: { type: "string", queries: [{queryType: "equality"}] }
       insurance: { type: "string", queries: [{queryType: "equality", contention: 16}] }
       a1c: { type: "long", queries: [{queryType: "equality", contention: 10}] }
-      spO2: { type: "double", queries: [{queryType: "rangePreview", min: 0, max: 1, precision: 1, sparsity: 1, contention: 8}] }
+      spO2: { type: "double", queries: [{queryType: "range", min: 0, max: 1, precision: 1, sparsity: 1, contention: 8}] }
 
 Clients:
   Default:

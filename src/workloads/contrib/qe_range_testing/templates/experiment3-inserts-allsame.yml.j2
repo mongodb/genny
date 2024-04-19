@@ -1,0 +1,17 @@
+  - Name: InsertActor
+    Type: CrudActor
+    Threads: {{ insert_threads }}
+    Database: *test_db
+    ClientName: *test_pool
+    Phases:
+    - *nop
+    - Repeat: {{ document_count // insert_threads }}
+      Collection: *test_coll
+      MetricsName: "load"
+      Operations:
+      - OperationName: insertOne
+        OperationMetricsName: inserts
+        OperationCommand:
+          Document:
+            _id: {^Inc: {start: 0, multiplier: {{ document_count // insert_threads }}}}
+            field1: 1

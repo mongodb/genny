@@ -1,0 +1,191 @@
+SchemaVersion: 2018-07-01
+Owner: "@10gen/server-security"
+Description: |
+  QE Range Release Criteria Experiment
+
+GlobalDefaults:
+  MyDatabase: &encrypted_db genny_release_criteria
+  MyCollection: &encrypted_coll my_coll
+  NopAlias: &nop {Nop: true}
+  {% if do_fsm %}
+  StateTransitions: &transitions
+  - To: Query
+    Weight: {{ query_ratio }}
+    SleepBefore: {^TimeSpec: {value: 0, unit: seconds}}
+  - To: Update
+    Weight: {{ 1 - query_ratio }}
+    SleepBefore: {^TimeSpec: {value: 0, unit: seconds}}
+  {% endif %}
+
+{% if encrypt %}
+Encryption:
+  {% if use_crypt_shared_lib %}
+  UseCryptSharedLib: true
+  CryptSharedLibPath: {{ crypt_shared_lib_path }}
+  {% endif %}
+  EncryptedCollections:
+  - Database: *encrypted_db
+    Collection: *encrypted_coll
+    EncryptionType: queryable
+
+    QueryableEncryptedFields:
+      tm_retail_tx: { type: "long", queries: [{queryType: "range", min: 0, max: 1000000000000, contention: 4, sparsity: 2, trimFactor: {{ timestamp_tf }}}] }
+      age_hospitals: { type: "int",  queries: [{queryType: "range", min: 0, max: 55000, contention: {{ age_cf }}, sparsity: 2, trimFactor: 6}] }
+      bnk_bal: { type: "decimal", queries: [{queryType: "range", min: 0, max: 1000000, precision: 2, contention: {{ balance_cf }}, sparsity: 2, trimFactor: {{ balance_tf }}}] }
+{% endif %}
+
+Clients:
+  EncryptedPool:
+    QueryOptions:
+      maxPoolSize: 400
+  {% if encrypt %}
+    EncryptionOptions:
+      KeyVaultDatabase: "keyvault"
+      KeyVaultCollection: "datakeys"
+      EncryptedCollections:
+      - genny_release_criteria.my_coll
+  {% endif %}
+
+Actors:
+  {# - Name: DataGenerator
+    Type: Python
+    Threads: 1
+    Phases:
+    - Repeat: 1
+      Module: qe_range_data_generation
+      Endpoint: generate_all_data
+    - *nop
+    - *nop #}
+{% if not encrypt %}
+  - Name: CreateSecondaryIndexes
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: 2
+        PhaseConfig:
+          Repeat: 1
+          Database: *encrypted_db
+          Operations:
+          - OperationName: RunCommand
+            OperationCommand:
+              createIndexes: *encrypted_coll
+              indexes:
+              - key: { tm_retail_tx: 1}
+                name: time_index
+          - OperationName: RunCommand
+            OperationCommand:
+              createIndexes: *encrypted_coll
+              indexes:
+              - key: { age_hospitals: 1}
+                name: age_index
+          - OperationName: RunCommand
+            OperationCommand:
+              createIndexes: *encrypted_coll
+              indexes:
+              - key: { bnk_bal: 1}
+                name: bal_index
+{% endif %}
+  
+  {% for t in range(insert_threads) %}
+  - Name: InsertActor_Thread{{ t }}
+    Type: CrudActor
+    Threads: 1
+    Database: *encrypted_db
+    ClientName: EncryptedPool
+    Phases:
+    - *nop
+    - Repeat: {{ document_count // insert_threads // batch_size }}
+      Collection: *encrypted_coll
+      MetricsName: "load"
+      Operations:
+      - OperationName: insertOne
+        OperationMetricsName: inserts
+        OperationCommand:
+          {# Documents:
+          {% for b in range(batch_size) %}
+          - tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "{{ timestamp_file }}", "sequential": true, "startFromLine": {{t * document_count // insert_threads + b * document_count // insert_threads // batch_size}}}}}}
+            age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "{{ age_file }}", "sequential": true, "startFromLine": {{t * document_count // insert_threads + b * document_count // insert_threads // batch_size}}}}}}
+            bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "{{ balance_file }}", "sequential": true, "startFromLine": {{t * document_count // insert_threads + b * document_count // insert_threads // batch_size}}}}}}
+            _id: {^Inc: {start: {{ b * document_count // insert_threads // batch_size }}, multiplier: 500000}}
+          {% endfor %} #}
+
+            {# {{ {'tm_retail_tx': 'tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "%s", "sequential": true, "startFromLine": %i}}}}' % (timestamp_file, t * document_count // insert_threads),
+            'age_hospitals': 'age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "%s", "sequential": true, "startFromLine": %i}}}}' % (age_file, t * document_count // insert_threads),
+            'bnk_bal': 'bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "%s", "sequential": true, "startFromLine": %i}}}}' % (balance_file, t * document_count // insert_threads)}[field_name] }} #}
+            
+          Document:
+            tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "{{ timestamp_file }}", "sequential": true, "startFromLine": {{t * document_count // insert_threads}}}}}}
+            age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "{{ age_file }}", "sequential": true, "startFromLine": {{t * document_count // insert_threads}}}}}}
+            bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "{{ balance_file }}", "sequential": true, "startFromLine": {{t * document_count // insert_threads}}}}}}
+
+            _id: {^Inc: {start: 0, multiplier: 500000}}
+    - *nop
+    {% endfor %}
+
+{% if do_fsm %}
+  {% for t in range(insert_threads) %}
+  - Name: FSMActor_Thread{{ t }}
+    Type: CrudActor
+    Threads: 1
+    Database: *encrypted_db
+    ClientName: EncryptedPool
+    
+    Phases:
+    - *nop
+    - *nop
+    - Repeat: {{ query_count // query_threads }}
+      Collection: *encrypted_coll
+      MetricsName: "FSM"
+      InitialStates:
+        - State: Query
+          Weight: {{ query_ratio }}
+        - State: Update
+          Weight: {{ 1 - query_ratio }}
+      States:
+        - Name: Query
+          Operations:
+          - OperationName: find
+            OperationMetricsName: range_query
+            OperationCommand:
+              Filter: { {{ field_name }}: {
+                  $gte: {^ConvertTo{{ field_type }}: {from: {^ChooseFromDataset:{"path": "{{ min_file }}", "sequential": true, "startFromLine": {{t * query_count // query_threads}}}}}},
+                  $lte: {^ConvertTo{{ field_type }}: {from: {^ChooseFromDataset:{"path": "{{ max_file }}", "sequential": true, "startFromLine": {{t * query_count // query_threads}}}}}}
+                }
+              }
+          Transitions: *transitions
+        - Name: Update
+          Operations:
+          - OperationName: updateOne
+            OperationMetricsName: update
+            OperationCommand:
+            {% set selector_dict = {
+              'timestamp': '{^RandomInt: {min: 0, max: 10000000000} } ',
+              'age': '{^ConvertToInt32: {from: {^RandomInt: {min: 1, max: 55000} } } }',
+              'balance': '{^ConvertToDecimal: {from: {^RandomInt: {min: 1, max: 1000000} } } }'
+            }%}
+              Filter: { {{ field_name }}: {^ConvertTo{{ field_type }}: {from: {^ChooseFromDataset:{"path": "{{ update_file }}"}}}}}
+              Update: {$set: { {{ field_name }}: {^ConvertTo{{ field_type }}: {from: {^ChooseFromDataset:{"path": "{{ insert_file }}"} } } } } }
+          Transitions: *transitions
+{% endfor %}
+ {% endif %}
+
+
+  - Name: LoggingActor0
+    Type: LoggingActor
+    Threads: 1
+    Phases:
+      - *nop
+      - Phase: 1..2
+        LogEvery: 5 minutes
+        Blocking: None
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - single-replica-fle
+      - shard-lite-fle
+    branch_name:
+      $gte: v7.0
