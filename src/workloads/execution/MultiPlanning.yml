@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/server-execution"
+Owner: Storage Execution
+SlackSupportChannelName: "#server-storage-execution"
+SlackSupportChannelId: C2RCHGB2L
 Description: |
  Create collection with multiple indexes and run queries with different selectivity on different
  indexes to test how efficiently multi planning can choose the most selective index.

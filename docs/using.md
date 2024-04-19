@@ -450,12 +450,19 @@ Try using `python test_result_summary.py --help` for more options.
 2.  Run the self-tests:
 
     ```bash
-	./run-genny lint-yaml  # Lint all YAML files
-	./run-genny cmake-test  # Run C++ Unit test - only necessary if editing core C++ code
-	./run-genny resmoke-test  # Run Actor integration tests - only necessary if adding/editing Actors
+    ./run-genny cmake-test  # Run C++ Unit test - only necessary if editing core C++ code
+    ./run-genny resmoke-test  # Run Actor integration tests - only necessary if adding/editing Actors
     ```
 
-    Note the current [issue](#orgb084b49) running resmoke-test. Also, note that there is no schema-checking of the yaml.
+    Note: the current [issue](#orgb084b49) running resmoke-test. 
+
+    Linting requires special configuration to run locally, see [here](./developing.md#lint-workload-and-other-yaml) for more information before proceeding with this command:
+
+    ```bash
+    ./run-genny lint-yaml  # Lint all YAML files, 
+    ```
+
+    Note: There is no schema-checking of the yaml.
 
 3. Update workload documentation.
 

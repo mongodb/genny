@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-integration"
+Owner: Query Integration
+SlackSupportChannelName: "#query-integration"
+SlackSupportChannelId: C04PDS7GAFM
 Description: |
   This workload runs different time-series optimizations with the tsbs dataset. During development,
   we targeted optimizations that are most relevant to pushdown time-series queries to SBE. Further

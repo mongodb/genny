@@ -1,7 +1,9 @@
 # This workload file describes the evergreen patches and tasks that produced
 # reliable data for 
 workload_name: qe_test_insert
-Owner: "@10gen/server-security"
+Owner: Server Security
+SlackSupportChannelName: "#server-security"
+SlackSupportChannelId: CB3CW8M8C
 Description: |
  This workload evaluates the performance of Queryable Encryption against the established “Queryable Encryption Performance Release Criteria.” 
 patches:

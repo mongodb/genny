@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
+SlackSupportChannelName: "#performance"
+SlackSupportChannelId: C0V3KSB52
 Description: |
   This workload was created to reproduce SERVER-53853: Large buildup of mongos to mongod connections and
   low performance with secondaryPreferred reads. This workload was originally two separate files,

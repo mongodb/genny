@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
+SlackSupportChannelName: "#performance"
+SlackSupportChannelId: C0V3KSB52
 Description: |
   This workload is developed as a general stress test of the server.
   It loads data into a large number of collections, with 9 indexes on each collection. After loading

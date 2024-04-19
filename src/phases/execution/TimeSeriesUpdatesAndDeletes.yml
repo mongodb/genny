@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/server-execution"
+Owner: Storage Execution
+SlackSupportChannelName: "#server-storage-execution"
+SlackSupportChannelId: C2RCHGB2L
 Description: |
   Set up 1000 independent sensors which will each have 100 buckets, and each bucket has 100
   measurements.

@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
-Owner: Storage Engines
+Owner: Storage Execution
+SlackSupportChannelName: "#server-storage-execution"
+SlackSupportChannelId: C2RCHGB2L
 Description: |
   The model workload for the large scale workload automation project. It consists of a 150GB cold
   database which is scanned by the snapshot scanner and a number of hot db collections and rolling

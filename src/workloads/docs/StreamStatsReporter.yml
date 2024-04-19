@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/atlas-streams"
+Owner: Atlas Streams
+SlackSupportChannelName: "#streams-engine"
+SlackSupportChannelId: C05P740L0VC
 Description: |
   Generates load against a stream processor and has a stats reporter actor that will
   report stats about that stream processor after the insert phase is complete since

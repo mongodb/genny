@@ -7,7 +7,9 @@
 # but here it is 'as is' for the moment when work was stopped
 
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
+SlackSupportChannelName: "#performance"
+SlackSupportChannelId: C0V3KSB52
 Description: |
   Workload to Benchmark the effect of LongLivedTransactions on an Update workload.
 

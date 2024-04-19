@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/server-security"
+Owner: Server Security
+SlackSupportChannelName: "#server-security"
+SlackSupportChannelId: CB3CW8M8C
 Description: |
   Models the Queryable Encryption acceptance criteria workloads
 

@@ -1,6 +1,8 @@
 # TODO PERF-3208: Enable Workload.
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/sharding"
+Owner: Cluster Scalability
+SlackSupportChannelName: "#server-sharding"
+SlackSupportChannelId: C8PK5KZ5H
 Description: |
   On a sharded collection on a single shard cluster, run workloads that updateOne, deleteOne, and findAndModify.
 

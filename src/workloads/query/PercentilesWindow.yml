@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-integration"
+Owner: Query Integration
+SlackSupportChannelName: "#query-integration"
+SlackSupportChannelId: C04PDS7GAFM
 Description: |
   This tests $percentile window functions over various bounded window sizes. Bounded window
   functions use a different implementation (an accurate algorithm) than the $percentile accumulator,

@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/sharding"
+Owner: Cluster Scalability
+SlackSupportChannelName: "#server-sharding"
+SlackSupportChannelId: C8PK5KZ5H
 Description: |
   Run updateOnes, deleteOnes, and findAndModifys on a replica set.
 

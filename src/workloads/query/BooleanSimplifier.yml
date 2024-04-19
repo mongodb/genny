@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-optimization"
+Owner: Query Optimization
+SlackSupportChannelName: "#query-optimization"
+SlackSupportChannelId: CQCBTN138
 
 Description: |
   This workload measures performance of boolean expressions which can be simplified by

@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/sys-perf"
+Owner: Product Performance
+SlackSupportChannelName: "#performance"
+SlackSupportChannelId: C0V3KSB52
 Description: |
   This workload is designed to insert 10k documents into a single collection and then
   perform exactly 10k updates. This is designed to help us calculate CPU cycle metrics

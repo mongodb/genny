@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/altas-streams"
+Owner: Atlas Streams
+SlackSupportChannelName: "#streams-engine"
+SlackSupportChannelId: C05P740L0VC
 Description: |
   Pipeline: Memory -> ... 20 $addField ... -> Tumbling Window
   Input Documents: 8M

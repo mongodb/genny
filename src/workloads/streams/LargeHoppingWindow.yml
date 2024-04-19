@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/altas-streams"
+Owner: Atlas Streams
+SlackSupportChannelName: "#streams-engine"
+SlackSupportChannelId: C05P740L0VC
 Description: |
   Pipeline: Memory -> Hopping Window (Group) -> Memory
   Input Documents: 1.6M

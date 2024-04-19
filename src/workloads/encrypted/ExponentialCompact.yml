@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/server-security"
+Owner: Server Security
+SlackSupportChannelName: "#server-security"
+SlackSupportChannelId: CB3CW8M8C
 Description: |
   With queryable encryption enabled, this workload runs alternating CRUD and compact phases,
   where the total number of inserts & updates is increased on every CRUD+Compact cycle in order

@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
-Owner: Storage Engines
+Owner: Storage Execution
+SlackSupportChannelName: "#server-storage-execution"
+SlackSupportChannelId: C2RCHGB2L
 Description: |
   This workload is designed to test the effectiveness of durable history as
   described in PM-1986.

@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-execution"
+Owner: Query Execution
+SlackSupportChannelName: "#query-execution"
+SlackSupportChannelId: CKABWR2CT
 Description: |
   This workload measures $lookup performance for scenarios that look up local scalar/array/dotted
   key against foreign collection's scalar/array/dotted key, when the foreign collections have

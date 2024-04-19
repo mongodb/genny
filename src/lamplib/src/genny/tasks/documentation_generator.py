@@ -3,6 +3,7 @@ import os
 from pathlib import PurePosixPath
 from re import S
 from typing import NamedTuple
+from typing import NamedTuple, Optional
 
 from jinja2 import Environment, PackageLoader
 import structlog
@@ -18,6 +19,8 @@ class Workload(NamedTuple):
     keywords: list[str]
     path: str
     github_link: str
+    support_channel_id: Optional[str] = None
+    support_channel_name: Optional[str] = None
 
 
 def main(genny_repo_root: str):
@@ -74,6 +77,8 @@ def get_workload_from_file(yaml_path: str, genny_repo_root: str) -> Workload:
             keywords=workload_yaml.get("Keywords", []),
             path=path,
             github_link=f"https://www.github.com/mongodb/genny/blob/master{path}",
+            support_channel_id=workload_yaml.get("SlackSupportChannelId", None),
+            support_channel_name=workload_yaml.get("SlackSupportChannelName", None),
         )
 
 

@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/product-perf"
+Owner: Product Performance
+SlackSupportChannelName: "#performance"
+SlackSupportChannelId: C0V3KSB52
 Description: |
   Demonstrate the ChooseFromDataset generator. The ChooseFromDataset generator takes one single
   argument, a path to a file. It then returns random lines from that file. The file should exist

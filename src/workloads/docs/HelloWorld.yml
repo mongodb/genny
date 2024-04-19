@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/dev-prod-tips"
+Owner: Performance Analysis
+SlackSupportChannelName: "#ask-devprod-performance"
+SlackSupportChannelId: C01VD0LQZED
 Description: |
   This is an introductory workload that shows how to write a workload in Genny.
   This workload writes a few messages to the screen.

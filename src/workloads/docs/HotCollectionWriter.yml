@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
-Owner: Storage Engines
+Owner: Storage Execution
+SlackSupportChannelName: "#server-storage-execution"
+SlackSupportChannelId: C2RCHGB2L
 Description: |
   A basic workload to test/document the HotCollectionUpdater actor type, which adds documents to a
   designated "hot" collection.
