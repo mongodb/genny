@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Cluster Scalability
-SlackSupportChannelName: "#server-sharding"
-SlackSupportChannelId: C8PK5KZ5H
 Description: |
   Loads a large set of documents with a random value assinged to `field`.
 

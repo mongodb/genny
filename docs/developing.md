@@ -20,46 +20,17 @@ All genny commands now use `./run-genny`. For a full list run `./run-genny --hel
 ### Linters
 
 
-#### Lint Python:
+Lint Python:
 
 ```sh
 ./run-genny lint-python # add --fix to fix any errors.
 ```
 
-#### Lint Workload and other YAML
-
-**Linting locally**
-
-The linting script requires a Github API token. To configure this locally follow these steps:
-
-1. Create a .env file in the root of the repo
-   ```sh
-   cp .env_template .env
-   ```
-
-2. Create an API token with repo access on Github [here](https://github.com/settings/tokens) and put it in the .env file created in the last step.Use the "Generate new token (classic)" option.
-
-      ![token creation image](./images/token_creation.png)
-
-
-3. Configure SSO for your API token as described [here](https://docs.github.com/en/enterprise-cloud@latest/authentication/authenticating-with-saml-single-sign-on)
-
-   ![sso configuration image](./images/sso_configuration.png)
-
-4. Finally, run the lint command:
-   ```sh
-   ./run-genny lint-yaml
-   ```
-
-**Linting in Evergreen**
-
-Alternatively, if you don't want to do the local setup you can run the standalone lint task in Evergreen:
+Lint Workload and other YAML:
 
 ```sh
-evergreen patch -p "genny" -t "t_lint_workloads_standalone" -v "amazon2" -f -u -y
+./run-genny lint-yaml
 ```
-
-The lint task is also ran in PR checks and the merge queue, but those take considerably more time than running the task locally or standalone in Evergreen.
 
 ### Workload Documentation Generation
 

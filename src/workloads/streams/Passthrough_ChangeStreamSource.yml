@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Atlas Streams
-SlackSupportChannelName: "#streams-engine"
-SlackSupportChannelId: C05P740L0VC
 Description: |
   Pipeline: Mongo Change Stream -> Project -> Memory
   Documents: 800k

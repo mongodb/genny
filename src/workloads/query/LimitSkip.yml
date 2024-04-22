@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Query Execution
-SlackSupportChannelName: "#query-execution"
-SlackSupportChannelId: CKABWR2CT
 Description: |
   This workload measures performance for $limit and $skip when different constants are supplied as
   arguments.

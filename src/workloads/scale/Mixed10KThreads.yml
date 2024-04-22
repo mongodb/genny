@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Storage Execution
-SlackSupportChannelName: "#server-storage-execution"
-SlackSupportChannelId: C2RCHGB2L
 Description: |
   This workload consists of a situation where the server is being contacted by 10k different
   clients to simulate an extreme case of overload in the server. Both reads and writes happen

@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Product Performance
-SlackSupportChannelName: "#performance"
-SlackSupportChannelId: C0V3KSB52
 Description: |
   This workload loads 10M rows into a collection, then executes collection scans in a single thread.
 

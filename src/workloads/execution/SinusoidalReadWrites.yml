@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Storage Execution
-SlackSupportChannelName: "#server-storage-execution"
-SlackSupportChannelId: C2RCHGB2L
 Description: |
   This workload attempts to create a sinusoidal distribution of reads/writes to test
   the behavior of execution control when the load on the system changes over time.

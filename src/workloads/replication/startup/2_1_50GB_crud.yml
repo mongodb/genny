@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Replication
-SlackSupportChannelName: "#server-replication"
-SlackSupportChannelId: C0V7X00AD
 Description: |
   Adds CRUD operations to be replayed during startup recovery for the heavy phase.
   To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.

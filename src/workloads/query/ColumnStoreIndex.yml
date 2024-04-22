@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Query Execution
-SlackSupportChannelName: "#query-execution"
-SlackSupportChannelId: CKABWR2CT
 Description: |
   This workload compares the query performance with columnar indexes to performances without them.
 

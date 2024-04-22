@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Atlas Streams
-SlackSupportChannelName: "#streams-engine"
-SlackSupportChannelId: C05P740L0VC
 Description: |
   Pipeline: Memory -> Tumbling Window (Group) -> Memory
   Input Documents: 3.2M

@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Performance Analysis
-SlackSupportChannelName: "#ask-devprod-performance"
-SlackSupportChannelId: C01VD0LQZED
 Description: |
   This workload shows off the actor template utility, which can be used to create a general
   actor template which can then be instantiated with parameters substituted.

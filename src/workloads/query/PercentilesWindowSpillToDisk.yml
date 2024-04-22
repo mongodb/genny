@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Query Integration
-SlackSupportChannelName: "#query-integration"
-SlackSupportChannelId: C04PDS7GAFM
 Description: |
   This tests $percentile window functions with different partitions and indexes to test its behavior
   when it spills to disk. There are a few cases to consider

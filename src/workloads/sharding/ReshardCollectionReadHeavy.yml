@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Cluster Scalability
-SlackSupportChannelName: "#server-sharding"
-SlackSupportChannelId: C8PK5KZ5H
 Description: |
   Runs the reshardCollection command while read and write operations are active on the collection
   being resharded.

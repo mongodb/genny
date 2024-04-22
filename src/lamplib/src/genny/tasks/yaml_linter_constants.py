@@ -5,8 +5,6 @@ REQUIRED_FIELDS = [
     "Description",
     "Owner",
     "Keywords",
-    "SlackSupportChannelName",
-    "SlackSupportChannelId",
 ]
 
 GRANDFATHERED_WORKLOADS_OWNERS_NOT_IN_MOTHRA = ["@mongodb/product-query", "@mongodb/query"]

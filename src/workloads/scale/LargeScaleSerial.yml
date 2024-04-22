@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Performance Infrastructure
-SlackSupportChannelName: "#ask-devprod-performance"
-SlackSupportChannelId: C01VD0LQZED
 Description: |
   This config simulates a "typical" large-scale OLTP workload running in parallel with a
   slower analytical operation. This is a use-case intended to improve with the addition of

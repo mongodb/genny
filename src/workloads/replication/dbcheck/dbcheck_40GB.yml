@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Replication
-SlackSupportChannelName: "#server-replication"
-SlackSupportChannelId: C0V7X00AD
 Description: |
   Measures the performance of running dbcheck's modes and its effect on crud operations.
 

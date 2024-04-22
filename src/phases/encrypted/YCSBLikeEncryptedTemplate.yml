@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Server Security
-SlackSupportChannelName: "#server-security"
-SlackSupportChannelId: CB3CW8M8C
 Description: |
   Template for encryption-enabled workloads that emulate a YCSB workload.
   Performs queries on an encrypted field, instead of _id, during the read/update phase.

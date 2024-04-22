@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Storage Execution
-SlackSupportChannelName: "#server-storage-execution"
-SlackSupportChannelId: C2RCHGB2L
 Description: |
   Test workload to evaluate Storage Engine behavior when running in a
   degraded replica set with or without eMRCf enabled.  A "degraded" replica

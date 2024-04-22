@@ -64,6 +64,8 @@ def main(genny_repo_root: str, lint_format: bool):
 
     if has_errors:
         sys.exit(1)
+    else:
+        SLOG.info("All YAML files are correctly formatted.")
 
 
 def check_required_fields(yaml_path):
@@ -72,10 +74,6 @@ def check_required_fields(yaml_path):
     for field in REQUIRED_FIELDS:
         if field not in workload:
             if field == "Keywords" and yaml_path in GRANDFATHERED_WORKLOADS_WITHOUT_KEYWORDS:
-                continue
-            if (
-                field == "SlackSupportChannelId" or field == "SlackSupportChannelName"
-            ) and workload["Owner"] in GRANDFATHERED_WORKLOADS_OWNERS_NOT_IN_MOTHRA:
                 continue
             SLOG.error(f"Genny workload {yaml_path} lacks the {field} field.")
             no_errors = False
@@ -102,23 +100,8 @@ def check_required_fields(yaml_path):
             f"""
             The configured team {team.name} does not have a SlackSupportChannelId or SlackSupportChannelName field in Mothra. 
             Please update the teams entry in Mothra to include these fields.
-            """
-        )
-        no_errors = False
 
-    if team.support_slack_channel_id != workload.get(
-        "SlackSupportChannelId"
-    ) or team.support_slack_channel_name != workload.get("SlackSupportChannelName"):
-        SLOG.error(
-            f"""
-            The SlackSupportChannelId and SlackSupportChannelName fields in the workload at {yaml_path} do not match the values in the Mothra repository for the team {team.name}.
-            Please correct the SlackSupportChannelId and SlackSupportChannelName fields to match the values in the Mothra repository.
-
-            Actual SlackSupportChannelId: {workload.get("SlackSupportChannelId")}
-            Expected SlackSupportChannelId: {team.support_slack_channel_id}
-
-            Actual SlackSupportChannelName: {workload.get("SlackSupportChannelName")}
-            Expected SlackSupportChannelName: {team.support_slack_channel_name}
+            Mothra Repository: https://github.com/10gen/mothra
             """
         )
         no_errors = False

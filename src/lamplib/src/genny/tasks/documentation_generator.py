@@ -1,15 +1,17 @@
 from os import path
 import os
 from pathlib import PurePosixPath
-from re import S
-from typing import NamedTuple
 from typing import NamedTuple, Optional
 
 from jinja2 import Environment, PackageLoader
 import structlog
 import yaml
 
+from tasks.mothra_service import MothraService
+
 SLOG = structlog.get_logger(__name__)
+
+mothra_service = MothraService()
 
 
 class Workload(NamedTuple):
@@ -70,6 +72,8 @@ def get_workload_from_file(yaml_path: str, genny_repo_root: str) -> Workload:
         workload_yaml = yaml.safe_load(f)
         workload_name = PurePosixPath(yaml_path).stem
         path = yaml_path.replace(genny_repo_root, "")
+        team = mothra_service.get_team(workload_yaml.get("Owner"))
+
         return Workload(
             name=workload_name,
             owner=workload_yaml.get("Owner"),
@@ -77,8 +81,8 @@ def get_workload_from_file(yaml_path: str, genny_repo_root: str) -> Workload:
             keywords=workload_yaml.get("Keywords", []),
             path=path,
             github_link=f"https://www.github.com/mongodb/genny/blob/master{path}",
-            support_channel_id=workload_yaml.get("SlackSupportChannelId", None),
-            support_channel_name=workload_yaml.get("SlackSupportChannelName", None),
+            support_channel_id=team.support_slack_channel_id if team else None,
+            support_channel_name=team.support_slack_channel_name if team else None,
         )
 
 

@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Query Execution
-SlackSupportChannelName: "#query-execution"
-SlackSupportChannelId: CKABWR2CT
 Description: |
   This workload runs queries on time-series collections that can at least partially run with block
   processing. At the moment, only queries with a $match prefix are eligible for block processing.

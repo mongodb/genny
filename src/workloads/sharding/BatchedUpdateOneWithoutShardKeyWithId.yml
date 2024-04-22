@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Cluster Scalability
-SlackSupportChannelName: "#server-sharding"
-SlackSupportChannelId: C8PK5KZ5H
 Description: |
   Runs the batched updateOne writes of type WithoutShardKeyWithId with a batch size of 1000.
 

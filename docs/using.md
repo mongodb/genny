@@ -441,34 +441,24 @@ Try using `python test_result_summary.py --help` for more options.
 
 1.  Create a yaml file in `./src/workloads` in whatever topical subdirectory you deem appropriate and populate it with appropriate configuration. If you have yaml configuration that may need loading, place it in `./src/phases` (and for more details about what that means, see [here](#org2078b23)). Consider whether existing Actors can be repurposed for your workload, or whether a new one is needed. For the latter, see [here](#org7e6c6bd).
 
+
     ```bash
     vim src/workloads/[workload_dir]/[workload_name.yml]
     vim src/phases/[phase_dir]/[phases_name.yml] # Only necessary if creating external configuration
     ./run-genny create-new-actor  # Only necessary if creating a new Actor
     ```
+    
+    Note: The `Owner` field in the workload yaml is expected to be a valid team in the [mothra](https://github.com/10gen/mothra/tree/main/mothra/teams) repo. Each team in Mothra that is referenced in Genny is expected to have a `support_slack_channel_name` and `support_slack_channel_id` in Mothra, if these values are not present you will need to add them before merging your workload.
 
 2.  Run the self-tests:
 
     ```bash
-    ./run-genny cmake-test  # Run C++ Unit test - only necessary if editing core C++ code
-    ./run-genny resmoke-test  # Run Actor integration tests - only necessary if adding/editing Actors
+	./run-genny lint-yaml  # Lint all YAML files
+	./run-genny cmake-test  # Run C++ Unit test - only necessary if editing core C++ code
+	./run-genny resmoke-test  # Run Actor integration tests - only necessary if adding/editing Actors
     ```
 
-    Note: the current [issue](#orgb084b49) running resmoke-test. 
-
-    Linting requires special configuration to run locally, see [here](./developing.md#lint-workload-and-other-yaml) for more information before proceeding with this command:
-
-    ```bash
-    ./run-genny lint-yaml  # Lint all YAML files, 
-    ```
-
-    Run the linter in Evergreen with:
-
-    ```bash
-    evergreen patch -p "genny" -t "t_lint_workloads_standalone" -v "amazon2" -f -u -y
-    ```
-
-    Note: There is no schema-checking of the yaml.
+    Note the current [issue](#orgb084b49) running resmoke-test. Also, note that there is no schema-checking of the yaml.
 
 3. Update workload documentation.
 

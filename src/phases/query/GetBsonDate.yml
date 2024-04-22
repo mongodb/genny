@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Query Execution
-SlackSupportChannelName: "#query-execution"
-SlackSupportChannelId: CKABWR2CT
 Description: |
   This file defines a parameterized configuration 'GetBsonDate' to work around the issue of
   ISODate.

@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Query Execution
-SlackSupportChannelName: "#query-execution"
-SlackSupportChannelId: CKABWR2CT
 Description: |
   This workload compares performance of inserts into a collection with only the default _id index,
   and in presence of the columnstore index. It uses an artificial data set with a wide overall

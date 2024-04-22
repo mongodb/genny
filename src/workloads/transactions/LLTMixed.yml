@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Product Performance
-SlackSupportChannelName: "#performance"
-SlackSupportChannelId: C0V3KSB52
 Description: |
   Workload to Benchmark the effect of LongLivedTransactions on a Mixed workload.
   The intent here is to test multiple transactions contained within a singular transaction (long lived).

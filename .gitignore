@@ -33,6 +33,3 @@ curator
 .vscode
 # clangd
 .cache
-
-# secrets
-.env

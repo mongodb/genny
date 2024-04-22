@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Storage Execution
-SlackSupportChannelName: "#server-storage-execution"
-SlackSupportChannelId: C2RCHGB2L
 Description: |
   This workload simulates a case of extreme overload with a majority of reads happening.
 

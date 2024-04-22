@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Product Performance
-SlackSupportChannelName: "#performance"
-SlackSupportChannelId: C0V3KSB52
 Description: |
   This workload is a short version load used to test Mongosync Collection Copy stage performance.
   The workload starts Mongosync on a cluster with an preloaded initial dataset.

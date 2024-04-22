@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Query Execution
-SlackSupportChannelName: "#query-execution"
-SlackSupportChannelId: CKABWR2CT
 Description: |
   Create collection with multiple indexes and run queries for which multi planner needs to read a lot
   of data in order to pick the best plan.

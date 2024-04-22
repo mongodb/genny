@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Atlas Serverless II
-SlackSupportChannelName: "#ask-cloud-atlas-serverless"
-SlackSupportChannelId: C050UC5MF1Q
 Description: |
   This workload is an extension of scale/LargeIndexedIns.yml to run the workload
   on multiple serverless tenants, with some slight variations. The Clients are

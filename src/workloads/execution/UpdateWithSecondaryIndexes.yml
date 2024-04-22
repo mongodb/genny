@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Storage Execution
-SlackSupportChannelName: "#server-storage-execution"
-SlackSupportChannelId: C2RCHGB2L
 Description: |
   Updates a large range of documents in the collection.
   Multiple secondary indexes are present.

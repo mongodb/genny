@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Query Execution
-SlackSupportChannelName: "#query-execution"
-SlackSupportChannelId: CKABWR2CT
 Description: |
   This workload measures $lookup performance for scenarios that look up local integer key against
   foreign collection's integer key, when the foreign collections have multiple collection

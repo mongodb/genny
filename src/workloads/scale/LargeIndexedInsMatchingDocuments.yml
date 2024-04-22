@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Product Performance
-SlackSupportChannelName: "#performance"
-SlackSupportChannelId: C0V3KSB52
 Description: |
   This is an indexed $in workload that matches documents in a collection.
   This workload is intended to test a more representative workload

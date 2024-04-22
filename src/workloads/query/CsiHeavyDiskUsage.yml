@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Query Execution
-SlackSupportChannelName: "#query-execution"
-SlackSupportChannelId: CKABWR2CT
 Description: |
   This workload measures bulk insert performance against a collection named "coll" in a database
   named "heavy_io". The collection and database must be set up before running the workload. The

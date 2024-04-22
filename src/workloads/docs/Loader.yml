@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Product Performance
-SlackSupportChannelName: "#performance"
-SlackSupportChannelId: C0V3KSB52
 Description: |
   The Loader actor loads a fixed number of documents using a fixed
   number of threads to a set of collections. The number of collections created

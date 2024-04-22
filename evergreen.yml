@@ -56,7 +56,6 @@ buildvariants:
   tasks:
   - name: tg_compile_and_test_with_server_on_amz
   - name: t_compile_and_dry_run_asan
-  - name: t_lint_workloads_standalone
 
 - name: amazon2_arm64
   display_name: Amazon Linux 2 arm64
@@ -162,11 +161,6 @@ tasks:
 
 - name: t_lint_workloads
   commands:
-  - func: f_lint_workloads
-
-- name: t_lint_workloads_standalone
-  commands:
-  - func: f_fetch_source
   - func: f_lint_workloads
   
 - name: t_check_generated_docs

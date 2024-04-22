@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Product Performance
-SlackSupportChannelName: "#performance"
-SlackSupportChannelId: C0V3KSB52
 Description: |
   Test latencies for a classic transaction of moving money from one account to another, using
   different write concern, read concern, sessions and transactions.  Based on

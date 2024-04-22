@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 Owner: Query Integration
-SlackSupportChannelName: "#query-integration"
-SlackSupportChannelId: C04PDS7GAFM
 Description: |
   This test stress tests bucket unpacking. Each document has many top-level fields. Each query
   targets a measurement, and cannot use the index on time/meta for time-series collections. Each
