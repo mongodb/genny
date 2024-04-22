@@ -6,7 +6,7 @@ We support several setups of the TPC-H benchmark by varying the scale and schema
 
 ## Normalized
 ### Scale 1
-[Q1](./genreated/workloads/workloads.md#q1)
+[Q1](./genreated/workloads.md#q1)
 
 ### Scale 10
 
