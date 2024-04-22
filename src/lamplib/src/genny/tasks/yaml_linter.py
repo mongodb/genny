@@ -98,7 +98,7 @@ def check_required_fields(yaml_path):
     if not team.support_slack_channel_id or not team.support_slack_channel_name:
         SLOG.error(
             f"""
-            The configured team {team.name} does not have a SlackSupportChannelId or SlackSupportChannelName field in Mothra. 
+            The configured team {team.name} does not have a support_slack_channel_id or support_slack_channel_name field in Mothra. 
             Please update the teams entry in Mothra to include these fields.
 
             Mothra Repository: https://github.com/10gen/mothra

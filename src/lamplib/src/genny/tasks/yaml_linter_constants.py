@@ -1,11 +1,7 @@
 import os
 
 # These fields are required in every workload file.
-REQUIRED_FIELDS = [
-    "Description",
-    "Owner",
-    "Keywords",
-]
+REQUIRED_FIELDS = ["Description", "Owner", "Keywords"]
 
 GRANDFATHERED_WORKLOADS_OWNERS_NOT_IN_MOTHRA = ["@mongodb/product-query", "@mongodb/query"]
 
