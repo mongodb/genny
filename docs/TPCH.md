@@ -2,7 +2,7 @@
 
 The [TPC-H](https://www.tpc.org/tpch/) is a decision support benchmark. It consists of a suite of business oriented ad-hoc queries and concurrent data modifications. The queries and the data populating the database have been chosen to have broad industry-wide relevance. This benchmark illustrates decision support systems that examine large volumes of data, execute queries with a high degree of complexity, and give answers to critical business questions.
 
-We support several setups of the TPC-H benchmark by varying the schema type and scale.
+We support several setups of the TPC-H benchmark by varying the schema type and scale. You also have the option to [run the TPC-H benchmark locally](https://docs.google.com/document/d/1joTjH9yKuPLifuQIL1QxaBl59WyvYvNmNCaSoMnyDYM/edit?usp=sharing).
 
 ## Denormalized
 ### Scale 1
