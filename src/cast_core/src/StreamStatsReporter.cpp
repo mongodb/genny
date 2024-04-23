@@ -64,9 +64,15 @@ struct StreamStatsReporter::PhaseConfig {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException("StreamStatsReporter only allows a single repeat"));
         }
 
+        std::string tenantId = phaseContext["TenantId"].to<std::string>();
         std::string streamProcessorName = phaseContext["StreamProcessorName"].to<std::string>();
         bsoncxx::builder::stream::document builder;
-        statsCommand = builder << "streams_getStats" << "" << "name" << streamProcessorName << bsoncxx::builder::stream::finalize;
+        statsCommand = builder
+            << "streams_getStats" << ""
+            << "tenantId" << tenantId
+            << "name" << streamProcessorName
+            << "processorId" << streamProcessorName
+            << bsoncxx::builder::stream::finalize;
     }
 };
 

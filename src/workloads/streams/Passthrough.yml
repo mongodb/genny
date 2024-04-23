@@ -13,6 +13,7 @@ Keywords:
 
 GlobalDefaults:
   DatabaseName: &DatabaseName test
+  TenantId: &TenantId test
   StreamProcessorName: &StreamProcessorName sp
 
   # Genny workload client typically has 16 CPUs, so use 16 inserter threads each inserting
@@ -54,7 +55,9 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         streams_startStreamProcessor: ""
+        tenantId: *TenantId
         name: *StreamProcessorName
+        processorId: *StreamProcessorName
         pipeline: [
           { $source: { connectionName: "__testMemory" } },
           {
@@ -79,7 +82,9 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         streams_stopStreamProcessor: ""
+        tenantId: *TenantId
         name: *StreamProcessorName
+        processorId: *StreamProcessorName
 
 - Name: Insert_Batch1000x
   Type: RunCommand
@@ -96,7 +101,9 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         streams_testOnlyInsert: ""
+        tenantId: *TenantId
         name: *StreamProcessorName
+        processorId: *StreamProcessorName
         documents: *Batch1000x
   - Phase: 2
     Nop: true
@@ -111,6 +118,7 @@ Actors:
     Nop: true
   - Phase: 1
     Repeat: 1
+    TenantId: *TenantId
     StreamProcessorName: *StreamProcessorName
     ExpectedDocumentCount: *ExpectedDocumentCount
   - Phase: 2
