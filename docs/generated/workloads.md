@@ -2988,7 +2988,7 @@ timeseries, aggregate, group, sort
 ### Description
 This workload exercises '$unionWith' with two or more collections in multiple scenarios, including
 collections of high overlap, disjoint collections, multiple sequential unions, nested unions, and
-unions with complex subpipelines. These tests are run on standalones, replica sets, and sharded
+unions with complex subpipelines. These tests are run on standalones, and replica set
 environments.
 
 
