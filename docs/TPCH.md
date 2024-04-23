@@ -17,6 +17,13 @@ We support several setups of the TPC-H benchmark by varying the schema type and 
 [Q20](./generated/workloads.md#q20-1), [Q21](./generated/workloads.md#q21-1), [Q22](./generated/workloads.md#q22-1),
 [validate](./generated/workloads.md#validate-1)
 
+### Column Store
+- [AvgAcctBal](./generated/phases#avgacctbal)
+- [AvgItemCost](./generated/phases#avgitemcost)
+- [BiggestOrders](./generated/phases#biggestorders)
+- [TotalLineitemRevenue](./generated/phases#totallineitemrevenue)
+- [TotalOrderRevenue](./generated/phases#totalorderrevenue)
+
 ## Normalized
 ### Scale 1
 [Q1](./generated/workloads.md#q1-2), [Q2](./generated/workloads.md#q2-2), [Q3](./generated/workloads.md#q3-2), [Q4](./generated/workloads.md#q4-2), [Q5](./generated/workloads.md#q5-2), [Q6](./generated/workloads.md#q6-2), [Q7](./generated/workloads.md#q7-2), [Q8](./generated/workloads.md#q8-2), [Q9](./generated/workloads.md#q9-2)
@@ -29,5 +36,6 @@ We support several setups of the TPC-H benchmark by varying the schema type and 
 [Q10](./generated/workloads.md#q10-3), [Q11](./generated/workloads.md#q11-3), [Q12](./generated/workloads.md#q12-3), [Q13](./generated/workloads.md#q13-3), [Q14](./generated/workloads.md#q14-3), [Q15](./generated/workloads.md#q15-3), [Q16](./generated/workloads.md#q16-3), [Q17](./generated/workloads.md#q17-3), [Q18](./generated/workloads.md#q18-3), [Q19](./generated/workloads.md#q19-3)
 [Q20](./generated/workloads.md#q20-3), [Q21](./generated/workloads.md#q21-3), [Q22](./generated/workloads.md#q22-3),
 [validate](./generated/workloads.md#validate-3)
+
 
 _Note that the linked docs are auto-generated and these links may break_
