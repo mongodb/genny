@@ -18,11 +18,11 @@ We support several setups of the TPC-H benchmark by varying the schema type and 
 [validate](./generated/workloads.md#validate-1)
 
 ### Column Store
-- [AvgAcctBal](./generated/phases#avgacctbal)
-- [AvgItemCost](./generated/phases#avgitemcost)
-- [BiggestOrders](./generated/phases#biggestorders)
-- [TotalLineitemRevenue](./generated/phases#totallineitemrevenue)
-- [TotalOrderRevenue](./generated/phases#totalorderrevenue)
+- [AvgAcctBal](./generated/phases.md#avgacctbal)
+- [AvgItemCost](./generated/phases.md#avgitemcost)
+- [BiggestOrders](./generated/phases.md#biggestorders)
+- [TotalLineitemRevenue](./generated/phases.md#totallineitemrevenue)
+- [TotalOrderRevenue](./generated/phases.md#totalorderrevenue)
 
 ## Normalized
 ### Scale 1
