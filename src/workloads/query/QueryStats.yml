@@ -228,6 +228,9 @@ AutoRun:
     mongodb_setup:
       $eq:
       - atlas-like-replica-query-stats.2023-09
+      # Note: this is just using the configuration used for all of our 3-node repl query stats variants.
+      # The workload will still override the rate limit regardless of what the base configuration is.
+      - replica-query-stats-rate-limit
     branch_name:
       $gte:
-        v7.0
+        v6.0
