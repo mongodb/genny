@@ -14,4 +14,4 @@ The Streams workload consists of several Genny workloads that run in waterfall f
 - [Large Hopping Window](./generated/workloads.md#largehoppingwindow)
 - [Add Fields](./generated/workloads.md#addfields)
 
-Note that the linked docs are auto-generated and these links may break
+_Note that the linked docs are auto-generated and these links may break_
