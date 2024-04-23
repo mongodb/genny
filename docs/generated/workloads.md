@@ -4131,7 +4131,7 @@ starved by writes. The origin of the test was as a reproduction for BF-2385 in w
 starved out by writes.
 
 This more stressful version of the test only runs one test phase, using 1024 threads per operation
-for 45 minutes.
+for 10 minutes.
 
   
 ### Keywords
