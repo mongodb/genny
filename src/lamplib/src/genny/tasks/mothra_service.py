@@ -18,12 +18,9 @@ class Team:
     support_slack_channel_name: Optional[str] = None
     support_slack_channel_id: Optional[str] = None
 
-    def __init__(self, **kwargs):
-        # Filter out any kwargs that are not in the class
-        filtered_kwargs = {k: v for k, v in kwargs.items() if k in self.__annotations__}
-
-        for k, v in filtered_kwargs.items():
-            setattr(self, k, v)
+    @classmethod
+    def create(cls, **kwargs) -> "Team":
+        return cls(**{k: v for k, v in kwargs.items() if k in cls.__annotations__})
 
 
 class MothraService:
@@ -37,7 +34,7 @@ class MothraService:
     def _load_team_map(self) -> dict[str, Team]:
         SLOG.info("Cloning Mothra repository to get team information.")
         with tempfile.TemporaryDirectory() as temp_dir:
-            subprocess.run(["git", "clone", MOTHRA_REPO, temp_dir])
+            subprocess.run(["git", "clone", "--depth=1", MOTHRA_REPO, temp_dir])
             teams = []
             team_map = {}
             for file in TEAMS_FILES_PATHS:
@@ -45,7 +42,7 @@ class MothraService:
                     teams.extend(yaml.safe_load(f)["teams"])
 
             for team in teams:
-                team_data = Team(**team)
+                team_data = Team.create(**team)
                 team_map[team_data.name] = team_data
 
             return team_map
