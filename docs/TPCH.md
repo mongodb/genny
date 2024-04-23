@@ -29,3 +29,5 @@ We support several setups of the TPC-H benchmark by varying the schema type and 
 [Q10](./generated/workloads.md#q10-3), [Q11](./generated/workloads.md#q11-3), [Q12](./generated/workloads.md#q12-3), [Q13](./generated/workloads.md#q13-3), [Q14](./generated/workloads.md#q14-3), [Q15](./generated/workloads.md#q15-3), [Q16](./generated/workloads.md#q16-3), [Q17](./generated/workloads.md#q17-3), [Q18](./generated/workloads.md#q18-3), [Q19](./generated/workloads.md#q19-3)
 [Q20](./generated/workloads.md#q20-3), [Q21](./generated/workloads.md#q21-3), [Q22](./generated/workloads.md#q22-3),
 [validate](./generated/workloads.md#validate-3)
+
+* Note that the linked docs are auto-generated and these links may break
