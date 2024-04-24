@@ -191,7 +191,6 @@ AutoRun:
       - replica-all-feature-flags
       - replica-maintenance-events
       - replica-noflowcontrol
-      - single-replica
       - single-replica-classic-query-engine
       - single-replica-sbe
       - standalone

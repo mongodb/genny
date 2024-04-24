@@ -610,7 +610,6 @@ AutoRun:
       - replica
       - replica-80-feature-flags
       - replica-all-feature-flags
-      - single-replica
       - single-replica-classic-query-engine
       - single-replica-sbe
     branch_name:

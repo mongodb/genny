@@ -96,7 +96,6 @@ AutoRun:
       - replica-all-feature-flags
       - shard
       - shard-80-feature-flags
-      - single-replica
       - single-replica-15gbwtcache
       - standalone
       - standalone-classic-query-engine

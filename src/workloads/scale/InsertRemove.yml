@@ -29,7 +29,6 @@ AutoRun:
       - atlas
       - atlas-like-replica.2022-10
       - replica
-      - single-replica
       - standalone
       - shard
       - shard-80-feature-flags

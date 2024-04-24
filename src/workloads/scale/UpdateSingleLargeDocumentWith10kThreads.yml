@@ -74,5 +74,5 @@ Actors:
 # - When:
 #     mongodb_setup:
 #       $eq:
-#       - single-replica
+#       - replica
 

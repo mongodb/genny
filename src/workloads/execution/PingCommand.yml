@@ -60,5 +60,5 @@ AutoRun:
 - When:
     mongodb_setup:
       $eq:
-      - single-replica
+      - replica
       - standalone
