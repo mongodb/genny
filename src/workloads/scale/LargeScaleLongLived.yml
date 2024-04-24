@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: Storage Engines
+Owner: Storage Execution
 Description: |
   This workload consists of two phases intended to test the basic long lived reader writer actors
   created for the large scale workload automation project. It creates a database with 10K

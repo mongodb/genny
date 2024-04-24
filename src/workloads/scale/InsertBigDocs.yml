@@ -1,7 +1,7 @@
 # This workload loads 500 rows into a collection, each of which is approximately 15MB in size.
 
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/replication"
+Owner: Replication
 Description: |
   TODO: TIG-3321
 

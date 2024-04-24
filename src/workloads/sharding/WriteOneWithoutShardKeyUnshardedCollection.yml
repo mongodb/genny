@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/sharding"
+Owner: Cluster Scalability
 Description: |
   On an unsharded collection on a single shard cluster, run workloads that updateOne, deleteOne, and findAndModify.
 

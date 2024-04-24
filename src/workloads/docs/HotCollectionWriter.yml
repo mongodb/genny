@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: Storage Engines
+Owner: Storage Execution
 Description: |
   A basic workload to test/document the HotCollectionUpdater actor type, which adds documents to a
   designated "hot" collection.

@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: mongodb/server-replication"
+Owner: Replication
 Description: |
  Issues dummy reads against both databases used in the light and the heavy phases.
   To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.

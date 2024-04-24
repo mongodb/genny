@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: mongodb/server-replication"
+Owner: Replication
 Description: |
   Measures the performance of running dbcheck's modes and its effect on crud operations.
 

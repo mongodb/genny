@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   This workload is a mixed workload to test the maximum throughput that
   can be achieved by change event application (CEA). The workload starts Mongosync

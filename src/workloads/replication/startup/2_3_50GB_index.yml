@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: mongodb/server-replication"
+Owner: Replication
 Description: |
   Initiates an index build to be continued during startup recovery for the heavy load phase.
   To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.

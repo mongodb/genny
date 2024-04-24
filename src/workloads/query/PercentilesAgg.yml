@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-integration"
+Owner: Query Integration
 Description: |
   Run tests for $percentile accumulator over 2 data distributions. We create a new collection for
   each distribution as putting the fields into the same document might be impacted by how much
