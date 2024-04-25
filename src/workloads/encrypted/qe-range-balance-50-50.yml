@@ -2,6 +2,8 @@ SchemaVersion: 2018-07-01
 Owner: "@10gen/server-security"
 Description: |
   QE Range Release Criteria Experiment
+Keywords:
+- Queryable Encryption
 
 GlobalDefaults:
   MyDatabase: &encrypted_db genny_release_criteria
@@ -47,7 +49,6 @@ Clients:
   
 
 Actors:
-  
 
   
   
@@ -65,10 +66,6 @@ Actors:
       - OperationName: insertOne
         OperationMetricsName: inserts
         OperationCommand:
-          
-
-            
-            
           Document:
             tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 0}}}}
             age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 0}}}}
@@ -91,10 +88,6 @@ Actors:
       - OperationName: insertOne
         OperationMetricsName: inserts
         OperationCommand:
-          
-
-            
-            
           Document:
             tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 6250}}}}
             age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 6250}}}}
@@ -117,10 +110,6 @@ Actors:
       - OperationName: insertOne
         OperationMetricsName: inserts
         OperationCommand:
-          
-
-            
-            
           Document:
             tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 12500}}}}
             age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 12500}}}}
@@ -143,10 +132,6 @@ Actors:
       - OperationName: insertOne
         OperationMetricsName: inserts
         OperationCommand:
-          
-
-            
-            
           Document:
             tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 18750}}}}
             age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 18750}}}}
@@ -169,10 +154,6 @@ Actors:
       - OperationName: insertOne
         OperationMetricsName: inserts
         OperationCommand:
-          
-
-            
-            
           Document:
             tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 25000}}}}
             age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 25000}}}}
@@ -195,10 +176,6 @@ Actors:
       - OperationName: insertOne
         OperationMetricsName: inserts
         OperationCommand:
-          
-
-            
-            
           Document:
             tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 31250}}}}
             age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 31250}}}}
@@ -221,10 +198,6 @@ Actors:
       - OperationName: insertOne
         OperationMetricsName: inserts
         OperationCommand:
-          
-
-            
-            
           Document:
             tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 37500}}}}
             age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 37500}}}}
@@ -247,10 +220,6 @@ Actors:
       - OperationName: insertOne
         OperationMetricsName: inserts
         OperationCommand:
-          
-
-            
-            
           Document:
             tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 43750}}}}
             age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 43750}}}}
@@ -273,10 +242,6 @@ Actors:
       - OperationName: insertOne
         OperationMetricsName: inserts
         OperationCommand:
-          
-
-            
-            
           Document:
             tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 50000}}}}
             age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 50000}}}}
@@ -299,10 +264,6 @@ Actors:
       - OperationName: insertOne
         OperationMetricsName: inserts
         OperationCommand:
-          
-
-            
-            
           Document:
             tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 56250}}}}
             age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 56250}}}}
@@ -325,10 +286,6 @@ Actors:
       - OperationName: insertOne
         OperationMetricsName: inserts
         OperationCommand:
-          
-
-            
-            
           Document:
             tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 62500}}}}
             age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 62500}}}}
@@ -351,10 +308,6 @@ Actors:
       - OperationName: insertOne
         OperationMetricsName: inserts
         OperationCommand:
-          
-
-            
-            
           Document:
             tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 68750}}}}
             age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 68750}}}}
@@ -377,10 +330,6 @@ Actors:
       - OperationName: insertOne
         OperationMetricsName: inserts
         OperationCommand:
-          
-
-            
-            
           Document:
             tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 75000}}}}
             age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 75000}}}}
@@ -403,10 +352,6 @@ Actors:
       - OperationName: insertOne
         OperationMetricsName: inserts
         OperationCommand:
-          
-
-            
-            
           Document:
             tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 81250}}}}
             age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 81250}}}}
@@ -429,10 +374,6 @@ Actors:
       - OperationName: insertOne
         OperationMetricsName: inserts
         OperationCommand:
-          
-
-            
-            
           Document:
             tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 87500}}}}
             age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 87500}}}}
@@ -455,10 +396,6 @@ Actors:
       - OperationName: insertOne
         OperationMetricsName: inserts
         OperationCommand:
-          
-
-            
-            
           Document:
             tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 93750}}}}
             age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 93750}}}}
@@ -504,7 +441,6 @@ Actors:
           - OperationName: updateOne
             OperationMetricsName: update
             OperationCommand:
-            
               Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
               Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
           Transitions: *transitions
@@ -543,7 +479,6 @@ Actors:
           - OperationName: updateOne
             OperationMetricsName: update
             OperationCommand:
-            
               Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
               Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
           Transitions: *transitions
@@ -582,7 +517,6 @@ Actors:
           - OperationName: updateOne
             OperationMetricsName: update
             OperationCommand:
-            
               Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
               Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
           Transitions: *transitions
@@ -621,7 +555,6 @@ Actors:
           - OperationName: updateOne
             OperationMetricsName: update
             OperationCommand:
-            
               Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
               Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
           Transitions: *transitions
@@ -660,7 +593,6 @@ Actors:
           - OperationName: updateOne
             OperationMetricsName: update
             OperationCommand:
-            
               Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
               Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
           Transitions: *transitions
@@ -699,7 +631,6 @@ Actors:
           - OperationName: updateOne
             OperationMetricsName: update
             OperationCommand:
-            
               Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
               Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
           Transitions: *transitions
@@ -738,7 +669,6 @@ Actors:
           - OperationName: updateOne
             OperationMetricsName: update
             OperationCommand:
-            
               Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
               Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
           Transitions: *transitions
@@ -777,7 +707,6 @@ Actors:
           - OperationName: updateOne
             OperationMetricsName: update
             OperationCommand:
-            
               Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
               Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
           Transitions: *transitions
@@ -816,7 +745,6 @@ Actors:
           - OperationName: updateOne
             OperationMetricsName: update
             OperationCommand:
-            
               Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
               Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
           Transitions: *transitions
@@ -855,7 +783,6 @@ Actors:
           - OperationName: updateOne
             OperationMetricsName: update
             OperationCommand:
-            
               Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
               Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
           Transitions: *transitions
@@ -894,7 +821,6 @@ Actors:
           - OperationName: updateOne
             OperationMetricsName: update
             OperationCommand:
-            
               Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
               Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
           Transitions: *transitions
@@ -933,7 +859,6 @@ Actors:
           - OperationName: updateOne
             OperationMetricsName: update
             OperationCommand:
-            
               Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
               Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
           Transitions: *transitions
@@ -972,7 +897,6 @@ Actors:
           - OperationName: updateOne
             OperationMetricsName: update
             OperationCommand:
-            
               Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
               Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
           Transitions: *transitions
@@ -1011,7 +935,6 @@ Actors:
           - OperationName: updateOne
             OperationMetricsName: update
             OperationCommand:
-            
               Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
               Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
           Transitions: *transitions
@@ -1050,7 +973,6 @@ Actors:
           - OperationName: updateOne
             OperationMetricsName: update
             OperationCommand:
-            
               Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
               Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
           Transitions: *transitions
@@ -1089,12 +1011,10 @@ Actors:
           - OperationName: updateOne
             OperationMetricsName: update
             OperationCommand:
-            
               Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
               Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
           Transitions: *transitions
 
- 
 
 
   - Name: LoggingActor0
