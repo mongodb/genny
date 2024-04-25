@@ -57,7 +57,6 @@ Actors:
         streams_startStreamProcessor: ""
         tenantId: *TenantId
         name: *StreamProcessorName
-        processorId: *StreamProcessorName
         pipeline: [
           { $source: { connectionName: "__testMemory" } },
           {
@@ -84,7 +83,6 @@ Actors:
         streams_stopStreamProcessor: ""
         tenantId: *TenantId
         name: *StreamProcessorName
-        processorId: *StreamProcessorName
 
 - Name: Insert_Batch1000x
   Type: RunCommand
@@ -103,7 +101,6 @@ Actors:
         streams_testOnlyInsert: ""
         tenantId: *TenantId
         name: *StreamProcessorName
-        processorId: *StreamProcessorName
         documents: *Batch1000x
   - Phase: 2
     Nop: true

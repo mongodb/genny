@@ -58,7 +58,7 @@ TEST_CASE_METHOD(MongoTestFixture, "StreamStatsReporter successfully connects to
                 << "streams_startStreamProcessor" << ""
                 << "tenantId" << "test"
                 << "name" << "sp"
-                << "processorId" << "sp"
+                << "processorId" << "test_spid"
                 << "pipeline" << bsoncxx::builder::stream::open_array
                 << bsoncxx::builder::stream::open_document
                 << "$source" << bsoncxx::builder::stream::open_document << "connectionName" << "__testMemory" << bsoncxx::builder::stream::close_document

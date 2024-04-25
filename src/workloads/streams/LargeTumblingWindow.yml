@@ -71,7 +71,6 @@ Actors:
         streams_startStreamProcessor: ""
         tenantId: *TenantId
         name: *StreamProcessorName
-        processorId: *StreamProcessorName
         pipeline: [
           {
             $source: {
@@ -115,7 +114,6 @@ Actors:
         streams_stopStreamProcessor: ""
         tenantId: *TenantId
         name: *StreamProcessorName
-        processorId: *StreamProcessorName
 
 - Name: Insert_Batch1000x
   Type: RunCommand
@@ -134,7 +132,6 @@ Actors:
         streams_testOnlyInsert: ""
         tenantId: *TenantId
         name: *StreamProcessorName
-        processorId: *StreamProcessorName
         documents: *Batch1000x
   - Phase: 2
     Repeat: 1
@@ -146,7 +143,6 @@ Actors:
         streams_testOnlyInsert: ""
         tenantId: *TenantId
         name: *StreamProcessorName
-        processorId: *StreamProcessorName
         documents:
         - *FlushDocument
   - Phase: 3
