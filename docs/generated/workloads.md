@@ -4186,7 +4186,7 @@ CrudActor, indexes, Loader, memory, planning, scale, stress
 ### Owner
 @mongodb/query
 ### Description
-The workload tests the server under a "multi-plan storm" situation, by letting many threads execute a query, which triggers a multi-plan. The large number of indexes on the test collection lets the planner generate numerous candidate plans. Normally, plans involving a sorter would quickly loose,  but using a large "skip" attribute with the command delays the end of the best plan contest significantly. This eventually makes the system run out-of-memory, due to each of the plans performing a sort on a  large number of documents.
+The workload tests the server under a "multi-plan storm" situation, by letting many threads execute a query, which triggers a multi-plan. The large number of indexes on the test collection lets the planner generate numerous candidate plans. Normally, plans involving a sorter would quickly loose, but using a large "skip" attribute with the command delays the end of the best plan contest significantly. This eventually makes the system run out-of-memory, due to each of the plans performing a sort on a large number of documents.
 
   
 ### Keywords
