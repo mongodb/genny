@@ -47,15 +47,6 @@ Clients:
   {% endif %}
 
 Actors:
-  {# - Name: DataGenerator
-    Type: Python
-    Threads: 1
-    Phases:
-    - Repeat: 1
-      Module: qe_range_data_generation
-      Endpoint: generate_all_data
-    - *nop
-    - *nop #}
 {% if not encrypt %}
   - Name: CreateSecondaryIndexes
     Type: RunCommand
@@ -96,25 +87,13 @@ Actors:
     ClientName: EncryptedPool
     Phases:
     - *nop
-    - Repeat: {{ document_count // insert_threads // batch_size }}
+    - Repeat: {{ document_count // insert_threads }}
       Collection: *encrypted_coll
       MetricsName: "load"
       Operations:
       - OperationName: insertOne
         OperationMetricsName: inserts
         OperationCommand:
-          {# Documents:
-          {% for b in range(batch_size) %}
-          - tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "{{ timestamp_file }}", "sequential": true, "startFromLine": {{t * document_count // insert_threads + b * document_count // insert_threads // batch_size}}}}}}
-            age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "{{ age_file }}", "sequential": true, "startFromLine": {{t * document_count // insert_threads + b * document_count // insert_threads // batch_size}}}}}}
-            bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "{{ balance_file }}", "sequential": true, "startFromLine": {{t * document_count // insert_threads + b * document_count // insert_threads // batch_size}}}}}}
-            _id: {^Inc: {start: {{ b * document_count // insert_threads // batch_size }}, multiplier: 500000}}
-          {% endfor %} #}
-
-            {# {{ {'tm_retail_tx': 'tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "%s", "sequential": true, "startFromLine": %i}}}}' % (timestamp_file, t * document_count // insert_threads),
-            'age_hospitals': 'age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "%s", "sequential": true, "startFromLine": %i}}}}' % (age_file, t * document_count // insert_threads),
-            'bnk_bal': 'bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "%s", "sequential": true, "startFromLine": %i}}}}' % (balance_file, t * document_count // insert_threads)}[field_name] }} #}
-            
           Document:
             tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "{{ timestamp_file }}", "sequential": true, "startFromLine": {{t * document_count // insert_threads}}}}}}
             age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "{{ age_file }}", "sequential": true, "startFromLine": {{t * document_count // insert_threads}}}}}}
@@ -160,17 +139,11 @@ Actors:
           - OperationName: updateOne
             OperationMetricsName: update
             OperationCommand:
-            {% set selector_dict = {
-              'timestamp': '{^RandomInt: {min: 0, max: 10000000000} } ',
-              'age': '{^ConvertToInt32: {from: {^RandomInt: {min: 1, max: 55000} } } }',
-              'balance': '{^ConvertToDecimal: {from: {^RandomInt: {min: 1, max: 1000000} } } }'
-            }%}
               Filter: { {{ field_name }}: {^ConvertTo{{ field_type }}: {from: {^ChooseFromDataset:{"path": "{{ update_file }}"}}}}}
               Update: {$set: { {{ field_name }}: {^ConvertTo{{ field_type }}: {from: {^ChooseFromDataset:{"path": "{{ insert_file }}"} } } } } }
           Transitions: *transitions
 {% endfor %}
- {% endif %}
-
+{% endif %}
 
   - Name: LoggingActor0
     Type: LoggingActor
