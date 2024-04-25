@@ -1,7 +1,7 @@
 workload_name: rc_experiment
 patches:
   {{ patch_id }}: 
-    linux-1-node-replSet-fle.2022-11: {% for exp_name in experiments %}
+    perf-shard-lite-fle.arm.aws.2023-11: {% for exp_name in experiments %}
     - "qe_range_testing_workloads_evergreen_{{ exp_name }}"{% endfor %}
 genny_metrics:
   tests: 
