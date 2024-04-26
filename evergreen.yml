@@ -511,7 +511,8 @@ functions:
 
 modules:
 - name: mongo
-  repo: git@github.com:mongodb/mongo.git
+  owner: mongodb
+  repo: mongo
   # This prefix is relative to the path in git.get_project
   # I.e., src/genny/../../src = ./src
   prefix: ../../src
