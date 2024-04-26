@@ -16,7 +16,6 @@ AutoRun:
     mongodb_setup:
       $eq:
       - replica
-      - single-replica
       - standalone
       - standalone-80-feature-flags
       - standalone-all-feature-flags

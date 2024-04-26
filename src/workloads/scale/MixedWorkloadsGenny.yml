@@ -310,7 +310,6 @@ AutoRun:
       - replica-maintenance-events
       - replica-noflowcontrol
       - replica-query-stats-rate-limit
-      - single-replica
       - single-replica-classic-query-engine
       - single-replica-sbe
       - standalone

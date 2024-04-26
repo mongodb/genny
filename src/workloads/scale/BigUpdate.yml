@@ -135,7 +135,6 @@ AutoRun:
       - replica-all-feature-flags
       - replica-disable-execution-control
       - replica-noflowcontrol
-      - single-replica
       - standalone
       - standalone-classic-query-engine
       - standalone-query-stats

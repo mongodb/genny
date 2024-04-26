@@ -209,7 +209,6 @@ AutoRun:
       - replica
       - replica-80-feature-flags
       - replica-all-feature-flags
-      - single-replica
       - standalone
       - standalone-80-feature-flags
       - standalone-all-feature-flags
