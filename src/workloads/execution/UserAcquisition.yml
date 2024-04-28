@@ -159,7 +159,7 @@ Actors:
               createUser: 'testUserAcquisition'
               pwd: 'pwd'
               roles:
-                - {db: 'admin', role: 'userAcquisitionRoleAll',}
+                - {db: 'admin', role: 'userAcquisitionRoleAll'}
 
       - Phase: 1
         Duration: 5 minutes

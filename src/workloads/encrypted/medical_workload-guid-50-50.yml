@@ -70,15 +70,21 @@ Actors:
               - OperationName: find
                 OperationMetricsName: query
                 OperationCommand:
-                  Filter: {guid: {^Join: {array: ["99999999-9999-9999-99999", {^FormatString: {"format": "%|07d|", "withArgs": [{^RandomInt: {min: 0, max: 1000000}}]}}]}}}
+                  Filter: {guid: {^Join: {
+                    array: ["99999999-9999-9999-99999", {^FormatString: {"format": "%|07d|", "withArgs": [{^RandomInt: {min: 0, max: 1000000}}]}}]
+                  }}}
             Transitions: *transitions
           - Name: Update
             Operations:
               - OperationName: updateOne
                 OperationMetricsName: update
                 OperationCommand:
-                  Filter: {guid: {^Join: {array: ["99999999-9999-9999-99999", {^FormatString: {"format": "%|07d|", "withArgs": [{^RandomInt: {min: 0, max: 1000000}}]}}]}}}
-                  Update: {$set: {guid: {^Join: {array: ["99999999-9999-9999-99999", {^FormatString: {"format": "%|07d|", "withArgs": [{^RandomInt: {min: 0, max: 1000000}}]}}]}}}}
+                  Filter: {guid: {^Join: {
+                    array: ["99999999-9999-9999-99999", {^FormatString: {"format": "%|07d|", "withArgs": [{^RandomInt: {min: 0, max: 1000000}}]}}]
+                  }}}
+                  Update: {$set: {guid: {^Join: {
+                    array: ["99999999-9999-9999-99999", {^FormatString: {"format": "%|07d|", "withArgs": [{^RandomInt: {min: 0, max: 1000000}}]}}]
+                  }}}}
             Transitions: *transitions
 
   - Name: LoggingActor0

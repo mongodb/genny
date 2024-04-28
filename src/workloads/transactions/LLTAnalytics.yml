@@ -36,7 +36,14 @@ GlobalDefaults:
     prod: {^RandomInt: {min: 0, max: 10000}}
     price: {^RandomDouble: {min: 0.0, max: 1000.0}}
     data: {^Join: {array: ["aaaaaaaaaa", {^FastRandomString: {length: {^RandomInt: {min: 0, max: 10}}}}]}}
-    orders: {^Array: {of: {ts: {^RandomDate: {min: "2011-01-01", max: "2021-01-01"}}, quantity: {^RandomInt: {min: 1, max: 100}}, unitPrice: {^RandomDouble: {min: 0.0, max: 1000.0}}}, number: {^RandomInt: {min: 0, max: 10}}}}
+    orders: {^Array: {
+      of: {
+        ts: {^RandomDate: {min: "2011-01-01", max: "2021-01-01"}},
+        quantity: {^RandomInt: {min: 1, max: 100}},
+        unitPrice: {^RandomDouble: {min: 0.0, max: 1000.0}}
+      },
+      number: {^RandomInt: {min: 0, max: 10}}
+    }}
 
   LLTIndexes: &LLTIndexes
     - keys: {price: 1, ts: 1, cuid: 1} # Ptc
@@ -161,7 +168,14 @@ ActorTemplates:
             ScanType: snapshot
             # ScanContinuous: true
             # GenerateCollectionNames: true
-            AggregatePipeline: {array: [{"$match": {"cuid": {"$gte": 500}}}, {"$unwind": "$orders"}, {"$group": {"_id": "$ts", "total": {"$sum": {$multiply: ["$orders.unitPrice", "$orders.quantity"]}}}}, {"$sort": {"_id": 1}}]}
+            AggregatePipeline: {
+              array: [
+                {"$match": {"cuid": {"$gte": 500}}},
+                {"$unwind": "$orders"},
+                {"$group": {"_id": "$ts", "total": {"$sum": {$multiply: ["$orders.unitPrice", "$orders.quantity"]}}}},
+                {"$sort": {"_id": 1}}
+              ]
+            }
             AggregateOptions:
               BatchSize: 1000
               Comment: {^Parameter: {Name: "Comment", Default: "Aggregate.Snapshot"}}

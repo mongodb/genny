@@ -34,7 +34,16 @@ Actors:
           numeric: {^Choose: {from: [{^RandomInt: {min: -100, max: 100}}, {^RandomDouble: {min: 0.0, max: 500.0}}, null], weights: [1, 1, 8]}}
           string: {^Choose: {from: [{^RandomString: {length: 15}}, null], weights: [1, 4]}}
           date: {^Choose: {from: [{^RandomDate: {min: "2021-01-01", max: "2023-01-01"}}, null], weights: [2, 8]}}
-          randomType: {^Choose: {from: [{^RandomInt: {min: -100, max: 100}}, {^RandomDouble: {min: 0.0, max: 500.0}}, {^RandomDate: {min: "2021-01-01", max: "2023-01-01"}}, {^RandomString: {length: 15}}, null], weights: [1, 1, 1, 1, 5]}}
+          randomType: {^Choose: {
+            from: [
+              {^RandomInt: {min: -100, max: 100}},
+              {^RandomDouble: {min: 0.0, max: 500.0}},
+              {^RandomDate: {min: "2021-01-01", max: "2023-01-01"}},
+              {^RandomString: {length: 15}},
+              null
+            ],
+            weights: [1, 1, 1, 1, 5]
+          }}
       - Nop: true
       - Nop: true
       - Nop: true
@@ -158,7 +167,10 @@ Actors:
           - OperationMetricsName: TestMultipleOutputWithoutPartition
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$setWindowFields: {sortBy: {_id: 1}, output: {numeric: {$locf: "$numeric"}, string: {$locf: "$string"}, date: {$locf: "$date"}}}}, {$limit: *limit}]
+              Pipeline: [
+                {$setWindowFields: {sortBy: {_id: 1}, output: {numeric: {$locf: "$numeric"}, string: {$locf: "$string"}, date: {$locf: "$date"}}}},
+                {$limit: *limit}
+              ]
       - Nop: true
       - Nop: true
       - Nop: true
@@ -261,7 +273,20 @@ Actors:
           - OperationMetricsName: TestMultipleOutputWithSinglePartition
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$setWindowFields: {sortBy: {_id: 1}, partitionBy: "$part1", output: {randomType: {$locf: "$randomType"}, string: {$locf: "$string"}, date: {$locf: "$date"}}}}, {$limit: *limit}]
+              Pipeline: [
+                {
+                  $setWindowFields: {
+                    sortBy: {_id: 1},
+                    partitionBy: "$part1",
+                    output: {
+                      randomType: {$locf: "$randomType"},
+                      string: {$locf: "$string"},
+                      date: {$locf: "$date"}
+                    }
+                  }
+                },
+                {$limit: *limit}
+              ]
               Options:
                 AllowDiskUse: true
       - Nop: true
@@ -296,7 +321,16 @@ Actors:
           - OperationMetricsName: TestStringWithMultiplePartitions
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$setWindowFields: {sortBy: {_id: 1}, partitionBy: {part1: "$part1", part2: "$part2"}, output: {string: {$locf: "$string"}}}}, {$limit: *limit}]
+              Pipeline: [
+                {
+                  $setWindowFields: {
+                    sortBy: {_id: 1},
+                    partitionBy: {part1: "$part1", part2: "$part2"},
+                    output: {string: {$locf: "$string"}}
+                  }
+                },
+                {$limit: *limit}
+              ]
               Options:
                 AllowDiskUse: true
       - Nop: true
@@ -331,7 +365,16 @@ Actors:
           - OperationMetricsName: TestRandomTypeWithMultiplePartitions
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$setWindowFields: {sortBy: {_id: 1}, partitionBy: {part1: "$part1", part2: "$part2"}, output: {randomType: {$locf: "$randomType"}}}}, {$limit: *limit}]
+              Pipeline: [
+                {
+                  $setWindowFields: {
+                    sortBy: {_id: 1},
+                    partitionBy: {part1: "$part1", part2: "$part2"},
+                    output: {randomType: {$locf: "$randomType"}}
+                  }
+                },
+                {$limit: *limit}
+              ]
               Options:
                 AllowDiskUse: true
       - Nop: true
@@ -366,7 +409,20 @@ Actors:
           - OperationMetricsName: TestMultipleOutputWithMultiplePartitions
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$setWindowFields: {sortBy: {_id: 1}, partitionBy: {part1: "$part1", part2: "$part2"}, output: {randomType: {$locf: "$randomType"}, string: {$locf: "$string"}, date: {$locf: "$date"}}}}, {$limit: *limit}]
+              Pipeline: [
+                {
+                  $setWindowFields: {
+                    sortBy: {_id: 1},
+                    partitionBy: {part1: "$part1", part2: "$part2"},
+                    output: {
+                      randomType: {$locf: "$randomType"},
+                      string: {$locf: "$string"},
+                      date: {$locf: "$date"}
+                    }
+                  }
+                },
+                {$limit: *limit}
+              ]
               Options:
                 AllowDiskUse: true
 

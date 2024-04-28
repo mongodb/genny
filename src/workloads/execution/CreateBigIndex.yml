@@ -187,7 +187,7 @@ Actors:
           Parameters:
             Repeat: 5
       - # For an already-sharded collection, you cannot create unique indexes on other fields.
-        # https://www.mongodb.com/docs/manual/core/sharding-shard-key/#unique-indexes
+        # https://www.mongodb.com/docs/manual/core/sharding-shard-key/#unique-indexes
         OnlyRunInInstances: [standalone, replica_set]
         LoadConfig:
           Path: ../../phases/execution/CreateIndexPhase.yml

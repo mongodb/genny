@@ -73,7 +73,18 @@ Actors:
           - OperationName: find
             OperationMetricsName: MostSelectiveA
             OperationCommand:
-              Filter: {a: &SelectiveQuery {^Choose: {from: [{$gte: &BigKey {^Join: {array: ["8", {^FastRandomString: {length: 5, alphabet: "0123456789"}}]}}}, {$lte: &SmallKey {^Join: {array: ["1", {^FastRandomString: {length: 5, alphabet: "0123456789"}}]}}}]}}, b: &NonSelectiveQuery {^Choose: {from: [{$gte: *SmallKey}, {$lte: *BigKey}]}}, c: *NonSelectiveQuery}
+              Filter: {
+                a: &SelectiveQuery {
+                  ^Choose: {
+                    from: [
+                      {$gte: &BigKey {^Join: {array: ["8", {^FastRandomString: {length: 5, alphabet: "0123456789"}}]}}},
+                      {$lte: &SmallKey {^Join: {array: ["1", {^FastRandomString: {length: 5, alphabet: "0123456789"}}]}}}
+                    ]
+                  }
+                },
+                b: &NonSelectiveQuery {^Choose: {from: [{$gte: *SmallKey}, {$lte: *BigKey}]}},
+                c: *NonSelectiveQuery
+              }
       - Repeat: 2000
         Collection: *Collection
         Operations:

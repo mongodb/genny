@@ -101,7 +101,7 @@ Actors:
               Document: *small_doc
       - {Nop: true}
       - {Nop: true}
-      - {Nop: true,}
+      - {Nop: true}
 
   # 50/50 mix of reads and updates.  Target 2% of document population
   - Name: UpdateHeavyPhase
@@ -129,7 +129,7 @@ Actors:
               Filter: {$and: [{key1: *small_doc_key}, {key2: {$gt: 500}}]}
               Update: {$set: {payload: *rand_short_string}}
       - {Nop: true}
-      - {Nop: true,}
+      - {Nop: true}
 
   # 90/10 mix of reads/updates.
   - Name: ReadMostlyPhase
@@ -178,7 +178,7 @@ Actors:
           - OperationName: findOne
             OperationCommand:
               Filter: {$and: [{key1: *small_doc_key}, {key2: {$gt: 800}}, {key2: {$lte: 1000}}]}
-      - {Nop: true,}
+      - {Nop: true}
 
   # Delete the same number of documents that we added, returning the database to the original
   # population (i.e., # of documents)
