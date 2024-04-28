@@ -105096,7 +105096,14 @@ credit_cards: &field_credit_cards
       30095399151616: 10
       630430333314: 10
 
-guid: &field_guid {^Join: {array: ["99999999-9999-9999-99999", {^FormatString: {"format": "%|07d|", "withArgs": [{^Inc: {start: 1, multiplier: {^Parameter: {Name: "multiplier", Default: 0}}}}]}}]}}
+guid: &field_guid {
+  ^Join: {
+    array: [
+      "99999999-9999-9999-99999",
+      {^FormatString: {"format": "%|07d|", "withArgs": [{^Inc: {start: 1, multiplier: {^Parameter: {Name: "multiplier", Default: 0}}}}]}}
+    ]
+  }
+}
 
 document_insert_medical:
   _id: {^Inc: {start: 1, multiplier: {^Parameter: {Name: "multiplier", Default: 0}}}}

@@ -77,7 +77,14 @@ Actors:
         ScanType: standard
         GlobalRate: 10 per 10 seconds
         # Count the frequency of each character in array field "a".
-        AggregatePipeline: {array: [{"$addFields": {"a": {"$map": {"input": {"$range": [0, {"$strLenCP": "$a"}]}, "in": {"$substrCP": ["$a", "$$this", 1]}}}}}, {"$unwind": "$a"}, {"$group": {"_id": "$a", "count": {"$sum": 1}}}, {"$sort": {"_id": 1}}]}
+        AggregatePipeline: {
+          array: [
+            {"$addFields": {"a": {"$map": {"input": {"$range": [0, {"$strLenCP": "$a"}]}, "in": {"$substrCP": ["$a", "$$this", 1]}}}}},
+            {"$unwind": "$a"},
+            {"$group": {"_id": "$a", "count": {"$sum": 1}}},
+            {"$sort": {"_id": 1}}
+          ]
+        }
         AggregateOptions:
           BatchSize: 1000
           Comment: Aggregation to count char frequency
