@@ -245,8 +245,12 @@ Actors:
             OperationName: RunCommand
             OperationCommand:
               aggregate: *coll
-              pipeline: [{$match: {m: 1001}} # this will match 5000 docs
-, {$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
+              pipeline: [
+                {$match: {m: 1001}}, # this will match 5000 docs
+                {$sort: {t: 1}},
+                {$_internalInhibitOptimization: {}},
+                {$skip: 1e10}
+              ]
               cursor: {batchSize: *batchSize}
       - Repeat: *numQueryRuns # Phase 14
         Database: *db
@@ -256,8 +260,12 @@ Actors:
             OperationCommand:
               explain:
                 aggregate: *coll
-                pipeline: [{$match: {m: 1001}} # this will match 5000 docs
-, {$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
+                pipeline: [
+                  {$match: {m: 1001}}, # this will match 5000 docs
+                  {$sort: {t: 1}},
+                  {$_internalInhibitOptimization: {}},
+                  {$skip: 1e10}
+                ]
                 cursor: {batchSize: *batchSize}
       - *Nop
       - *Nop
@@ -268,8 +276,12 @@ Actors:
             OperationName: RunCommand
             OperationCommand:
               aggregate: *coll
-              pipeline: [{$match: {m: 1002}} # this will match 10 docs
-, {$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
+              pipeline: [
+                {$match: {m: 1002}}, # this will match 10 docs
+                {$sort: {t: 1}},
+                {$_internalInhibitOptimization: {}},
+                {$skip: 1e10}
+              ]
               cursor: {batchSize: *batchSize}
       - *Nop
       - *Nop

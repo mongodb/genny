@@ -45,7 +45,7 @@ Actors:
           - keys: {a: "hashed"}
           - keys: {loc2d: "2d"}
           - keys: {loc2dSphere: "2dsphere"}
-      - &Nop {Nop: true,}
+      - &Nop {Nop: true}
 
   - Name: Validate
     Type: RunCommand
