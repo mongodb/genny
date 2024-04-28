@@ -59,26 +59,35 @@ GlobalDefaults:
     #     <7 more fields like this>
     #   }
     # }
-    root: {^Object: {withNEntries: *objectWidth,
+    root: { ^Object: {
+      withNEntries: *objectWidth,
 
-        # We are using uniform distribution of fields to make the sampling more stable.
-        havingKeys: {^FormatString: {"format": "x%d", "withArgs": [{^RandomInt: {min: 0, max: *schemaWidth}}]}},
+      # We are using uniform distribution of fields to make the sampling more stable.
+      havingKeys:
+        {
+          ^FormatString:
+            {
+              "format": "x%d",
+              "withArgs": [{ ^RandomInt: { min: 0, max: *schemaWidth } }],
+            },
+        },
 
-        # We don't expect the actual values to matter.
-        andValues: {^RandomInt: {min: 0, max: *schemaWidth}},
+      # We don't expect the actual values to matter.
+      andValues: { ^RandomInt: { min: 0, max: *schemaWidth } },
 
-        # Occasionally, the key generator might produce the same key name. For this workload,
-        # it's OK to have some of the objects with fewer than 'objectWidth' fields (and we don't
-        # want to test parsing of the duplicated keys for the index as it's not a common user
-        # scenario).
-        duplicatedKeys: skip}}
+      # Occasionally, the key generator might produce the same key name. For this workload,
+      # it's OK to have some of the objects with fewer than 'objectWidth' fields (and we don't
+      # want to test parsing of the duplicated keys for the index as it's not a common user
+      # scenario).
+      duplicatedKeys: skip,
+    } }
 
 ActorTemplates:
   # We want to be able to compare results from the same test between the runs in presence of different
   # indexes. For this we'll have to instantiate the same actor multiple times with a unique name.
   - TemplateName: InsertFromSample
     Config:
-      Name: {^Parameter: {Name: "Name", Default: "Insert"}}
+      Name: { ^Parameter: { Name: "Name", Default: "Insert" } }
       Type: SamplingLoader
       Database: *db
       Collection: *coll
@@ -86,10 +95,10 @@ ActorTemplates:
       # No more than sampleSize*objectWidth paths can be "touched" by a sample.
       SampleSize: *sampleSize
 
-      Threads: {^Parameter: {Name: "Threads", Default: 1}}
+      Threads: { ^Parameter: { Name: "Threads", Default: 1 } }
       Phases:
         OnlyActiveInPhases:
-          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
+          Active: [{ ^Parameter: { Name: "OnlyActiveInPhase", Default: 1024 } }]
           NopInPhasesUpTo: *maxPhases
           PhaseConfig:
             # When the batch size is the same as sample size, each sampled document will be used in
@@ -100,12 +109,12 @@ ActorTemplates:
 
             # "Repeat" is pretty redundant with "InsertBatchSize", but "InsertBatchSize" is preferred.
             # Repetitions will still share the same sample.
-            Repeat: {^Parameter: {Name: "Repeats", Default: 1}}
+            Repeat: { ^Parameter: { Name: "Repeats", Default: 1 } }
 
             # The instances of the template must specify the number of batches to make it clear what
             # they are testing wrt to cold/warm state. The stats per batch will be available in the
             # 'IndividualBulkInsert' measurement.
-            Batches: {^Parameter: {Name: "Batches", Default: 500}}
+            Batches: { ^Parameter: { Name: "Batches", Default: 500 } }
 
 Actors:
   - Name: Loader
@@ -163,7 +172,7 @@ Actors:
               OperationCommand:
                 createIndexes: *coll
                 indexes:
-                  - key: {"$**": "columnstore"}
+                  - key: { "$**": "columnstore" }
                     name: csi
 
   # Repeat the same tests as with no index in presence of CSI.
@@ -172,4 +181,3 @@ Actors:
       TemplateParameters:
         Name: Csi
         OnlyActiveInPhase: 5
-

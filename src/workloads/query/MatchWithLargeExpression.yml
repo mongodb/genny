@@ -23,21 +23,60 @@ Keywords:
 ActorTemplates:
   - TemplateName: MatchExpressionWithOrClausesTemplate
     Config:
-      Name: {^Parameter: {Name: "Name", Default: "unused"}}
+      Name: { ^Parameter: { Name: "Name", Default: "unused" } }
       Type: CrudActor
       Database: *Database
       Threads: 1
       Phases:
         OnlyActiveInPhases:
-          Active: [{^Parameter: {Name: "ActivePhase", Default: -1}}]
+          Active: [{ ^Parameter: { Name: "ActivePhase", Default: -1 } }]
           NopInPhasesUpTo: *MaxPhases
           PhaseConfig:
-            Repeat: {^Parameter: {Name: "Repeat", Default: 1}}
+            Repeat: { ^Parameter: { Name: "Repeat", Default: 1 } }
             Collection: *Collection
             Operations:
               - OperationName: aggregate
                 OperationCommand:
-                  Pipeline: [{$match: {$or: {^Array: {of: {$and: [{a: {$gt: {^Inc: {start: 10}}}}, {b: {$gt: {^Inc: {start: 10}}}}]}, number: {^Parameter: {Name: "NumberOfClauses", Default: -1}}}}}}]
+                  Pipeline:
+                    [
+                      {
+                        $match:
+                          {
+                            $or:
+                              {
+                                ^Array:
+                                  {
+                                    of:
+                                      {
+                                        $and:
+                                          [
+                                            {
+                                              a:
+                                                {
+                                                  $gt: { ^Inc: { start: 10 } },
+                                                },
+                                            },
+                                            {
+                                              b:
+                                                {
+                                                  $gt: { ^Inc: { start: 10 } },
+                                                },
+                                            },
+                                          ],
+                                      },
+                                    number:
+                                      {
+                                        ^Parameter:
+                                          {
+                                            Name: "NumberOfClauses",
+                                            Default: -1,
+                                          },
+                                      },
+                                  },
+                              },
+                          },
+                      },
+                    ]
 
 Actors:
   - Name: InsertData
@@ -122,7 +161,7 @@ Actors:
         NumberOfClauses: 10000
 
 # TODO: PERF-4993
-#- ActorFromTemplate:
+# - ActorFromTemplate:
 #    TemplateName: MatchExpressionWithOrClausesTemplate
 #    TemplateParameters:
 #      Name: RunMatchExpressionOrWith50000Clauses

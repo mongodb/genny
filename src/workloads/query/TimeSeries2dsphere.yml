@@ -16,7 +16,7 @@ GlobalDefaults:
   dbname: &db test
   fieldName: &field "numeric"
   index: &index
-    keys: {location: '2dsphere'}
+    keys: { location: "2dsphere" }
 
   # Data distribution constants.
   # To insert more efficiently, pick a big-ish batch size.
@@ -54,7 +54,7 @@ GlobalDefaults:
   distPerDoc: &distPerDoc 0.0027
 
   # Other abbreviations.
-  nop: &Nop {Nop: true}
+  nop: &Nop { Nop: true }
 
 Actors:
   - Name: CreateTimeSeriesCollection
@@ -69,7 +69,9 @@ Actors:
           OperationCommand: {
             # We have to call the collection 'Collection0' because that's the name that Loader
             # chooses implicitly.
-            create: &coll Collection0, timeseries: {timeField: "timestamp", metaField: "meta"}}
+            create: &coll Collection0,
+            timeseries: { timeField: "timestamp", metaField: "meta" },
+          }
       - *Nop
       - *Nop
       - *Nop
@@ -88,8 +90,20 @@ Actors:
         DocumentCount: *documentCount
         BatchSize: *insertBatchSize
         Document:
-          timestamp: {^IncDate: {start: "2022-01-01", step: *docIntervalMillis}}
-          location: {^TwoDWalk: {docsPerSeries: *docsPerSeries, minX: *minX, maxX: *maxX, minY: *minY, maxY: *maxY, distPerDoc: *distPerDoc}}
+          timestamp:
+            { ^IncDate: { start: "2022-01-01", step: *docIntervalMillis } }
+          location:
+            {
+              ^TwoDWalk:
+                {
+                  docsPerSeries: *docsPerSeries,
+                  minX: *minX,
+                  maxX: *maxX,
+                  minY: *minY,
+                  maxY: *maxY,
+                  distPerDoc: *distPerDoc,
+                },
+            }
         Indexes:
           - *index
       - *Nop
@@ -123,7 +137,35 @@ Actors:
           - OperationMetricsName: GeoWithinQuery
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$match: {location: {$geoWithin: {$centerSphere: [[{^RandomDouble: {min: *minX, max: *maxX}}, {^RandomDouble: {min: *minY, max: *maxY}}], 0.001]}}}}, {$skip: 1e5}]
+              Pipeline:
+                [
+                  {
+                    $match:
+                      {
+                        location:
+                          {
+                            $geoWithin:
+                              {
+                                $centerSphere:
+                                  [
+                                    [
+                                      {
+                                        ^RandomDouble:
+                                          { min: *minX, max: *maxX },
+                                      },
+                                      {
+                                        ^RandomDouble:
+                                          { min: *minY, max: *maxY },
+                                      },
+                                    ],
+                                    0.001,
+                                  ],
+                              },
+                          },
+                      },
+                  },
+                  { $skip: 1e5 },
+                ]
       - *Nop
       - Duration: 30 seconds
         Database: *db
@@ -132,7 +174,24 @@ Actors:
           - OperationMetricsName: GeoNearQuery
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$geoNear: {key: 'location', near: [{^RandomDouble: {min: *minX, max: *maxX}}, {^RandomDouble: {min: *minY, max: *maxY}}], spherical: true, distanceField: 'd', maxDistance: 0.001}}, {$skip: 1e5}]
+              Pipeline:
+                [
+                  {
+                    $geoNear:
+                      {
+                        key: "location",
+                        near:
+                          [
+                            { ^RandomDouble: { min: *minX, max: *maxX } },
+                            { ^RandomDouble: { min: *minY, max: *maxY } },
+                          ],
+                        spherical: true,
+                        distanceField: "d",
+                        maxDistance: 0.001,
+                      },
+                  },
+                  { $skip: 1e5 },
+                ]
 
 AutoRun:
   - When:

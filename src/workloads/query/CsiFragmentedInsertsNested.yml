@@ -57,33 +57,105 @@ GlobalDefaults:
     #     }
     #   ]
     # }
-    root: {^Array: {of: {^Object: {withNEntries: *objectWidth, havingKeys: {^FormatString: {"format": "x%d", "withArgs": [{^RandomInt: {min: 0, max: *schemaWidth}}]}}, andValues: {^Array: {of: {
-                  # Create an object with either "a" or "b" key, or both. This is achieved by using
-                  # 'duplicatedKeys: skip' parameter, which would ignore the second generated key if
-                  # it has the same name as the first, so with probability 1/2 we'll get both fields
-                  # and with probability 1/4 each of {a: } and {b: }.
-                  ^Object: {withNEntries: 2, havingKeys: {^RandomString: {length: 1, alphabet: ab}}, andValues: {^Choose: {from: [{^RandomInt: {min: 0, max: *schemaWidth}}, [42, {^RandomInt: {min: 0, max: *schemaWidth}}], {obj: {^RandomInt: {min: 0, max: *schemaWidth}}}]}}, duplicatedKeys: skip}},
-                # 5 elements make it almost certain that both "a" and "b" are used in the array to
-                # yield ~10 paths per object.
-                number: 5}}, duplicatedKeys: skip}}, number: 1}}
+    root:
+      {
+        ^Array:
+          {
+            of:
+              {
+                ^Object:
+                  {
+                    withNEntries: *objectWidth,
+                    havingKeys:
+                      {
+                        ^FormatString:
+                          {
+                            "format": "x%d",
+                            "withArgs":
+                              [{ ^RandomInt: { min: 0, max: *schemaWidth } }],
+                          },
+                      },
+                    andValues: { ^Array: {
+                      of: {
+                        # Create an object with either "a" or "b" key, or both. This is achieved by using
+                        # 'duplicatedKeys: skip' parameter, which would ignore the second generated key if
+                        # it has the same name as the first, so with probability 1/2 we'll get both fields
+                        # and with probability 1/4 each of {a: } and {b: }.
+                        ^Object:
+                          {
+                            withNEntries: 2,
+                            havingKeys:
+                              {
+                                ^RandomString:
+                                  { length: 1, alphabet: ab },
+                              },
+                            andValues:
+                              {
+                                ^Choose:
+                                  {
+                                    from:
+                                      [
+                                        {
+                                          ^RandomInt:
+                                            {
+                                              min: 0,
+                                              max: *schemaWidth,
+                                            },
+                                        },
+                                        [
+                                          42,
+                                          {
+                                            ^RandomInt:
+                                              {
+                                                min: 0,
+                                                max: *schemaWidth,
+                                              },
+                                          },
+                                        ],
+                                        {
+                                          obj:
+                                            {
+                                              ^RandomInt:
+                                                {
+                                                  min: 0,
+                                                  max: *schemaWidth,
+                                                },
+                                            },
+                                        },
+                                      ],
+                                  },
+                              },
+                            duplicatedKeys: skip,
+                          },
+                      },
+                      # 5 elements make it almost certain that both "a" and "b" are used in the array to
+                      # yield ~10 paths per object.
+                      number: 5,
+                    } },
+                    duplicatedKeys: skip,
+                  },
+              },
+            number: 1,
+          },
+      }
 
 ActorTemplates:
   - TemplateName: InsertFromSample
     Config:
-      Name: {^Parameter: {Name: "Name", Default: "Insert"}}
+      Name: { ^Parameter: { Name: "Name", Default: "Insert" } }
       Type: SamplingLoader
       Database: *db
       Collection: *coll
       SampleSize: *sampleSize
-      Threads: {^Parameter: {Name: "Threads", Default: 1}}
+      Threads: { ^Parameter: { Name: "Threads", Default: 1 } }
       Phases:
         OnlyActiveInPhases:
-          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
+          Active: [{ ^Parameter: { Name: "OnlyActiveInPhase", Default: 1024 } }]
           NopInPhasesUpTo: *maxPhases
           PhaseConfig:
             InsertBatchSize: *sampleSize
-            Repeat: {^Parameter: {Name: "Repeats", Default: 1}}
-            Batches: {^Parameter: {Name: "Batches", Default: 500}}
+            Repeat: { ^Parameter: { Name: "Repeats", Default: 1 } }
+            Batches: { ^Parameter: { Name: "Batches", Default: 500 } }
 
 Actors:
   - Name: Loader
@@ -135,7 +207,7 @@ Actors:
               OperationCommand:
                 createIndexes: *coll
                 indexes:
-                  - key: {"$**": "columnstore"}
+                  - key: { "$**": "columnstore" }
                     name: csi
 
   - ActorFromTemplate:
@@ -143,4 +215,3 @@ Actors:
       TemplateParameters:
         Name: Csi
         OnlyActiveInPhase: 5
-

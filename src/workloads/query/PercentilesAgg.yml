@@ -42,7 +42,7 @@ ActorTemplates:
       Threads: 1
       Phases:
         OnlyActiveInPhases:
-          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
+          Active: [{ ^Parameter: { Name: "OnlyActiveInPhase", Default: 1024 } }]
           NopInPhasesUpTo: *maxPhases
           PhaseConfig:
             Threads: 1
@@ -52,21 +52,21 @@ ActorTemplates:
             DocumentCount: *docCount
             BatchSize: 1000
             Document:
-              _id: {^Inc: {start: 0}}
-              data: {^Parameter: {Name: "Data", Default: 0}}
+              _id: { ^Inc: { start: 0 } }
+              data: { ^Parameter: { Name: "Data", Default: 0 } }
               # We will use this field as our group key to test having 100 groups.
-              key: {^RandomInt: {min: 0, max: 100}}
+              key: { ^RandomInt: { min: 0, max: 100 } }
 
   # The specific percentile and the number of them doesn't affect t-digest much as it spends most time
   # creating the representation of the inputs that is suitable for computing _any_ percentile.
   - TemplateName: ComputePercentile
     Config:
-      Name: {^Parameter: {Name: "Name", Default: "ComputePercentile"}}
+      Name: { ^Parameter: { Name: "Name", Default: "ComputePercentile" } }
       Type: CrudActor
       Threads: 1
       Phases:
         OnlyActiveInPhases:
-          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
+          Active: [{ ^Parameter: { Name: "OnlyActiveInPhase", Default: 1024 } }]
           NopInPhasesUpTo: *maxPhases
           PhaseConfig:
             Repeat: 20
@@ -75,19 +75,39 @@ ActorTemplates:
             Operations:
               - OperationName: aggregate
                 OperationCommand:
-                  Pipeline: [{$group: {_id: {^Parameter: {Name: "GroupBy", Default: null}}, p: {$percentile: {p: [0.01, 0.5, 0.99], input: "$data", method: "approximate"}}}}]
+                  Pipeline:
+                    [
+                      {
+                        $group:
+                          {
+                            _id:
+                              {
+                                ^Parameter: { Name: "GroupBy", Default: null },
+                              },
+                            p:
+                              {
+                                $percentile:
+                                  {
+                                    p: [0.01, 0.5, 0.99],
+                                    input: "$data",
+                                    method: "approximate",
+                                  },
+                              },
+                          },
+                      },
+                    ]
 
   # During development of $percentile we compared its performance to $min and $minN. We don't need to
   # keep running the tests for these but we'd like to keep the templates around for reference and ease
   # of rerunning the local experiments if needed in the future.
   - TemplateName: ComputeMinN
     Config:
-      Name: {^Parameter: {Name: "Name", Default: "ComputeMinN"}}
+      Name: { ^Parameter: { Name: "Name", Default: "ComputeMinN" } }
       Type: CrudActor
       Threads: 1
       Phases:
         OnlyActiveInPhases:
-          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
+          Active: [{ ^Parameter: { Name: "OnlyActiveInPhase", Default: 1024 } }]
           NopInPhasesUpTo: *maxPhases
           PhaseConfig:
             Repeat: 20
@@ -96,16 +116,28 @@ ActorTemplates:
             Operations:
               - OperationName: aggregate
                 OperationCommand:
-                  Pipeline: [{$group: {_id: {^Parameter: {Name: "GroupBy", Default: null}}, p: {$minN: {n: 5000, input: "$data"}}}}]
+                  Pipeline:
+                    [
+                      {
+                        $group:
+                          {
+                            _id:
+                              {
+                                ^Parameter: { Name: "GroupBy", Default: null },
+                              },
+                            p: { $minN: { n: 5000, input: "$data" } },
+                          },
+                      },
+                    ]
 
   - TemplateName: ComputeMin
     Config:
-      Name: {^Parameter: {Name: "Name", Default: "ComputeMin"}}
+      Name: { ^Parameter: { Name: "Name", Default: "ComputeMin" } }
       Type: CrudActor
       Threads: 1
       Phases:
         OnlyActiveInPhases:
-          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
+          Active: [{ ^Parameter: { Name: "OnlyActiveInPhase", Default: 1024 } }]
           NopInPhasesUpTo: *maxPhases
           PhaseConfig:
             Repeat: 20
@@ -114,7 +146,19 @@ ActorTemplates:
             Operations:
               - OperationName: aggregate
                 OperationCommand:
-                  Pipeline: [{$group: {_id: {^Parameter: {Name: "GroupBy", Default: null}}, p: {$min: "$data"}}}]
+                  Pipeline:
+                    [
+                      {
+                        $group:
+                          {
+                            _id:
+                              {
+                                ^Parameter: { Name: "GroupBy", Default: null },
+                              },
+                            p: { $min: "$data" },
+                          },
+                      },
+                    ]
 
 # *0 - create dataset
 # *1 - warm up or quiese but they don't seem to affect the numbers, so we are not doing either
@@ -142,7 +186,8 @@ Actors:
       TemplateName: CreateDataset
       TemplateParameters:
         OnlyActiveInPhase: 0
-        Data: {^RandomDouble: {distribution: normal, mean: 50.0, sigma: 10.0}}
+        Data:
+          { ^RandomDouble: { distribution: normal, mean: 50.0, sigma: 10.0 } }
 
   - ActorFromTemplate:
       TemplateName: ComputePercentile
@@ -163,9 +208,26 @@ Actors:
       TemplateName: CreateDataset
       TemplateParameters:
         OnlyActiveInPhase: 10
-        Data: {^Choose: {from: [{^RandomDouble: {distribution: normal, mean: 50.0, sigma: 10.0}}, {^RandomDouble: {distribution: exponential, lambda: 1.0}}, {^RandomDouble: {distribution: uniform, min: 0.0, max: 100.0}}, {^RandomDouble: {distribution: weibull, a: 1.0, b: 0.5}},
-              # on 1e6 docs this will produce duplicates, including in the tails of other distributions
-              {^RandomInt: {distribution: uniform, min: 0, max: 1000}}]}}
+        Data: { ^Choose: { from: [
+          {
+            ^RandomDouble:
+              { distribution: normal, mean: 50.0, sigma: 10.0 },
+          },
+          {
+            ^RandomDouble: { distribution: exponential, lambda: 1.0 },
+          },
+          {
+            ^RandomDouble:
+              { distribution: uniform, min: 0.0, max: 100.0 },
+          },
+          {
+            ^RandomDouble: { distribution: weibull, a: 1.0, b: 0.5 },
+          },
+          # on 1e6 docs this will produce duplicates, including in the tails of other distributions
+          {
+            ^RandomInt: { distribution: uniform, min: 0, max: 1000 },
+          },
+        ] } }
 
   - ActorFromTemplate:
       TemplateName: ComputePercentile
@@ -180,4 +242,3 @@ Actors:
         Name: "mixed_percentile_multi_groups"
         GroupBy: "$key"
         OnlyActiveInPhase: 13
-
