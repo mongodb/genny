@@ -16,7 +16,7 @@ project(cast_core VERSION 0.0.1 LANGUAGES CXX)
 
 CreateGennyTargets(
     NAME    cast_core
-    TYPE    SHARED
+    TYPE    STATIC
     DEPENDS
         gennylib
     TEST_DEPENDS    testlib
