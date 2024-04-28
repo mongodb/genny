@@ -10,10 +10,10 @@ Clients:
       socketTimeoutMS: -1
 
 Actors:
-- Name: TPCHDenormalizedTotalLineitemRevenueExplain
-  Type: RunCommand
-  Database: tpch
-  Phases:
-  - LoadConfig:
-      Path: ../../../../phases/tpch/denormalized/TotalLineitemRevenue.yml
-      Key: TPCHDenormalizedTotalLineitemRevenueExplain
+  - Name: TPCHDenormalizedTotalLineitemRevenueExplain
+    Type: RunCommand
+    Database: tpch
+    Phases:
+      - LoadConfig:
+          Path: ../../../../phases/tpch/denormalized/TotalLineitemRevenue.yml
+          Key: TPCHDenormalizedTotalLineitemRevenueExplain

@@ -13,15 +13,15 @@ Description: |
   The concurrent writes namespace is test.concurrentWritesColl
 
 Keywords:
-- RunCommand
-- Loader
-- LoggingActor
-- CrudActor
-- insert
-- delete
-- batch
-- deleteMany
-- latency
+  - RunCommand
+  - Loader
+  - LoggingActor
+  - CrudActor
+  - insert
+  - delete
+  - batch
+  - deleteMany
+  - latency
 
 GlobalDefaults:
 
@@ -35,15 +35,14 @@ GlobalDefaults:
 
   ##### Constants ####
 
-  WriteRate: &WriteRate 1 per 500 microseconds  # 2000/second
+  WriteRate: &WriteRate 1 per 500 microseconds # 2000/second
   ConcurrentWritesColl: &ConcurrentWritesColl concurrentWritesColl
   Database: &Database test
   MassDeletionsColl: &MassDeletionsColl Collection0
   NumPhases: &NumPhases 11
   LoaderThreads: &LoaderThreads 4
   # Delete by primary index always.
-  DeleteQuery: &DeleteQuery
-    {_id: {$gte: {^ObjectId: "000000000000000000000000"}}}
+  DeleteQuery: &DeleteQuery {_id: {$gte: {^ObjectId: "000000000000000000000000"}}}
   # Only used for generating the Document padding.
   RandomStringLength: &RandomStringLength 6
   RandomStringValue: &RandomStringValue {^FastRandomString: {length: *RandomStringLength, alphabet: "0123456789"}}
@@ -51,7 +50,7 @@ GlobalDefaults:
   #### Document Size Specifications ####
 
   # __________  1KB Specifications __________
-  TargetDocumentSizeBytes_1KB: &TargetDocumentSizeBytes_1KB 1_024  # 1KB
+  TargetDocumentSizeBytes_1KB: &TargetDocumentSizeBytes_1KB 1_024 # 1KB
   DocumentCount_1KB: &DocumentCount_1KB 10_000_000
   InsertBatchSize_1KB: &InsertBatchSize_1KB 1_000
   DocumentPaddingSizeBytes_1KB: &DocumentPaddingSizeBytes_1KB
@@ -66,11 +65,11 @@ GlobalDefaults:
     d: *RandomStringValue
     e: *RandomStringValue
     f: *RandomStringValue
-    g: *RandomStringValue  # up to field_count fields
+    g: *RandomStringValue # up to field_count fields
     padding: {^FastRandomString: {length: *DocumentPaddingSizeBytes_1KB}}
 
   # __________  10MB Specifcations __________
-  TargetDocumentSizeBytes_10MB: &TargetDocumentSizeBytes_10MB 10_485_760  # 10MB
+  TargetDocumentSizeBytes_10MB: &TargetDocumentSizeBytes_10MB 10_485_760 # 10MB
   DocumentCount_10MB: &DocumentCount_10MB 4_000
   InsertBatchSize_10MB: &InsertBatchSize_10MB 1
   DocumentPaddingSizeBytes_10MB: &DocumentPaddingSizeBytes_10MB
@@ -85,221 +84,218 @@ GlobalDefaults:
     d: *RandomStringValue
     e: *RandomStringValue
     f: *RandomStringValue
-    g: *RandomStringValue  # up to field_count fields
+    g: *RandomStringValue # up to field_count fields
     padding: {^FastRandomString: {length: *DocumentPaddingSizeBytes_10MB}}
 
 ActorTemplates:
-- TemplateName: InitializeDatabase
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "InitializeDatabaseDefaultName"}}
+  - TemplateName: InitializeDatabase
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "InitializeDatabaseDefaultName"}}
+      Type: RunCommand
+      Threads: 1
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          NopInPhasesUpTo: *NumPhases
+          PhaseConfig:
+            Repeat: 1
+            Database: *Database
+            Operations:
+              LoadConfig:
+                Path: *ConfigFile
+                Key: InitializeDatabaseOps
+
+  - TemplateName: PopulateInitialData
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "PopulateInitialDataDefaultName"}}
+      Type: Loader
+      Threads: 4
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          NopInPhasesUpTo: *NumPhases
+          PhaseConfig:
+            Repeat: 1
+            Database: *Database
+            MultipleThreadsPerCollection: true
+            CollectionCount: 1
+            DocumentCount: {^Parameter: {Name: "DocumentCount", Default: 1}}
+            BatchSize: {^Parameter: {Name: "BatchSize", Default: 1}}
+            Document: {^Parameter: {Name: "DocumentToInsert", Default: {defaultDoc: 1}}}
+
+  - TemplateName: LargeMultiDelete
+    Config:
+      Name: &Name {^Parameter: {Name: "Name", Default: "LargeMultiDeleteDefaultName"}}
+      Type: CrudActor
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          NopInPhasesUpTo: *NumPhases
+          PhaseConfig:
+            Repeat: 1
+            MetricsName: *Name
+            Database: *Database
+            Collection: *MassDeletionsColl
+            Operations:
+              - OperationName: bulkWrite
+                OperationCommand:
+                  WriteOperations:
+                    - WriteCommand: deleteMany
+                      Filter: *DeleteQuery
+                      OperationOptions:
+                        WriteConcern: {Level: "majority"}
+
+  - TemplateName: ConcurrentWrites
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "ConcurrentWritesDefaultName"}}
+      Type: CrudActor
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          NopInPhasesUpTo: *NumPhases
+          PhaseConfig:
+            Blocking: None
+            GlobalRate: *WriteRate
+            Database: *Database
+            Collection: *ConcurrentWritesColl
+            Operations:
+              - OperationName: insertOne
+                OperationCommand:
+                  Document: {^Parameter: {Name: "DocumentToInsert", Default: {defaultDoc: 1}}}
+
+Actors:
+  # Phase 1: Select between DELETE and BATCHED_DELETE query exec stage.
+  - Name: SelectDeleteExecutor
     Type: RunCommand
     Threads: 1
     Phases:
       OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+        Active: [1]
         NopInPhasesUpTo: *NumPhases
         PhaseConfig:
           Repeat: 1
-          Database: *Database
-          Operations:
-            LoadConfig:
-              Path: *ConfigFile
-              Key: InitializeDatabaseOps
-
-- TemplateName: PopulateInitialData
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "PopulateInitialDataDefaultName"}}
-    Type: Loader
-    Threads: 4
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        NopInPhasesUpTo: *NumPhases
-        PhaseConfig:
-          Repeat: 1
-          Database: *Database
-          MultipleThreadsPerCollection: true
-          CollectionCount: 1
-          DocumentCount: {^Parameter: {Name: "DocumentCount", Default: 1}}
-          BatchSize: {^Parameter: {Name: "BatchSize", Default: 1}}
-          Document:
-            {^Parameter: {Name: "DocumentToInsert", Default: {defaultDoc: 1}}}
-
-- TemplateName: LargeMultiDelete
-  Config:
-    Name: &Name {^Parameter: {Name: "Name", Default: "LargeMultiDeleteDefaultName"}}
-    Type: CrudActor
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        NopInPhasesUpTo: *NumPhases
-        PhaseConfig:
-          Repeat: 1
-          MetricsName: *Name
-          Database: *Database
-          Collection: *MassDeletionsColl
-          Operations:
-          - OperationName: bulkWrite
+          Database: admin
+          Operation:
+            OperationMetricsName: SelectDeleteExecutor
+            OperationName: RunCommand
             OperationCommand:
-              WriteOperations:
-              - WriteCommand: deleteMany
-                Filter:
-                  *DeleteQuery
-                OperationOptions:
-                  WriteConcern: { Level: "majority" }
+              setParameter: 1
+              batchUserMultiDeletes: *UseBatchedDeleteStage
 
-- TemplateName: ConcurrentWrites
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "ConcurrentWritesDefaultName"}}
-    Type: CrudActor
+  # Phase 2: Initialize the database.
+  - ActorFromTemplate:
+      TemplateName: InitializeDatabase
+      TemplateParameters:
+        Name: InitializeDatabase0_1KB
+        OnlyActiveInPhases: 2
+
+  # Phase 3: Populate for First Round of Deletes without Concurrent Writes.
+  - ActorFromTemplate:
+      TemplateName: PopulateInitialData
+      TemplateParameters:
+        Name: PopulateInitialData0_1KB
+        BatchSize: *InsertBatchSize_1KB
+        DocumentCount: *DocumentCount_1KB
+        DocumentToInsert: *DocumentToInsert_1KB
+        OnlyActiveInPhase: 3
+
+  # The LoggingActor should be active in all phases that use the 'PopulateInitialData' template to
+  # guard against timeout due to no logging.
+  - Name: MainLoggingActor
+    Type: LoggingActor
+    Threads: 1
     Phases:
       OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+        Active: [3, 5, 8, 10]
         NopInPhasesUpTo: *NumPhases
         PhaseConfig:
+          LogEvery: 9 minutes
           Blocking: None
-          GlobalRate: *WriteRate
-          Database: *Database
-          Collection: *ConcurrentWritesColl
-          Operations:
-          - OperationName: insertOne
-            OperationCommand:
-              Document:
-                {^Parameter: {Name: "DocumentToInsert", Default: {defaultDoc: 1}}}
 
-Actors:
-# Phase 1: Select between DELETE and BATCHED_DELETE query exec stage.
-- Name: SelectDeleteExecutor
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: admin
-        Operation:
-          OperationMetricsName: SelectDeleteExecutor
-          OperationName: RunCommand
-          OperationCommand:
-            setParameter: 1
-            batchUserMultiDeletes: *UseBatchedDeleteStage
+  # Phase 4: Issue a large delete that should take a considerable amount of time to run. This delete
+  # will run with no concurrent writes to the database.
+  - ActorFromTemplate:
+      TemplateName: LargeMultiDelete
+      TemplateParameters:
+        Name: LargeMultiDelete0_1KB
+        OnlyActiveInPhase: 4
 
-# Phase 2: Initialize the database.
-- ActorFromTemplate:
-    TemplateName: InitializeDatabase
-    TemplateParameters:
-      Name: InitializeDatabase0_1KB
-      OnlyActiveInPhases: 2
+  # Phase 5: Populate the collection for mass deletion again, in preparation for phase 6 when concurrent writes will be
+  # issued to another collection in the same database.
+  - ActorFromTemplate:
+      TemplateName: PopulateInitialData
+      TemplateParameters:
+        Name: PopulateInitialData1_1KB
+        BatchSize: *InsertBatchSize_1KB
+        DocumentCount: *DocumentCount_1KB
+        DocumentToInsert: *DocumentToInsert_1KB
+        OnlyActiveInPhase: 5
 
-# Phase 3: Populate for First Round of Deletes without Concurrent Writes.
-- ActorFromTemplate:
-    TemplateName: PopulateInitialData
-    TemplateParameters:
-      Name: PopulateInitialData0_1KB
-      BatchSize: *InsertBatchSize_1KB
-      DocumentCount: *DocumentCount_1KB
-      DocumentToInsert: *DocumentToInsert_1KB
-      OnlyActiveInPhase: 3
+  # Phase 6: Issue a large delete that should take a considerable amount of time to run. This delete
+  # will run with concurrent writes to another collection.
+  - ActorFromTemplate:
+      TemplateName: LargeMultiDelete
+      TemplateParameters:
+        Name: LargeMultiDelete1_1KB
+        OnlyActiveInPhase: 6
 
-# The LoggingActor should be active in all phases that use the 'PopulateInitialData' template to
-# guard against timeout due to no logging.
-- Name: MainLoggingActor
-  Type: LoggingActor
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3, 5, 8, 10]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        LogEvery: 9 minutes
-        Blocking: None
+  # Phase 6: Perform some write operations - see how write latency is impacted on ConcurrentWritesColl by the large delete on MassDeletionsColl.
+  - ActorFromTemplate:
+      TemplateName: ConcurrentWrites
+      TemplateParameters:
+        Name: ConcurrentWrites_1KB
+        DocumentToInsert: *DocumentToInsert_1KB
+        OnlyActiveInPhase: 6
 
-# Phase 4: Issue a large delete that should take a considerable amount of time to run. This delete
-# will run with no concurrent writes to the database.
-- ActorFromTemplate:
-    TemplateName: LargeMultiDelete
-    TemplateParameters:
-      Name: LargeMultiDelete0_1KB
-      OnlyActiveInPhase: 4
+  # Phase 7: Initialize the database.
+  - ActorFromTemplate:
+      TemplateName: InitializeDatabase
+      TemplateParameters:
+        Name: InitializeDatabase0_10MB
+        OnlyActiveInPhases: 7
 
-# Phase 5: Populate the collection for mass deletion again, in preparation for phase 6 when concurrent writes will be
-# issued to another collection in the same database.
-- ActorFromTemplate:
-    TemplateName: PopulateInitialData
-    TemplateParameters:
-      Name: PopulateInitialData1_1KB
-      BatchSize: *InsertBatchSize_1KB
-      DocumentCount: *DocumentCount_1KB
-      DocumentToInsert: *DocumentToInsert_1KB
-      OnlyActiveInPhase: 5
+  # Phase 8: Populate for First Round of Deletes without Concurrent Writes.
+  - ActorFromTemplate:
+      TemplateName: PopulateInitialData
+      TemplateParameters:
+        Name: PopulateInitialData0_10MB
+        BatchSize: *InsertBatchSize_10MB
+        DocumentCount: *DocumentCount_10MB
+        DocumentToInsert: *DocumentToInsert_10MB
+        OnlyActiveInPhase: 8
 
-# Phase 6: Issue a large delete that should take a considerable amount of time to run. This delete
-# will run with concurrent writes to another collection.
-- ActorFromTemplate:
-    TemplateName: LargeMultiDelete
-    TemplateParameters:
-      Name: LargeMultiDelete1_1KB
-      OnlyActiveInPhase: 6
+  # Phase 9: Issue a large delete that should take a considerable amount of time to run. This delete
+  # will run with no concurrent writes to the database.
+  - ActorFromTemplate:
+      TemplateName: LargeMultiDelete
+      TemplateParameters:
+        Name: LargeMultiDelete0_10MB
+        OnlyActiveInPhase: 9
 
-# Phase 6: Perform some write operations - see how write latency is impacted on ConcurrentWritesColl by the large delete on MassDeletionsColl.
-- ActorFromTemplate:
-    TemplateName: ConcurrentWrites
-    TemplateParameters:
-      Name: ConcurrentWrites_1KB
-      DocumentToInsert: *DocumentToInsert_1KB
-      OnlyActiveInPhase: 6
+  # Phase 10: Populate the collection for mass deletion again, in preparation for phase 6 when concurrent writes will be
+  # issued to another collection in the same database.
+  - ActorFromTemplate:
+      TemplateName: PopulateInitialData
+      TemplateParameters:
+        Name: PopulateInitialData1_10MB
+        BatchSize: *InsertBatchSize_10MB
+        DocumentCount: *DocumentCount_10MB
+        DocumentToInsert: *DocumentToInsert_10MB
+        OnlyActiveInPhase: 10
 
-# Phase 7: Initialize the database.
-- ActorFromTemplate:
-    TemplateName: InitializeDatabase
-    TemplateParameters:
-      Name: InitializeDatabase0_10MB
-      OnlyActiveInPhases: 7
+  # Phase 11: Issue a large delete that should take a considerable amount of time to run. This delete
+  # will run with concurrent writes to another collection.
+  - ActorFromTemplate:
+      TemplateName: LargeMultiDelete
+      TemplateParameters:
+        Name: LargeMultiDelete1_10MB
+        OnlyActiveInPhase: 11
 
-# Phase 8: Populate for First Round of Deletes without Concurrent Writes.
-- ActorFromTemplate:
-    TemplateName: PopulateInitialData
-    TemplateParameters:
-      Name: PopulateInitialData0_10MB
-      BatchSize: *InsertBatchSize_10MB
-      DocumentCount: *DocumentCount_10MB
-      DocumentToInsert: *DocumentToInsert_10MB
-      OnlyActiveInPhase: 8
-
-# Phase 9: Issue a large delete that should take a considerable amount of time to run. This delete
-# will run with no concurrent writes to the database.
-- ActorFromTemplate:
-    TemplateName: LargeMultiDelete
-    TemplateParameters:
-      Name: LargeMultiDelete0_10MB
-      OnlyActiveInPhase: 9
-
-# Phase 10: Populate the collection for mass deletion again, in preparation for phase 6 when concurrent writes will be
-# issued to another collection in the same database.
-- ActorFromTemplate:
-    TemplateName: PopulateInitialData
-    TemplateParameters:
-      Name: PopulateInitialData1_10MB
-      BatchSize: *InsertBatchSize_10MB
-      DocumentCount: *DocumentCount_10MB
-      DocumentToInsert: *DocumentToInsert_10MB
-      OnlyActiveInPhase: 10
-
-# Phase 11: Issue a large delete that should take a considerable amount of time to run. This delete
-# will run with concurrent writes to another collection.
-- ActorFromTemplate:
-    TemplateName: LargeMultiDelete
-    TemplateParameters:
-      Name: LargeMultiDelete1_10MB
-      OnlyActiveInPhase: 11
-
-# Phase 11: Perform some write operations - see how write latency is impacted on ConcurrentWritesColl by the large delete on MassDeletionsColl.
-- ActorFromTemplate:
-    TemplateName: ConcurrentWrites
-    TemplateParameters:
-      Name: ConcurrentWrites_10MB
-      DocumentToInsert: *DocumentToInsert_10MB
-      OnlyActiveInPhase: 11
+  # Phase 11: Perform some write operations - see how write latency is impacted on ConcurrentWritesColl by the large delete on MassDeletionsColl.
+  - ActorFromTemplate:
+      TemplateName: ConcurrentWrites
+      TemplateParameters:
+        Name: ConcurrentWrites_10MB
+        DocumentToInsert: *DocumentToInsert_10MB
+        OnlyActiveInPhase: 11
 

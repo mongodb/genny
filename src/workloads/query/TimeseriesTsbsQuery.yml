@@ -42,20 +42,11 @@ GlobalDefaults:
 
 # Create variables to mimic the randomness of tsbs_generate_queries.
 # Generates a single string like "host_42", with random integer in range [0,99].
-GenHostNames:
-  &GenHostNames {
-    ^FormatString:
-      {
-        "format": "host_%d",
-        "withArgs": [{ ^RandomInt: { min: 0, max: 99 } }],
-      },
-  }
+GenHostNames: &GenHostNames {^FormatString: {"format": "host_%d", "withArgs": [{^RandomInt: {min: 0, max: 99}}]}}
 
 # Generates an array of strings like "host_42", with random integer in range [0,99].
-HostName1:
-  &HostName1 { ^Array: { of: *GenHostNames, number: 1, distinct: true } }
-HostName8:
-  &HostName8 { ^Array: { of: *GenHostNames, number: 8, distinct: true } }
+HostName1: &HostName1 {^Array: {of: *GenHostNames, number: 1, distinct: true}}
+HostName8: &HostName8 {^Array: {of: *GenHostNames, number: 8, distinct: true}}
 
 Actors:
   # The data is already loaded into the collection from the dsi configuration.
@@ -87,47 +78,7 @@ Actors:
           Operations:
             - OperationName: aggregate
               OperationCommand:
-                Pipeline:
-                  [
-                    {
-                      $match:
-                        {
-                          measurement: "cpu",
-                          "tags.hostname": { $in: *HostName1 },
-                          time:
-                            {
-                              $gte:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator: 
-                                        { ^IncDate: { start: *startDate,step: 2520000 } },
-                                    },
-                                },
-                              $lt:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator:
-                                        {
-                                          ^IncDate: { start: *startDatePlusOneHour, step: 2520000 },
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                    {
-                      $group:
-                        {
-                          _id: { $dateTrunc: { date: "$time", unit: "minute" } },
-                          max_usage_user: { $max: "$usage_user" },
-                        },
-                    },
-                    { $sort: { _id: 1 } },
-                  ]
+                Pipeline: [{$match: {measurement: "cpu", "tags.hostname": {$in: *HostName1}, time: {$gte: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *startDate, step: 2520000}}}}, $lt: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *startDatePlusOneHour, step: 2520000}}}}}}}, {$group: {_id: {$dateTrunc: {date: "$time", unit: "minute"}}, max_usage_user: {$max: "$usage_user"}}}, {$sort: {_id: 1}}]
 
   - Name: single_groupby_1_8_1
     Type: CrudActor
@@ -143,47 +94,7 @@ Actors:
           Operations:
             - OperationName: aggregate
               OperationCommand:
-                Pipeline:
-                  [
-                    {
-                      $match:
-                        {
-                          measurement: "cpu",
-                          "tags.hostname": { $in: *HostName8 },
-                          time:
-                            {
-                              $gte:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator:
-                                        { ^IncDate: { start: *startDate, step: 2520000 } },
-                                    },
-                                },
-                              $lt:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator:
-                                        {
-                                          ^IncDate: { start: *startDatePlusOneHour, step: 2520000 },
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                    {
-                      $group:
-                        {
-                          _id: { $dateTrunc: { date: "$time", unit: "minute" } },
-                          max_usage_user: { $max: "$usage_user" },
-                        },
-                    },
-                    { $sort: { _id: 1 } },
-                  ]
+                Pipeline: [{$match: {measurement: "cpu", "tags.hostname": {$in: *HostName8}, time: {$gte: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *startDate, step: 2520000}}}}, $lt: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *startDatePlusOneHour, step: 2520000}}}}}}}, {$group: {_id: {$dateTrunc: {date: "$time", unit: "minute"}}, max_usage_user: {$max: "$usage_user"}}}, {$sort: {_id: 1}}]
 
   - Name: single_groupby_5_1_1
     Type: CrudActor
@@ -199,51 +110,7 @@ Actors:
           Operations:
             - OperationName: aggregate
               OperationCommand:
-                Pipeline:
-                  [
-                    {
-                      $match:
-                        {
-                          measurement: "cpu",
-                          "tags.hostname": { $in: *HostName1 },
-                          time:
-                            {
-                              $gte:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator:
-                                        { ^IncDate: { start: *startDate, step: 2520000 } },
-                                    },
-                                },
-                              $lt:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator:
-                                        {
-                                          ^IncDate: { start: *startDatePlusOneHour, step: 2520000 },
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                    {
-                      $group:
-                        {
-                          _id: { $dateTrunc: { date: "$time", unit: "minute" } },
-                          max_usage_user: { $max: "$usage_user" },
-                          max_usage_guest: { $max: "$usage_guest" },
-                          max_usage_system: { $max: "$usage_system" },
-                          max_usage_iowait: { $max: "$usage_iowait" },
-                          max_usage_irq: { $max: "$usage_irq" },
-                        },
-                    },
-                    { $sort: { _id: 1 } },
-                  ]
+                Pipeline: [{$match: {measurement: "cpu", "tags.hostname": {$in: *HostName1}, time: {$gte: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *startDate, step: 2520000}}}}, $lt: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *startDatePlusOneHour, step: 2520000}}}}}}}, {$group: {_id: {$dateTrunc: {date: "$time", unit: "minute"}}, max_usage_user: {$max: "$usage_user"}, max_usage_guest: {$max: "$usage_guest"}, max_usage_system: {$max: "$usage_system"}, max_usage_iowait: {$max: "$usage_iowait"}, max_usage_irq: {$max: "$usage_irq"}}}, {$sort: {_id: 1}}]
 
   - Name: single_groupby_5_8_1
     Type: CrudActor
@@ -259,51 +126,7 @@ Actors:
           Operations:
             - OperationName: aggregate
               OperationCommand:
-                Pipeline:
-                  [
-                    {
-                      $match:
-                        {
-                          measurement: "cpu",
-                          "tags.hostname": { $in: *HostName8 },
-                          time:
-                            {
-                              $gte:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator: 
-                                        { ^IncDate: { start: *startDate, step: 2520000 } },
-                                    },
-                                },
-                              $lt:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator:
-                                        {
-                                          ^IncDate: { start: *startDatePlusOneHour, step: 2520000 },
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                    {
-                      $group:
-                        {
-                          _id: { $dateTrunc: { date: "$time", unit: "minute" } },
-                          max_usage_user: { $max: "$usage_user" },
-                          max_usage_guest: { $max: "$usage_guest" },
-                          max_usage_system: { $max: "$usage_system" },
-                          max_usage_iowait: { $max: "$usage_iowait" },
-                          max_usage_irq: { $max: "$usage_irq" },
-                        },
-                    },
-                    { $sort: { _id: 1 } },
-                  ]
+                Pipeline: [{$match: {measurement: "cpu", "tags.hostname": {$in: *HostName8}, time: {$gte: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *startDate, step: 2520000}}}}, $lt: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *startDatePlusOneHour, step: 2520000}}}}}}}, {$group: {_id: {$dateTrunc: {date: "$time", unit: "minute"}}, max_usage_user: {$max: "$usage_user"}, max_usage_guest: {$max: "$usage_guest"}, max_usage_system: {$max: "$usage_system"}, max_usage_iowait: {$max: "$usage_iowait"}, max_usage_irq: {$max: "$usage_irq"}}}, {$sort: {_id: 1}}]
 
   - Name: single_groupby_1_1_12
     Type: CrudActor
@@ -319,48 +142,7 @@ Actors:
           Operations:
             - OperationName: aggregate
               OperationCommand:
-                Pipeline:
-                  [
-                    {
-                      $match:
-                        {
-                          measurement: "cpu",
-                          "tags.hostname": { $in: *HostName1 },
-                          time:
-                            {
-                              $gte:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator: 
-                                        { ^IncDate: { start: *startDate, step: 2520000 } },
-                                    },
-                                },
-                              $lt:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator:
-                                        {
-                                          ^IncDate: 
-                                            { start: *startDatePlusTwelveHours, step: 2520000 },
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                    {
-                      $group:
-                        {
-                          _id: { $dateTrunc: { "date": "$time", "unit": "minute" } },
-                          max_usage_user: { $max: "$usage_user" },
-                        },
-                    },
-                    { $sort: { _id: 1 } },
-                  ]
+                Pipeline: [{$match: {measurement: "cpu", "tags.hostname": {$in: *HostName1}, time: {$gte: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *startDate, step: 2520000}}}}, $lt: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *startDatePlusTwelveHours, step: 2520000}}}}}}}, {$group: {_id: {$dateTrunc: {"date": "$time", "unit": "minute"}}, max_usage_user: {$max: "$usage_user"}}}, {$sort: {_id: 1}}]
 
   - Name: single_groupby_5_1_12
     Type: CrudActor
@@ -376,52 +158,7 @@ Actors:
           Operations:
             - OperationName: aggregate
               OperationCommand:
-                Pipeline:
-                  [
-                    {
-                      $match:
-                        {
-                          measurement: "cpu",
-                          "tags.hostname": { $in: *HostName1 },
-                          time:
-                            {
-                              $gte:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator: 
-                                        { ^IncDate: { start: *startDate, step: 2520000 } },
-                                    },
-                                },
-                              $lt:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator:
-                                        {
-                                          ^IncDate: 
-                                            { start: *startDatePlusTwelveHours, step: 2520000 },
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                    {
-                      $group:
-                        {
-                          _id: { $dateTrunc: { "date": "$time", "unit": "minute" } },
-                          max_usage_user: { $max: "$usage_user" },
-                          max_usage_guest: { $max: "$usage_guest" },
-                          max_usage_system: { $max: "$usage_system" },
-                          max_usage_iowait: { $max: "$usage_iowait" },
-                          max_usage_irq: { $max: "$usage_irq" },
-                        },
-                    },
-                    { $sort: { _id: 1 } },
-                  ]
+                Pipeline: [{$match: {measurement: "cpu", "tags.hostname": {$in: *HostName1}, time: {$gte: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *startDate, step: 2520000}}}}, $lt: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *startDatePlusTwelveHours, step: 2520000}}}}}}}, {$group: {_id: {$dateTrunc: {"date": "$time", "unit": "minute"}}, max_usage_user: {$max: "$usage_user"}, max_usage_guest: {$max: "$usage_guest"}, max_usage_system: {$max: "$usage_system"}, max_usage_iowait: {$max: "$usage_iowait"}, max_usage_irq: {$max: "$usage_irq"}}}, {$sort: {_id: 1}}]
 
   # double-groupby-M computes the per-host, per-hour mean of M(1|5|all=10) metrics in a random 12h
   # time window.
@@ -439,51 +176,7 @@ Actors:
           Operations:
             - OperationName: aggregate
               OperationCommand:
-                Pipeline:
-                  [
-                    {
-                      $match:
-                        {
-                          measurement: "cpu",
-                          time:
-                            {
-                              $gte:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator:
-                                        { ^IncDate: { start: *startDate, step: 2520000 } },
-                                    },
-                                },
-                              $lt:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator:
-                                        {
-                                          ^IncDate: 
-                                            {  start: *startDatePlusTwelveHours, step: 2520000 },
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                    {
-                      $group:
-                        {
-                          _id:
-                            {
-                              time: { $dateTrunc: { date: "$time", unit: "hour" } },
-                              hostname: "$tags.hostname",
-                            },
-                          avg_usage_softirq: { $avg: "$usage_softirq" },
-                        },
-                    },
-                    { $sort: { "_id.time": 1, "_id.hostname": 1 } },
-                  ]
+                Pipeline: [{$match: {measurement: "cpu", time: {$gte: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *startDate, step: 2520000}}}}, $lt: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *startDatePlusTwelveHours, step: 2520000}}}}}}}, {$group: {_id: {time: {$dateTrunc: {date: "$time", unit: "hour"}}, hostname: "$tags.hostname"}, avg_usage_softirq: {$avg: "$usage_softirq"}}}, {$sort: {"_id.time": 1, "_id.hostname": 1}}]
 
   - Name: double_groupby_5
     Type: CrudActor
@@ -499,55 +192,7 @@ Actors:
           Operations:
             - OperationName: aggregate
               OperationCommand:
-                Pipeline:
-                  [
-                    {
-                      $match:
-                        {
-                          measurement: "cpu",
-                          time:
-                            {
-                              $gte:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator:
-                                        { ^IncDate: { start: *startDate, step: 2520000 } },
-                                    },
-                                },
-                              $lt:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator:
-                                        {
-                                          ^IncDate:
-                                            { start: *startDatePlusTwelveHours, step: 2520000 },
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                    {
-                      $group:
-                        {
-                          _id:
-                            {
-                              time: { $dateTrunc: { date: "$time", unit: "hour" } },
-                              hostname: "$tags.hostname",
-                            },
-                          avg_usage_softirq: { $avg: "$usage_softirq" },
-                          avg_usage_steal: { $avg: "$usage_steal" },
-                          avg_usage_guest: { $avg: "$usage_guest" },
-                          avg_usage_user: { $avg: "$usage_user" },
-                          avg_usage_system: { $avg: "$usage_system" },
-                        },
-                    },
-                    { $sort: { "_id.time": 1, "_id.hostname": 1 } },
-                  ]
+                Pipeline: [{$match: {measurement: "cpu", time: {$gte: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *startDate, step: 2520000}}}}, $lt: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *startDatePlusTwelveHours, step: 2520000}}}}}}}, {$group: {_id: {time: {$dateTrunc: {date: "$time", unit: "hour"}}, hostname: "$tags.hostname"}, avg_usage_softirq: {$avg: "$usage_softirq"}, avg_usage_steal: {$avg: "$usage_steal"}, avg_usage_guest: {$avg: "$usage_guest"}, avg_usage_user: {$avg: "$usage_user"}, avg_usage_system: {$avg: "$usage_system"}}}, {$sort: {"_id.time": 1, "_id.hostname": 1}}]
 
   - Name: double_groupby_all
     Type: CrudActor
@@ -563,60 +208,7 @@ Actors:
           Operations:
             - OperationName: aggregate
               OperationCommand:
-                Pipeline:
-                  [
-                    {
-                      $match:
-                        {
-                          measurement: "cpu",
-                          time:
-                            {
-                              $gte:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator:
-                                        { ^IncDate: { start: *startDate, step: 2520000 } },
-                                    },
-                                },
-                              $lt:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator:
-                                        {
-                                          ^IncDate:
-                                            { start: *startDatePlusTwelveHours, step: 2520000 },
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                    {
-                      $group:
-                        {
-                          _id:
-                            {
-                              time: { $dateTrunc: { date: "$time", unit: "hour" } },
-                              hostname: "$tags.hostname",
-                            },
-                          avg_usage_softirq: { $avg: "$usage_softirq" },
-                          avg_usage_steal: { $avg: "$usage_steal" },
-                          avg_usage_guest: { $avg: "$usage_guest" },
-                          avg_usage_user: { $avg: "$usage_user" },
-                          avg_usage_system: { $avg: "$usage_system" },
-                          avg_usage_iowait: { $avg: "$usage_iowait" },
-                          avg_usage_irq: { $avg: "$usage_irq" },
-                          avg_usage_nice: { $avg: "$usage_nice" },
-                          avg_usage_idle: { $avg: "$usage_idle" },
-                          avg_usage_guest_nice: { $avg: "$usage_guest_nice" },
-                        },
-                    },
-                    { $sort: { "_id.time": 1, "_id.hostname": 1 } },
-                  ]
+                Pipeline: [{$match: {measurement: "cpu", time: {$gte: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *startDate, step: 2520000}}}}, $lt: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *startDatePlusTwelveHours, step: 2520000}}}}}}}, {$group: {_id: {time: {$dateTrunc: {date: "$time", unit: "hour"}}, hostname: "$tags.hostname"}, avg_usage_softirq: {$avg: "$usage_softirq"}, avg_usage_steal: {$avg: "$usage_steal"}, avg_usage_guest: {$avg: "$usage_guest"}, avg_usage_user: {$avg: "$usage_user"}, avg_usage_system: {$avg: "$usage_system"}, avg_usage_iowait: {$avg: "$usage_iowait"}, avg_usage_irq: {$avg: "$usage_irq"}, avg_usage_nice: {$avg: "$usage_nice"}, avg_usage_idle: {$avg: "$usage_idle"}, avg_usage_guest_nice: {$avg: "$usage_guest_nice"}}}, {$sort: {"_id.time": 1, "_id.hostname": 1}}]
 
   # groupby-orderby-limit computes the per-minute max of a single metric for the last five minutes.
   - Name: groupby_orderby_limit
@@ -635,45 +227,7 @@ Actors:
               OperationCommand:
                 # It is unclear how TSBS evaluates the endpoint, but the range is often wide.
                 # So we pick a time close to the max time.
-                Pipeline:
-                  [
-                    {
-                      $match:
-                        {
-                          measurement: "cpu",
-                          time:
-                            {
-                              $gte:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator:
-                                        { ^IncDate: { start: *startDate, step: 2520000 } },
-                                    },
-                                },
-                              $lt:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator:
-                                        { ^IncDate: { start: *closeToEndTime, step: 2520000 } },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                    {
-                      $group:
-                        {
-                          _id: { $dateTrunc: { date: "$time", unit: "minute" } },
-                          max_usage_user: { $max: "$usage_user" },
-                        },
-                    },
-                    { $sort: { _id: 1 } },
-                    { $limit: 5 },
-                  ]
+                Pipeline: [{$match: {measurement: "cpu", time: {$gte: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *startDate, step: 2520000}}}}, $lt: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *closeToEndTime, step: 2520000}}}}}}}, {$group: {_id: {$dateTrunc: {date: "$time", unit: "minute"}}, max_usage_user: {$max: "$usage_user"}}}, {$sort: {_id: 1}}, {$limit: 5}]
 
   # cpu_max_all_H family of queries computes per-hour max of all(10) metrics for H(1|8) hosts for a
   # randomly chosen 8h time window.
@@ -691,57 +245,7 @@ Actors:
           Operations:
             - OperationName: aggregate
               OperationCommand:
-                Pipeline:
-                  [
-                    {
-                      $match:
-                        {
-                          measurement: "cpu",
-                          "tags.hostname": { $in: *HostName1 },
-                          time:
-                            {
-                              $gte:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator:
-                                        { ^IncDate: { start: *startDate, step: 2520000 } },
-                                    },
-                                },
-                              $lt:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator: 
-                                      {
-                                          ^IncDate: 
-                                            { start: *startDatePlusEightHours, step: 2520000 },
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                    {
-                      $group:
-                        {
-                          _id: { $dateTrunc: { date: "$time", unit: "hour" } },
-                          max_usage_softirq: { $max: "$usage_softirq" },
-                          max__usage_steal: { $max: "$usage_steal" },
-                          max_usage_guest: { $max: "$usage_guest" },
-                          max_usage_user: { $max: "$usage_user" },
-                          max_usage_system: { $max: "$usage_system" },
-                          max_usage_iowait: { $max: "$usage_iowait" },
-                          max_usage_irq: { $max: "$usage_irq" },
-                          max_usage_nice: { $max: "$usage_nice" },
-                          max_usage_idle: { $max: "$usage_idle" },
-                          max_usage_guest_nice: { $max: "$usage_guest_nice" },
-                        },
-                    },
-                    { $sort: { _id: 1 } },
-                  ]
+                Pipeline: [{$match: {measurement: "cpu", "tags.hostname": {$in: *HostName1}, time: {$gte: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *startDate, step: 2520000}}}}, $lt: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *startDatePlusEightHours, step: 2520000}}}}}}}, {$group: {_id: {$dateTrunc: {date: "$time", unit: "hour"}}, max_usage_softirq: {$max: "$usage_softirq"}, max__usage_steal: {$max: "$usage_steal"}, max_usage_guest: {$max: "$usage_guest"}, max_usage_user: {$max: "$usage_user"}, max_usage_system: {$max: "$usage_system"}, max_usage_iowait: {$max: "$usage_iowait"}, max_usage_irq: {$max: "$usage_irq"}, max_usage_nice: {$max: "$usage_nice"}, max_usage_idle: {$max: "$usage_idle"}, max_usage_guest_nice: {$max: "$usage_guest_nice"}}}, {$sort: {_id: 1}}]
 
   - Name: cpu_max_all_8
     Type: CrudActor
@@ -757,57 +261,7 @@ Actors:
           Operations:
             - OperationName: aggregate
               OperationCommand:
-                Pipeline:
-                  [
-                    {
-                      $match:
-                        {
-                          measurement: "cpu",
-                          "tags.hostname": { $in: *HostName8 },
-                          time:
-                            {
-                              $gte:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator:
-                                        { ^IncDate: { start: *startDate, step: 2520000 } },
-                                    },
-                                },
-                              $lt:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator:
-                                        {
-                                          ^IncDate:
-                                            { start: *startDatePlusEightHours, step: 2520000 },
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                    {
-                      $group:
-                        {
-                          _id: { $dateTrunc: { date: "$time", unit: "hour" } },
-                          max_usage_softirq: { $max: "$usage_softirq" },
-                          max__usage_steal: { $max: "$usage_steal" },
-                          max_usage_guest: { $max: "$usage_guest" },
-                          max_usage_user: { $max: "$usage_user" },
-                          max_usage_system: { $max: "$usage_system" },
-                          max_usage_iowait: { $max: "$usage_iowait" },
-                          max_usage_irq: { $max: "$usage_irq" },
-                          max_usage_nice: { $max: "$usage_nice" },
-                          max_usage_idle: { $max: "$usage_idle" },
-                          max_usage_guest_nice: { $max: "$usage_guest_nice" },
-                        },
-                    },
-                    { $sort: { _id: 1 } },
-                  ]
+                Pipeline: [{$match: {measurement: "cpu", "tags.hostname": {$in: *HostName8}, time: {$gte: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *startDate, step: 2520000}}}}, $lt: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *startDatePlusEightHours, step: 2520000}}}}}}}, {$group: {_id: {$dateTrunc: {date: "$time", unit: "hour"}}, max_usage_softirq: {$max: "$usage_softirq"}, max__usage_steal: {$max: "$usage_steal"}, max_usage_guest: {$max: "$usage_guest"}, max_usage_user: {$max: "$usage_user"}, max_usage_system: {$max: "$usage_system"}, max_usage_iowait: {$max: "$usage_iowait"}, max_usage_irq: {$max: "$usage_irq"}, max_usage_nice: {$max: "$usage_nice"}, max_usage_idle: {$max: "$usage_idle"}, max_usage_guest_nice: {$max: "$usage_guest_nice"}}}, {$sort: {_id: 1}}]
 
   # high-cpu-H: finds events with high “usage_user” metric in a random 12h window for H(1|all)
   # hosts.
@@ -825,42 +279,8 @@ Actors:
           Operations:
             - OperationName: aggregate
               OperationCommand:
-                Pipeline:
-                  [
-                    {
-                      $match:
-                        {
-                          measurement: "cpu",
-                          "tags.hostname": { $in: *HostName1 },
-                          time:
-                            {
-                              $gte:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator:
-                                        { ^IncDate: { start: *startDate, step: 2520000 } },
-                                    },
-                                },
-                              $lt:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator:
-                                        {
-                                          ^IncDate:
-                                            { start: *startDatePlusTwelveHours, step: 2520000 },
-                                        },
-                                    },
-                                },
-                            },
-                          usage_user: { $gt: 90 }, # 90 is hard-coded in TSBS.
-                        },
-                    },
-                    { $set: { tags: "$tags.hostname" } },
-                  ]
+                Pipeline: [{$match: {measurement: "cpu", "tags.hostname": {$in: *HostName1}, time: {$gte: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *startDate, step: 2520000}}}}, $lt: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *startDatePlusTwelveHours, step: 2520000}}}}}, usage_user: {$gt: 90} # 90 is hard-coded in TSBS.
+}}, {$set: {tags: "$tags.hostname"}}]
 
   - Name: high_cpu_all
     Type: CrudActor
@@ -876,41 +296,8 @@ Actors:
           Operations:
             - OperationName: aggregate
               OperationCommand:
-                Pipeline:
-                  [
-                    {
-                      $match:
-                        {
-                          measurement: "cpu",
-                          time:
-                            {
-                              $gte:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator: 
-                                        { ^IncDate: { start: *startDate, step: 2520000 } },
-                                    },
-                                },
-                              $lt:
-                                {
-                                  ^Cycle:
-                                    {
-                                      ofLength: 100,
-                                      fromGenerator:
-                                        {
-                                          ^IncDate:
-                                            { start: *startDatePlusTwelveHours, step: 2520000 },
-                                        },
-                                    },
-                                },
-                            },
-                          usage_user: { $gt: 90 }, # 90 is hard-coded in TSBS.
-                        },
-                    },
-                    { $set: { tags: "$tags.hostname" } },
-                  ]
+                Pipeline: [{$match: {measurement: "cpu", time: {$gte: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *startDate, step: 2520000}}}}, $lt: {^Cycle: {ofLength: 100, fromGenerator: {^IncDate: {start: *startDatePlusTwelveHours, step: 2520000}}}}}, usage_user: {$gt: 90} # 90 is hard-coded in TSBS.
+}}, {$set: {tags: "$tags.hostname"}}]
 
   # lastpoint computes the last row per host.
   - Name: lastpoint
@@ -927,25 +314,4 @@ Actors:
           Operations:
             - OperationName: aggregate
               OperationCommand:
-                Pipeline:
-                  [
-                    { $sort: { "tags.hostname": 1, "time": -1 } },
-                    {
-                      $group:
-                        {
-                          _id: { "hostname": "$tags.hostname" },
-                          time: { $first: "$time" },
-                          measurement: { $first: "$measurement" },
-                          usage_softirq: { $first: "$usage_softirq" },
-                          musage_steal: { $first: "$usage_steal" },
-                          usage_guest: { $first: "$usage_guest" },
-                          usage_user: { $first: "$usage_user" },
-                          usage_system: { $first: "$usage_system" },
-                          usage_iowait: { $first: "$usage_iowait" },
-                          usage_irq: { $first: "$usage_irq" },
-                          usage_nice: { $first: "$usage_nice" },
-                          usage_idle: { $first: "$usage_idle" },
-                          usage_guest_nice: { $first: "$usage_guest_nice" },
-                        },
-                    },
-                  ]
+                Pipeline: [{$sort: {"tags.hostname": 1, "time": -1}}, {$group: {_id: {"hostname": "$tags.hostname"}, time: {$first: "$time"}, measurement: {$first: "$measurement"}, usage_softirq: {$first: "$usage_softirq"}, musage_steal: {$first: "$usage_steal"}, usage_guest: {$first: "$usage_guest"}, usage_user: {$first: "$usage_user"}, usage_system: {$first: "$usage_system"}, usage_iowait: {$first: "$usage_iowait"}, usage_irq: {$first: "$usage_irq"}, usage_nice: {$first: "$usage_nice"}, usage_idle: {$first: "$usage_idle"}, usage_guest_nice: {$first: "$usage_guest_nice"}}}]

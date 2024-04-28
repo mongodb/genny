@@ -17,7 +17,7 @@ ExpressionTemplate:
         Database: *db
         Collection: &coll {^Parameter: {Name: "collection", Default: Collection0}}
         Operations:
-        - OperationMetricsName: {^Parameter: {Name: "operationMetricsName", Default: OperationMetric}}
-          OperationName: aggregate
-          OperationCommand:
-            Pipeline: {^Parameter: {Name: "Pipeline", Default: []}}
+          - OperationMetricsName: {^Parameter: {Name: "operationMetricsName", Default: OperationMetric}}
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline: {^Parameter: {Name: "Pipeline", Default: []}}

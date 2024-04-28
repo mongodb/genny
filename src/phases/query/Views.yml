@@ -16,5 +16,5 @@ CreateIdentityView:
         Repeat: 1
         Database: {^Parameter: {Name: "Database", Default: test}}
         Operations:
-        - OperationName: RunCommand
-          OperationCommand: {create: {^Parameter: {Name: "View", Default: Collection0}}, viewOn: {^Parameter: {Name: "Collection", Default: Collection0}}, pipeline: []}
+          - OperationName: RunCommand
+            OperationCommand: {create: {^Parameter: {Name: "View", Default: Collection0}}, viewOn: {^Parameter: {Name: "Collection", Default: Collection0}}, pipeline: []}

@@ -10,7 +10,7 @@ Description: |
   many stages.
 
 Keywords:
-- streams
+  - streams
 
 GlobalDefaults:
   DatabaseName: &DatabaseName test
@@ -21,24 +21,19 @@ GlobalDefaults:
   # for the window so this will generate 8M keys on the open window.
   NumThreads: &NumThreads 16
   NumBatch1000xPerThread: &NumBatch1000xPerThread 500
-  NumDocumentsPerThread: &NumDocumentsPerThread 500000  # NumBatch1000xPerThread * 1000
-  ExpectedDocumentCount: &ExpectedDocumentCount 8000000  # NumDocumentsPerThread * NumThreads
+  NumDocumentsPerThread: &NumDocumentsPerThread 500000 # NumBatch1000xPerThread * 1000
+  ExpectedDocumentCount: &ExpectedDocumentCount 8000000 # NumDocumentsPerThread * NumThreads
 
-  Channel: &Channel {^RandomInt: { min: 0, max: 10000 }}
-  Url: &Url {^FormatString: { format: "https://www.nexmark.com/%s/%s/%s/item.htm?query=1&channel_id=%d", withArgs: [
-    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
-    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
-    {^RandomString: { length: {^RandomInt: { min: 3, max: 5 }}}},
-    *Channel
-  ]}}
+  Channel: &Channel {^RandomInt: {min: 0, max: 10000}}
+  Url: &Url {^FormatString: {format: "https://www.nexmark.com/%s/%s/%s/item.htm?query=1&channel_id=%d", withArgs: [{^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}}, {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}}, {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}}, *Channel]}}
 
   Document: &Document
-    auction: {^RandomInt: { min: 1000, max: 401000 }}
-    bidder: {^Inc: { start: 1000, multiplier: 1 }}
+    auction: {^RandomInt: {min: 1000, max: 401000}}
+    bidder: {^Inc: {start: 1000, multiplier: 1}}
     price: {^RandomDouble: {min: 100, max: 100000000}}
     channel: *Channel
     url: *Url
-    dateTime: {^IncDate: { start: "2023-01-01T00:00:00.000", step: 10 }}
+    dateTime: {^IncDate: {start: "2023-01-01T00:00:00.000", step: 10}}
 
   # Manually construct 1k batch rather than using ^Array function so that all documents in a
   # single 1k batch have the same timestamp. And since this is across 16 threads, each timestamp
@@ -49,111 +44,66 @@ GlobalDefaults:
   Batch1000x: &Batch1000x {^FlattenOnce: [*Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x, *Batch100x]}
 
 Actors:
-- Name: Setup
-  Type: RunCommand
-  ClientName: Stream
-  Threads: 1
-  Phases:
-  - Phase: 0
-    Repeat: 1
-    Database: *DatabaseName
-    Operations:
-    - OperationMetricsName: CreateStreamProcessor
-      OperationName: RunCommand
-      OperationCommand:
-        streams_startStreamProcessor: ""
-        name: *StreamProcessorName
-        pipeline: [
-          {
-            $source: {
-              connectionName: "__testMemory",
-              timeField: { $convert: { input: "$dateTime", to: "date" }},
-            }
-          },
-          { $addFields: { price1: { $multiply: ["$price", 1.75] }}},
-          { $addFields: { price2: { $multiply: ["$price1", 1.75] }}},
-          { $addFields: { price3: { $multiply: ["$price2", 1.75] }}},
-          { $addFields: { price4: { $multiply: ["$price3", 1.75] }}},
-          { $addFields: { price5: { $multiply: ["$price4", 1.75] }}},
-          { $addFields: { price6: { $multiply: ["$price5", 1.75] }}},
-          { $addFields: { price7: { $multiply: ["$price6", 1.75] }}},
-          { $addFields: { price8: { $multiply: ["$price7", 1.75] }}},
-          { $addFields: { price9: { $multiply: ["$price8", 1.75] }}},
-          { $addFields: { price10: { $multiply: ["$price9", 1.75] }}},
-          { $addFields: { price11: { $multiply: ["$price10", 1.75] }}},
-          { $addFields: { price12: { $multiply: ["$price11", 1.75] }}},
-          { $addFields: { price13: { $multiply: ["$price12", 1.75] }}},
-          { $addFields: { price14: { $multiply: ["$price13", 1.75] }}},
-          { $addFields: { price15: { $multiply: ["$price14", 1.75] }}},
-          { $addFields: { price16: { $multiply: ["$price15", 1.75] }}},
-          { $addFields: { price17: { $multiply: ["$price16", 1.75] }}},
-          { $addFields: { price18: { $multiply: ["$price17", 1.75] }}},
-          { $addFields: { price19: { $multiply: ["$price18", 1.75] }}},
-          { $addFields: { price20: { $multiply: ["$price19", 1.75] }}},
-          {
-            $tumblingWindow: {
-              interval: { size: 1, unit: "second" },
-              allowedLateness: { size: 1, unit: "second" },
-              pipeline: [
-                {
-                  $group: {
-                    _id: "$auction",
-                    minPrice: { $min: "$price" },
-                    maxPrice: { $max: "$price" },
-                    sumPrice: { $sum: "$price" },
-                    avgPrice: { $avg: "$price" }
-                  }
-                }
-              ]
-            }
-          },
-          { $emit: { connectionName: "__noopSink" }}
-        ]
-        connections: [{ name: "__testMemory", type: "in_memory", options: {} }]
-        options: {}
-  - Phase: 1
-    Nop: true
-  - Phase: 2
-    Repeat: 1
-    Database: *DatabaseName
-    Operations:
-    - OperationMetricsName: Stop
-      OperationName: RunCommand
-      OperationCommand:
-        streams_stopStreamProcessor: ""
-        name: *StreamProcessorName
+  - Name: Setup
+    Type: RunCommand
+    ClientName: Stream
+    Threads: 1
+    Phases:
+      - Phase: 0
+        Repeat: 1
+        Database: *DatabaseName
+        Operations:
+          - OperationMetricsName: CreateStreamProcessor
+            OperationName: RunCommand
+            OperationCommand:
+              streams_startStreamProcessor: ""
+              name: *StreamProcessorName
+              pipeline: [{$source: {connectionName: "__testMemory", timeField: {$convert: {input: "$dateTime", to: "date"}}}}, {$addFields: {price1: {$multiply: ["$price", 1.75]}}}, {$addFields: {price2: {$multiply: ["$price1", 1.75]}}}, {$addFields: {price3: {$multiply: ["$price2", 1.75]}}}, {$addFields: {price4: {$multiply: ["$price3", 1.75]}}}, {$addFields: {price5: {$multiply: ["$price4", 1.75]}}}, {$addFields: {price6: {$multiply: ["$price5", 1.75]}}}, {$addFields: {price7: {$multiply: ["$price6", 1.75]}}}, {$addFields: {price8: {$multiply: ["$price7", 1.75]}}}, {$addFields: {price9: {$multiply: ["$price8", 1.75]}}}, {$addFields: {price10: {$multiply: ["$price9", 1.75]}}}, {$addFields: {price11: {$multiply: ["$price10", 1.75]}}}, {$addFields: {price12: {$multiply: ["$price11", 1.75]}}}, {$addFields: {price13: {$multiply: ["$price12", 1.75]}}}, {$addFields: {price14: {$multiply: ["$price13", 1.75]}}}, {$addFields: {price15: {$multiply: ["$price14", 1.75]}}}, {$addFields: {price16: {$multiply: ["$price15", 1.75]}}}, {$addFields: {price17: {$multiply: ["$price16", 1.75]}}}, {$addFields: {price18: {$multiply: ["$price17", 1.75]}}}, {$addFields: {price19: {$multiply: ["$price18", 1.75]}}}, {$addFields: {price20: {$multiply: ["$price19", 1.75]}}}, {$tumblingWindow: {interval: {size: 1, unit: "second"}, allowedLateness: {size: 1, unit: "second"}, pipeline: [{$group: {_id: "$auction", minPrice: {$min: "$price"}, maxPrice: {$max: "$price"}, sumPrice: {$sum: "$price"}, avgPrice: {$avg: "$price"}}}]}}, {$emit: {connectionName: "__noopSink"}}]
+              connections: [{name: "__testMemory", type: "in_memory", options: {}}]
+              options: {}
+      - Phase: 1
+        Nop: true
+      - Phase: 2
+        Repeat: 1
+        Database: *DatabaseName
+        Operations:
+          - OperationMetricsName: Stop
+            OperationName: RunCommand
+            OperationCommand:
+              streams_stopStreamProcessor: ""
+              name: *StreamProcessorName
 
-- Name: Insert_Batch1000x
-  Type: RunCommand
-  ClientName: Stream
-  Threads: *NumThreads
-  Phases:
-  - Phase: 0
-    Nop: true
-  - Phase: 1
-    Repeat: *NumBatch1000xPerThread
-    Database: *DatabaseName
-    Operations:
-    - OperationMetricsName: Insert
-      OperationName: RunCommand
-      OperationCommand:
-        streams_testOnlyInsert: ""
-        name: *StreamProcessorName
-        documents: *Batch1000x
-  - Phase: 2
-    Nop: true
+  - Name: Insert_Batch1000x
+    Type: RunCommand
+    ClientName: Stream
+    Threads: *NumThreads
+    Phases:
+      - Phase: 0
+        Nop: true
+      - Phase: 1
+        Repeat: *NumBatch1000xPerThread
+        Database: *DatabaseName
+        Operations:
+          - OperationMetricsName: Insert
+            OperationName: RunCommand
+            OperationCommand:
+              streams_testOnlyInsert: ""
+              name: *StreamProcessorName
+              documents: *Batch1000x
+      - Phase: 2
+        Nop: true
 
-- Name: AddFields.MemorySource.Stats
-  Type: StreamStatsReporter
-  ClientName: Stream
-  Database: *DatabaseName
-  Threads: 1
-  Phases:
-  - Phase: 0
-    Nop: true
-  - Phase: 1
-    Repeat: 1
-    StreamProcessorName: *StreamProcessorName
-    ExpectedDocumentCount: *ExpectedDocumentCount
-  - Phase: 2
-    Nop: true
+  - Name: AddFields.MemorySource.Stats
+    Type: StreamStatsReporter
+    ClientName: Stream
+    Database: *DatabaseName
+    Threads: 1
+    Phases:
+      - Phase: 0
+        Nop: true
+      - Phase: 1
+        Repeat: 1
+        StreamProcessorName: *StreamProcessorName
+        ExpectedDocumentCount: *ExpectedDocumentCount
+      - Phase: 2
+        Nop: true

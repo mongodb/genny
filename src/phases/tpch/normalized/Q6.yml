@@ -12,17 +12,7 @@ query6Quantity: &query6Quantity {^Parameter: {Name: "Query6Quantity", Default: 2
 
 TPCHNormalizedQuery6Aggregation: &TPCHNormalizedQuery6Aggregation
   aggregate: lineitem
-  pipeline:
-    [
-      {$match: {$and: [
-        {$expr: {$gte: ["$l_shipdate", {^Date: *query6Date}]}},
-        {$expr: {$lt: ["$l_shipdate", {$dateAdd: {startDate: {^Date: *query6Date}, unit: "year", amount: 1}}]}},
-        {$expr: {$gte: ["$l_discount", {$subtract: [*query6Discount, 0.01]}]}},
-        {$expr: {$lte: ["$l_discount", {$add: [*query6Discount, 0.011]}]}},
-        {$expr: {$lt: ["$l_quantity", *query6Quantity]}}]}},
-      {$group: {_id: 0, revenue: {$sum: {$multiply: ["$l_extendedprice", "$l_discount"]}}}},
-      {$project: {_id: 0, revenue: 1}},
-    ]
+  pipeline: [{$match: {$and: [{$expr: {$gte: ["$l_shipdate", {^Date: *query6Date}]}}, {$expr: {$lt: ["$l_shipdate", {$dateAdd: {startDate: {^Date: *query6Date}, unit: "year", amount: 1}}]}}, {$expr: {$gte: ["$l_discount", {$subtract: [*query6Discount, 0.01]}]}}, {$expr: {$lte: ["$l_discount", {$add: [*query6Discount, 0.011]}]}}, {$expr: {$lt: ["$l_quantity", *query6Quantity]}}]}}, {$group: {_id: 0, revenue: {$sum: {$multiply: ["$l_extendedprice", "$l_discount"]}}}}, {$project: {_id: 0, revenue: 1}}]
   cursor: {batchSize: *batchSize}
   allowDiskUse: true
 
@@ -30,25 +20,24 @@ TPCHNormalizedQuery6Warmup:
   Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
   Database: &db tpch
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHNormalizedQuery6Aggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHNormalizedQuery6Aggregation
 
 TPCHNormalizedQuery6:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query6
-    OperationName: RunCommand
-    OperationCommand: *TPCHNormalizedQuery6Aggregation
+    - OperationMetricsName: Query6
+      OperationName: RunCommand
+      OperationCommand: *TPCHNormalizedQuery6Aggregation
 
 TPCHNormalizedQuery6Explain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query6
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHNormalizedQuery6Aggregation
-      verbosity:
-        executionStats
+    - OperationMetricsName: Query6
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHNormalizedQuery6Aggregation
+        verbosity: executionStats

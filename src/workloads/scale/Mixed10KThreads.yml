@@ -16,9 +16,9 @@ Description: |
     * "ss connections active": the number of connections.
 
 Keywords:
-- scale
-- insertMany
-- find
+  - scale
+  - insertMany
+  - find
 
 dbname: &dbname mixed_10k
 DocumentCount: &NumDocs 10000
@@ -33,86 +33,86 @@ Clients:
       maxPoolSize: 10100
 
 ActorTemplates:
-- TemplateName: WritesActorTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: WritesActor}}
-    Type: CrudActor
-    Database: *dbname
-    Threads: {^Parameter: {Name: "Threads", Default: 1000}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
-        NopInPhasesUpTo: *NumPhases
-        PhaseConfig:
-          Duration: 3 minutes
-          RecordFailure: true
-          CollectionCount: *NumColls
-          Operations:
-          - OperationName: insertOne
-            OperationMetricsName: WriteDocs
-            OperationCommand:
-              Document: *doc
-            ThrowOnFailure: false
-- TemplateName: ReadsActorTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: ReadsActor}}
-    Type: CrudActor
-    Database: *dbname
-    Threads: {^Parameter: {Name: "Threads", Default: 1000}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
-        NopInPhasesUpTo: *NumPhases
-        PhaseConfig:
-          Duration: 3 minutes
-          RecordFailure: true
-          CollectionCount: *NumColls
-          Operations:
-          - OperationName: find
-            OperationCommand:
-              Filter: { a: { ^RandomInt: { min: 0, max: *NumDocs } } }
-              Options:
-                Limit: 10
-            OperationMetricsName: ReadDocs
-            ThrowOnFailure: false
+  - TemplateName: WritesActorTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: WritesActor}}
+      Type: CrudActor
+      Database: *dbname
+      Threads: {^Parameter: {Name: "Threads", Default: 1000}}
+      Phases:
+        OnlyActiveInPhases:
+          Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
+          NopInPhasesUpTo: *NumPhases
+          PhaseConfig:
+            Duration: 3 minutes
+            RecordFailure: true
+            CollectionCount: *NumColls
+            Operations:
+              - OperationName: insertOne
+                OperationMetricsName: WriteDocs
+                OperationCommand:
+                  Document: *doc
+                ThrowOnFailure: false
+  - TemplateName: ReadsActorTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: ReadsActor}}
+      Type: CrudActor
+      Database: *dbname
+      Threads: {^Parameter: {Name: "Threads", Default: 1000}}
+      Phases:
+        OnlyActiveInPhases:
+          Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
+          NopInPhasesUpTo: *NumPhases
+          PhaseConfig:
+            Duration: 3 minutes
+            RecordFailure: true
+            CollectionCount: *NumColls
+            Operations:
+              - OperationName: find
+                OperationCommand:
+                  Filter: {a: {^RandomInt: {min: 0, max: *NumDocs}}}
+                  Options:
+                    Limit: 10
+                OperationMetricsName: ReadDocs
+                ThrowOnFailure: false
 Actors:
-- Name: Setup
-  Type: Loader
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        # Have 10k documents ready at start
-        Repeat: 1
-        BatchSize: 100
-        Threads: 1
-        DocumentCount: *NumDocs
-        Database: *dbname
-        CollectionCount: *NumColls
-        Document: *doc
-        Indexes:
-        - keys: {a: 1}
+  - Name: Setup
+    Type: Loader
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          # Have 10k documents ready at start
+          Repeat: 1
+          BatchSize: 100
+          Threads: 1
+          DocumentCount: *NumDocs
+          Database: *dbname
+          CollectionCount: *NumColls
+          Document: *doc
+          Indexes:
+            - keys: {a: 1}
 
-- ActorFromTemplate:
-    TemplateName: WritesActorTemplate
-    TemplateParameters:
-      Name: {^Parameter: {Name: "WritingName", Default: WritingActor_50_50}}
-      Threads: {^Parameter: {Name: "WritingThreads", Default: 5000}}
-      ActivePhases: [1]
+  - ActorFromTemplate:
+      TemplateName: WritesActorTemplate
+      TemplateParameters:
+        Name: {^Parameter: {Name: "WritingName", Default: WritingActor_50_50}}
+        Threads: {^Parameter: {Name: "WritingThreads", Default: 5000}}
+        ActivePhases: [1]
 
-- ActorFromTemplate:
-    TemplateName: ReadsActorTemplate
-    TemplateParameters:
-      Name: {^Parameter: {Name: "ReadingName", Default: ReadsActor_50_50}}
-      Threads: {^Parameter: {Name: "ReadingThreads", Default: 5000}}
-      ActivePhases: [1]
+  - ActorFromTemplate:
+      TemplateName: ReadsActorTemplate
+      TemplateParameters:
+        Name: {^Parameter: {Name: "ReadingName", Default: ReadsActor_50_50}}
+        Threads: {^Parameter: {Name: "ReadingThreads", Default: 5000}}
+        ActivePhases: [1]
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica
-      - replica-80-feature-flags
-      - replica-all-feature-flags
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - replica-80-feature-flags
+          - replica-all-feature-flags

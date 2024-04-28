@@ -40,8 +40,8 @@ QueryTemplate:
         Database: *Database
         Collection: {^Parameter: {Name: "collection", Default: Collection0}}
         Operations:
-        - OperationMetricsName: *Name
-          OperationName: aggregate
-          OperationCommand:
-            Pipeline: {^Parameter: {Name: "pipeline", Default: ""}}
+          - OperationMetricsName: *Name
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline: {^Parameter: {Name: "pipeline", Default: ""}}
 

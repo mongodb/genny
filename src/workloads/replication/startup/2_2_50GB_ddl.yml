@@ -48,41 +48,41 @@ Description: |
   ```
 
 Keywords:
-- startup
-- stopCheckpointing
-- collections
-- indexes
+  - startup
+  - stopCheckpointing
+  - collections
+  - indexes
 
 Clients:
   Default:
     QueryOptions:
       maxPoolSize: 300
       # Allow for longer duration since index builds may take a while.
-      socketTimeoutMS: 3_600_000  # = 1 hour
+      socketTimeoutMS: 3_600_000 # = 1 hour
       connectTimeoutMS: 3_600_000
 
 GlobalDefaults:
   - NumPhases: &max_phase 1
   - Database: &database "startup_50GB_ddl"
-  - CollectionCount: &collectionCount 1000  # 1k collections with 11 indexes each (10k+ tables).
+  - CollectionCount: &collectionCount 1000 # 1k collections with 11 indexes each (10k+ tables).
 
 Actors:
-- StopCheckpointing:
-  LoadConfig:
-    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
-    Key: StopCheckpointTemplate
-    Parameters:
-      active: [0]
-      nopInPhasesUpTo: *max_phase
+  - StopCheckpointing:
+    LoadConfig:
+      Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+      Key: StopCheckpointTemplate
+      Parameters:
+        active: [0]
+        nopInPhasesUpTo: *max_phase
 
-- DDLAndCrudOperations:
-  LoadConfig:
-    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
-    Key: InsertDataTemplate
-    Parameters:
-      active: [1]
-      nopInPhasesUpTo: *max_phase
-      database: *database
-      collectionCount: *collectionCount
-      approxDocumentSize: 1000  # 1kB
-      documentCount: 100  # for an approximate total of 100KB per collection, total ~1GB.
+  - DDLAndCrudOperations:
+    LoadConfig:
+      Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+      Key: InsertDataTemplate
+      Parameters:
+        active: [1]
+        nopInPhasesUpTo: *max_phase
+        database: *database
+        collectionCount: *collectionCount
+        approxDocumentSize: 1000 # 1kB
+        documentCount: 100 # for an approximate total of 100KB per collection, total ~1GB.

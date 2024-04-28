@@ -17,231 +17,184 @@ GlobalDefaults:
   MaxPhases: &MaxPhases 9
 
 ValueGenerators:
-- &SmallId {^Join: {array: [
-  { ^FormatString: {"format": "%07.0f", "withArgs": [
-    {^RandomDouble: {
-      min: 1,
-      max: {^NumExpr: {withExpression: "(2 * docCount) / 10", andValues: {docCount: *docCount}}}}}]}},
-  *PaddingGenerator]}}
-- &BigId {^Join: {array: [
-  { ^FormatString: {"format": "%07.0f", "withArgs": [
-    {^RandomDouble: {
-      min: {^NumExpr: {withExpression: "(8 * docCount) / 10", andValues: {docCount: *docCount}}},
-      max: *docCount}}]}},
-  *PaddingGenerator]}}
-- &SmallSecondaryKey {^Join: {array: ["1", {^FastRandomString: {length: 5, alphabet: "0123456789"}}]}}
-- &BigSecondaryKey {^Join: {array: ["8", {^FastRandomString: {length: 5, alphabet: "0123456789"}}]}}
+  - &SmallId {^Join: {array: [{^FormatString: {"format": "%07.0f", "withArgs": [{^RandomDouble: {min: 1, max: {^NumExpr: {withExpression: "(2 * docCount) / 10", andValues: {docCount: *docCount}}}}}]}}, *PaddingGenerator]}}
+  - &BigId {^Join: {array: [{^FormatString: {"format": "%07.0f", "withArgs": [{^RandomDouble: {min: {^NumExpr: {withExpression: "(8 * docCount) / 10", andValues: {docCount: *docCount}}}, max: *docCount}}]}}, *PaddingGenerator]}}
+  - &SmallSecondaryKey {^Join: {array: ["1", {^FastRandomString: {length: 5, alphabet: "0123456789"}}]}}
+  - &BigSecondaryKey {^Join: {array: ["8", {^FastRandomString: {length: 5, alphabet: "0123456789"}}]}}
 
 Actors:
-# Phase 0: create collection
-- Name: Create
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        Operations:
-        - OperationName: RunCommand
-          OperationCommand:
-            create: *Collection
-            clusteredIndex: {key: {_id: 1}, unique: true}
+  # Phase 0: create collection
+  - Name: Create
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          Operations:
+            - OperationName: RunCommand
+              OperationCommand:
+                create: *Collection
+                clusteredIndex: {key: {_id: 1}, unique: true}
 
+  # Phase 1: Shard the collection
+  - Name: ShardCollection
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          # Until EVG-21054 is resolved, using OnlyRunInInstance requires excluding the workload from dry-runs
+          OnlyRunInInstance: sharded
+          Repeat: 1
+          Operations:
+            - OperationName: AdminCommand
+              OperationMetricsName: EnableShardingMetrics
+              OperationCommand:
+                enableSharding: *Database
+            - OperationName: AdminCommand
+              OperationMetricsName: ShardCollectionMetrics
+              OperationCommand:
+                shardCollection: *Namespace
+                key: {_id: "hashed"}
 
-# Phase 1: Shard the collection
-- Name: ShardCollection
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        # Until EVG-21054 is resolved, using OnlyRunInInstance requires excluding the workload from dry-runs
-        OnlyRunInInstance: sharded
-        Repeat: 1
-        Operations:
-        - OperationName: AdminCommand
-          OperationMetricsName: EnableShardingMetrics
-          OperationCommand:
-            enableSharding: *Database
-        - OperationName: AdminCommand
-          OperationMetricsName: ShardCollectionMetrics
-          OperationCommand:
-            shardCollection: *Namespace
-            key: {_id: "hashed"}
+  - Name: Insert
+    Type: Loader
+    Threads: *LoadingThreads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          MultipleThreadsPerCollection: true
+          CollectionCount: 1
+          DocumentCount: *docCount
+          BatchSize: 1000
+          Document:
+            # Start from {_id: "0000001"} in order to be able to set the ^RandomInt max bound to
+            # *docCount in the LookupByClusterKey phase. This works around TIG-3759.
+            #
+            # The multiplier in the format string arg uses the actor ID to generate non-conflicting
+            # _ids. Each actor will start their counters from `start + multiplier * ActorID`. The
+            # actor IDs in this phase should start at 3, so we start the increment counter at
+            # -3*DocsPerThread + 1 to get to 1 as the first _id.
+            _id: {^Join: {array: [{^FormatString: {"format": "%07d", "withArgs": [{^Inc: {start: -187499, multiplier: *DocsPerThread}}]}}, *PaddingGenerator]}}
+            a: &RandomSecondaryKey {^FastRandomString: {length: 6, alphabet: "0123456789"}}
+            b: {^FastRandomString: {length: 1024}}
 
-- Name: Insert
-  Type: Loader
-  Threads: *LoadingThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        MultipleThreadsPerCollection: true
-        CollectionCount: 1
-        DocumentCount: *docCount
-        BatchSize: 1000
-        Document:
-          # Start from {_id: "0000001"} in order to be able to set the ^RandomInt max bound to
-          # *docCount in the LookupByClusterKey phase. This works around TIG-3759.
-          #
-          # The multiplier in the format string arg uses the actor ID to generate non-conflicting
-          # _ids. Each actor will start their counters from `start + multiplier * ActorID`. The
-          # actor IDs in this phase should start at 3, so we start the increment counter at
-          # -3*DocsPerThread + 1 to get to 1 as the first _id.
-          _id: {^Join: {array: [
-            {
-              ^FormatString: {
-                "format": "%07d",
-                "withArgs": [{^Inc: {start: -187499, multiplier: *DocsPerThread}}]
-              }
-            },
-            *PaddingGenerator
-          ]}}
-          a: &RandomSecondaryKey {^FastRandomString: {length: 6, alphabet: "0123456789"}}
-          b: {^FastRandomString: {length: 1024}}
+  # Phase 3: Point _id lookups. TODO convert to range queries once TIG-3707 is implemented.
+  - Name: LookupByClusterKey
+    Type: CrudActor
+    Database: *Database
+    Threads: 16
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Duration: 1 minute
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: &RandomId {_id: {^Join: {array: [{^FormatString: {"format": "%07d", "withArgs": [{^RandomInt: {min: 1, max: *docCount}}]}}, *PaddingGenerator]}}}
 
-# Phase 3: Point _id lookups. TODO convert to range queries once TIG-3707 is implemented.
-- Name: LookupByClusterKey
-  Type: CrudActor
-  Database: *Database
-  Threads: 16
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Duration: 1 minute
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: &RandomId {_id: {^Join: {array: [{ ^FormatString: {"format": "%07d", "withArgs": [{^RandomInt: {min: 1, max: *docCount}}]}}, *PaddingGenerator]}}}
+  # Phase 4: Create a secondary index.
+  - Name: BuildIndex
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          Operations:
+            - OperationName: RunCommand
+              OperationCommand:
+                createIndexes: *Collection
+                indexes:
+                  - key: {a: 1}
+                    name: a
 
+  # Phase 5: Secondary index lookups.
+  - Name: LookupBySecondaryIndex
+    Type: CrudActor
+    Database: *Database
+    Threads: 16
+    Phases:
+      OnlyActiveInPhases:
+        Active: [5]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Duration: 1 minute
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: {a: *RandomSecondaryKey}
 
-# Phase 4: Create a secondary index.
-- Name: BuildIndex
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [4]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        Operations:
-        - OperationName: RunCommand
-          OperationCommand:
-            createIndexes: *Collection
-            indexes:
-            - key: {a: 1}
-              name: a
+  # Phase 6: Range query with both primary and secondary key. Primary key matches much less
+  # documents, so primary index should be selected by the query planner.
+  - Name: PrimaryIndexScanWithSecondaryKeyFilter
+    Type: CrudActor
+    Database: *Database
+    Threads: 16
+    Phases:
+      OnlyActiveInPhases:
+        Active: [6]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Duration: 1 minute
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: {_id: {^Choose: {from: [{$gte: *BigId}, {$lte: *SmallId}]}}, a: {^Choose: {from: [{$gte: *SmallSecondaryKey}, {$lte: *BigSecondaryKey}]}}}
 
+  # Phase 7: Range query with both primary and secondary key. Secondary key matches much less
+  # documents, so secondary index should be selected by the query planner.
+  - Name: SecondaryIndexScanWithPrimaryKeyFilter
+    Type: CrudActor
+    Database: *Database
+    Threads: 16
+    Phases:
+      OnlyActiveInPhases:
+        Active: [7]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Duration: 1 minute
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: {_id: {^Choose: {from: [{$gte: *SmallId}, {$lte: *BigId}]}}, a: {^Choose: {from: [{$gte: *BigSecondaryKey}, {$lte: *SmallSecondaryKey}]}}}
 
-# Phase 5: Secondary index lookups.
-- Name: LookupBySecondaryIndex
-  Type: CrudActor
-  Database: *Database
-  Threads: 16
-  Phases:
-    OnlyActiveInPhases:
-      Active: [5]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Duration: 1 minute
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {a: *RandomSecondaryKey}
-
-# Phase 6: Range query with both primary and secondary key. Primary key matches much less
-# documents, so primary index should be selected by the query planner.
-- Name: PrimaryIndexScanWithSecondaryKeyFilter
-  Type: CrudActor
-  Database: *Database
-  Threads: 16
-  Phases:
-    OnlyActiveInPhases:
-      Active: [6]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Duration: 1 minute
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {
-              _id: {^Choose: {
-                from: [
-                  {$gte: *BigId},
-                  {$lte: *SmallId}
-                ]
-              }},
-              a: {^Choose: {
-                from: [
-                  {$gte: *SmallSecondaryKey},
-                  {$lte: *BigSecondaryKey}
-                ]
-              }}
-            }
-
-# Phase 7: Range query with both primary and secondary key. Secondary key matches much less
-# documents, so secondary index should be selected by the query planner.
-- Name: SecondaryIndexScanWithPrimaryKeyFilter
-  Type: CrudActor
-  Database: *Database
-  Threads: 16
-  Phases:
-    OnlyActiveInPhases:
-      Active: [7]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Duration: 1 minute
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {
-              _id: {^Choose: {
-                from: [
-                  {$gte: *SmallId},
-                  {$lte: *BigId}
-                ]
-              }},
-              a: {^Choose: {
-                from: [
-                  {$gte: *BigSecondaryKey},
-                  {$lte: *SmallSecondaryKey}
-                ]
-              }}
-            }
-
-# Phase 8: Point deletion.
-- Name: PointDeleter
-  Type: CrudActor
-  Database: *Database
-  Threads: &ThreadCount 16
-  Phases:
-    OnlyActiveInPhases:
-      Active: [8]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Duration: 3 minutes
-        Collection: *Collection
-        Operations:
-        - OperationName: deleteOne
-          OperationCommand:
-            Filter:
-              # Beware, ^Inc uses ActorId which is unique for each instance within the whole workload
-              # If there are N threads created before the PointDeleter, the first N documents will
-              # not be deleted. See TIG-4057
-              {_id: {^Join: {array: [{ ^FormatString: {"format": "%07d", "withArgs": [{^Inc: {start: 0, multiplier: 1, step: *ThreadCount}}]}}, *PaddingGenerator]}}}
+  # Phase 8: Point deletion.
+  - Name: PointDeleter
+    Type: CrudActor
+    Database: *Database
+    Threads: &ThreadCount 16
+    Phases:
+      OnlyActiveInPhases:
+        Active: [8]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Duration: 3 minutes
+          Collection: *Collection
+          Operations:
+            - OperationName: deleteOne
+              OperationCommand:
+                Filter: {
+                  # Beware, ^Inc uses ActorId which is unique for each instance within the whole workload
+                  # If there are N threads created before the PointDeleter, the first N documents will
+                  # not be deleted. See TIG-4057
+                  _id: {^Join: {array: [{^FormatString: {"format": "%07d", "withArgs": [{^Inc: {start: 0, multiplier: 1, step: *ThreadCount}}]}}, *PaddingGenerator]}}}

@@ -4,5 +4,5 @@ Description: |
   Configuration for the MultiDeletes workload.
 
 InitializeDatabaseOps:
-- OperationName: RunCommand
-  OperationCommand: {dropDatabase: 1}
+  - OperationName: RunCommand
+    OperationCommand: {dropDatabase: 1}

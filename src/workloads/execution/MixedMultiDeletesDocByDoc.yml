@@ -6,21 +6,21 @@ Description: |
   documents of ~10MB.
 
 Keywords:
-- RunCommand
-- Loader
-- LoggingActor
-- CrudActor
-- insert
-- delete
-- batch
-- deleteMany
-- latency
+  - RunCommand
+  - Loader
+  - LoggingActor
+  - CrudActor
+  - insert
+  - delete
+  - batch
+  - deleteMany
+  - latency
 
 Clients:
   Default:
     QueryOptions:
       # Allow for longer duration since the loading of the data may take a while.
-      socketTimeoutMS: 3_600_000  # = 1 hour
+      socketTimeoutMS: 3_600_000 # = 1 hour
 
 LoadConfig:
   Path: "../../phases/execution/MixedMultiDeletes.yml"
@@ -28,14 +28,14 @@ LoadConfig:
     UseBatchedDeleteStage: 0
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica
-    branch_name:
-      $neq:
-      - v4.2
-      - v4.4
-      - v5.0
-      # 6.0 Does not have the 'batchUserMultiDeletes' server parameter.
-      - v6.0
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+      branch_name:
+        $neq:
+          - v4.2
+          - v4.4
+          - v5.0
+          # 6.0 Does not have the 'batchUserMultiDeletes' server parameter.
+          - v6.0

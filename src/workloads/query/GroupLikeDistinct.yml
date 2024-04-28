@@ -6,14 +6,14 @@ Description: |
   be optimized to use DISTINCT_SCAN plan.
 
 Keywords:
-- Distinct
-- Group
-- First
-- Last
-- Top
-- Bottom
-- timeseries
-- aggregate
+  - Distinct
+  - Group
+  - First
+  - Last
+  - Top
+  - Bottom
+  - timeseries
+  - aggregate
 
 GlobalDefaults:
   Database: &Database test
@@ -21,185 +21,184 @@ GlobalDefaults:
   MaxPhases: &MaxPhases 17
 
 ActorTemplates:
-- TemplateName: RunAggCommand
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "RunAggCommand"}}
-    Type: CrudActor
-    Database: *Database
-    Threads: 4
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
-        NopInPhasesUpTo: *MaxPhases
-        PhaseConfig:
-          Repeat: 500
-          Collection: *Collection
-          Operations:
-          - OperationName: aggregate
-            OperationCommand:
-              Pipeline: {^Parameter: {Name: "Pipeline", Default: []}}
+  - TemplateName: RunAggCommand
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "RunAggCommand"}}
+      Type: CrudActor
+      Database: *Database
+      Threads: 4
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
+          NopInPhasesUpTo: *MaxPhases
+          PhaseConfig:
+            Repeat: 500
+            Collection: *Collection
+            Operations:
+              - OperationName: aggregate
+                OperationCommand:
+                  Pipeline: {^Parameter: {Name: "Pipeline", Default: []}}
 
 Actors:
-# Clear any pre-existing collection state.
-- Name: ClearCollection
-  Type: CrudActor
-  Database: *Database
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
-        Collection: *Collection
-        Operations:
-        - OperationName: drop
+  # Clear any pre-existing collection state.
+  - Name: ClearCollection
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+          Collection: *Collection
+          Operations:
+            - OperationName: drop
 
-- Name: InsertData
-  Type: Loader
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        MultipleThreadsPerCollection: true
-        CollectionCount: 1
-        DocumentCount: 1e6
-        BatchSize: 1000
-        Document:
-          _id: {^Inc: {start: 0, step: 1}}
-          a: {^RandomInt: {min: 0, max: 100}}
-          b: {^RandomInt: {min: 0, max: 100}}
-          c: {^RandomInt: {min: 0, max: 100}}
-        Indexes:
-          - keys: {a: 1, b: 1}
+  - Name: InsertData
+    Type: Loader
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          MultipleThreadsPerCollection: true
+          CollectionCount: 1
+          DocumentCount: 1e6
+          BatchSize: 1000
+          Document:
+            _id: {^Inc: {start: 0, step: 1}}
+            a: {^RandomInt: {min: 0, max: 100}}
+            b: {^RandomInt: {min: 0, max: 100}}
+            c: {^RandomInt: {min: 0, max: 100}}
+          Indexes:
+            - keys: {a: 1, b: 1}
 
-# The following use a DISTINCT_SCAN.
-- ActorFromTemplate:
-    TemplateName: RunAggCommand
-    TemplateParameters:
-      Name: "Group"
-      OnlyActiveInPhase: 2
-      Pipeline: [{$group: {_id: "$a"}}]
+  # The following use a DISTINCT_SCAN.
+  - ActorFromTemplate:
+      TemplateName: RunAggCommand
+      TemplateParameters:
+        Name: "Group"
+        OnlyActiveInPhase: 2
+        Pipeline: [{$group: {_id: "$a"}}]
 
-- ActorFromTemplate:
-    TemplateName: RunAggCommand
-    TemplateParameters:
-      Name: "GroupSort"
-      OnlyActiveInPhase: 3
-      Pipeline: [{$sort: {a: 1}}, {$group: {_id: "$a"}}]
+  - ActorFromTemplate:
+      TemplateName: RunAggCommand
+      TemplateParameters:
+        Name: "GroupSort"
+        OnlyActiveInPhase: 3
+        Pipeline: [{$sort: {a: 1}}, {$group: {_id: "$a"}}]
 
-- ActorFromTemplate:
-    TemplateName: RunAggCommand
-    TemplateParameters:
-      Name: "GroupSortFirstCovered"
-      OnlyActiveInPhase: 4
-      Pipeline: [{$sort: {a: 1, b: 1}}, {$group: {_id: "$a", accum: {$first: "$b"}}}]
+  - ActorFromTemplate:
+      TemplateName: RunAggCommand
+      TemplateParameters:
+        Name: "GroupSortFirstCovered"
+        OnlyActiveInPhase: 4
+        Pipeline: [{$sort: {a: 1, b: 1}}, {$group: {_id: "$a", accum: {$first: "$b"}}}]
 
-- ActorFromTemplate:
-    TemplateName: RunAggCommand
-    TemplateParameters:
-      Name: "GroupSortFirstFetched"
-      OnlyActiveInPhase: 5
-      Pipeline: [{$sort: {a: 1, b: 1}}, {$group: {_id: "$a", accum: {$first: "$c"}}}]
+  - ActorFromTemplate:
+      TemplateName: RunAggCommand
+      TemplateParameters:
+        Name: "GroupSortFirstFetched"
+        OnlyActiveInPhase: 5
+        Pipeline: [{$sort: {a: 1, b: 1}}, {$group: {_id: "$a", accum: {$first: "$c"}}}]
 
-- ActorFromTemplate:
-    TemplateName: RunAggCommand
-    TemplateParameters:
-      Name: "GroupSortLastCovered"
-      OnlyActiveInPhase: 6
-      Pipeline: [{$sort: {a: 1, b: 1}}, {$group: {_id: "$a", accum: {$last: "$b"}}}]
+  - ActorFromTemplate:
+      TemplateName: RunAggCommand
+      TemplateParameters:
+        Name: "GroupSortLastCovered"
+        OnlyActiveInPhase: 6
+        Pipeline: [{$sort: {a: 1, b: 1}}, {$group: {_id: "$a", accum: {$last: "$b"}}}]
 
-- ActorFromTemplate:
-    TemplateName: RunAggCommand
-    TemplateParameters:
-      Name: "GroupSortLastFetched"
-      OnlyActiveInPhase: 7
-      Pipeline: [{$sort: {a: 1, b: 1}}, {$group: {_id: "$a", accum: {$last: "$c"}}}]
+  - ActorFromTemplate:
+      TemplateName: RunAggCommand
+      TemplateParameters:
+        Name: "GroupSortLastFetched"
+        OnlyActiveInPhase: 7
+        Pipeline: [{$sort: {a: 1, b: 1}}, {$group: {_id: "$a", accum: {$last: "$c"}}}]
 
-# The following do not yet use DISTINCT_SCAN, but they will after SERVER-84347.
-- ActorFromTemplate:
-    TemplateName: RunAggCommand
-    TemplateParameters:
-      Name: "GroupTopCovered"
-      OnlyActiveInPhase: 8
-      Pipeline: [{$group: {_id: "$a", accum: {$top: {output: ["$b"], sortBy: {a: 1, b: 1}}}}}]
+  # The following do not yet use DISTINCT_SCAN, but they will after SERVER-84347.
+  - ActorFromTemplate:
+      TemplateName: RunAggCommand
+      TemplateParameters:
+        Name: "GroupTopCovered"
+        OnlyActiveInPhase: 8
+        Pipeline: [{$group: {_id: "$a", accum: {$top: {output: ["$b"], sortBy: {a: 1, b: 1}}}}}]
 
-- ActorFromTemplate:
-    TemplateName: RunAggCommand
-    TemplateParameters:
-      Name: "GroupTopFetched"
-      OnlyActiveInPhase: 9
-      Pipeline: [{$group: {_id: "$a", accum: {$top: {output: ["$c"], sortBy: {a: 1, b: 1}}}}}]
+  - ActorFromTemplate:
+      TemplateName: RunAggCommand
+      TemplateParameters:
+        Name: "GroupTopFetched"
+        OnlyActiveInPhase: 9
+        Pipeline: [{$group: {_id: "$a", accum: {$top: {output: ["$c"], sortBy: {a: 1, b: 1}}}}}]
 
-- ActorFromTemplate:
-    TemplateName: RunAggCommand
-    TemplateParameters:
-      Name: "GroupBottomCovered"
-      OnlyActiveInPhase: 10
-      Pipeline: [{$group: {_id: "$a", accum: {$bottom: {output: ["$b"], sortBy: {a: 1, b: 1}}}}}]
+  - ActorFromTemplate:
+      TemplateName: RunAggCommand
+      TemplateParameters:
+        Name: "GroupBottomCovered"
+        OnlyActiveInPhase: 10
+        Pipeline: [{$group: {_id: "$a", accum: {$bottom: {output: ["$b"], sortBy: {a: 1, b: 1}}}}}]
 
-- ActorFromTemplate:
-    TemplateName: RunAggCommand
-    TemplateParameters:
-      Name: "GroupBottomFetched"
-      OnlyActiveInPhase: 11
-      Pipeline: [{$group: {_id: "$a", accum: {$bottom: {output: ["$c"], sortBy: {a: 1, b: 1}}}}}]
+  - ActorFromTemplate:
+      TemplateName: RunAggCommand
+      TemplateParameters:
+        Name: "GroupBottomFetched"
+        OnlyActiveInPhase: 11
+        Pipeline: [{$group: {_id: "$a", accum: {$bottom: {output: ["$c"], sortBy: {a: 1, b: 1}}}}}]
 
-- ActorFromTemplate:
-    TemplateName: RunAggCommand
-    TemplateParameters:
-      Name: "GroupTopNCovered"
-      OnlyActiveInPhase: 12
-      Pipeline: [{$group: {_id: "$a", accum: {$topN: {n: 1, output: ["$b"], sortBy: {a: 1, b: 1}}}}}]
+  - ActorFromTemplate:
+      TemplateName: RunAggCommand
+      TemplateParameters:
+        Name: "GroupTopNCovered"
+        OnlyActiveInPhase: 12
+        Pipeline: [{$group: {_id: "$a", accum: {$topN: {n: 1, output: ["$b"], sortBy: {a: 1, b: 1}}}}}]
 
-- ActorFromTemplate:
-    TemplateName: RunAggCommand
-    TemplateParameters:
-      Name: "GroupTopNFetched"
-      OnlyActiveInPhase: 13
-      Pipeline: [{$group: {_id: "$a", accum: {$topN: {n: 1, output: ["$c"], sortBy: {a: 1, b: 1}}}}}]
+  - ActorFromTemplate:
+      TemplateName: RunAggCommand
+      TemplateParameters:
+        Name: "GroupTopNFetched"
+        OnlyActiveInPhase: 13
+        Pipeline: [{$group: {_id: "$a", accum: {$topN: {n: 1, output: ["$c"], sortBy: {a: 1, b: 1}}}}}]
 
-- ActorFromTemplate:
-    TemplateName: RunAggCommand
-    TemplateParameters:
-      Name: "GroupBottomNCovered"
-      OnlyActiveInPhase: 14
-      Pipeline: [{$group: {_id: "$a", accum: {$bottomN: {n: 1, output: ["$b"], sortBy: {a: 1, b: 1}}}}}]
+  - ActorFromTemplate:
+      TemplateName: RunAggCommand
+      TemplateParameters:
+        Name: "GroupBottomNCovered"
+        OnlyActiveInPhase: 14
+        Pipeline: [{$group: {_id: "$a", accum: {$bottomN: {n: 1, output: ["$b"], sortBy: {a: 1, b: 1}}}}}]
 
-- ActorFromTemplate:
-    TemplateName: RunAggCommand
-    TemplateParameters:
-      Name: "GroupBottomNFetched"
-      OnlyActiveInPhase: 15
-      Pipeline: [{$group: {_id: "$a", accum: {$bottomN: {n: 1, output: ["$c"], sortBy: {a: 1, b: 1}}}}}]
+  - ActorFromTemplate:
+      TemplateName: RunAggCommand
+      TemplateParameters:
+        Name: "GroupBottomNFetched"
+        OnlyActiveInPhase: 15
+        Pipeline: [{$group: {_id: "$a", accum: {$bottomN: {n: 1, output: ["$c"], sortBy: {a: 1, b: 1}}}}}]
 
-# Min and max are not included in SERVER-84347, but are here for completeness and for future work.
-- ActorFromTemplate:
-    TemplateName: RunAggCommand
-    TemplateParameters:
-      Name: "GroupMin"
-      OnlyActiveInPhase: 16
-      Pipeline: [{$group: {_id: "$a", accum: {$min: "$b"}}}]
+  # Min and max are not included in SERVER-84347, but are here for completeness and for future work.
+  - ActorFromTemplate:
+      TemplateName: RunAggCommand
+      TemplateParameters:
+        Name: "GroupMin"
+        OnlyActiveInPhase: 16
+        Pipeline: [{$group: {_id: "$a", accum: {$min: "$b"}}}]
 
-- ActorFromTemplate:
-    TemplateName: RunAggCommand
-    TemplateParameters:
-      Name: "GroupMax"
-      OnlyActiveInPhase: 17
-      Pipeline: [{$group: {_id: "$a", accum: {$max: "$b"}}}]
+  - ActorFromTemplate:
+      TemplateName: RunAggCommand
+      TemplateParameters:
+        Name: "GroupMax"
+        OnlyActiveInPhase: 17
+        Pipeline: [{$group: {_id: "$a", accum: {$max: "$b"}}}]
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica
-      - replica-80-feature-flags
-      - replica-all-feature-flags
-    branch_name:
-      $gte:
-        v5.2
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - replica-80-feature-flags
+          - replica-all-feature-flags
+      branch_name:
+        $gte: v5.2

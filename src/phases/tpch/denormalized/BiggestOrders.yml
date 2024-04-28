@@ -9,12 +9,7 @@ batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
 
 TPCHDenormalizedBiggestOrdersAggregation: &TPCHDenormalizedBiggestOrdersAggregation
   aggregate: customer
-  pipeline:
-    [
-      {$match: {"nation.region.r_name": "EUROPE"}},
-      {$group: {_id: "$nation.n_name", biggestOrder:
-                  {$max: "$orders.o_totalprice"}}}
-    ]
+  pipeline: [{$match: {"nation.region.r_name": "EUROPE"}}, {$group: {_id: "$nation.n_name", biggestOrder: {$max: "$orders.o_totalprice"}}}]
   cursor: {batchSize: *batchSize}
   allowDiskUse: true
 
@@ -22,25 +17,24 @@ TPCHDenormalizedBiggestOrdersWarmup:
   Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
   Database: &db tpch
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedBiggestOrdersAggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedBiggestOrdersAggregation
 
 TPCHDenormalizedBiggestOrders:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: BiggestOrders
-    OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedBiggestOrdersAggregation
+    - OperationMetricsName: BiggestOrders
+      OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedBiggestOrdersAggregation
 
 TPCHDenormalizedBiggestOrdersExplain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: BiggestOrders
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHDenormalizedBiggestOrdersAggregation
-      verbosity:
-        executionStats
+    - OperationMetricsName: BiggestOrders
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHDenormalizedBiggestOrdersAggregation
+        verbosity: executionStats

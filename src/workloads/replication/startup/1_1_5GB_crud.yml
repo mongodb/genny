@@ -36,9 +36,9 @@ Description: |
   ```
 
 Keywords:
-- startup
-- stopCheckpointing
-- updates
+  - startup
+  - stopCheckpointing
+  - updates
 
 Clients:
   Default:
@@ -52,22 +52,22 @@ GlobalDefaults:
   - CollectionCount: &collectionCount 5
 
 Actors:
-- StopCheckpointing:
-  LoadConfig:
-    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
-    Key: StopCheckpointTemplate
-    Parameters:
-      active: [0]
-      nopInPhasesUpTo: *max_phase
+  - StopCheckpointing:
+    LoadConfig:
+      Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+      Key: StopCheckpointTemplate
+      Parameters:
+        active: [0]
+        nopInPhasesUpTo: *max_phase
 
-- CrudOperations:
-  LoadConfig:
-    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
-    Key: CrudOperationsTemplate
-    Parameters:
-      active: [1]
-      nopInPhasesUpTo: *max_phase
-      database: *database
-      collectionCount: *collectionCount
-      numOfCollectionsTargeted: *collectionCount
-      numOfCrudOpsPerCollection: 10000   # ~50k operations in total.
+  - CrudOperations:
+    LoadConfig:
+      Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+      Key: CrudOperationsTemplate
+      Parameters:
+        active: [1]
+        nopInPhasesUpTo: *max_phase
+        database: *database
+        collectionCount: *collectionCount
+        numOfCollectionsTargeted: *collectionCount
+        numOfCrudOpsPerCollection: 10000 # ~50k operations in total.

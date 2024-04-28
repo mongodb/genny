@@ -9,11 +9,11 @@ Clients:
       socketTimeoutMS: -1
 
 Actors:
-- Name: TPCHDenormalizedQuery22Explain
-  Type: RunCommand
-  Database: tpch
-  Phases:
-  - Nop: true
+  - Name: TPCHDenormalizedQuery22Explain
+    Type: RunCommand
+    Database: tpch
+    Phases:
+      - Nop: true
 
 # TODO: PERF-2995 uncomment
 # Error message: document constructed by $facet is 104857668 bytes, which exceeds the limit of 104857600 bytes

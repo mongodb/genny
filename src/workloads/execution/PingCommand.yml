@@ -13,52 +13,52 @@ GlobalDefaults:
   dbname: &dbname admin
 
 ActorTemplates:
-- TemplateName: PingTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "OneThreadPingRateLimited"}}
-    Type: RunCommand
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "Active", Default: [0]}}
-        NopInPhasesUpTo: *MaxPhases
-        PhaseConfig:
-          Duration: {^Parameter: {Name: "Duration", Default: "60 seconds"}}
-          GlobalRate: {^Parameter: {Name: "Rate", Default: "100 per 1 second"}}
-          Database: *dbname
-          Operations:
-          - OperationName: RunCommand
-            OperationIsQuiet: true
-            OperationCommand:
-              ping: 1
+  - TemplateName: PingTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "OneThreadPingRateLimited"}}
+      Type: RunCommand
+      Threads: {^Parameter: {Name: "Threads", Default: 1}}
+      Phases:
+        OnlyActiveInPhases:
+          Active: {^Parameter: {Name: "Active", Default: [0]}}
+          NopInPhasesUpTo: *MaxPhases
+          PhaseConfig:
+            Duration: {^Parameter: {Name: "Duration", Default: "60 seconds"}}
+            GlobalRate: {^Parameter: {Name: "Rate", Default: "100 per 1 second"}}
+            Database: *dbname
+            Operations:
+              - OperationName: RunCommand
+                OperationIsQuiet: true
+                OperationCommand:
+                  ping: 1
 
 Actors:
-- ActorFromTemplate:
-    TemplateName: PingTemplate
-    TemplateParameters:
-      Name: OneThreadPingRateLimited
+  - ActorFromTemplate:
+      TemplateName: PingTemplate
+      TemplateParameters:
+        Name: OneThreadPingRateLimited
 
-- ActorFromTemplate:
-    TemplateName: PingTemplate
-    TemplateParameters:
-      Name: ThirtyTwoThreadsPingRateLimited
-      Threads: 32
-      Active: [2]
+  - ActorFromTemplate:
+      TemplateName: PingTemplate
+      TemplateParameters:
+        Name: ThirtyTwoThreadsPingRateLimited
+        Threads: 32
+        Active: [2]
 
-- Name: QuiescePhase
-  Type: QuiesceActor
-  Threads: 1
-  Database: *dbname
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
+  - Name: QuiescePhase
+    Type: QuiesceActor
+    Threads: 1
+    Database: *dbname
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - single-replica
-      - standalone
+  - When:
+      mongodb_setup:
+        $eq:
+          - single-replica
+          - standalone
