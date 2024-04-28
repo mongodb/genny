@@ -250,7 +250,7 @@ void Topology::update(DBConnection& connection) {
     auto res = connection.runAdminCommand("isMaster");
     auto msg = res.view()["msg"];
     if (msg && msg.type() == bsoncxx::type::k_utf8) {
-        isMongos = msg.get_string().value == "isdbgrid";
+        isMongos = msg.get_string().value.compare("isdbgrid") == 0;
     }
 
     if (isMongos) {

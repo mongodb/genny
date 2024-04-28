@@ -112,7 +112,7 @@ struct Read : public RunOperation {
                 _filterExpr ? _filterExpr->evaluate() : bsoncxx::document::view_or_value{};
             auto optionalDocument = collection.find_one(filter);
             if (optionalDocument) {
-                auto document = optionalDocument.get();
+                auto document = optionalDocument.value();
                 statTracker.addDocuments(1);
                 statTracker.addBytes(document.view().length());
                 statTracker.success();

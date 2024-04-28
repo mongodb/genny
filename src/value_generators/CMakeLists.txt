@@ -19,7 +19,7 @@ CreateGennyTargets(
     TYPE    STATIC
     DEPENDS
         gennylib
-        MongoCxx::bsoncxx
+        mongo::bsoncxx_static
         Boost::boost
         Boost::log
     TEST_DEPENDS    testlib

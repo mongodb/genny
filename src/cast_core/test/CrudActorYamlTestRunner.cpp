@@ -114,10 +114,10 @@ void requireEvent(ApmEvent& event, YAML::Node requirements) {
         REQUIRE(expectedCollation.view() == actualCollation.view());
     }
     if (auto hint = requirements["hint"]; hint) {
-        REQUIRE(event.command["hint"].get_string().value == hint.as<std::string>());
+        REQUIRE(event.command["hint"].get_string().value.compare(hint.as<std::string>()) == 0);
     }
     if (auto comment = requirements["comment"]) {
-        REQUIRE(event.command["comment"].get_string().value == comment.as<std::string>());
+        REQUIRE(event.command["comment"].get_string().value.compare(comment.as<std::string>()) == 0);
     }
     if (auto limit = requirements["limit"]) {
         REQUIRE(event.command["limit"].get_int64() == limit.as<int64_t>());
@@ -168,7 +168,7 @@ void requireEvent(ApmEvent& event, YAML::Node requirements) {
         if (isNumeric(w)) {
             REQUIRE(event.command["writeConcern"]["w"].get_int32() == w.as<int32_t>());
         } else {
-            REQUIRE(event.command["writeConcern"]["w"].get_string().value == w.as<std::string>());
+            REQUIRE(event.command["writeConcern"]["w"].get_string().value.compare(w.as<std::string>()) == 0);
         }
     }
     if (auto j = requirements["writeConcern"]["j"]; j) {
@@ -184,8 +184,8 @@ void requireEvent(ApmEvent& event, YAML::Node requirements) {
         REQUIRE(event.command["bypassDocumentValidation"].get_bool() == bypass.as<bool>());
     }
     if (auto readPref = requirements["$readPreference"]["mode"]; readPref) {
-        REQUIRE(event.command["$readPreference"]["mode"].get_string().value ==
-                readPref.as<std::string>());
+        REQUIRE(event.command["$readPreference"]["mode"].get_string().value.compare(
+                readPref.as<std::string>())== 0);
     }
     if (auto staleness = requirements["$readPreference"]["maxStalenessSeconds"]) {
         REQUIRE(event.command["$readPreference"]["maxStalenessSeconds"].get_int64() ==

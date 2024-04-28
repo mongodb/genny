@@ -100,7 +100,7 @@ std::vector<bsoncxx::document::value> DeferredSample::gatherSample(
     if (sampleDocs.empty()) {
         BOOST_THROW_EXCEPTION(InvalidConfigurationException(
             _actorName + ": Sample was unable to find any documents from collection '" +
-            to_string(_collection.name()) +
+            std::string(_collection.name()) +
             "'. Could the collection be empty or could the pipeline be filtering out "
             "documents? Attempting to sample " +
             boost::to_string(_sampleSize) +
@@ -109,7 +109,7 @@ std::vector<bsoncxx::document::value> DeferredSample::gatherSample(
     if (sampleDocs.size() < _sampleSize) {
         BOOST_THROW_EXCEPTION(InvalidConfigurationException(
             _actorName + ": Could not get a sample of the expected size. Either the collection '" +
-            to_string(_collection.name()) + "' is smaller than the requested sample size of " +
+            std::string(_collection.name()) + "' is smaller than the requested sample size of " +
             boost::to_string(_sampleSize) +
             " documents, or the specified pipeline suffix is filtering documents. Found "
             "only " +

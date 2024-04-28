@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-find_package(gRPC REQUIRED)
 
 find_package(Protobuf REQUIRED)
+find_package(gRPC REQUIRED)
+
 
 add_library(protobuf INTERFACE IMPORTED)
 target_link_libraries(protobuf INTERFACE

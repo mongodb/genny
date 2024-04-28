@@ -26,11 +26,7 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
 endif()
 
-# Include Genny toolchain cmake file, now build type is set
-include(${GENNY_TOOLCHAIN_DIR}/scripts/buildsystems/vcpkg.cmake)
-
-# Include our local cmake folder in the module path
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+find_package(MongoCxx REQUIRED)
 
 # Use our modules
 include(Options)
@@ -86,9 +82,7 @@ find_package(
 )
 # </Boost>
 
-# <yaml-cpp>
 find_package(yaml-cpp CONFIG REQUIRED)
-# <yaml-cpp>
 
 # Required CMAKE options
 set(CMAKE_CXX_STANDARD 17)

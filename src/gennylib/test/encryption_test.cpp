@@ -498,7 +498,7 @@ TEST_CASE("EncryptionContext outputs correct extra options document") {
         REQUIRE(doc.view()["cryptSharedLibRequired"].get_bool());
         REQUIRE(doc.view()["cryptSharedLibPath"]);
         REQUIRE_NOTHROW(doc.view()["cryptSharedLibPath"].get_string());
-        REQUIRE(doc.view()["cryptSharedLibPath"].get_string().value == "/usr/lib/mongo_crypt_v1.so");
+        REQUIRE(doc.view()["cryptSharedLibPath"].get_string().value.compare("/usr/lib/mongo_crypt_v1.so") == 0);
     }
 }
 TEST_CASE("EncryptionContext outputs correct schema map document") {
@@ -566,8 +566,8 @@ TEST_CASE("EncryptionContext outputs correct schema map document") {
     REQUIRE(rootProperties.view()["name"].get_document().view() == bsoncxx::from_json(expectedNameSchema));
     REQUIRE(piiProperties.view()["dob"].get_document().view() == bsoncxx::from_json(expectedDobSchema));
     REQUIRE(piiProperties.view()["ssn"].get_document().view() == bsoncxx::from_json(expectedSsnSchema));
-    REQUIRE(doc.view()["accounts.balances"]["bsonType"].get_string().value == "object");
-    REQUIRE(rootProperties.view()["pii"]["bsonType"].get_string().value == "object");
+    REQUIRE(doc.view()["accounts.balances"]["bsonType"].get_string().value.compare("object") == 0);
+    REQUIRE(rootProperties.view()["pii"]["bsonType"].get_string().value.compare("object") == 0);
 }
 
 TEST_CASE("EncryptionContext outputs correct encrypted fields map document") {
@@ -706,22 +706,22 @@ TEST_CASE("EncryptionContext outputs correct auto_encryption options") {
 
     auto opts = encryption.getAutoEncryptionOptions();
 
-    REQUIRE(opts.key_vault_namespace().has_value());
+    REQUIRE(opts.key_vault_namespace());
     REQUIRE(opts.key_vault_namespace().value().first == "keyvault_db");
     REQUIRE(opts.key_vault_namespace().value().second == "datakeys");
 
-    REQUIRE(opts.kms_providers().has_value());
+    REQUIRE(opts.kms_providers());
     const auto& kmsdoc = opts.kms_providers().value();
     REQUIRE(kmsdoc.view()["local"]);
     REQUIRE(kmsdoc.view()["local"]["key"]);
     REQUIRE_NOTHROW(kmsdoc.view()["local"]["key"].get_binary());
 
-    REQUIRE(opts.schema_map().has_value());
+    REQUIRE(opts.schema_map());
     auto& schemaDoc = opts.schema_map().value();
     REQUIRE(schemaDoc.view()["accounts.balances"]);
     REQUIRE(schemaDoc.view()["accounts.ratings"]);
 
-    REQUIRE(opts.extra_options().has_value());
+    REQUIRE(opts.extra_options());
     const auto& extradoc = opts.extra_options().value();
     REQUIRE(extradoc.view()["mongocryptdBypassSpawn"]);
     REQUIRE_NOTHROW(extradoc.view()["mongocryptdBypassSpawn"].get_bool());

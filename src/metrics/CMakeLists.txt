@@ -22,7 +22,7 @@ CreateGennyTargets(
         Boost::boost
         Boost::log
         poplarlib
-        MongoCxx::bsoncxx
+        mongo::bsoncxx_static
     TEST_DEPENDS
         testlib
 )

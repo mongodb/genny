@@ -327,16 +327,16 @@ TEST_CASE("PoolFactory behavior") {
         factory.setEncryptionContext(encryption);
 
         auto factoryOpts = factory.makeOptions();
-        REQUIRE(factoryOpts.client_opts().auto_encryption_opts().has_value());
+        REQUIRE(factoryOpts.client_opts().auto_encryption_opts());
 
         auto autoEncOpts = *factoryOpts.client_opts().auto_encryption_opts();
-        REQUIRE(autoEncOpts.key_vault_namespace().has_value());
+        REQUIRE(autoEncOpts.key_vault_namespace());
         REQUIRE(autoEncOpts.key_vault_namespace().value() == encryption.getKeyVaultNamespace());
-        REQUIRE(autoEncOpts.kms_providers().has_value());
+        REQUIRE(autoEncOpts.kms_providers());
         REQUIRE(autoEncOpts.kms_providers().value() == encryption.generateKMSProvidersDoc());
-        REQUIRE(autoEncOpts.schema_map().has_value());
+        REQUIRE(autoEncOpts.schema_map());
         REQUIRE(autoEncOpts.schema_map().value() == encryption.generateSchemaMapDoc());
-        REQUIRE(autoEncOpts.extra_options().has_value());
+        REQUIRE(autoEncOpts.extra_options());
         REQUIRE(autoEncOpts.extra_options().value() == encryption.generateExtraOptionsDoc());
 
         auto pool = factory.makePool();

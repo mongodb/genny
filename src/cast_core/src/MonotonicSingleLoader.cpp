@@ -95,7 +95,7 @@ void MonotonicSingleLoader::run() {
                         individualOpCtx.failure();
                         totalOpCtx.failure();
                         BOOST_LOG_TRIVIAL(info)
-                            << " Error inserting: " << bsoncxx::to_json(e.raw_server_error().get());
+                            << " Error inserting: " << bsoncxx::to_json(e.raw_server_error().value());
                     }
 
 
