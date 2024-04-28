@@ -79,6 +79,7 @@ Actors:
     Nop: true
   - Phase: 1
     Repeat: 1
+    TenantId: *TenantId
     StreamProcessorName: *StreamProcessorName
     ExpectedDocumentCount: *ExpectedDocumentCount
   - Phase: 2
