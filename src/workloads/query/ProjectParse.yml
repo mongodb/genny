@@ -9,7 +9,7 @@ Description: |
 GlobalDefaults:
   dbname: &db test
   coll: &coll Collection0
-  nop: &Nop {Nop: true}
+  nop: &Nop { Nop: true }
 
 Keywords:
   - Project
@@ -29,7 +29,7 @@ Actors:
         DocumentCount: 10
         BatchSize: 10
         Document:
-          m: {^Inc: {start: 0}}
+          m: { ^Inc: { start: 0 } }
       - *Nop
       - *Nop
       - *Nop
@@ -59,21 +59,77 @@ Actors:
           - OperationMetricsName: ProjectParseSmall
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$project: {^Object: {withNEntries: 10, havingKeys: {^FastRandomString: {length: 10}}, andValues: 1, duplicatedKeys: skip}}}]
+              Pipeline:
+                [
+                  {
+                    $project:
+                      {
+                        ^Object:
+                          {
+                            withNEntries: 10,
+                            havingKeys: { ^FastRandomString: { length: 10 } },
+                            andValues: 1,
+                            duplicatedKeys: skip,
+                          },
+                      },
+                  },
+                ]
       - Duration: 5 minutes
         Collection: *coll
         Operations:
           - OperationMetricsName: ProjectParseMedium
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$project: {^FixedGeneratedValue: {fromGenerator: {^Object: {withNEntries: 101, havingKeys: {^FastRandomString: {length: 10}}, andValues: 1, duplicatedKeys: skip}}}}}]
+              Pipeline:
+                [
+                  {
+                    $project:
+                      {
+                        ^FixedGeneratedValue:
+                          {
+                            fromGenerator:
+                              {
+                                ^Object:
+                                  {
+                                    withNEntries: 101,
+                                    havingKeys:
+                                      { ^FastRandomString: { length: 10 } },
+                                    andValues: 1,
+                                    duplicatedKeys: skip,
+                                  },
+                              },
+                          },
+                      },
+                  },
+                ]
       - Duration: 5 minutes
         Collection: *coll
         Operations:
           - OperationMetricsName: ProjectParseLarge
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$project: {^FixedGeneratedValue: {fromGenerator: {^Object: {withNEntries: 20000, havingKeys: {^RandomString: {length: 10}}, andValues: 1, duplicatedKeys: skip}}}}}]
+              Pipeline:
+                [
+                  {
+                    $project:
+                      {
+                        ^FixedGeneratedValue:
+                          {
+                            fromGenerator:
+                              {
+                                ^Object:
+                                  {
+                                    withNEntries: 20000,
+                                    havingKeys:
+                                      { ^RandomString: { length: 10 } },
+                                    andValues: 1,
+                                    duplicatedKeys: skip,
+                                  },
+                              },
+                          },
+                      },
+                  },
+                ]
 
 AutoRun:
   - When:

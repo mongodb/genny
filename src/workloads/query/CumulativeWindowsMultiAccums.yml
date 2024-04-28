@@ -44,10 +44,10 @@ Actors:
           DocumentCount: 100000
           BatchSize: &batchSize 100000
           Document:
-            t: {^RandomDate: {min: "2020-01-01", max: "2021-01-01"}}
-            x: {^RandomDouble: {distribution: normal, mean: 0, sigma: 3}}
-            y: {^RandomDouble: {distribution: normal, mean: 1, sigma: 3}}
-            z: {^RandomString: {length: 1000}} # Unused field
+            t: { ^RandomDate: { min: "2020-01-01", max: "2021-01-01" } }
+            x: { ^RandomDouble: { distribution: normal, mean: 0, sigma: 3 } }
+            y: { ^RandomDouble: { distribution: normal, mean: 1, sigma: 3 } }
+            z: { ^RandomString: { length: 1000 } } # Unused field
 
   - Name: CreateIndex
     Type: RunCommand
@@ -63,7 +63,7 @@ Actors:
             - OperationName: RunCommand
               OperationCommand:
                 createIndexes: *Collection
-                indexes: [{key: {t: 1}, name: "t"}]
+                indexes: [{ key: { t: 1 }, name: "t" }]
 
   - TopCumulative:
     LoadConfig: &loadConfig
@@ -74,7 +74,23 @@ Actors:
         active: [3]
         operationMetricsName: TopCumulative
         nopInPhasesUpTo: *MaxPhases
-        Pipeline: [{$setWindowFields: {sortBy: {t: 1}, output: {top: {$top: {sortBy: {time: 1}, output: "$x"}, window: {documents: ["unbounded", "current"]}}}}}]
+        Pipeline:
+          [
+            {
+              $setWindowFields:
+                {
+                  sortBy: { t: 1 },
+                  output:
+                    {
+                      top:
+                        {
+                          $top: { sortBy: { time: 1 }, output: "$x" },
+                          window: { documents: ["unbounded", "current"] },
+                        },
+                    },
+                },
+            },
+          ]
 
   - BottomCumulative:
     LoadConfig:
@@ -84,7 +100,23 @@ Actors:
         active: [4]
         operationMetricsName: BottomCumulative
         nopInPhasesUpTo: *MaxPhases
-        Pipeline: [{$setWindowFields: {sortBy: {t: 1}, output: {bottom: {$bottom: {sortBy: {time: 1}, output: "$x"}, window: {documents: ["unbounded", "current"]}}}}}]
+        Pipeline:
+          [
+            {
+              $setWindowFields:
+                {
+                  sortBy: { t: 1 },
+                  output:
+                    {
+                      bottom:
+                        {
+                          $bottom: { sortBy: { time: 1 }, output: "$x" },
+                          window: { documents: ["unbounded", "current"] },
+                        },
+                    },
+                },
+            },
+          ]
 
   - MaxNCumulative:
     LoadConfig:
@@ -94,7 +126,23 @@ Actors:
         active: [5]
         operationMetricsName: MaxNCumulative
         nopInPhasesUpTo: *MaxPhases
-        Pipeline: [{$setWindowFields: {sortBy: {t: 1}, output: {maxN: {$maxN: {input: "$x", n: 4}, window: {documents: ["unbounded", "current"]}}}}}]
+        Pipeline:
+          [
+            {
+              $setWindowFields:
+                {
+                  sortBy: { t: 1 },
+                  output:
+                    {
+                      maxN:
+                        {
+                          $maxN: { input: "$x", n: 4 },
+                          window: { documents: ["unbounded", "current"] },
+                        },
+                    },
+                },
+            },
+          ]
 
   - MinNCumulative:
     LoadConfig:
@@ -104,7 +152,23 @@ Actors:
         active: [6]
         operationMetricsName: MinNCumulative
         nopInPhasesUpTo: *MaxPhases
-        Pipeline: [{$setWindowFields: {sortBy: {t: 1}, output: {minN: {$minN: {input: "$x", n: 4}, window: {documents: ["unbounded", "current"]}}}}}]
+        Pipeline:
+          [
+            {
+              $setWindowFields:
+                {
+                  sortBy: { t: 1 },
+                  output:
+                    {
+                      minN:
+                        {
+                          $minN: { input: "$x", n: 4 },
+                          window: { documents: ["unbounded", "current"] },
+                        },
+                    },
+                },
+            },
+          ]
 
   - TopNCumulative:
     LoadConfig:
@@ -114,7 +178,23 @@ Actors:
         active: [7]
         operationMetricsName: TopNCumulative
         nopInPhasesUpTo: *MaxPhases
-        Pipeline: [{$setWindowFields: {sortBy: {t: 1}, output: {topN: {$topN: {sortBy: {time: 1}, output: "$x", n: 4}, window: {documents: ["unbounded", "current"]}}}}}]
+        Pipeline:
+          [
+            {
+              $setWindowFields:
+                {
+                  sortBy: { t: 1 },
+                  output:
+                    {
+                      topN:
+                        {
+                          $topN: { sortBy: { time: 1 }, output: "$x", n: 4 },
+                          window: { documents: ["unbounded", "current"] },
+                        },
+                    },
+                },
+            },
+          ]
 
   - BottomNCumulative:
     LoadConfig:
@@ -124,7 +204,23 @@ Actors:
         active: [8]
         operationMetricsName: BottomNCumulative
         nopInPhasesUpTo: *MaxPhases
-        Pipeline: [{$setWindowFields: {sortBy: {t: 1}, output: {bottomN: {$bottomN: {sortBy: {time: 1}, output: "$x", n: 4}, window: {documents: ["unbounded", "current"]}}}}}]
+        Pipeline:
+          [
+            {
+              $setWindowFields:
+                {
+                  sortBy: { t: 1 },
+                  output:
+                    {
+                      bottomN:
+                        {
+                          $bottomN: { sortBy: { time: 1 }, output: "$x", n: 4 },
+                          window: { documents: ["unbounded", "current"] },
+                        },
+                    },
+                },
+            },
+          ]
 
   - FirstNCumulative:
     LoadConfig:
@@ -134,7 +230,23 @@ Actors:
         active: [9]
         operationMetricsName: FirstNCumulative
         nopInPhasesUpTo: *MaxPhases
-        Pipeline: [{$setWindowFields: {sortBy: {t: 1}, output: {firstN: {$firstN: {input: "$x", n: 4}, window: {documents: ["unbounded", "current"]}}}}}]
+        Pipeline:
+          [
+            {
+              $setWindowFields:
+                {
+                  sortBy: { t: 1 },
+                  output:
+                    {
+                      firstN:
+                        {
+                          $firstN: { input: "$x", n: 4 },
+                          window: { documents: ["unbounded", "current"] },
+                        },
+                    },
+                },
+            },
+          ]
 
   - LastNCumulative:
     LoadConfig:
@@ -144,7 +256,23 @@ Actors:
         active: [10]
         operationMetricsName: LastNCumulative
         nopInPhasesUpTo: *MaxPhases
-        Pipeline: [{$setWindowFields: {sortBy: {t: 1}, output: {lastN: {$lastN: {input: "$x", n: 4}, window: {documents: ["unbounded", "current"]}}}}}]
+        Pipeline:
+          [
+            {
+              $setWindowFields:
+                {
+                  sortBy: { t: 1 },
+                  output:
+                    {
+                      lastN:
+                        {
+                          $lastN: { input: "$x", n: 4 },
+                          window: { documents: ["unbounded", "current"] },
+                        },
+                    },
+                },
+            },
+          ]
 
   - DerivativeCumulative:
     LoadConfig:
@@ -154,7 +282,23 @@ Actors:
         active: [11]
         operationMetricsName: DerivativeCumulative
         nopInPhasesUpTo: *MaxPhases
-        Pipeline: [{$setWindowFields: {sortBy: {t: 1}, output: {derivative: {$derivative: {input: "$x", unit: "second"}, window: {documents: ["unbounded", "current"]}}}}}]
+        Pipeline:
+          [
+            {
+              $setWindowFields:
+                {
+                  sortBy: { t: 1 },
+                  output:
+                    {
+                      derivative:
+                        {
+                          $derivative: { input: "$x", unit: "second" },
+                          window: { documents: ["unbounded", "current"] },
+                        },
+                    },
+                },
+            },
+          ]
 
 AutoRun:
   - When:

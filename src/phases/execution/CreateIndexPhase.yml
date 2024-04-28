@@ -5,21 +5,43 @@ Description: |
   all types of indexes, and IndexCollection creates indexes for each of them, one at a time.
 InsertData:
   Repeat: 1
-  Database: &db {^Parameter: {Name: "db", Default: test}}
+  Database: &db { ^Parameter: { Name: "db", Default: test } }
   Threads: 1
   CollectionCount: 1
   DocumentCount: 10000000
   BatchSize: 1000
   Document:
-    loc2d: &loc2d [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -180, max: 180}}]
-    loc2dSphere: &loc2dSphere [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -90, max: 90}}]
-    point: &point {type: Point, coordinates: [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -90, max: 90}}]}
-    randomString: &randomString {^RandomString: {length: 16}}
-    randomInt: &randomInt {^RandomInt: {min: -10000000, max: 10000000}}
-    attributes: &attributes {color: *randomString, size: *randomString, inside: {bookmark: *randomInt, postitnote: *randomInt}, outside: {dustcover: *randomString}}
+    loc2d:
+      &loc2d [
+        { ^RandomInt: { min: -180, max: 180 } },
+        { ^RandomInt: { min: -180, max: 180 } },
+      ]
+    loc2dSphere:
+      &loc2dSphere [
+        { ^RandomInt: { min: -180, max: 180 } },
+        { ^RandomInt: { min: -90, max: 90 } },
+      ]
+    point:
+      &point {
+        type: Point,
+        coordinates:
+          [
+            { ^RandomInt: { min: -180, max: 180 } },
+            { ^RandomInt: { min: -90, max: 90 } },
+          ],
+      }
+    randomString: &randomString { ^RandomString: { length: 16 } }
+    randomInt: &randomInt { ^RandomInt: { min: -10000000, max: 10000000 } }
+    attributes:
+      &attributes {
+        color: *randomString,
+        size: *randomString,
+        inside: { bookmark: *randomInt, postitnote: *randomInt },
+        outside: { dustcover: *randomString },
+      }
 
 CreateIntegerIndexCmd:
-  Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
+  Repeat: { ^Parameter: { Name: "Repeat", Default: 5 } }
   Database: *db
   Operations:
     - OperationMetricsName: CreateIndexInt
@@ -37,7 +59,7 @@ CreateIntegerIndexCmd:
         index: random_int
 
 CreateStringIndexCmd:
-  Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
+  Repeat: { ^Parameter: { Name: "Repeat", Default: 5 } }
   Database: *db
   Operations:
     - OperationMetricsName: CreateIndexString
@@ -55,7 +77,7 @@ CreateStringIndexCmd:
         index: random_string
 
 Create2dIndexesCmd:
-  Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
+  Repeat: { ^Parameter: { Name: "Repeat", Default: 5 } }
   Database: *db
   Operations:
     - OperationMetricsName: Create2dIndexesCmd
@@ -76,7 +98,7 @@ Create2dIndexesCmd:
         index: 2dIndex
 
 Create2dSphereIndexesCoordCmd:
-  Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
+  Repeat: { ^Parameter: { Name: "Repeat", Default: 5 } }
   Database: *db
   Operations:
     - OperationMetricsName: Create2dSphereIndexesCoordCmd
@@ -94,7 +116,7 @@ Create2dSphereIndexesCoordCmd:
         index: 2dsphereCoordIndex
 
 Create2dSphereGeoJsonIndexesCmd:
-  Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
+  Repeat: { ^Parameter: { Name: "Repeat", Default: 5 } }
   Database: *db
   Operations:
     - OperationMetricsName: Create2dSphereGeoJsonIndexesCmd
@@ -112,7 +134,7 @@ Create2dSphereGeoJsonIndexesCmd:
         index: 2dsphereGeoJsonIndex
 
 CreateHashedIndexesCmd:
-  Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
+  Repeat: { ^Parameter: { Name: "Repeat", Default: 5 } }
   Database: *db
   Operations:
     - OperationMetricsName: CreateHashedIndexesCmd
@@ -130,7 +152,7 @@ CreateHashedIndexesCmd:
         index: hashedIndex
 
 CreateTextIndexesCmd:
-  Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
+  Repeat: { ^Parameter: { Name: "Repeat", Default: 5 } }
   Database: *db
   Operations:
     - OperationMetricsName: CreateTextIndexesCmd
@@ -148,7 +170,7 @@ CreateTextIndexesCmd:
         index: textIndex
 
 CreateUniqueIndexesCmd:
-  Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
+  Repeat: { ^Parameter: { Name: "Repeat", Default: 5 } }
   Database: *db
   Operations:
     - OperationMetricsName: CreateUniqueIndexesCmd
@@ -167,7 +189,7 @@ CreateUniqueIndexesCmd:
         index: uniqueIndex
 
 CreateWildCardIndexesCmd:
-  Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
+  Repeat: { ^Parameter: { Name: "Repeat", Default: 5 } }
   Database: *db
   Operations:
     - OperationMetricsName: CreateWildCardIndexesCmd
@@ -175,7 +197,7 @@ CreateWildCardIndexesCmd:
       OperationCommand:
         createIndexes: Collection0
         indexes:
-          - key: {"attributes.$**": 1}
+          - key: { "attributes.$**": 1 }
             name: wildCardIndex
     - OperationMetricsName: DropCreatedWildCardIndexesCmd
       OperationName: RunCommand

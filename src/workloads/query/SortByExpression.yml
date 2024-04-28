@@ -18,9 +18,13 @@ Actors:
         DocumentCount: 10000
         BatchSize: &batchSize 10000
         Document:
-          int: {^RandomInt: {min: 1, max: 100}}
-          str: {^RandomString: {length: 5, alphabet: "0123456789ABCDEFGabcdefg"}}
-      - &Nop {Nop: true}
+          int: { ^RandomInt: { min: 1, max: 100 } }
+          str:
+            {
+              ^RandomString:
+                { length: 5, alphabet: "0123456789ABCDEFGabcdefg" },
+            }
+      - &Nop { Nop: true }
       - *Nop
       - *Nop
 
@@ -47,8 +51,13 @@ Actors:
             OperationName: RunCommand
             OperationCommand:
               aggregate: Collection0
-              pipeline: [{$addFields: {lowerStr: {$toLower: "$str"}}}, {$sort: {lowerStr: 1}}, {$project: {lowerStr: 0}}]
-              cursor: {batchSize: *batchSize}
+              pipeline:
+                [
+                  { $addFields: { lowerStr: { $toLower: "$str" } } },
+                  { $sort: { lowerStr: 1 } },
+                  { $project: { lowerStr: 0 } },
+                ]
+              cursor: { batchSize: *batchSize }
       - *Nop
 
   - Name: SortByExpressionTwice
@@ -65,8 +74,16 @@ Actors:
             OperationName: RunCommand
             OperationCommand:
               aggregate: Collection0
-              pipeline: [{$addFields: {lowerStr: {$toLower: "$str"}}}, {$sort: {lowerStr: 1}}, {$project: {lowerStr: 0}}, {$addFields: {upperStr: {$toUpper: "$str"}}}, {$sort: {upperStr: 1}}, {$project: {upperStr: 0}}]
-              cursor: {batchSize: *batchSize}
+              pipeline:
+                [
+                  { $addFields: { lowerStr: { $toLower: "$str" } } },
+                  { $sort: { lowerStr: 1 } },
+                  { $project: { lowerStr: 0 } },
+                  { $addFields: { upperStr: { $toUpper: "$str" } } },
+                  { $sort: { upperStr: 1 } },
+                  { $project: { upperStr: 0 } },
+                ]
+              cursor: { batchSize: *batchSize }
 
 AutoRun:
   - When:

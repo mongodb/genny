@@ -25,13 +25,46 @@ Actors:
         DocumentCount: 600
         BatchSize: &limit 100
         Document:
-          part1: {^Choose: {from: [1, 2, 3, 4]}}
-          part2: {^Choose: {from: [1, 2, 3, 4]}}
-          sortDateField: {^RandomDate: {min: {^Inc: {start: 0, multiplier: 1, step: 1}}, max: {^Inc: {start: 1, multiplier: 1, step: 1}}}}
-          sortField: {^Inc: {start: 0}}
-          integer: {^Choose: {from: [{^RandomInt: {min: -100, max: 100}}, null], weights: [2, 8]}}
-          double: {^Choose: {from: [{^RandomDouble: {min: 0.0, max: 500.0}}, null], weights: [2, 8]}}
-          numeric: {^Choose: {from: [{^RandomInt: {min: -100, max: 100}}, {^RandomDouble: {min: 0.0, max: 500.0}}, null], weights: [1, 1, 8]}}
+          part1: { ^Choose: { from: [1, 2, 3, 4] } }
+          part2: { ^Choose: { from: [1, 2, 3, 4] } }
+          sortDateField:
+            {
+              ^RandomDate:
+                {
+                  min: { ^Inc: { start: 0, multiplier: 1, step: 1 } },
+                  max: { ^Inc: { start: 1, multiplier: 1, step: 1 } },
+                },
+            }
+          sortField: { ^Inc: { start: 0 } }
+          integer:
+            {
+              ^Choose:
+                {
+                  from: [{ ^RandomInt: { min: -100, max: 100 } }, null],
+                  weights: [2, 8],
+                },
+            }
+          double:
+            {
+              ^Choose:
+                {
+                  from: [{ ^RandomDouble: { min: 0.0, max: 500.0 } }, null],
+                  weights: [2, 8],
+                },
+            }
+          numeric:
+            {
+              ^Choose:
+                {
+                  from:
+                    [
+                      { ^RandomInt: { min: -100, max: 100 } },
+                      { ^RandomDouble: { min: 0.0, max: 500.0 } },
+                      null,
+                    ],
+                  weights: [1, 1, 8],
+                },
+            }
       - Nop: true
       - Nop: true
       - Nop: true
@@ -77,7 +110,17 @@ Actors:
           - OperationMetricsName: TestSingleOutputWithoutPartition
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$setWindowFields: {sortBy: {sortField: 1}, output: {numeric: {$linearFill: "$numeric"}}}}, {$limit: *limit}]
+              Pipeline:
+                [
+                  {
+                    $setWindowFields:
+                      {
+                        sortBy: { sortField: 1 },
+                        output: { numeric: { $linearFill: "$numeric" } },
+                      },
+                  },
+                  { $limit: *limit },
+                ]
               Options:
                 BatchSize: *limit
       - Nop: true
@@ -106,7 +149,21 @@ Actors:
           - OperationMetricsName: TestMultipleOutputWithoutPartition
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$setWindowFields: {sortBy: {sortDateField: 1}, output: {numeric: {$linearFill: "$numeric"}, double: {$linearFill: "$double"}}}}, {$limit: *limit}]
+              Pipeline:
+                [
+                  {
+                    $setWindowFields:
+                      {
+                        sortBy: { sortDateField: 1 },
+                        output:
+                          {
+                            numeric: { $linearFill: "$numeric" },
+                            double: { $linearFill: "$double" },
+                          },
+                      },
+                  },
+                  { $limit: *limit },
+                ]
               Options:
                 BatchSize: *limit
       - Nop: true
@@ -135,7 +192,18 @@ Actors:
           - OperationMetricsName: TestSingleOutputWithSinglePartition
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$setWindowFields: {sortBy: {sortField: 1}, partitionBy: "$part1", output: {numeric: {$linearFill: "$numeric"}}}}, {$limit: *limit}]
+              Pipeline:
+                [
+                  {
+                    $setWindowFields:
+                      {
+                        sortBy: { sortField: 1 },
+                        partitionBy: "$part1",
+                        output: { numeric: { $linearFill: "$numeric" } },
+                      },
+                  },
+                  { $limit: *limit },
+                ]
               Options:
                 BatchSize: *limit
                 AllowDiskUse: true
@@ -165,7 +233,22 @@ Actors:
           - OperationMetricsName: TestMultipleOutputWithSinglePartition
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$setWindowFields: {sortBy: {sortDateField: 1}, partitionBy: "$part1", output: {numeric: {$linearFill: "$numeric"}, integer: {$linearFill: "$integer"}}}}, {$limit: *limit}]
+              Pipeline:
+                [
+                  {
+                    $setWindowFields:
+                      {
+                        sortBy: { sortDateField: 1 },
+                        partitionBy: "$part1",
+                        output:
+                          {
+                            numeric: { $linearFill: "$numeric" },
+                            integer: { $linearFill: "$integer" },
+                          },
+                      },
+                  },
+                  { $limit: *limit },
+                ]
               Options:
                 BatchSize: *limit
                 AllowDiskUse: true
@@ -195,7 +278,18 @@ Actors:
           - OperationMetricsName: TestSingleOutputWithMultiplePartitions
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$setWindowFields: {sortBy: {sortField: 1}, partitionBy: {part1: "$part1", part2: "$part2"}, output: {numeric: {$linearFill: "$numeric"}}}}, {$limit: *limit}]
+              Pipeline:
+                [
+                  {
+                    $setWindowFields:
+                      {
+                        sortBy: { sortField: 1 },
+                        partitionBy: { part1: "$part1", part2: "$part2" },
+                        output: { numeric: { $linearFill: "$numeric" } },
+                      },
+                  },
+                  { $limit: *limit },
+                ]
               Options:
                 BatchSize: *limit
                 AllowDiskUse: true
@@ -225,7 +319,22 @@ Actors:
           - OperationMetricsName: TestMultipleOutputWithMultiplePartitions
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$setWindowFields: {sortBy: {sortDateField: 1}, partitionBy: {part1: "$part1", part2: "$part2"}, output: {numeric: {$linearFill: "$numeric"}, double: {$linearFill: "$double"}}}}, {$limit: *limit}]
+              Pipeline:
+                [
+                  {
+                    $setWindowFields:
+                      {
+                        sortBy: { sortDateField: 1 },
+                        partitionBy: { part1: "$part1", part2: "$part2" },
+                        output:
+                          {
+                            numeric: { $linearFill: "$numeric" },
+                            double: { $linearFill: "$double" },
+                          },
+                      },
+                  },
+                  { $limit: *limit },
+                ]
               Options:
                 BatchSize: *limit
                 AllowDiskUse: true
@@ -251,4 +360,3 @@ AutoRun:
           - v5.0
           - v5.1
           - v5.2
-

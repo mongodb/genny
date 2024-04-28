@@ -23,16 +23,100 @@ GlobalDefaults:
   Repeat: &Repeat 10
   Threads: &Threads 1
   MaxPhases: &MaxPhases 32
-  ListOfTenInts: &ListOfTenInts {^Choose: {from: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"], deterministic: true}}
-  GenIntFields: &GenIntFields {^Join: {array: ["$int", *ListOfTenInts], sep: ""}}
-  GenStrFields: &GenStrFields {^Join: {array: ["$str", *ListOfTenInts], sep: ""}}
-  GenArrFields: &GenArrFields {^Join: {array: ["$arr", *ListOfTenInts], sep: ""}}
-  GenNonExistentFields: &GenNonExistentFields {^Join: {array: ["$a", *ListOfTenInts], sep: ""}}
-  GenDupArrFields: &GenDupArrFields {^Join: {array: ["$arr1Dup", {^Choose: {from: ["1", "2", "3", "4", "5", "6", "7", "8", "9"], deterministic: true}}], sep: ""}}
-  GenSwitchCaseBranches: &GenSwitchCaseBranches [{case: {$gt: ["$int1", 100]}, then: "$int1"}, {case: {$gt: ["$int2", 100]}, then: "$int2"}, {case: {$gt: ["$int3", 100]}, then: "$int3"}, {case: {$gt: ["$int4", 100]}, then: "$int4"}, {case: {$gt: ["$int5", 100]}, then: "$int5"}, {case: {$gt: ["$int6", 100]}, then: "$int6"}, {case: {$gt: ["$int7", 100]}, then: "$int7"}, {case: {$gt: ["$int8", 100]}, then: "$int8"}, {case: {$gt: ["$int9", 100]}, then: "$int9"}, {case: {$gt: ["$int10", 100]}, then: "$int10"}]
-  IntGenerator: &IntGenerator {^Join: {array: [{^FormatString: {format: "%03d", withArgs: [{^Inc: {start: 1}}]}}]}}
-  FiftyBoundVariables: &FiftyBoundVariables {^FixedGeneratedValue: {fromGenerator: {^Object: {withNEntries: 50, havingKeys: {^Join: {array: ["a", *IntGenerator], sep: ""}}, andValues: *GenIntFields, duplicatedKeys: insert}}}}
-  HundredBoundVariables: &HundredBoundVariables {^FixedGeneratedValue: {fromGenerator: {^Object: {withNEntries: 100, havingKeys: {^Join: {array: ["a", *IntGenerator], sep: ""}}, andValues: *GenIntFields, duplicatedKeys: insert}}}}
+  ListOfTenInts:
+    &ListOfTenInts {
+      ^Choose:
+        {
+          from: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
+          deterministic: true,
+        },
+    }
+  GenIntFields:
+    &GenIntFields { ^Join: { array: ["$int", *ListOfTenInts], sep: "" } }
+  GenStrFields:
+    &GenStrFields { ^Join: { array: ["$str", *ListOfTenInts], sep: "" } }
+  GenArrFields:
+    &GenArrFields { ^Join: { array: ["$arr", *ListOfTenInts], sep: "" } }
+  GenNonExistentFields:
+    &GenNonExistentFields { ^Join: { array: ["$a", *ListOfTenInts], sep: "" } }
+  GenDupArrFields:
+    &GenDupArrFields {
+      ^Join:
+        {
+          array:
+            [
+              "$arr1Dup",
+              {
+                ^Choose:
+                  {
+                    from: ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+                    deterministic: true,
+                  },
+              },
+            ],
+          sep: "",
+        },
+    }
+  GenSwitchCaseBranches:
+    &GenSwitchCaseBranches [
+      { case: { $gt: ["$int1", 100] }, then: "$int1" },
+      { case: { $gt: ["$int2", 100] }, then: "$int2" },
+      { case: { $gt: ["$int3", 100] }, then: "$int3" },
+      { case: { $gt: ["$int4", 100] }, then: "$int4" },
+      { case: { $gt: ["$int5", 100] }, then: "$int5" },
+      { case: { $gt: ["$int6", 100] }, then: "$int6" },
+      { case: { $gt: ["$int7", 100] }, then: "$int7" },
+      { case: { $gt: ["$int8", 100] }, then: "$int8" },
+      { case: { $gt: ["$int9", 100] }, then: "$int9" },
+      { case: { $gt: ["$int10", 100] }, then: "$int10" },
+    ]
+  IntGenerator:
+    &IntGenerator {
+      ^Join:
+        {
+          array:
+            [
+              {
+                ^FormatString:
+                  { format: "%03d", withArgs: [{ ^Inc: { start: 1 } }] },
+              },
+            ],
+        },
+    }
+  FiftyBoundVariables:
+    &FiftyBoundVariables {
+      ^FixedGeneratedValue:
+        {
+          fromGenerator:
+            {
+              ^Object:
+                {
+                  withNEntries: 50,
+                  havingKeys:
+                    { ^Join: { array: ["a", *IntGenerator], sep: "" } },
+                  andValues: *GenIntFields,
+                  duplicatedKeys: insert,
+                },
+            },
+        },
+    }
+  HundredBoundVariables:
+    &HundredBoundVariables {
+      ^FixedGeneratedValue:
+        {
+          fromGenerator:
+            {
+              ^Object:
+                {
+                  withNEntries: 100,
+                  havingKeys:
+                    { ^Join: { array: ["a", *IntGenerator], sep: "" } },
+                  andValues: *GenIntFields,
+                  duplicatedKeys: insert,
+                },
+            },
+        },
+    }
 
 Actors:
   # Clear any pre-existing collection state.
@@ -66,27 +150,36 @@ Actors:
           DocumentCount: *DocumentCount
           BatchSize: 1000
           Document:
-            int1: {^RandomInt: {min: -100, max: 100}}
-            int2: {^RandomInt: {min: -100, max: 100}}
-            int3: {^RandomInt: {min: -100, max: 100}}
-            int4: {^RandomInt: {min: -100, max: 100}}
-            int5: {^RandomInt: {min: -100, max: 100}}
-            int6: {^RandomInt: {min: -100, max: 100}}
-            int7: {^RandomInt: {min: -100, max: 100}}
-            int8: {^RandomInt: {min: -100, max: 100}}
-            int9: {^RandomInt: {min: -100, max: 100}}
-            int10: {^RandomInt: {min: -100, max: 100}}
-            str1: {^RandomString: {length: 16}}
-            str2: {^RandomString: {length: 16}}
-            str3: {^RandomString: {length: 16}}
-            str4: {^RandomString: {length: 16}}
-            str5: {^RandomString: {length: 16}}
-            str6: {^RandomString: {length: 16}}
-            str7: {^RandomString: {length: 16}}
-            str8: {^RandomString: {length: 16}}
-            str9: {^RandomString: {length: 16}}
-            str10: {^RandomString: {length: 16}}
-            arr1: &arr1 [{^Repeat: {count: 10, fromGenerator: {^RandomInt: {min: -100, max: 100}}}}]
+            int1: { ^RandomInt: { min: -100, max: 100 } }
+            int2: { ^RandomInt: { min: -100, max: 100 } }
+            int3: { ^RandomInt: { min: -100, max: 100 } }
+            int4: { ^RandomInt: { min: -100, max: 100 } }
+            int5: { ^RandomInt: { min: -100, max: 100 } }
+            int6: { ^RandomInt: { min: -100, max: 100 } }
+            int7: { ^RandomInt: { min: -100, max: 100 } }
+            int8: { ^RandomInt: { min: -100, max: 100 } }
+            int9: { ^RandomInt: { min: -100, max: 100 } }
+            int10: { ^RandomInt: { min: -100, max: 100 } }
+            str1: { ^RandomString: { length: 16 } }
+            str2: { ^RandomString: { length: 16 } }
+            str3: { ^RandomString: { length: 16 } }
+            str4: { ^RandomString: { length: 16 } }
+            str5: { ^RandomString: { length: 16 } }
+            str6: { ^RandomString: { length: 16 } }
+            str7: { ^RandomString: { length: 16 } }
+            str8: { ^RandomString: { length: 16 } }
+            str9: { ^RandomString: { length: 16 } }
+            str10: { ^RandomString: { length: 16 } }
+            arr1:
+              &arr1 [
+                {
+                  ^Repeat:
+                    {
+                      count: 10,
+                      fromGenerator: { ^RandomInt: { min: -100, max: 100 } },
+                    },
+                },
+              ]
             arr1Dup1: *arr1
             arr1Dup2: *arr1
             arr1Dup3: *arr1
@@ -96,15 +189,15 @@ Actors:
             arr1Dup7: *arr1
             arr1Dup8: *arr1
             arr1Dup9: *arr1
-            arr2: [{^Repeat: {count: 10, fromGenerator: {b: 2, c: 2}}}]
-            arr3: [{^Repeat: {count: 10, fromGenerator: {b: 3, c: 3}}}]
-            arr4: [{^Repeat: {count: 10, fromGenerator: {b: 4, c: 4}}}]
-            arr5: [{^Repeat: {count: 10, fromGenerator: {b: 5, c: 5}}}]
-            arr6: [{^Repeat: {count: 10, fromGenerator: {b: 6, c: 6}}}]
-            arr7: [{^Repeat: {count: 10, fromGenerator: {b: 7, c: 7}}}]
-            arr8: [{^Repeat: {count: 10, fromGenerator: {b: 8, c: 8}}}]
-            arr9: [{^Repeat: {count: 10, fromGenerator: {b: 9, c: 9}}}]
-            arr10: [{^Repeat: {count: 10, fromGenerator: {b: 10, c: 10}}}]
+            arr2: [{ ^Repeat: { count: 10, fromGenerator: { b: 2, c: 2 } } }]
+            arr3: [{ ^Repeat: { count: 10, fromGenerator: { b: 3, c: 3 } } }]
+            arr4: [{ ^Repeat: { count: 10, fromGenerator: { b: 4, c: 4 } } }]
+            arr5: [{ ^Repeat: { count: 10, fromGenerator: { b: 5, c: 5 } } }]
+            arr6: [{ ^Repeat: { count: 10, fromGenerator: { b: 6, c: 6 } } }]
+            arr7: [{ ^Repeat: { count: 10, fromGenerator: { b: 7, c: 7 } } }]
+            arr8: [{ ^Repeat: { count: 10, fromGenerator: { b: 8, c: 8 } } }]
+            arr9: [{ ^Repeat: { count: 10, fromGenerator: { b: 9, c: 9 } } }]
+            arr10: [{ ^Repeat: { count: 10, fromGenerator: { b: 10, c: 10 } } }]
 
   # Phase 2: Ensure all data is synced to disk.
   - Name: Quiesce
@@ -129,7 +222,15 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [3]
         operationMetricsName: VariadicAggExpressionAddTen
-        Pipeline: [{$project: {add: {$add: {^Array: {of: *GenIntFields, number: 10}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  add: { $add: { ^Array: { of: *GenIntFields, number: 10 } } },
+                },
+            },
+          ]
 
   - ExpressionAddFifty:
     LoadConfig:
@@ -139,7 +240,15 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [4]
         operationMetricsName: VariadicAggExpressionAddFifty
-        Pipeline: [{$project: {add: {$add: {^Array: {of: *GenIntFields, number: 50}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  add: { $add: { ^Array: { of: *GenIntFields, number: 50 } } },
+                },
+            },
+          ]
 
   - ExpressionAddHundred:
     LoadConfig:
@@ -149,7 +258,15 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [5]
         operationMetricsName: VariadicAggExpressionAddHundred
-        Pipeline: [{$project: {add: {$add: {^Array: {of: *GenIntFields, number: 100}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  add: { $add: { ^Array: { of: *GenIntFields, number: 100 } } },
+                },
+            },
+          ]
 
   - ExpressionConcatTen:
     LoadConfig:
@@ -159,7 +276,16 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [6]
         operationMetricsName: VariadicAggExpressionConcatTen
-        Pipeline: [{$project: {concat: {$concat: {^Array: {of: *GenStrFields, number: 10}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  concat:
+                    { $concat: { ^Array: { of: *GenStrFields, number: 10 } } },
+                },
+            },
+          ]
 
   - ExpressionConcatFifty:
     LoadConfig:
@@ -169,7 +295,16 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [7]
         operationMetricsName: VariadicAggExpressionConcatFifty
-        Pipeline: [{$project: {concat: {$concat: {^Array: {of: *GenStrFields, number: 50}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  concat:
+                    { $concat: { ^Array: { of: *GenStrFields, number: 50 } } },
+                },
+            },
+          ]
 
   - ExpressionConcatHundred:
     LoadConfig:
@@ -179,7 +314,16 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [8]
         operationMetricsName: VariadicAggExpressionConcatHundred
-        Pipeline: [{$project: {concat: {$concat: {^Array: {of: *GenStrFields, number: 100}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  concat:
+                    { $concat: { ^Array: { of: *GenStrFields, number: 100 } } },
+                },
+            },
+          ]
 
   - ExpressionConcatArraysTen:
     LoadConfig:
@@ -189,7 +333,19 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [9]
         operationMetricsName: VariadicAggExpressionConcatArraysTen
-        Pipeline: [{$project: {concatArrays: {$concatArrays: {^Array: {of: *GenArrFields, number: 10}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  concatArrays:
+                    {
+                      $concatArrays:
+                        { ^Array: { of: *GenArrFields, number: 10 } },
+                    },
+                },
+            },
+          ]
 
   - ExpressionConcatArraysFifty:
     LoadConfig:
@@ -199,7 +355,19 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [10]
         operationMetricsName: VariadicAggExpressionConcatArraysFifty
-        Pipeline: [{$project: {concatArrays: {$concatArrays: {^Array: {of: *GenArrFields, number: 50}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  concatArrays:
+                    {
+                      $concatArrays:
+                        { ^Array: { of: *GenArrFields, number: 50 } },
+                    },
+                },
+            },
+          ]
 
   - ExpressionConcatArraysHundred:
     LoadConfig:
@@ -209,7 +377,19 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [11]
         operationMetricsName: VariadicAggExpressionConcatArraysHundred
-        Pipeline: [{$project: {concatArrays: {$concatArrays: {^Array: {of: *GenArrFields, number: 100}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  concatArrays:
+                    {
+                      $concatArrays:
+                        { ^Array: { of: *GenArrFields, number: 100 } },
+                    },
+                },
+            },
+          ]
 
   # For the following $ifNull test cases, the arguments do not exist in the
   # documents that we insert into our collection. This results in executing
@@ -222,7 +402,31 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [12]
         operationMetricsName: VariadicAggExpressionIfNullTen
-        Pipeline: [{$project: {ifNull: {$ifNull: {^Concat: {arrays: [{^Array: {of: *GenNonExistentFields, number: 10}}, [0]]}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  ifNull:
+                    {
+                      $ifNull:
+                        {
+                          ^Concat:
+                            {
+                              arrays:
+                                [
+                                  {
+                                    ^Array:
+                                      { of: *GenNonExistentFields, number: 10 },
+                                  },
+                                  [0],
+                                ],
+                            },
+                        },
+                    },
+                },
+            },
+          ]
 
   - ExpressionIfNullFifty:
     LoadConfig:
@@ -232,7 +436,31 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [13]
         operationMetricsName: VariadicAggExpressionIfNullFifty
-        Pipeline: [{$project: {ifNull: {$ifNull: {^Concat: {arrays: [{^Array: {of: *GenNonExistentFields, number: 50}}, [0]]}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  ifNull:
+                    {
+                      $ifNull:
+                        {
+                          ^Concat:
+                            {
+                              arrays:
+                                [
+                                  {
+                                    ^Array:
+                                      { of: *GenNonExistentFields, number: 50 },
+                                  },
+                                  [0],
+                                ],
+                            },
+                        },
+                    },
+                },
+            },
+          ]
 
   - ExpressionIfNullHundred:
     LoadConfig:
@@ -242,7 +470,31 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [14]
         operationMetricsName: VariadicAggExpressionIfNullHundred
-        Pipeline: [{$project: {ifNull: {$ifNull: {^Concat: {arrays: [{^Array: {of: *GenNonExistentFields, number: 50}}, [0]]}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  ifNull:
+                    {
+                      $ifNull:
+                        {
+                          ^Concat:
+                            {
+                              arrays:
+                                [
+                                  {
+                                    ^Array:
+                                      { of: *GenNonExistentFields, number: 50 },
+                                  },
+                                  [0],
+                                ],
+                            },
+                        },
+                    },
+                },
+            },
+          ]
 
   - ExpressionLetTen:
     LoadConfig:
@@ -252,7 +504,38 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [15]
         operationMetricsName: VariadicAggExpressionLetTen
-        Pipeline: [{$project: {let: {$let: {vars: {^Object: {withNEntries: 10, havingKeys: {^Join: {array: ["a", *ListOfTenInts], sep: ""}}, andValues: *GenIntFields, duplicatedKeys: insert}}, in: {$add: ["$$a1", "$$a10"]}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  let:
+                    {
+                      $let:
+                        {
+                          vars:
+                            {
+                              ^Object:
+                                {
+                                  withNEntries: 10,
+                                  havingKeys:
+                                    {
+                                      ^Join:
+                                        {
+                                          array: ["a", *ListOfTenInts],
+                                          sep: "",
+                                        },
+                                    },
+                                  andValues: *GenIntFields,
+                                  duplicatedKeys: insert,
+                                },
+                            },
+                          in: { $add: ["$$a1", "$$a10"] },
+                        },
+                    },
+                },
+            },
+          ]
 
   - ExpressionLetFifty:
     LoadConfig:
@@ -262,7 +545,22 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [16]
         operationMetricsName: VariadicAggExpressionLetFifty
-        Pipeline: [{$project: {let: {$let: {vars: *FiftyBoundVariables, in: {$add: ["$$a001", "$$a050"]}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  let:
+                    {
+                      $let:
+                        {
+                          vars: *FiftyBoundVariables,
+                          in: { $add: ["$$a001", "$$a050"] },
+                        },
+                    },
+                },
+            },
+          ]
 
   - ExpressionLetHundred:
     LoadConfig:
@@ -272,7 +570,22 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [17]
         operationMetricsName: VariadicAggExpressionLetHundred
-        Pipeline: [{$project: {let: {$let: {vars: *HundredBoundVariables, in: {$add: ["$$a001", "$$a100"]}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  let:
+                    {
+                      $let:
+                        {
+                          vars: *HundredBoundVariables,
+                          in: { $add: ["$$a001", "$$a100"] },
+                        },
+                    },
+                },
+            },
+          ]
 
   - ExpressionMultiplyTen:
     LoadConfig:
@@ -282,7 +595,18 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [18]
         operationMetricsName: VariadicAggExpressionMultiplyTen
-        Pipeline: [{$project: {multiply: {$multiply: {^Array: {of: *GenIntFields, number: 10}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  multiply:
+                    {
+                      $multiply: { ^Array: { of: *GenIntFields, number: 10 } },
+                    },
+                },
+            },
+          ]
 
   - ExpressionMultiplyFifty:
     LoadConfig:
@@ -292,7 +616,18 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [19]
         operationMetricsName: VariadicAggExpressionMultiplyFifty
-        Pipeline: [{$project: {multiply: {$multiply: {^Array: {of: *GenIntFields, number: 50}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  multiply:
+                    {
+                      $multiply: { ^Array: { of: *GenIntFields, number: 50 } },
+                    },
+                },
+            },
+          ]
 
   - ExpressionMultiplyHundred:
     LoadConfig:
@@ -302,7 +637,18 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [20]
         operationMetricsName: VariadicAggExpressionMultiplyHundred
-        Pipeline: [{$project: {multiply: {$multiply: {^Array: {of: *GenIntFields, number: 100}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  multiply:
+                    {
+                      $multiply: { ^Array: { of: *GenIntFields, number: 100 } },
+                    },
+                },
+            },
+          ]
 
   - ExpressionSwitchTen:
     LoadConfig:
@@ -312,7 +658,36 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [21]
         operationMetricsName: VariadicAggExpressionSwitchTen
-        Pipeline: [{$project: {switch: {$switch: {branches: {^Array: {of: {^Choose: {from: *GenSwitchCaseBranches, deterministic: true}}, number: 10}}, default: "$int1"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  switch:
+                    {
+                      $switch:
+                        {
+                          branches:
+                            {
+                              ^Array:
+                                {
+                                  of:
+                                    {
+                                      ^Choose:
+                                        {
+                                          from: *GenSwitchCaseBranches,
+                                          deterministic: true,
+                                        },
+                                    },
+                                  number: 10,
+                                },
+                            },
+                          default: "$int1",
+                        },
+                    },
+                },
+            },
+          ]
 
   - ExpressionSwitchFifty:
     LoadConfig:
@@ -322,7 +697,36 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [22]
         operationMetricsName: VariadicAggExpressionSwitchFifty
-        Pipeline: [{$project: {switch: {$switch: {branches: {^Array: {of: {^Choose: {from: *GenSwitchCaseBranches, deterministic: true}}, number: 50}}, default: "$int1"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  switch:
+                    {
+                      $switch:
+                        {
+                          branches:
+                            {
+                              ^Array:
+                                {
+                                  of:
+                                    {
+                                      ^Choose:
+                                        {
+                                          from: *GenSwitchCaseBranches,
+                                          deterministic: true,
+                                        },
+                                    },
+                                  number: 50,
+                                },
+                            },
+                          default: "$int1",
+                        },
+                    },
+                },
+            },
+          ]
 
   - ExpressionSwitchHundred:
     LoadConfig:
@@ -332,7 +736,36 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [23]
         operationMetricsName: VariadicAggExpressionSwitchHundred
-        Pipeline: [{$project: {switch: {$switch: {branches: {^Array: {of: {^Choose: {from: *GenSwitchCaseBranches, deterministic: true}}, number: 100}}, default: "$int1"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  switch:
+                    {
+                      $switch:
+                        {
+                          branches:
+                            {
+                              ^Array:
+                                {
+                                  of:
+                                    {
+                                      ^Choose:
+                                        {
+                                          from: *GenSwitchCaseBranches,
+                                          deterministic: true,
+                                        },
+                                    },
+                                  number: 100,
+                                },
+                            },
+                          default: "$int1",
+                        },
+                    },
+                },
+            },
+          ]
 
   - ExpressionSetEqualsTen:
     LoadConfig:
@@ -342,7 +775,31 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [24]
         operationMetricsName: VariadicAggExpressionSetEqualsTen
-        Pipeline: [{$project: {setEquals: {$setEquals: {^Concat: {arrays: [{^Array: {of: *GenDupArrFields, number: 10}}, ["$arr1"]]}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  setEquals:
+                    {
+                      $setEquals:
+                        {
+                          ^Concat:
+                            {
+                              arrays:
+                                [
+                                  {
+                                    ^Array:
+                                      { of: *GenDupArrFields, number: 10 },
+                                  },
+                                  ["$arr1"],
+                                ],
+                            },
+                        },
+                    },
+                },
+            },
+          ]
 
   - ExpressionSetEqualsFifty:
     LoadConfig:
@@ -352,7 +809,31 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [25]
         operationMetricsName: VariadicAggExpressionSetEqualsFifty
-        Pipeline: [{$project: {setEquals: {$setEquals: {^Concat: {arrays: [{^Array: {of: *GenDupArrFields, number: 50}}, ["$arr1"]]}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  setEquals:
+                    {
+                      $setEquals:
+                        {
+                          ^Concat:
+                            {
+                              arrays:
+                                [
+                                  {
+                                    ^Array:
+                                      { of: *GenDupArrFields, number: 50 },
+                                  },
+                                  ["$arr1"],
+                                ],
+                            },
+                        },
+                    },
+                },
+            },
+          ]
 
   - ExpressionSetEqualsHundred:
     LoadConfig:
@@ -362,7 +843,31 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [26]
         operationMetricsName: VariadicAggExpressionSetEqualsHundred
-        Pipeline: [{$project: {setEquals: {$setEquals: {^Concat: {arrays: [{^Array: {of: *GenDupArrFields, number: 100}}, ["$arr1"]]}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  setEquals:
+                    {
+                      $setEquals:
+                        {
+                          ^Concat:
+                            {
+                              arrays:
+                                [
+                                  {
+                                    ^Array:
+                                      { of: *GenDupArrFields, number: 100 },
+                                  },
+                                  ["$arr1"],
+                                ],
+                            },
+                        },
+                    },
+                },
+            },
+          ]
 
   - ExpressionSetIntersectionTen:
     LoadConfig:
@@ -372,7 +877,31 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [27]
         operationMetricsName: VariadicAggExpressionSetIntersectionTen
-        Pipeline: [{$project: {setIntersection: {$setIntersection: {^Concat: {arrays: [{^Array: {of: *GenDupArrFields, number: 10}}, ["$arr1"]]}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  setIntersection:
+                    {
+                      $setIntersection:
+                        {
+                          ^Concat:
+                            {
+                              arrays:
+                                [
+                                  {
+                                    ^Array:
+                                      { of: *GenDupArrFields, number: 10 },
+                                  },
+                                  ["$arr1"],
+                                ],
+                            },
+                        },
+                    },
+                },
+            },
+          ]
 
   - ExpressionSetIntersectionFifty:
     LoadConfig:
@@ -382,7 +911,31 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [28]
         operationMetricsName: VariadicAggExpressionSetIntersectionFifty
-        Pipeline: [{$project: {setIntersection: {$setIntersection: {^Concat: {arrays: [{^Array: {of: *GenDupArrFields, number: 50}}, ["$arr1"]]}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  setIntersection:
+                    {
+                      $setIntersection:
+                        {
+                          ^Concat:
+                            {
+                              arrays:
+                                [
+                                  {
+                                    ^Array:
+                                      { of: *GenDupArrFields, number: 50 },
+                                  },
+                                  ["$arr1"],
+                                ],
+                            },
+                        },
+                    },
+                },
+            },
+          ]
 
   - ExpressionSetIntersectionHundred:
     LoadConfig:
@@ -392,7 +945,31 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [29]
         operationMetricsName: VariadicAggExpressionSetIntersectionHundred
-        Pipeline: [{$project: {setIntersection: {$setIntersection: {^Concat: {arrays: [{^Array: {of: *GenDupArrFields, number: 100}}, ["$arr1"]]}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  setIntersection:
+                    {
+                      $setIntersection:
+                        {
+                          ^Concat:
+                            {
+                              arrays:
+                                [
+                                  {
+                                    ^Array:
+                                      { of: *GenDupArrFields, number: 100 },
+                                  },
+                                  ["$arr1"],
+                                ],
+                            },
+                        },
+                    },
+                },
+            },
+          ]
 
   - ExpressionSetUnionTen:
     LoadConfig:
@@ -402,7 +979,18 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [30]
         operationMetricsName: VariadicAggExpressionSetUnionTen
-        Pipeline: [{$project: {setUnion: {$setUnion: {^Array: {of: *GenArrFields, number: 10}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  setUnion:
+                    {
+                      $setUnion: { ^Array: { of: *GenArrFields, number: 10 } },
+                    },
+                },
+            },
+          ]
 
   - ExpressionSetUnionFifty:
     LoadConfig:
@@ -412,7 +1000,18 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [31]
         operationMetricsName: VariadicAggExpressionSetUnionFifty
-        Pipeline: [{$project: {setUnion: {$setUnion: {^Array: {of: *GenArrFields, number: 50}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  setUnion:
+                    {
+                      $setUnion: { ^Array: { of: *GenArrFields, number: 50 } },
+                    },
+                },
+            },
+          ]
 
   - ExpressionSetUnionHundred:
     LoadConfig:
@@ -422,7 +1021,18 @@ Actors:
         nopInPhasesUpTo: *MaxPhases
         active: [32]
         operationMetricsName: VariadicAggExpressionSetUnionHundred
-        Pipeline: [{$project: {setUnion: {$setUnion: {^Array: {of: *GenArrFields, number: 100}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  setUnion:
+                    {
+                      $setUnion: { ^Array: { of: *GenArrFields, number: 100 } },
+                    },
+                },
+            },
+          ]
 
 AutoRun:
   - When:

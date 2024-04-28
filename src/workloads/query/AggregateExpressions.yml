@@ -60,35 +60,98 @@ Actors:
           DocumentCount: *DocumentCount
           BatchSize: 1000
           Document:
-            int: &integer {^RandomInt: {min: -100, max: 100}}
+            int: &integer { ^RandomInt: { min: -100, max: 100 } }
             int2: *integer
             zero: 0
-            negativeInt: {^RandomInt: {min: -1000, max: -1}}
-            year: {^RandomInt: {min: 1, max: 9999}}
-            month: {^RandomInt: {min: 1, max: 12}}
-            day: {^RandomInt: {min: 1, max: 31}}
-            hour: {^RandomInt: {min: 1, max: 24}}
-            posInt: {^RandomInt: {min: 1, max: 100}}
-            bool: {^Choose: {from: [true, false], weights: [1, 1]}}
+            negativeInt: { ^RandomInt: { min: -1000, max: -1 } }
+            year: { ^RandomInt: { min: 1, max: 9999 } }
+            month: { ^RandomInt: { min: 1, max: 12 } }
+            day: { ^RandomInt: { min: 1, max: 31 } }
+            hour: { ^RandomInt: { min: 1, max: 24 } }
+            posInt: { ^RandomInt: { min: 1, max: 100 } }
+            bool: { ^Choose: { from: [true, false], weights: [1, 1] } }
             nullVal: null
-            string: &string {^RandomString: {length: 16}}
+            string: &string { ^RandomString: { length: 16 } }
             string2: *string
             hello: "hellohellohellohellobye"
             upper: "THISISANALLUPPERCASESTRING"
-            preDeterminedString: {^Choose: {from: ["one", "two", "three"], weights: [1, 1, 1]}}
-            array: &array [{^Repeat: {count: 10, fromGenerator: {b: 0, c: 0}}}]
+            preDeterminedString:
+              { ^Choose: { from: ["one", "two", "three"], weights: [1, 1, 1] } }
+            array:
+              &array [{ ^Repeat: { count: 10, fromGenerator: { b: 0, c: 0 } } }]
             array2: *array
-            array3: [{^Cycle: {ofLength: 10, fromGenerator: {k: {^RandomString: {length: 16}}, v: {^RandomString: {length: 16}}}}}]
-            array4: [{^Cycle: {ofLength: 10, fromGenerator: [{^RandomString: {length: 16}}, {^RandomString: {length: 16}}]}}]
-            nestedObj: {int: *integer, array: *array}
-            double: &double {^RandomDouble: {distribution: normal, mean: 50, sigma: 13}}
-            doubleBounded: {^RandomDouble: {min: -1, max: 1}}
-            doubleBoundedNonZero: {^Choose: {from: [{^RandomDouble: {min: -1, max: -0.000000001}}, {^RandomDouble: {min: 0.000000001, max: 1}}], weights: [1, 1]}}
-            date1: &date {^RandomDate: {min: "2021-01-01T00:00:02.000Z", max: "2054-01-01T00:00:10.000Z"}}
+            array3:
+              [
+                {
+                  ^Cycle:
+                    {
+                      ofLength: 10,
+                      fromGenerator:
+                        {
+                          k: { ^RandomString: { length: 16 } },
+                          v: { ^RandomString: { length: 16 } },
+                        },
+                    },
+                },
+              ]
+            array4:
+              [
+                {
+                  ^Cycle:
+                    {
+                      ofLength: 10,
+                      fromGenerator:
+                        [
+                          { ^RandomString: { length: 16 } },
+                          { ^RandomString: { length: 16 } },
+                        ],
+                    },
+                },
+              ]
+            nestedObj: { int: *integer, array: *array }
+            double:
+              &double {
+                ^RandomDouble: { distribution: normal, mean: 50, sigma: 13 },
+              }
+            doubleBounded: { ^RandomDouble: { min: -1, max: 1 } }
+            doubleBoundedNonZero:
+              {
+                ^Choose:
+                  {
+                    from:
+                      [
+                        { ^RandomDouble: { min: -1, max: -0.000000001 } },
+                        { ^RandomDouble: { min: 0.000000001, max: 1 } },
+                      ],
+                    weights: [1, 1],
+                  },
+              }
+            date1:
+              &date {
+                ^RandomDate:
+                  {
+                    min: "2021-01-01T00:00:02.000Z",
+                    max: "2054-01-01T00:00:10.000Z",
+                  },
+              }
             date2: *date
-            randomType: {^Choose: {from: [*integer, *double, *date, *string, *array, null], weights: [1, 1, 1, 1, 1, 1]}}
+            randomType:
+              {
+                ^Choose:
+                  {
+                    from: [*integer, *double, *date, *string, *array, null],
+                    weights: [1, 1, 1, 1, 1, 1],
+                  },
+              }
             timezone1: "America/New_York"
-            obj: {int: *integer, double: *double, date: *date, string: *string, array: *array}
+            obj:
+              {
+                int: *integer,
+                double: *double,
+                date: *date,
+                string: *string,
+                array: *array,
+              }
 
   # Phase 2: Ensure all data is synced to disk.
   - Name: Quiesce
@@ -112,7 +175,7 @@ Actors:
         name: ExpressionAbs
         active: [3]
         operationMetricsName: AggExpressionAbs
-        Pipeline: [{$project: {abs: {$abs: "$negativeInt"}}}]
+        Pipeline: [{ $project: { abs: { $abs: "$negativeInt" } } }]
 
   - ExpressionAdd:
     LoadConfig:
@@ -121,7 +184,7 @@ Actors:
         name: ExpressionAdd
         active: [4]
         operationMetricsName: AggExpressionAdd
-        Pipeline: [{$project: {add: {$add: ["$int", "$int2"]}}}]
+        Pipeline: [{ $project: { add: { $add: ["$int", "$int2"] } } }]
 
   - ExpressionArrayElemAt:
     LoadConfig:
@@ -130,7 +193,8 @@ Actors:
         name: ExpressionArrayElemAt
         active: [5]
         operationMetricsName: AggExpressionArrayElemAt
-        Pipeline: [{$project: {arrayElemAt: {$arrayElemAt: ["$array", 5]}}}]
+        Pipeline:
+          [{ $project: { arrayElemAt: { $arrayElemAt: ["$array", 5] } } }]
 
   - ExpressionFirst:
     LoadConfig:
@@ -139,7 +203,7 @@ Actors:
         name: ExpressionFirst
         active: [6]
         operationMetricsName: AggExpressionFirst
-        Pipeline: [{$project: {first: {$first: "$array"}}}]
+        Pipeline: [{ $project: { first: { $first: "$array" } } }]
 
   - ExpressionBSONSize:
     LoadConfig:
@@ -148,7 +212,7 @@ Actors:
         name: ExpressionBSONSize
         active: [7]
         operationMetricsName: AggExpressionBSONSize
-        Pipeline: [{$project: {bsonSize: {$bsonSize: "$nestedObj"}}}]
+        Pipeline: [{ $project: { bsonSize: { $bsonSize: "$nestedObj" } } }]
 
   - ExpressionCeil:
     LoadConfig:
@@ -157,7 +221,7 @@ Actors:
         name: ExpressionCeil
         active: [8]
         operationMetricsName: AggExpressionCeil
-        Pipeline: [{$project: {ceil: {$ceil: "$double"}}}]
+        Pipeline: [{ $project: { ceil: { $ceil: "$double" } } }]
 
   - ExpressionCompare:
     LoadConfig:
@@ -166,7 +230,7 @@ Actors:
         name: ExpressionCompare
         active: [9]
         operationMetricsName: AggExpressionCompare
-        Pipeline: [{$project: {cmp: {$cmp: ["$int", 0]}}}]
+        Pipeline: [{ $project: { cmp: { $cmp: ["$int", 0] } } }]
 
   - ExpressionConcat:
     LoadConfig:
@@ -175,7 +239,8 @@ Actors:
         name: ExpressionConcat
         active: [10]
         operationMetricsName: AggExpressionConcat
-        Pipeline: [{$project: {concat: {$concat: ["$string", "_", "$string2"]}}}]
+        Pipeline:
+          [{ $project: { concat: { $concat: ["$string", "_", "$string2"] } } }]
 
   - ExpressionConcatArrays:
     LoadConfig:
@@ -184,7 +249,13 @@ Actors:
         name: ExpressionConcatArrays
         active: [11]
         operationMetricsName: AggExpressionConcatArrays
-        Pipeline: [{$project: {concatArrays: {$concatArrays: ["$array1", "$array2"]}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                { concatArrays: { $concatArrays: ["$array1", "$array2"] } },
+            },
+          ]
 
   - ExpressionCond:
     LoadConfig:
@@ -193,7 +264,19 @@ Actors:
         name: ExpressionCond
         active: [12]
         operationMetricsName: AggExpressionCond
-        Pipeline: [{$project: {cond: {$cond: {if: {$gte: ["$int", 0]}, then: 100, else: -100}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  cond:
+                    {
+                      $cond:
+                        { if: { $gte: ["$int", 0] }, then: 100, else: -100 },
+                    },
+                },
+            },
+          ]
 
   - ExpressionDateDiff:
     LoadConfig:
@@ -202,7 +285,23 @@ Actors:
         name: ExpressionDateDiff
         active: [13]
         operationMetricsName: AggExpressionDateDiff
-        Pipeline: [{$project: {dateDiff: {$dateDiff: {startDate: "$date1", endDate: "$date2", unit: "millisecond"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  dateDiff:
+                    {
+                      $dateDiff:
+                        {
+                          startDate: "$date1",
+                          endDate: "$date2",
+                          unit: "millisecond",
+                        },
+                    },
+                },
+            },
+          ]
 
   - ExpressionDateTrunc:
     LoadConfig:
@@ -211,7 +310,16 @@ Actors:
         name: ExpressionDateTrunc
         active: [14]
         operationMetricsName: AggExpressionDateTrunc
-        Pipeline: [{$project: {dateTrunc: {$dateTrunc: {date: "$date1", unit: "millisecond"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  dateTrunc:
+                    { $dateTrunc: { date: "$date1", unit: "millisecond" } },
+                },
+            },
+          ]
 
   - ExpressionDivide:
     LoadConfig:
@@ -220,7 +328,7 @@ Actors:
         name: ExpressionDivide
         active: [15]
         operationMetricsName: AggExpressionDivide
-        Pipeline: [{$project: {divide: {$divide: ["$int", "$posInt"]}}}]
+        Pipeline: [{ $project: { divide: { $divide: ["$int", "$posInt"] } } }]
 
   - ExpressionExp:
     LoadConfig:
@@ -229,7 +337,7 @@ Actors:
         name: ExpressionExp
         active: [16]
         operationMetricsName: AggExpressionExp
-        Pipeline: [{$project: {exp: {$exp: "$int"}}}]
+        Pipeline: [{ $project: { exp: { $exp: "$int" } } }]
 
   - ExpressionFilter:
     LoadConfig:
@@ -238,7 +346,23 @@ Actors:
         name: ExpressionFilter
         active: [17]
         operationMetricsName: AggExpressionFilter
-        Pipeline: [{$project: {filter: {$filter: {input: "$array", as: "a", cond: {$eq: ["$$a.b", 0]}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  filter:
+                    {
+                      $filter:
+                        {
+                          input: "$array",
+                          as: "a",
+                          cond: { $eq: ["$$a.b", 0] },
+                        },
+                    },
+                },
+            },
+          ]
 
   - ExpressionFloor:
     LoadConfig:
@@ -247,7 +371,7 @@ Actors:
         name: ExpressionFloor
         active: [18]
         operationMetricsName: AggExpressionFloor
-        Pipeline: [{$project: {floor: {$floor: "$double"}}}]
+        Pipeline: [{ $project: { floor: { $floor: "$double" } } }]
 
   - ExpressionIfNull:
     LoadConfig:
@@ -256,7 +380,7 @@ Actors:
         name: ExpressionIfNull
         active: [19]
         operationMetricsName: AggExpressionIfNull
-        Pipeline: [{$project: {ifNull: {$ifNull: ["$nullVal", 0]}}}]
+        Pipeline: [{ $project: { ifNull: { $ifNull: ["$nullVal", 0] } } }]
 
   - ExpressionIndexOfBytes:
     LoadConfig:
@@ -265,7 +389,8 @@ Actors:
         name: ExpressionIndexOfBytes
         active: [20]
         operationMetricsName: AggExpressionIndexOfBytes
-        Pipeline: [{$project: {indexOfBytes: {$indexOfBytes: ["$hello", "o"]}}}]
+        Pipeline:
+          [{ $project: { indexOfBytes: { $indexOfBytes: ["$hello", "o"] } } }]
 
   - ExpressionIndexOfCP:
     LoadConfig:
@@ -274,7 +399,7 @@ Actors:
         name: ExpressionIndexOfCP
         active: [21]
         operationMetricsName: AggExpressionIndexOfCP
-        Pipeline: [{$project: {indexOfCP: {$indexOfCP: ["$hello", "l"]}}}]
+        Pipeline: [{ $project: { indexOfCP: { $indexOfCP: ["$hello", "l"] } } }]
 
   - ExpressionIsNumber:
     LoadConfig:
@@ -283,7 +408,7 @@ Actors:
         name: ExpressionIsNumber
         active: [22]
         operationMetricsName: AggExpressionIsNumber
-        Pipeline: [{$project: {isNumber: {$isNumber: "$randomType"}}}]
+        Pipeline: [{ $project: { isNumber: { $isNumber: "$randomType" } } }]
 
   - ExpressionLet:
     LoadConfig:
@@ -292,7 +417,22 @@ Actors:
         name: ExpressionLet
         active: [23]
         operationMetricsName: AggExpressionLet
-        Pipeline: [{$project: {let: {$let: {vars: {a: "$int", b: "$int2"}, in: {$gte: ["$$a", "$$b"]}}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  let:
+                    {
+                      $let:
+                        {
+                          vars: { a: "$int", b: "$int2" },
+                          in: { $gte: ["$$a", "$$b"] },
+                        },
+                    },
+                },
+            },
+          ]
 
   - ExpressionLn:
     LoadConfig:
@@ -301,7 +441,7 @@ Actors:
         name: ExpressionLn
         active: [24]
         operationMetricsName: AggExpressionLn
-        Pipeline: [{$project: {ln: {$ln: "$posInt"}}}]
+        Pipeline: [{ $project: { ln: { $ln: "$posInt" } } }]
 
   - ExpressionLog10:
     LoadConfig:
@@ -310,7 +450,7 @@ Actors:
         name: ExpressionLog10
         active: [25]
         operationMetricsName: AggExpressionLog10
-        Pipeline: [{$project: {log10: {$log10: "$posInt"}}}]
+        Pipeline: [{ $project: { log10: { $log10: "$posInt" } } }]
 
   - ExpressionMod:
     LoadConfig:
@@ -319,7 +459,7 @@ Actors:
         name: ExpressionMod
         active: [26]
         operationMetricsName: AggExpressionMod
-        Pipeline: [{$project: {mod: {$mod: ["$int", "$posInt"]}}}]
+        Pipeline: [{ $project: { mod: { $mod: ["$int", "$posInt"] } } }]
 
   - ExpressionMultiply:
     LoadConfig:
@@ -328,7 +468,7 @@ Actors:
         name: ExpressionMultiply
         active: [27]
         operationMetricsName: AggExpressionMultiply
-        Pipeline: [{$project: {multiply: {$multiply: ["$int", "$int2"]}}}]
+        Pipeline: [{ $project: { multiply: { $multiply: ["$int", "$int2"] } } }]
 
   - ExpressionNot:
     LoadConfig:
@@ -337,7 +477,7 @@ Actors:
         name: ExpressionNot
         active: [28]
         operationMetricsName: AggExpressionNot
-        Pipeline: [{$project: {not: {$not: "$bool"}}}]
+        Pipeline: [{ $project: { not: { $not: "$bool" } } }]
 
   - ExpressionReplaceOne:
     LoadConfig:
@@ -346,7 +486,19 @@ Actors:
         name: ExpressionReplaceOne
         active: [29]
         operationMetricsName: AggExpressionReplaceOne
-        Pipeline: [{$project: {replaceOne: {$replaceOne: {input: "$hello", find: "bye", replacement: "hello"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  replaceOne:
+                    {
+                      $replaceOne:
+                        { input: "$hello", find: "bye", replacement: "hello" },
+                    },
+                },
+            },
+          ]
 
   - ExpressionReverseArray:
     LoadConfig:
@@ -355,7 +507,7 @@ Actors:
         name: ExpressionReverseArray
         active: [30]
         operationMetricsName: AggExpressionReverseArray
-        Pipeline: [{$project: {reverseArray: {$reverseArray: "$array"}}}]
+        Pipeline: [{ $project: { reverseArray: { $reverseArray: "$array" } } }]
 
   - ExpressionIsArray:
     LoadConfig:
@@ -364,7 +516,7 @@ Actors:
         name: ExpressionIsArray
         active: [31]
         operationMetricsName: AggExpressionIsArray
-        Pipeline: [{$project: {isArray: {$isArray: "$randomType"}}}]
+        Pipeline: [{ $project: { isArray: { $isArray: "$randomType" } } }]
 
   - ExpressionSqrt:
     LoadConfig:
@@ -373,7 +525,7 @@ Actors:
         name: ExpressionSqrt
         active: [32]
         operationMetricsName: AggExpressionSqrt
-        Pipeline: [{$project: {sqrt: {$sqrt: "$posInt"}}}]
+        Pipeline: [{ $project: { sqrt: { $sqrt: "$posInt" } } }]
 
   - ExpressionSwitch:
     LoadConfig:
@@ -382,7 +534,26 @@ Actors:
         name: ExpressionSwitch
         active: [33]
         operationMetricsName: AggExpressionSwitch
-        Pipeline: [{$project: {switch: {$switch: {branches: [{case: {$gte: ["$int", 0]}, then: "GTE 0"}, {case: {$lt: ["$int", 0]}, then: "LT 0"}], default: "Out of bounds"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  switch:
+                    {
+                      $switch:
+                        {
+                          branches:
+                            [
+                              { case: { $gte: ["$int", 0] }, then: "GTE 0" },
+                              { case: { $lt: ["$int", 0] }, then: "LT 0" },
+                            ],
+                          default: "Out of bounds",
+                        },
+                    },
+                },
+            },
+          ]
 
   - ExpressionToLower:
     LoadConfig:
@@ -391,7 +562,7 @@ Actors:
         name: ExpressionToLower
         active: [34]
         operationMetricsName: AggExpressionToLower
-        Pipeline: [{$project: {toLower: {$toLower: "$upper"}}}]
+        Pipeline: [{ $project: { toLower: { $toLower: "$upper" } } }]
 
   - ExpressionToUpper:
     LoadConfig:
@@ -400,7 +571,7 @@ Actors:
         name: ExpressionTestToUpper
         active: [35]
         operationMetricsName: AggExpressionTestToUpper
-        Pipeline: [{$project: {toUpper: {$toUpper: "$hello"}}}]
+        Pipeline: [{ $project: { toUpper: { $toUpper: "$hello" } } }]
 
   - ExpressionRegexFind:
     LoadConfig:
@@ -409,7 +580,15 @@ Actors:
         name: ExpressionRegexFind
         active: [36]
         operationMetricsName: AggExpressionRegexFind
-        Pipeline: [{$project: {regexFind: {$regexFind: {input: "$hello", regex: /(h)*/}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  regexFind: { $regexFind: { input: "$hello", regex: /(h)*/ } },
+                },
+            },
+          ]
 
   - ExpressionRegexFindAll:
     LoadConfig:
@@ -418,7 +597,16 @@ Actors:
         name: ExpressionRegexFindAll
         active: [37]
         operationMetricsName: AggExpressionRegexFindAll
-        Pipeline: [{$project: {regexFindAll: {$regexFindAll: {input: "$hello", regex: /(h)*/}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  regexFindAll:
+                    { $regexFindAll: { input: "$hello", regex: /(h)*/ } },
+                },
+            },
+          ]
 
   - ExpressionRegexMatch:
     LoadConfig:
@@ -427,7 +615,16 @@ Actors:
         name: ExpressionRegexMatch
         active: [38]
         operationMetricsName: AggExpressionRegexMatch
-        Pipeline: [{$project: {regexMatch: {$regexMatch: {input: "$string", regex: /(s(be)*)/}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  regexMatch:
+                    { $regexMatch: { input: "$string", regex: /(s(be)*)/ } },
+                },
+            },
+          ]
 
   - ExpressionCosine:
     LoadConfig:
@@ -436,7 +633,7 @@ Actors:
         name: ExpressionCosine
         active: [39]
         operationMetricsName: AggExpressionCosine
-        Pipeline: [{$project: {cos: {$cos: "$double"}}}]
+        Pipeline: [{ $project: { cos: { $cos: "$double" } } }]
 
   - ExpressionSine:
     LoadConfig:
@@ -445,7 +642,7 @@ Actors:
         name: ExpressionSine
         active: [40]
         operationMetricsName: AggExpressionSine
-        Pipeline: [{$project: {sin: {$sin: "$double"}}}]
+        Pipeline: [{ $project: { sin: { $sin: "$double" } } }]
 
   - ExpressionTangent:
     LoadConfig:
@@ -454,7 +651,7 @@ Actors:
         name: ExpressionTangent
         active: [41]
         operationMetricsName: AggExpressionTangent
-        Pipeline: [{$project: {tan: {$tan: "$double"}}}]
+        Pipeline: [{ $project: { tan: { $tan: "$double" } } }]
 
   - ExpressionArcCosine:
     LoadConfig:
@@ -463,7 +660,7 @@ Actors:
         name: ExpressionArcCosine
         active: [42]
         operationMetricsName: AggExpressionArcCosine
-        Pipeline: [{$project: {acos: {$acos: "$doubleBounded"}}}]
+        Pipeline: [{ $project: { acos: { $acos: "$doubleBounded" } } }]
 
   - ExpressionArcSine:
     LoadConfig:
@@ -472,7 +669,7 @@ Actors:
         name: ExpressionArcSine
         active: [43]
         operationMetricsName: AggExpressionArcSine
-        Pipeline: [{$project: {asin: {$asin: "$doubleBounded"}}}]
+        Pipeline: [{ $project: { asin: { $asin: "$doubleBounded" } } }]
 
   - ExpressionArcTangent:
     LoadConfig:
@@ -481,7 +678,7 @@ Actors:
         name: ExpressionArcTangent
         active: [44]
         operationMetricsName: AggExpressionArcTangent
-        Pipeline: [{$project: {atan: {$atan: "$double"}}}]
+        Pipeline: [{ $project: { atan: { $atan: "$double" } } }]
 
   - ExpressionArcTangent2:
     LoadConfig:
@@ -490,7 +687,13 @@ Actors:
         name: ExpressionArcTangent2
         active: [45]
         operationMetricsName: AggExpressionArcTangent2
-        Pipeline: [{$project: {atan2: {$atan2: ["$double", "$doubleBoundedNonZero"]}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                { atan2: { $atan2: ["$double", "$doubleBoundedNonZero"] } },
+            },
+          ]
 
   - ExpressionHyperbolicArcTangent:
     LoadConfig:
@@ -499,7 +702,7 @@ Actors:
         name: ExpressionHyperbolicArcTangent
         active: [46]
         operationMetricsName: AggExpressionHyperbolicArcTangent
-        Pipeline: [{$project: {atanh: {$atanh: "$doubleBounded"}}}]
+        Pipeline: [{ $project: { atanh: { $atanh: "$doubleBounded" } } }]
 
   - ExpressionHyperbolicArcCosine:
     LoadConfig:
@@ -508,7 +711,7 @@ Actors:
         name: ExpressionHyperbolicArcCosine
         active: [47]
         operationMetricsName: AggExpressionHyperbolicArcCosine
-        Pipeline: [{$project: {acosh: {$acosh: "$posInt"}}}]
+        Pipeline: [{ $project: { acosh: { $acosh: "$posInt" } } }]
 
   - ExpressionHyperbolicArcSine:
     LoadConfig:
@@ -517,7 +720,7 @@ Actors:
         name: ExpressionHyperbolicArcSine
         active: [48]
         operationMetricsName: AggExpressionHyperbolicArcSine
-        Pipeline: [{$project: {asinh: {$asinh: "$double"}}}]
+        Pipeline: [{ $project: { asinh: { $asinh: "$double" } } }]
 
   - ExpressionHyperbolicCosine:
     LoadConfig:
@@ -526,7 +729,7 @@ Actors:
         name: ExpressionHyperbolicCosine
         active: [49]
         operationMetricsName: AggExpressionHyperbolicCosine
-        Pipeline: [{$project: {cosh: {$cosh: "$double"}}}]
+        Pipeline: [{ $project: { cosh: { $cosh: "$double" } } }]
 
   - ExpressionHyperbolicSine:
     LoadConfig:
@@ -535,7 +738,7 @@ Actors:
         name: ExpressionHyperbolicSine
         active: [50]
         operationMetricsName: AggExpressionHyperbolicSine
-        Pipeline: [{$project: {sinh: {$sinh: "$double"}}}]
+        Pipeline: [{ $project: { sinh: { $sinh: "$double" } } }]
 
   - ExpressionHyperbolicTangent:
     LoadConfig:
@@ -544,7 +747,7 @@ Actors:
         name: ExpressionHyperbolicTangent
         active: [51]
         operationMetricsName: AggExpressionHyperbolicTangent
-        Pipeline: [{$project: {tanh: {$tanh: "$double"}}}]
+        Pipeline: [{ $project: { tanh: { $tanh: "$double" } } }]
 
   - ExpressionDegreesToRadians:
     LoadConfig:
@@ -553,7 +756,8 @@ Actors:
         name: ExpressionDegreesToRadians
         active: [52]
         operationMetricsName: AggExpressionDegreesToRadians
-        Pipeline: [{$project: {degreesToRadians: {$degreesToRadians: "$double"}}}]
+        Pipeline:
+          [{ $project: { degreesToRadians: { $degreesToRadians: "$double" } } }]
 
   - ExpressionRadiansToDegrees:
     LoadConfig:
@@ -562,7 +766,8 @@ Actors:
         name: ExpressionRadiansToDegrees
         active: [53]
         operationMetricsName: AggExpressionRadiansToDegrees
-        Pipeline: [{$project: {radiansToDegrees: {$radiansToDegrees: "$double"}}}]
+        Pipeline:
+          [{ $project: { radiansToDegrees: { $radiansToDegrees: "$double" } } }]
 
   - ExpressionDayOfMonth:
     LoadConfig:
@@ -571,7 +776,7 @@ Actors:
         name: ExpressionDayOfMonth
         active: [54]
         operationMetricsName: AggExpressionDayOfMonth
-        Pipeline: [{$project: {dayOfMonth: {$dayOfMonth: "$date1"}}}]
+        Pipeline: [{ $project: { dayOfMonth: { $dayOfMonth: "$date1" } } }]
 
   - ExpressionDayOfWeek:
     LoadConfig:
@@ -580,7 +785,7 @@ Actors:
         name: ExpressionDayOfWeek
         active: [55]
         operationMetricsName: AggExpressionDayOfWeek
-        Pipeline: [{$project: {dayOfWeek: {$dayOfWeek: "$date1"}}}]
+        Pipeline: [{ $project: { dayOfWeek: { $dayOfWeek: "$date1" } } }]
 
   - ExpressionDayOfYear:
     LoadConfig:
@@ -589,7 +794,7 @@ Actors:
         name: ExpressionDayOfYear
         active: [56]
         operationMetricsName: AggExpressionDayOfYear
-        Pipeline: [{$project: {dayOfYear: {$dayOfYear: "$date1"}}}]
+        Pipeline: [{ $project: { dayOfYear: { $dayOfYear: "$date1" } } }]
 
   - ExpressionDateAdd:
     LoadConfig:
@@ -598,7 +803,19 @@ Actors:
         name: ExpressionDateAdd
         active: [57]
         operationMetricsName: AggExpressionDateAdd
-        Pipeline: [{$project: {dateAdd: {$dateAdd: {startDate: "$date1", unit: month, amount: 32}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  dateAdd:
+                    {
+                      $dateAdd:
+                        { startDate: "$date1", unit: month, amount: 32 },
+                    },
+                },
+            },
+          ]
 
   - ExpressionDateSubtract:
     LoadConfig:
@@ -607,7 +824,19 @@ Actors:
         name: ExpressionDateSubtract
         active: [58]
         operationMetricsName: AggExpressionDateSubtract
-        Pipeline: [{$project: {dateSubtract: {$dateSubtract: {startDate: "$date1", unit: month, amount: 32}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  dateSubtract:
+                    {
+                      $dateSubtract:
+                        { startDate: "$date1", unit: month, amount: 32 },
+                    },
+                },
+            },
+          ]
 
   - ExpressionLast:
     LoadConfig:
@@ -616,7 +845,7 @@ Actors:
         name: ExpressionLast
         active: [59]
         operationMetricsName: AggExpressionLast
-        Pipeline: [{$project: {last: {$last: "$array"}}}]
+        Pipeline: [{ $project: { last: { $last: "$array" } } }]
 
   - ExpressionDateFromParts:
     LoadConfig:
@@ -625,7 +854,24 @@ Actors:
         name: ExpressionDateFromParts
         active: [60]
         operationMetricsName: AggExpressionDateFromParts
-        Pipeline: [{$project: {dateFromParts: {$dateFromParts: {'year': "$year", 'month': "$month", 'day': "$day", 'hour': "$hour"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  dateFromParts:
+                    {
+                      $dateFromParts:
+                        {
+                          "year": "$year",
+                          "month": "$month",
+                          "day": "$day",
+                          "hour": "$hour",
+                        },
+                    },
+                },
+            },
+          ]
 
   - ExpressionDateToParts:
     LoadConfig:
@@ -634,7 +880,19 @@ Actors:
         name: ExpressionDateToParts
         active: [61]
         operationMetricsName: AggExpressionDateToParts
-        Pipeline: [{$project: {dateToParts: {$dateToParts: {date: "$date1", timezone: "America/New_York"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  dateToParts:
+                    {
+                      $dateToParts:
+                        { date: "$date1", timezone: "America/New_York" },
+                    },
+                },
+            },
+          ]
 
   - ExpressionSubtract:
     LoadConfig:
@@ -643,7 +901,7 @@ Actors:
         name: ExpressionSubtract
         active: [62]
         operationMetricsName: AggExpressionSubtract
-        Pipeline: [{$project: {subtract: {$subtract: ["$int", "$int2"]}}}]
+        Pipeline: [{ $project: { subtract: { $subtract: ["$int", "$int2"] } } }]
 
   - ExpressionRange:
     LoadConfig:
@@ -652,7 +910,7 @@ Actors:
         name: ExpressionRange
         active: [63]
         operationMetricsName: AggExpressionRange
-        Pipeline: [{$project: {range: {$range: ["$zero", "$posInt"]}}}]
+        Pipeline: [{ $project: { range: { $range: ["$zero", "$posInt"] } } }]
 
   - ExpressionYear:
     LoadConfig:
@@ -661,7 +919,7 @@ Actors:
         name: ExpressionYear
         active: [64]
         operationMetricsName: AggExpressionYear
-        Pipeline: [{$project: {year: {$year: {date: "$date1"}}}}]
+        Pipeline: [{ $project: { year: { $year: { date: "$date1" } } } }]
 
   - ExpressionYearTimezone:
     LoadConfig:
@@ -670,7 +928,13 @@ Actors:
         name: ExpressionYearTimezone
         active: [65]
         operationMetricsName: AggExpressionYearTimezone
-        Pipeline: [{$project: {year: {$year: {date: "$date1", timezone: "$timezone1"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                { year: { $year: { date: "$date1", timezone: "$timezone1" } } },
+            },
+          ]
 
   - ExpressionYearConstTimezone:
     LoadConfig:
@@ -679,7 +943,18 @@ Actors:
         name: ExpressionYearConstTimezone
         active: [66]
         operationMetricsName: AggExpressionYearConstTimezone
-        Pipeline: [{$project: {year: {$year: {date: "$date1", timezone: "$America/New_York"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  year:
+                    {
+                      $year: { date: "$date1", timezone: "$America/New_York" },
+                    },
+                },
+            },
+          ]
 
   - ExpressionMonth:
     LoadConfig:
@@ -688,7 +963,7 @@ Actors:
         name: ExpressionMonth
         active: [67]
         operationMetricsName: AggExpressionMonth
-        Pipeline: [{$project: {month: {$month: {date: "$date1"}}}}]
+        Pipeline: [{ $project: { month: { $month: { date: "$date1" } } } }]
 
   - ExpressionMonthTimezone:
     LoadConfig:
@@ -697,7 +972,15 @@ Actors:
         name: ExpressionMonthTimezone
         active: [68]
         operationMetricsName: AggExpressionMonthTimezone
-        Pipeline: [{$project: {month: {$month: {date: "$date1", timezone: "$timezone1"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  month: { $month: { date: "$date1", timezone: "$timezone1" } },
+                },
+            },
+          ]
 
   - ExpressionMonthConstTimezone:
     LoadConfig:
@@ -706,7 +989,18 @@ Actors:
         name: ExpressionMonthConstTimezone
         active: [69]
         operationMetricsName: AggExpressionMonthConstTimezone
-        Pipeline: [{$project: {month: {$month: {date: "$date1", timezone: "$America/New_York"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  month:
+                    {
+                      $month: { date: "$date1", timezone: "$America/New_York" },
+                    },
+                },
+            },
+          ]
 
   - ExpressionHour:
     LoadConfig:
@@ -715,7 +1009,7 @@ Actors:
         name: ExpressionHour
         active: [70]
         operationMetricsName: AggExpressionHour
-        Pipeline: [{$project: {hour: {$hour: {date: "$date1"}}}}]
+        Pipeline: [{ $project: { hour: { $hour: { date: "$date1" } } } }]
 
   - ExpressionHourTimezone:
     LoadConfig:
@@ -724,7 +1018,13 @@ Actors:
         name: ExpressionHourTimezone
         active: [71]
         operationMetricsName: AggExpressionHourTimezone
-        Pipeline: [{$project: {hour: {$hour: {date: "$date1", timezone: "$timezone1"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                { hour: { $hour: { date: "$date1", timezone: "$timezone1" } } },
+            },
+          ]
 
   - ExpressionHourConstTimezone:
     LoadConfig:
@@ -733,7 +1033,18 @@ Actors:
         name: ExpressionHourConstTimezone
         active: [72]
         operationMetricsName: AggExpressionHourConstTimezone
-        Pipeline: [{$project: {hour: {$hour: {date: "$date1", timezone: "$America/New_York"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  hour:
+                    {
+                      $hour: { date: "$date1", timezone: "$America/New_York" },
+                    },
+                },
+            },
+          ]
 
   - ExpressionMinute:
     LoadConfig:
@@ -742,7 +1053,7 @@ Actors:
         name: ExpressionMinute
         active: [73]
         operationMetricsName: AggExpressionMinute
-        Pipeline: [{$project: {minute: {$minute: {date: "$date1"}}}}]
+        Pipeline: [{ $project: { minute: { $minute: { date: "$date1" } } } }]
 
   - ExpressionMinuteTimezone:
     LoadConfig:
@@ -751,7 +1062,16 @@ Actors:
         name: ExpressionMinuteTimezone
         active: [74]
         operationMetricsName: AggExpressionMinuteTimezone
-        Pipeline: [{$project: {minute: {$minute: {date: "$date1", timezone: "$timezone1"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  minute:
+                    { $minute: { date: "$date1", timezone: "$timezone1" } },
+                },
+            },
+          ]
 
   - ExpressionMinuteConstTimezone:
     LoadConfig:
@@ -760,7 +1080,19 @@ Actors:
         name: ExpressionMinuteConstTimezone
         active: [75]
         operationMetricsName: AggExpressionMinuteConstTimezone
-        Pipeline: [{$project: {minute: {$minute: {date: "$date1", timezone: "$America/New_York"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  minute:
+                    {
+                      $minute:
+                        { date: "$date1", timezone: "$America/New_York" },
+                    },
+                },
+            },
+          ]
 
   - ExpressionSecond:
     LoadConfig:
@@ -769,7 +1101,7 @@ Actors:
         name: ExpressionSecond
         active: [76]
         operationMetricsName: AggExpressionSecond
-        Pipeline: [{$project: {second: {$second: {date: "$date1"}}}}]
+        Pipeline: [{ $project: { second: { $second: { date: "$date1" } } } }]
 
   - ExpressionSecondTimezone:
     LoadConfig:
@@ -778,7 +1110,16 @@ Actors:
         name: ExpressionSecondTimezone
         active: [77]
         operationMetricsName: AggExpressionSecondTimezone
-        Pipeline: [{$project: {second: {$second: {date: "$date1", timezone: "$timezone1"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  second:
+                    { $second: { date: "$date1", timezone: "$timezone1" } },
+                },
+            },
+          ]
 
   - ExpressionSecondConstTimezone:
     LoadConfig:
@@ -787,7 +1128,19 @@ Actors:
         name: ExpressionSecondConstTimezone
         active: [78]
         operationMetricsName: AggExpressionSecondConstTimezone
-        Pipeline: [{$project: {second: {$second: {date: "$date1", timezone: "$America/New_York"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  second:
+                    {
+                      $second:
+                        { date: "$date1", timezone: "$America/New_York" },
+                    },
+                },
+            },
+          ]
 
   - ExpressionMillisecond:
     LoadConfig:
@@ -796,7 +1149,8 @@ Actors:
         name: ExpressionMillisecond
         active: [79]
         operationMetricsName: AggExpressionMillisecond
-        Pipeline: [{$project: {millisecond: {$millisecond: {date: "$date1"}}}}]
+        Pipeline:
+          [{ $project: { millisecond: { $millisecond: { date: "$date1" } } } }]
 
   - ExpressionMillisecondTimezone:
     LoadConfig:
@@ -805,7 +1159,18 @@ Actors:
         name: ExpressionMillisecondTimezone
         active: [80]
         operationMetricsName: AggExpressionMillisecondTimezone
-        Pipeline: [{$project: {millisecond: {$millisecond: {date: "$date1", timezone: "$timezone1"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  millisecond:
+                    {
+                      $millisecond: { date: "$date1", timezone: "$timezone1" },
+                    },
+                },
+            },
+          ]
 
   - ExpressionMillisecondConstTimezone:
     LoadConfig:
@@ -814,7 +1179,19 @@ Actors:
         name: ExpressionMillisecondConstTimezone
         active: [81]
         operationMetricsName: AggExpressionMillisecondConstTimezone
-        Pipeline: [{$project: {millisecond: {$millisecond: {date: "$date1", timezone: "$America/New_York"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  millisecond:
+                    {
+                      $millisecond:
+                        { date: "$date1", timezone: "$America/New_York" },
+                    },
+                },
+            },
+          ]
 
   - ExpressionWeek:
     LoadConfig:
@@ -823,7 +1200,7 @@ Actors:
         name: ExpressionWeek
         active: [82]
         operationMetricsName: AggExpressionWeek
-        Pipeline: [{$project: {week: {$week: {date: "$date1"}}}}]
+        Pipeline: [{ $project: { week: { $week: { date: "$date1" } } } }]
 
   - ExpressionWeekTimezone:
     LoadConfig:
@@ -832,7 +1209,13 @@ Actors:
         name: ExpressionWeekTimezone
         active: [83]
         operationMetricsName: AggExpressionWeekTimezone
-        Pipeline: [{$project: {week: {$week: {date: "$date1", timezone: "$timezone1"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                { week: { $week: { date: "$date1", timezone: "$timezone1" } } },
+            },
+          ]
 
   - ExpressionWeekConstTimezone:
     LoadConfig:
@@ -841,7 +1224,18 @@ Actors:
         name: ExpressionWeekConstTimezone
         active: [84]
         operationMetricsName: AggExpressionWeekConstTimezone
-        Pipeline: [{$project: {week: {$week: {date: "$date1", timezone: "$America/New_York"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  week:
+                    {
+                      $week: { date: "$date1", timezone: "$America/New_York" },
+                    },
+                },
+            },
+          ]
 
   - ExpressionISOWeekYear:
     LoadConfig:
@@ -850,7 +1244,8 @@ Actors:
         name: ExpressionISOWeekYear
         active: [85]
         operationMetricsName: AggExpressionISOWeekYear
-        Pipeline: [{$project: {isoWeekYear: {$isoWeekYear: {date: "$date1"}}}}]
+        Pipeline:
+          [{ $project: { isoWeekYear: { $isoWeekYear: { date: "$date1" } } } }]
 
   - ExpressionISOWeekYearTimezone:
     LoadConfig:
@@ -859,7 +1254,18 @@ Actors:
         name: ExpressionISOWeekYearTimezone
         active: [86]
         operationMetricsName: AggExpressionISOWeekYearTimezone
-        Pipeline: [{$project: {isoWeekYear: {$isoWeekYear: {date: "$date1", timezone: "$timezone1"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  isoWeekYear:
+                    {
+                      $isoWeekYear: { date: "$date1", timezone: "$timezone1" },
+                    },
+                },
+            },
+          ]
 
   - ExpressionISOWeekYearConstTimezone:
     LoadConfig:
@@ -868,7 +1274,19 @@ Actors:
         name: ExpressionISOWeekYearConstTimezone
         active: [87]
         operationMetricsName: AggExpressionISOWeekYearConstTimezone
-        Pipeline: [{$project: {isoWeekYear: {$isoWeekYear: {date: "$date1", timezone: "$America/New_York"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  isoWeekYear:
+                    {
+                      $isoWeekYear:
+                        { date: "$date1", timezone: "$America/New_York" },
+                    },
+                },
+            },
+          ]
 
   - ExpressionISODayOfWeek:
     LoadConfig:
@@ -877,7 +1295,12 @@ Actors:
         name: ExpressionISODayOfWeek
         active: [88]
         operationMetricsName: AggExpressionISODayOfWeek
-        Pipeline: [{$project: {isoDayOfWeek: {$isoDayOfWeek: {date: "$date1"}}}}]
+        Pipeline:
+          [
+            {
+              $project: { isoDayOfWeek: { $isoDayOfWeek: { date: "$date1" } } },
+            },
+          ]
 
   - ExpressionISODayOfWeekTimezone:
     LoadConfig:
@@ -886,7 +1309,18 @@ Actors:
         name: ExpressionISODayOfWeekTimezone
         active: [89]
         operationMetricsName: AggExpressionISODayOfWeekTimezone
-        Pipeline: [{$project: {isoDayOfWeek: {$isoDayOfWeek: {date: "$date1", timezone: "$timezone1"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  isoDayOfWeek:
+                    {
+                      $isoDayOfWeek: { date: "$date1", timezone: "$timezone1" },
+                    },
+                },
+            },
+          ]
 
   - ExpressionISODayOfWeekConstTimezone:
     LoadConfig:
@@ -895,7 +1329,19 @@ Actors:
         name: ExpressionISODayOfWeekConstTimezone
         active: [90]
         operationMetricsName: AggExpressionISODayOfWeekConstTimezone
-        Pipeline: [{$project: {isoDayOfWeek: {$isoDayOfWeek: {date: "$date1", timezone: "$America/New_York"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  isoDayOfWeek:
+                    {
+                      $isoDayOfWeek:
+                        { date: "$date1", timezone: "$America/New_York" },
+                    },
+                },
+            },
+          ]
 
   - ExpressionISOWeek:
     LoadConfig:
@@ -904,7 +1350,7 @@ Actors:
         name: ExpressionISOWeek
         active: [91]
         operationMetricsName: AggExpressionISOWeek
-        Pipeline: [{$project: {isoWeek: {$isoWeek: {date: "$date1"}}}}]
+        Pipeline: [{ $project: { isoWeek: { $isoWeek: { date: "$date1" } } } }]
 
   - ExpressionISOWeekTimezone:
     LoadConfig:
@@ -913,7 +1359,16 @@ Actors:
         name: ExpressionISOWeekTimezone
         active: [92]
         operationMetricsName: AggExpressionISOWeekTimezone
-        Pipeline: [{$project: {isoWeek: {$isoWeek: {date: "$date1", timezone: "$timezone1"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  isoWeek:
+                    { $isoWeek: { date: "$date1", timezone: "$timezone1" } },
+                },
+            },
+          ]
 
   - ExpressionISOWeekConstTimezone:
     LoadConfig:
@@ -922,7 +1377,19 @@ Actors:
         name: ExpressionISOWeekConstTimezone
         active: [93]
         operationMetricsName: AggExpressionISOWeekConstTimezone
-        Pipeline: [{$project: {isoWeek: {$isoWeek: {date: "$date1", timezone: "$America/New_York"}}}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  isoWeek:
+                    {
+                      $isoWeek:
+                        { date: "$date1", timezone: "$America/New_York" },
+                    },
+                },
+            },
+          ]
 
   - ExpressionObjectToArray:
     LoadConfig:
@@ -931,7 +1398,7 @@ Actors:
         name: ExpressionObjectToArray
         active: [94]
         operationMetricsName: AggExpressionObjectToArray
-        Pipeline: [{$project: {array: {$objectToArray: "$obj"}}}]
+        Pipeline: [{ $project: { array: { $objectToArray: "$obj" } } }]
 
   - ExpressionArrayToObject1:
     LoadConfig:
@@ -940,7 +1407,7 @@ Actors:
         name: ExpressionArrayToObject1
         active: [95]
         operationMetricsName: AggExpressionArrayToObject1
-        Pipeline: [{$project: {object: {$arrayToObject: "$array3"}}}]
+        Pipeline: [{ $project: { object: { $arrayToObject: "$array3" } } }]
 
   - ExpressionArrayToObject2:
     LoadConfig:
@@ -949,7 +1416,7 @@ Actors:
         name: ExpressionArrayToObject2
         active: [96]
         operationMetricsName: AggExpressionArrayToObject2
-        Pipeline: [{$project: {object: {$arrayToObject: "$array4"}}}]
+        Pipeline: [{ $project: { object: { $arrayToObject: "$array4" } } }]
 
   - ExpressionRound:
     LoadConfig:
@@ -958,7 +1425,7 @@ Actors:
         name: ExpressionRound
         active: [97]
         operationMetricsName: AggExpressionRound
-        Pipeline: [{$project: {round: {$round: ["$double", 1]}}}]
+        Pipeline: [{ $project: { round: { $round: ["$double", 1] } } }]
 
   - ExpressionArray:
     LoadConfig:
@@ -967,7 +1434,23 @@ Actors:
         name: ExpressionArray
         active: [98]
         operationMetricsName: AggExpressionArray
-        Pipeline: [{$project: {array: ["$int", "$string", "$double", "$nestedObj", "$array", "$array2"]}}]
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  array:
+                    [
+                      "$int",
+                      "$string",
+                      "$double",
+                      "$nestedObj",
+                      "$array",
+                      "$array2",
+                    ],
+                },
+            },
+          ]
 
   - ExpressionTrunc:
     LoadConfig:
@@ -976,7 +1459,7 @@ Actors:
         name: ExpressionTrunc
         active: [99]
         operationMetricsName: AggExpressionTrunc
-        Pipeline: [{$project: {trunc: {$trunc: ["$double", 1]}}}]
+        Pipeline: [{ $project: { trunc: { $trunc: ["$double", 1] } } }]
 
 AutoRun:
   - When:

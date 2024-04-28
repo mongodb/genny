@@ -33,11 +33,11 @@ Actors:
         Document:
           # Each document has a unique _id. In phase 2 we use this to create evenly distributed
           # partition keys.
-          _id: {^Inc: {}}
+          _id: { ^Inc: {} }
           # This int field is what we sum. Its value shouldn't matter for this test.
-          int: &int {^RandomInt: {min: 1, max: 10000}}
+          int: &int { ^RandomInt: { min: 1, max: 10000 } }
           # This string pads the doc size out to around 10KB.
-          string: &string {^RandomString: {length: 10000}}
+          string: &string { ^RandomString: { length: 10000 } }
       - Nop: true
       - Nop: true
 
@@ -52,11 +52,37 @@ Actors:
           - OperationName: RunCommand
             OperationCommand:
               update: Collection0
-              updates: [{q: {}, u: [{$set: {spill_indexed: {$mod: ["$_id", 5]}, spill_unindexed: {$mod: ["$_id", 5]}, not_spill_indexed: {$mod: ["$_id", 12]}, not_spill_unindexed: {$mod: ["$_id", 12]}}}], multi: true, upsert: false}]
+              updates:
+                [
+                  {
+                    q: {},
+                    u:
+                      [
+                        {
+                          $set:
+                            {
+                              spill_indexed: { $mod: ["$_id", 5] },
+                              spill_unindexed: { $mod: ["$_id", 5] },
+                              not_spill_indexed: { $mod: ["$_id", 12] },
+                              not_spill_unindexed: { $mod: ["$_id", 12] },
+                            },
+                        },
+                      ],
+                    multi: true,
+                    upsert: false,
+                  },
+                ]
           - OperationName: RunCommand
             OperationCommand:
               createIndexes: Collection0
-              indexes: [{key: {spill_indexed: 1}, name: "spill_indexed_1"}, {key: {not_spill_indexed: 1}, name: "not_spill_indexed_1"}]
+              indexes:
+                [
+                  { key: { spill_indexed: 1 }, name: "spill_indexed_1" },
+                  {
+                    key: { not_spill_indexed: 1 },
+                    name: "not_spill_indexed_1",
+                  },
+                ]
       - Nop: true
 
   - Name: SetWindowFieldsUnbounded
@@ -69,14 +95,31 @@ Actors:
         Database: *db
         Collection: Collection0
         Operations:
-
           # Nothing spills:
           # - $sort is indexed
           # - partitions are small enough to fit in memory
           - OperationMetricsName: NothingSpills
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$setWindowFields: {partitionBy: "$not_spill_indexed", output: {total: {$sum: "$int"}}}}, {$project: {partitionKey: 1, percentage: {$divide: ["$int", "$total"]}, keepString: {$type: "$string"}}}, {$limit: *batchSize}]
+              Pipeline:
+                [
+                  {
+                    $setWindowFields:
+                      {
+                        partitionBy: "$not_spill_indexed",
+                        output: { total: { $sum: "$int" } },
+                      },
+                  },
+                  {
+                    $project:
+                      {
+                        partitionKey: 1,
+                        percentage: { $divide: ["$int", "$total"] },
+                        keepString: { $type: "$string" },
+                      },
+                  },
+                  { $limit: *batchSize },
+                ]
               Options:
                 BatchSize: *batchSize
                 AllowDiskUse: true
@@ -87,7 +130,25 @@ Actors:
           - OperationMetricsName: SortSpills
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$setWindowFields: {partitionBy: "$not_spill_unindexed", output: {total: {$sum: "$int"}}}}, {$project: {partitionKey: 1, percentage: {$divide: ["$int", "$total"]}, keepString: {$type: "$string"}}}, {$limit: *batchSize}]
+              Pipeline:
+                [
+                  {
+                    $setWindowFields:
+                      {
+                        partitionBy: "$not_spill_unindexed",
+                        output: { total: { $sum: "$int" } },
+                      },
+                  },
+                  {
+                    $project:
+                      {
+                        partitionKey: 1,
+                        percentage: { $divide: ["$int", "$total"] },
+                        keepString: { $type: "$string" },
+                      },
+                  },
+                  { $limit: *batchSize },
+                ]
               Options:
                 BatchSize: *batchSize
                 AllowDiskUse: true
@@ -98,7 +159,25 @@ Actors:
           - OperationMetricsName: PartitionSpills
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$setWindowFields: {partitionBy: "$spill_indexed", output: {total: {$sum: "$int"}}}}, {$project: {partitionKey: 1, percentage: {$divide: ["$int", "$total"]}, keepString: {$type: "$string"}}}, {$limit: *batchSize}]
+              Pipeline:
+                [
+                  {
+                    $setWindowFields:
+                      {
+                        partitionBy: "$spill_indexed",
+                        output: { total: { $sum: "$int" } },
+                      },
+                  },
+                  {
+                    $project:
+                      {
+                        partitionKey: 1,
+                        percentage: { $divide: ["$int", "$total"] },
+                        keepString: { $type: "$string" },
+                      },
+                  },
+                  { $limit: *batchSize },
+                ]
               Options:
                 BatchSize: *batchSize
                 AllowDiskUse: true
@@ -109,7 +188,25 @@ Actors:
           - OperationMetricsName: BothSpill
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$setWindowFields: {partitionBy: "$spill_unindexed", output: {total: {$sum: "$int"}}}}, {$project: {partitionKey: 1, percentage: {$divide: ["$int", "$total"]}, keepString: {$type: "$string"}}}, {$limit: *batchSize}]
+              Pipeline:
+                [
+                  {
+                    $setWindowFields:
+                      {
+                        partitionBy: "$spill_unindexed",
+                        output: { total: { $sum: "$int" } },
+                      },
+                  },
+                  {
+                    $project:
+                      {
+                        partitionKey: 1,
+                        percentage: { $divide: ["$int", "$total"] },
+                        keepString: { $type: "$string" },
+                      },
+                  },
+                  { $limit: *batchSize },
+                ]
               Options:
                 BatchSize: *batchSize
                 AllowDiskUse: true

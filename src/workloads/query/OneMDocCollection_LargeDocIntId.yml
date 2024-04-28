@@ -21,12 +21,24 @@ GlobalDefaults:
 ActorTemplates:
   - TemplateName: IDHACK
     Config:
-      Name: {^Parameter: {Name: "Name", Default: "IDHackQuery"}}
+      Name: { ^Parameter: { Name: "Name", Default: "IDHackQuery" } }
       Type: CrudActor
-      Threads: {^Parameter: {Name: "Threads", Default: 1}}
+      Threads: { ^Parameter: { Name: "Threads", Default: 1 } }
       Phases:
         OnlyActiveInPhases:
-          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
+          Active:
+            [
+              {
+                ^Parameter:
+                  {
+                    Name: "OnlyActiveInPhase",
+                    Default:
+                      {
+                        unused: "please specify in which phases this actor should be active.",
+                      },
+                  },
+              },
+            ]
           NopInPhasesUpTo: *MaxPhases
           PhaseConfig:
             # Our testing suggested the first ~20 seconds of this actor shows a lot of noise before
@@ -37,7 +49,7 @@ ActorTemplates:
             Operations:
               - OperationName: find
                 OperationCommand:
-                  Filter: {_id: {^RandomInt: {min: 0, max: 9999999}}}
+                  Filter: { _id: { ^RandomInt: { min: 0, max: 9999999 } } }
 
 Actors:
   # Clear any pre-existing collection state.
@@ -71,8 +83,17 @@ Actors:
           DocumentCount: 1000000
           BatchSize: 1000
           Document:
-            _id: {^Inc: {start: -200000, multiplier: 100000}}
-            extraData: {^Object: {withNEntries: {^RandomInt: {min: 5, max: 1000}}, havingKeys: {^RandomString: {length: 10}}, andValues: 0, duplicatedKeys: skip}}
+            _id: { ^Inc: { start: -200000, multiplier: 100000 } }
+            extraData:
+              {
+                ^Object:
+                  {
+                    withNEntries: { ^RandomInt: { min: 5, max: 1000 } },
+                    havingKeys: { ^RandomString: { length: 10 } },
+                    andValues: 0,
+                    duplicatedKeys: skip,
+                  },
+              }
 
   - Name: Quiesce
     Type: QuiesceActor

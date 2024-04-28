@@ -12,12 +12,26 @@ GlobalDefaults:
   limit: &limit 30000
   fieldName: &field "timestamp"
   index: &index
-    keys: {timestamp: 1}
-    options: {name: "timestamp"}
-  stepSize: &step {^RandomInt: {min: 10, max: 10}}
-  nop: &Nop {Nop: true}
-  explicitBounds: &bounds [{^RandomDate: {min: "2021-01-01T00:00:02.000Z", max: "2021-01-01T00:00:10.000Z"}}, {^RandomDate: {min: "2021-01-01T00:00:10.000Z", max: "2021-01-01T00:00:20.000Z"}}]
-  numericBounds: &numericBounds [{^RandomInt: {min: 5000, max: 15000}}, {^RandomInt: {min: 20000, max: 30000}}]
+    keys: { timestamp: 1 }
+    options: { name: "timestamp" }
+  stepSize: &step { ^RandomInt: { min: 10, max: 10 } }
+  nop: &Nop { Nop: true }
+  explicitBounds:
+    &bounds [
+      {
+        ^RandomDate:
+          { min: "2021-01-01T00:00:02.000Z", max: "2021-01-01T00:00:10.000Z" },
+      },
+      {
+        ^RandomDate:
+          { min: "2021-01-01T00:00:10.000Z", max: "2021-01-01T00:00:20.000Z" },
+      },
+    ]
+  numericBounds:
+    &numericBounds [
+      { ^RandomInt: { min: 5000, max: 15000 } },
+      { ^RandomInt: { min: 20000, max: 30000 } },
+    ]
 
 Actors:
   - Name: CreateTimeSeriesCollection
@@ -29,7 +43,11 @@ Actors:
         Operation:
           OperationMetricsName: CreateTimeSeriesCollection
           OperationName: RunCommand
-          OperationCommand: {create: &coll Collection0, timeseries: {timeField: "timestamp", metaField: "numeric"}}
+          OperationCommand:
+            {
+              create: &coll Collection0,
+              timeseries: { timeField: "timestamp", metaField: "numeric" },
+            }
       - *Nop
       - *Nop
       - *Nop
@@ -58,11 +76,42 @@ Actors:
         DocumentCount: 10000
         BatchSize: *limit
         Document:
-          partitionKey: {^RandomInt: {min: 1, max: 10}}
-          timestamp: {^RandomDate: {min: "2021-01-01T00:00:00.000Z", max: "2021-01-01T00:00:20.000Z"}}
-          toFillRandomType: {^Choose: {from: [{^RandomInt: {min: -100, max: 100}}, {^RandomDouble: {min: 0.0, max: 500.0}}, {^RandomDate: {min: "2021-01-01", max: "2023-01-01"}}, {^RandomString: {length: 15}}, null], weights: [1, 1, 1, 1, 6]}}
-          toFillNumeric: {^Choose: {from: [{^RandomInt: {min: -1000, max: 1000}}, {^RandomDouble: {min: 0.0, max: 2000.0}}]}}
-          numeric: {^Inc: {start: 0, multiplier: 1, step: 6}}
+          partitionKey: { ^RandomInt: { min: 1, max: 10 } }
+          timestamp:
+            {
+              ^RandomDate:
+                {
+                  min: "2021-01-01T00:00:00.000Z",
+                  max: "2021-01-01T00:00:20.000Z",
+                },
+            }
+          toFillRandomType:
+            {
+              ^Choose:
+                {
+                  from:
+                    [
+                      { ^RandomInt: { min: -100, max: 100 } },
+                      { ^RandomDouble: { min: 0.0, max: 500.0 } },
+                      { ^RandomDate: { min: "2021-01-01", max: "2023-01-01" } },
+                      { ^RandomString: { length: 15 } },
+                      null,
+                    ],
+                  weights: [1, 1, 1, 1, 6],
+                },
+            }
+          toFillNumeric:
+            {
+              ^Choose:
+                {
+                  from:
+                    [
+                      { ^RandomInt: { min: -1000, max: 1000 } },
+                      { ^RandomDouble: { min: 0.0, max: 2000.0 } },
+                    ],
+                },
+            }
+          numeric: { ^Inc: { start: 0, multiplier: 1, step: 6 } }
         # $densify stages always add a $sort on the field that is being densified, so this phase adds
         # indexes on the timestamp field so that we aren't performing an in-memory sort.
         Indexes:
@@ -145,7 +194,20 @@ Actors:
           - OperationMetricsName: TestDensifyTimestampFillWithoutPartition
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$densify: {field: *field, range: {bounds: *bounds, step: *step, unit: "millisecond"}}}, {$fill: {output: {toFillRandomType: {method: "locf"}}}}]
+              Pipeline:
+                [
+                  {
+                    $densify:
+                      {
+                        field: *field,
+                        range:
+                          { bounds: *bounds, step: *step, unit: "millisecond" },
+                      },
+                  },
+                  {
+                    $fill: { output: { toFillRandomType: { method: "locf" } } },
+                  },
+                ]
               Options:
                 BatchSize: *limit
                 AllowDiskUse: true
@@ -177,7 +239,30 @@ Actors:
           - OperationMetricsName: TestDensifyTimestampFillWithPartition
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$densify: {field: *field, range: {bounds: "partition", step: *step, unit: "millisecond"}, partitionByFields: ["partitionKey"]}}, {$fill: {output: {toFillRandomType: {method: "locf"}}, partitionByFields: ["partitionKey"]}}, {$limit: *limit}]
+              Pipeline:
+                [
+                  {
+                    $densify:
+                      {
+                        field: *field,
+                        range:
+                          {
+                            bounds: "partition",
+                            step: *step,
+                            unit: "millisecond",
+                          },
+                        partitionByFields: ["partitionKey"],
+                      },
+                  },
+                  {
+                    $fill:
+                      {
+                        output: { toFillRandomType: { method: "locf" } },
+                        partitionByFields: ["partitionKey"],
+                      },
+                  },
+                  { $limit: *limit },
+                ]
               Options:
                 BatchSize: *limit
                 AllowDiskUse: true
@@ -209,7 +294,25 @@ Actors:
           - OperationMetricsName: TestDensifyNumericFillWithPartition
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$densify: {field: "numeric", range: {bounds: "partition", step: *step}, partitionByFields: ["partitionKey"]}}, {$fill: {output: {toFillRandomType: {method: "locf"}}, partitionByFields: ["partitionKey"]}}, {$limit: *limit}]
+              Pipeline:
+                [
+                  {
+                    $densify:
+                      {
+                        field: "numeric",
+                        range: { bounds: "partition", step: *step },
+                        partitionByFields: ["partitionKey"],
+                      },
+                  },
+                  {
+                    $fill:
+                      {
+                        output: { toFillRandomType: { method: "locf" } },
+                        partitionByFields: ["partitionKey"],
+                      },
+                  },
+                  { $limit: *limit },
+                ]
               Options:
                 BatchSize: *limit
                 AllowDiskUse: true
@@ -241,7 +344,24 @@ Actors:
           - OperationMetricsName: TestDensifyNumericLinearFillNumeric
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$densify: {field: "numeric", range: {bounds: *numericBounds, step: *step}}}, {$fill: {sortBy: {numeric: 1}, output: {toFillRandomNumeric: {method: "linear"}}}}, {$limit: *limit}]
+              Pipeline:
+                [
+                  {
+                    $densify:
+                      {
+                        field: "numeric",
+                        range: { bounds: *numericBounds, step: *step },
+                      },
+                  },
+                  {
+                    $fill:
+                      {
+                        sortBy: { numeric: 1 },
+                        output: { toFillRandomNumeric: { method: "linear" } },
+                      },
+                  },
+                  { $limit: *limit },
+                ]
               Options:
                 BatchSize: *limit
                 AllowDiskUse: true
@@ -273,7 +393,18 @@ Actors:
           - OperationMetricsName: TestDensifyNumericFillArbitraryValue
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$densify: {field: "numeric", range: {bounds: *numericBounds, step: *step}}}, {$fill: {output: {toFillRandomType: {value: "0"}}}}, {$limit: *limit}]
+              Pipeline:
+                [
+                  {
+                    $densify:
+                      {
+                        field: "numeric",
+                        range: { bounds: *numericBounds, step: *step },
+                      },
+                  },
+                  { $fill: { output: { toFillRandomType: { value: "0" } } } },
+                  { $limit: *limit },
+                ]
               Options:
                 BatchSize: *limit
                 AllowDiskUse: true

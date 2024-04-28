@@ -26,11 +26,11 @@ Actors:
         Database: &Database test
         CollectionCount: 2 # Loader will populate 'Collection0' and 'Collection1'.
         Document:
-          key: {^RandomInt: {min: 1, max: 100}}
-          smallInt: {^RandomInt: {min: 1, max: 10}}
-          int: {^RandomInt: {min: 1, max: 100}}
-          str: {^RandomString: {length: 100}}
-      - &Nop {Nop: true}
+          key: { ^RandomInt: { min: 1, max: 100 } }
+          smallInt: { ^RandomInt: { min: 1, max: 10 } }
+          int: { ^RandomInt: { min: 1, max: 100 } }
+          str: { ^RandomString: { length: 100 } }
+      - &Nop { Nop: true }
       - *Nop
 
   - Name: Quiesce
@@ -55,19 +55,76 @@ Actors:
           - OperationMetricsName: LookupWithCachedPrefixUnshardedToUnsharded
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$lookup: {from: Collection1, let: {localInt: "$int"}, pipeline: [{$group: {_id: {$sum: ["$int", 1]}}}, {$match: {$expr: {$eq: ["$_id", "$$localInt"]}}}], as: joined}}, {$project: {str: 0, "joined.str": 0}}, {$limit: *NumDocs}]
+              Pipeline:
+                [
+                  {
+                    $lookup:
+                      {
+                        from: Collection1,
+                        let: { localInt: "$int" },
+                        pipeline:
+                          [
+                            { $group: { _id: { $sum: ["$int", 1] } } },
+                            {
+                              $match:
+                                { $expr: { $eq: ["$_id", "$$localInt"] } },
+                            },
+                          ],
+                        as: joined,
+                      },
+                  },
+                  { $project: { str: 0, "joined.str": 0 } },
+                  { $limit: *NumDocs },
+                ]
               Options:
                 BatchSize: *NumDocs
           - OperationMetricsName: LookupOneToFewUnshardedToUnsharded
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$match: {int: {$lte: 4}}}, {$lookup: {from: Collection1, let: {int0: "$int"}, pipeline: [{$match: {$expr: {$eq: ["$$int0", "$int"]}}}], as: "joined"}}, {$project: {str: 0, "joined.str": 0}}, {$limit: *NumDocs}]
+              Pipeline:
+                [
+                  { $match: { int: { $lte: 4 } } },
+                  {
+                    $lookup:
+                      {
+                        from: Collection1,
+                        let: { int0: "$int" },
+                        pipeline:
+                          [{ $match: { $expr: { $eq: ["$$int0", "$int"] } } }],
+                        as: "joined",
+                      },
+                  },
+                  { $project: { str: 0, "joined.str": 0 } },
+                  { $limit: *NumDocs },
+                ]
               Options:
                 BatchSize: *NumDocs
           - OperationMetricsName: LookupOneToManyUnshardedToUnsharded
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$match: {int: {$lte: 4}}}, {$lookup: {from: Collection1, let: {smallInt0: "$smallInt"}, pipeline: [{$match: {$expr: {$eq: ["$$smallInt0", "$smallInt"]}}}], as: "joined"}}, {$project: {str: 0, "joined.str": 0}}, {$limit: *NumDocs}]
+              Pipeline:
+                [
+                  { $match: { int: { $lte: 4 } } },
+                  {
+                    $lookup:
+                      {
+                        from: Collection1,
+                        let: { smallInt0: "$smallInt" },
+                        pipeline:
+                          [
+                            {
+                              $match:
+                                {
+                                  $expr: { $eq: ["$$smallInt0", "$smallInt"] },
+                                },
+                            },
+                          ],
+                        as: "joined",
+                      },
+                  },
+                  { $project: { str: 0, "joined.str": 0 } },
+                  { $limit: *NumDocs },
+                ]
               Options:
                 BatchSize: *NumDocs
 

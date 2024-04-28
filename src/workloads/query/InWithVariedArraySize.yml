@@ -18,29 +18,82 @@ GlobalDefaults:
   DocumentCount: &DocumentCount 1000000
   MaxPhases: &MaxPhases 8
   internalQueryMaxScansToExplode: &internalQueryMaxScansToExplode 197
-  randomIntUptoDocCount: &randomIntUptoDocCount {^RandomInt: {min: 0, max: *DocumentCount}}
-  InUptoMaxScansToExplode: &InUptoMaxScansToExplode {$in: {^Array: {of: *randomIntUptoDocCount, number: {^Inc: {start: 0, end: *internalQueryMaxScansToExplode}}}}}
-  InAboveMaxScansToExplode: &InAboveMaxScansToExplode {$in: {^Array: {of: *randomIntUptoDocCount, number: {^Inc: {start: *internalQueryMaxScansToExplode, end: 2000}}}}}
-  ContinuousInArray: &ContinuousInArray {$in: {^Array: {of: {^Inc: {start: 1}}, number: {^Inc: {start: 100}}}}}
+  randomIntUptoDocCount:
+    &randomIntUptoDocCount { ^RandomInt: { min: 0, max: *DocumentCount } }
+  InUptoMaxScansToExplode:
+    &InUptoMaxScansToExplode {
+      $in:
+        {
+          ^Array:
+            {
+              of: *randomIntUptoDocCount,
+              number:
+                { ^Inc: { start: 0, end: *internalQueryMaxScansToExplode } },
+            },
+        },
+    }
+  InAboveMaxScansToExplode:
+    &InAboveMaxScansToExplode {
+      $in:
+        {
+          ^Array:
+            {
+              of: *randomIntUptoDocCount,
+              number:
+                { ^Inc: { start: *internalQueryMaxScansToExplode, end: 2000 } },
+            },
+        },
+    }
+  ContinuousInArray:
+    &ContinuousInArray {
+      $in:
+        {
+          ^Array:
+            { of: { ^Inc: { start: 1 } }, number: { ^Inc: { start: 100 } } },
+        },
+    }
 
 ActorTemplates:
   - TemplateName: FindQueryTemplate
     Config:
-      Name: {^Parameter: {Name: "name", Default: "FindQueryTemplate"}}
+      Name: { ^Parameter: { Name: "name", Default: "FindQueryTemplate" } }
       Type: CrudActor
       Database: *Database
       Threads: 1
       Phases:
         OnlyActiveInPhases:
-          Active: [{^Parameter: {Name: "active", Default: {unused: "Invalid phase number."}}}]
+          Active:
+            [
+              {
+                ^Parameter:
+                  {
+                    Name: "active",
+                    Default: { unused: "Invalid phase number." },
+                  },
+              },
+            ]
           NopInPhasesUpTo: *MaxPhases
           PhaseConfig:
-            Repeat: {^Parameter: {Name: "repeat", Default: {unused: "Invalid repeat value."}}}
+            Repeat:
+              {
+                ^Parameter:
+                  {
+                    Name: "repeat",
+                    Default: { unused: "Invalid repeat value." },
+                  },
+              }
             Collection: *Collection
             Operations:
               - OperationName: find
                 OperationCommand:
-                  Filter: {^Parameter: {Name: "filter", Default: {unused: "Invalid filter."}}}
+                  Filter:
+                    {
+                      ^Parameter:
+                        {
+                          Name: "filter",
+                          Default: { unused: "Invalid filter." },
+                        },
+                    }
                   Options:
                     Sort: '{"anotherRandomDouble": {"$numberInt": "1"}}'
 
@@ -81,9 +134,12 @@ Actors:
           DocumentCount: *DocumentCount
           BatchSize: 1000
           Document:
-            randomDouble: &randomDouble {^RandomDouble: {distribution: normal, mean: 100, sigma: 20}}
+            randomDouble:
+              &randomDouble {
+                ^RandomDouble: { distribution: normal, mean: 100, sigma: 20 },
+              }
             anotherRandomDouble: *randomDouble
-            monotonicInt: {^Inc: {start: 1}}
+            monotonicInt: { ^Inc: { start: 1 } }
 
   # Phase 2: Ensure all data is synced to disk.
   - Name: Quiesce
@@ -107,7 +163,7 @@ Actors:
         name: "InArrayWithLessThanMaxScansToExplodeElemsUnindexed"
         active: 3
         repeat: 200
-        filter: {_id: *InUptoMaxScansToExplode}
+        filter: { _id: *InUptoMaxScansToExplode }
 
   - ActorFromTemplate:
       TemplateName: FindQueryTemplate
@@ -115,7 +171,7 @@ Actors:
         name: "InArrayWithMoreThanMaxScansToExplodeElemsUnindexed"
         active: 4
         repeat: 2000
-        filter: {_id: *InAboveMaxScansToExplode}
+        filter: { _id: *InAboveMaxScansToExplode }
 
   - Name: CreateIndexes
     Type: RunCommand
@@ -132,19 +188,19 @@ Actors:
               OperationCommand:
                 createIndexes: *Collection
                 indexes:
-                  - key: {randomDouble: 1}
+                  - key: { randomDouble: 1 }
                     name: randomDouble_1
-                  - key: {anotherRandomDouble: 1}
+                  - key: { anotherRandomDouble: 1 }
                     name: anotherRandomDouble_1
-                  - key: {_id: 1, randomDouble: 1}
+                  - key: { _id: 1, randomDouble: 1 }
                     name: _id_1_randomDouble_1
-                  - key: {_id: 1, anotherRandomDouble: 1}
+                  - key: { _id: 1, anotherRandomDouble: 1 }
                     name: _id_1_anotherRandomDouble_1
-                  - key: {randomDouble: 1, anotherRandomDouble: 1}
+                  - key: { randomDouble: 1, anotherRandomDouble: 1 }
                     name: randomDouble_1_anotherRandomDouble_1
-                  - key: {_id: 1, randomDouble: 1, anotherRandomDouble: 1}
+                  - key: { _id: 1, randomDouble: 1, anotherRandomDouble: 1 }
                     name: _id_1_randomDouble_1_anotherRandomDouble_1
-                  - key: {monotonicInt: 1}
+                  - key: { monotonicInt: 1 }
                     name: monotonicInt_1
 
   - ActorFromTemplate:
@@ -153,7 +209,7 @@ Actors:
         name: "InArrayWithLessThanMaxScansToExplodeElemsIndexed"
         active: 6
         repeat: 200
-        filter: {randomDouble: {$eq: 100}, _id: *InUptoMaxScansToExplode}
+        filter: { randomDouble: { $eq: 100 }, _id: *InUptoMaxScansToExplode }
 
   - ActorFromTemplate:
       TemplateName: FindQueryTemplate
@@ -161,7 +217,7 @@ Actors:
         name: "InArrayWithMoreThanMaxScansToExplodeElemsIndexed"
         active: 7
         repeat: 2000
-        filter: {randomDouble: {$eq: 100}, _id: *InAboveMaxScansToExplode}
+        filter: { randomDouble: { $eq: 100 }, _id: *InAboveMaxScansToExplode }
 
   # Phase 8: In with a continous array. The classic index scan stage will not do an extra seek if the
   # next document is within the next index bounds, however, the SBE index scan stage will do an extra
@@ -172,7 +228,7 @@ Actors:
         name: "InArrayWithContinuousElements"
         active: 8
         repeat: 1000
-        filter: {monotonicInt: *ContinuousInArray}
+        filter: { monotonicInt: *ContinuousInArray }
 
 AutoRun:
   - When:

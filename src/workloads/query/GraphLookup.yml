@@ -43,18 +43,18 @@ Actors:
             OperationName: AdminCommand
             OperationCommand:
               shardCollection: test.Collection0
-              key: {b: hashed}
+              key: { b: hashed }
           - OperationMetricsName: ShardForeignCollection
             OperationName: AdminCommand
             OperationCommand:
               shardCollection: test.Collection2
-              key: {b: hashed}
+              key: { b: hashed }
           # Disable the balancer so that it can't skew results while the $lookups are running.
           - OperationMetricsName: DisableBalancer
             OperationName: AdminCommand
             OperationCommand:
               balancerStop: 1
-      - &Nop {Nop: true}
+      - &Nop { Nop: true }
       - *Nop
       - *Nop
       - *Nop
@@ -75,16 +75,16 @@ Actors:
         Database: *Database
         CollectionCount: 3 # Loader will populate 'Collection0', 'Collection1', and 'Collection2'.
         Document: &Document
-          a: {^RandomInt: {min: 1, max: 100}}
-          b: {^RandomInt: {min: 1, max: 100}}
-          c: {^RandomInt: {min: 1, max: 10}}
-          matchOne: {^RandomInt: {min: 1, max: 3000}}
-          secondMatchOne: {^RandomInt: {min: 1, max: 3000}}
-          matchTwo: {^RandomInt: {min: 1, max: 1500}}
-          matchFive: {^RandomInt: {min: 1, max: 600}}
-          secondMatchFive: {^RandomInt: {min: 1, max: 600}}
-          matchTen: {^RandomInt: {min: 1, max: 300}}
-          matchOneHundred: {^RandomInt: {min: 1, max: 30}}
+          a: { ^RandomInt: { min: 1, max: 100 } }
+          b: { ^RandomInt: { min: 1, max: 100 } }
+          c: { ^RandomInt: { min: 1, max: 10 } }
+          matchOne: { ^RandomInt: { min: 1, max: 3000 } }
+          secondMatchOne: { ^RandomInt: { min: 1, max: 3000 } }
+          matchTwo: { ^RandomInt: { min: 1, max: 1500 } }
+          matchFive: { ^RandomInt: { min: 1, max: 600 } }
+          secondMatchFive: { ^RandomInt: { min: 1, max: 600 } }
+          matchTen: { ^RandomInt: { min: 1, max: 300 } }
+          matchOneHundred: { ^RandomInt: { min: 1, max: 30 } }
       - Repeat: 1
         BatchSize: 1000
         Threads: 1
@@ -151,80 +151,192 @@ Actors:
             OperationName: RunCommand
             OperationCommand:
               aggregate: *ShardedColl0
-              pipeline: [{$graphLookup: {from: *ShardedColl0, startWith: "$c", connectFromField: "a", connectToField: "b", as: "matches", maxDepth: 0}}, {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}]
+              pipeline:
+                [
+                  {
+                    $graphLookup:
+                      {
+                        from: *ShardedColl0,
+                        startWith: "$c",
+                        connectFromField: "a",
+                        connectToField: "b",
+                        as: "matches",
+                        maxDepth: 0,
+                      },
+                  },
+                  { $project: { a: 1, b: 1, "matches.a": 1, "matches.b": 1 } },
+                ]
               # To get meaningful results, the entire result set should fit in a single batch. This should
               # be possible since both collections are small.
-              cursor: {batchSize: *num_docs_total}
+              cursor: { batchSize: *num_docs_total }
 
           # Targeted $graphLookup from sharded collection to sharded collection, depth limited
           - OperationMetricsName: TargetedGraphLookupShardedToShardedDepthLimited
             OperationName: RunCommand
             OperationCommand:
               aggregate: *ShardedColl0
-              pipeline: [{$graphLookup: {from: *ShardedColl0, startWith: "$c", connectFromField: "a", connectToField: "b", as: "matches", maxDepth: 2}}, {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}]
+              pipeline:
+                [
+                  {
+                    $graphLookup:
+                      {
+                        from: *ShardedColl0,
+                        startWith: "$c",
+                        connectFromField: "a",
+                        connectToField: "b",
+                        as: "matches",
+                        maxDepth: 2,
+                      },
+                  },
+                  { $project: { a: 1, b: 1, "matches.a": 1, "matches.b": 1 } },
+                ]
               # To get meaningful results, the entire result set should fit in a single batch. This should
               # be possible since both collections are small.
-              cursor: {batchSize: *num_docs_total}
+              cursor: { batchSize: *num_docs_total }
 
           # Untargeted $graphLookup from sharded collection to sharded collection, no recursion
           - OperationMetricsName: UntargetedGraphLookupShardedToShardedNoRecursion
             OperationName: RunCommand
             OperationCommand:
               aggregate: *ShardedColl0
-              pipeline: [{$graphLookup: {from: *ShardedColl0, startWith: "$c", connectFromField: "b", connectToField: "a", as: "matches", maxDepth: 0}}, {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}]
+              pipeline:
+                [
+                  {
+                    $graphLookup:
+                      {
+                        from: *ShardedColl0,
+                        startWith: "$c",
+                        connectFromField: "b",
+                        connectToField: "a",
+                        as: "matches",
+                        maxDepth: 0,
+                      },
+                  },
+                  { $project: { a: 1, b: 1, "matches.a": 1, "matches.b": 1 } },
+                ]
               # To get meaningful results, the entire result set should fit in a single batch. This should
               # be possible since both collections are small.
-              cursor: {batchSize: *num_docs_total}
+              cursor: { batchSize: *num_docs_total }
 
           # Untargeted $graphLookup from sharded collection to sharded collection, depth limited
           - OperationMetricsName: UntargetedGraphLookupShardedToShardedDepthLimited
             OperationName: RunCommand
             OperationCommand:
               aggregate: *ShardedColl0
-              pipeline: [{$graphLookup: {from: *ShardedColl0, startWith: "$c", connectFromField: "b", connectToField: "a", as: "matches", maxDepth: 2}}, {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}]
+              pipeline:
+                [
+                  {
+                    $graphLookup:
+                      {
+                        from: *ShardedColl0,
+                        startWith: "$c",
+                        connectFromField: "b",
+                        connectToField: "a",
+                        as: "matches",
+                        maxDepth: 2,
+                      },
+                  },
+                  { $project: { a: 1, b: 1, "matches.a": 1, "matches.b": 1 } },
+                ]
               # To get meaningful results, the entire result set should fit in a single batch. This should
               # be possible since both collections are small.
-              cursor: {batchSize: *num_docs_total}
+              cursor: { batchSize: *num_docs_total }
 
           # Targeted $graphLookup from unsharded collection to sharded collection, no recursion
           - OperationMetricsName: TargetedGraphLookupUnshardedToShardedNoRecursion
             OperationName: RunCommand
             OperationCommand:
               aggregate: *UnshardedColl1
-              pipeline: [{$graphLookup: {from: *ShardedColl0, startWith: "$c", connectFromField: "a", connectToField: "b", as: "matches", maxDepth: 0}}, {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}]
+              pipeline:
+                [
+                  {
+                    $graphLookup:
+                      {
+                        from: *ShardedColl0,
+                        startWith: "$c",
+                        connectFromField: "a",
+                        connectToField: "b",
+                        as: "matches",
+                        maxDepth: 0,
+                      },
+                  },
+                  { $project: { a: 1, b: 1, "matches.a": 1, "matches.b": 1 } },
+                ]
               # To get meaningful results, the entire result set should fit in a single batch. This should
               # be possible since both collections are small.
-              cursor: {batchSize: *num_docs_total}
+              cursor: { batchSize: *num_docs_total }
 
           # Targeted $graphLookup from unsharded collection to sharded collection, depth limited
           - OperationMetricsName: TargetedGraphLookupUnshardedToShardedDepthLimited
             OperationName: RunCommand
             OperationCommand:
               aggregate: *UnshardedColl1
-              pipeline: [{$graphLookup: {from: *ShardedColl0, startWith: "$c", connectFromField: "a", connectToField: "b", as: "matches", maxDepth: 2}}, {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}]
+              pipeline:
+                [
+                  {
+                    $graphLookup:
+                      {
+                        from: *ShardedColl0,
+                        startWith: "$c",
+                        connectFromField: "a",
+                        connectToField: "b",
+                        as: "matches",
+                        maxDepth: 2,
+                      },
+                  },
+                  { $project: { a: 1, b: 1, "matches.a": 1, "matches.b": 1 } },
+                ]
               # To get meaningful results, the entire result set should fit in a single batch. This should
               # be possible since both collections are small.
-              cursor: {batchSize: *num_docs_total}
+              cursor: { batchSize: *num_docs_total }
 
           # Untargeted $graphLookup from unsharded collection to sharded collection, no recursion
           - OperationMetricsName: UntargetedGraphLookupUnshardedToShardedNoRecursion
             OperationName: RunCommand
             OperationCommand:
               aggregate: *UnshardedColl1
-              pipeline: [{$graphLookup: {from: *ShardedColl0, startWith: "$c", connectFromField: "b", connectToField: "a", as: "matches", maxDepth: 0}}, {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}]
+              pipeline:
+                [
+                  {
+                    $graphLookup:
+                      {
+                        from: *ShardedColl0,
+                        startWith: "$c",
+                        connectFromField: "b",
+                        connectToField: "a",
+                        as: "matches",
+                        maxDepth: 0,
+                      },
+                  },
+                  { $project: { a: 1, b: 1, "matches.a": 1, "matches.b": 1 } },
+                ]
               # To get meaningful results, the entire result set should fit in a single batch. This should
               # be possible since both collections are small.
-              cursor: {batchSize: *num_docs_total}
+              cursor: { batchSize: *num_docs_total }
 
           # Untargeted $graphLookup from unsharded collection to sharded collection, depth limited
           - OperationMetricsName: UntargetedGraphLookupUnshardedToShardedDepthLimited
             OperationName: RunCommand
             OperationCommand:
               aggregate: *UnshardedColl1
-              pipeline: [{$graphLookup: {from: *ShardedColl0, startWith: "$c", connectFromField: "b", connectToField: "a", as: "matches", maxDepth: 2}}, {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}]
+              pipeline:
+                [
+                  {
+                    $graphLookup:
+                      {
+                        from: *ShardedColl0,
+                        startWith: "$c",
+                        connectFromField: "b",
+                        connectToField: "a",
+                        as: "matches",
+                        maxDepth: 2,
+                      },
+                  },
+                  { $project: { a: 1, b: 1, "matches.a": 1, "matches.b": 1 } },
+                ]
               # To get meaningful results, the entire result set should fit in a single batch. This should
               # be possible since both collections are small.
-              cursor: {batchSize: *num_docs_total}
+              cursor: { batchSize: *num_docs_total }
 
           # In the following queries the 'maxDepth' field is not specified, so the $graphLookup runs
           # to completion. The foreign collection here is smaller to account for the worst case scenario
@@ -236,100 +348,296 @@ Actors:
             OperationName: RunCommand
             OperationCommand:
               aggregate: *ShardedColl0
-              pipeline: [{$graphLookup: {from: *ShardedColl2, startWith: "$c", connectFromField: "a", connectToField: "b", as: "matches"}}, {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}]
+              pipeline:
+                [
+                  {
+                    $graphLookup:
+                      {
+                        from: *ShardedColl2,
+                        startWith: "$c",
+                        connectFromField: "a",
+                        connectToField: "b",
+                        as: "matches",
+                      },
+                  },
+                  { $project: { a: 1, b: 1, "matches.a": 1, "matches.b": 1 } },
+                ]
               # To get meaningful results, the entire result set should fit in a single batch. This should
               # be possible since both collections are small.
-              cursor: {batchSize: *num_docs_total}
+              cursor: { batchSize: *num_docs_total }
 
           # Untargeted $graphLookup from sharded collection to sharded collection, depth unlimited
           - OperationMetricsName: UntargetedGraphLookupShardedToShardedDepthUnlimited
             OperationName: RunCommand
             OperationCommand:
               aggregate: *ShardedColl0
-              pipeline: [{$graphLookup: {from: *ShardedColl2, startWith: "$c", connectFromField: "b", connectToField: "a", as: "matches"}}, {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}]
+              pipeline:
+                [
+                  {
+                    $graphLookup:
+                      {
+                        from: *ShardedColl2,
+                        startWith: "$c",
+                        connectFromField: "b",
+                        connectToField: "a",
+                        as: "matches",
+                      },
+                  },
+                  { $project: { a: 1, b: 1, "matches.a": 1, "matches.b": 1 } },
+                ]
               # To get meaningful results, the entire result set should fit in a single batch. This should
               # be possible since both collections are small.
-              cursor: {batchSize: *num_docs_total}
+              cursor: { batchSize: *num_docs_total }
 
           # Targeted $graphLookup from unsharded collection to sharded collection, depth unlimited
           - OperationMetricsName: TargetedGraphLookupUnshardedToShardedDepthUnlimited
             OperationName: RunCommand
             OperationCommand:
               aggregate: *UnshardedColl1
-              pipeline: [{$graphLookup: {from: *ShardedColl2, startWith: "$c", connectFromField: "a", connectToField: "b", as: "matches"}}, {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}]
+              pipeline:
+                [
+                  {
+                    $graphLookup:
+                      {
+                        from: *ShardedColl2,
+                        startWith: "$c",
+                        connectFromField: "a",
+                        connectToField: "b",
+                        as: "matches",
+                      },
+                  },
+                  { $project: { a: 1, b: 1, "matches.a": 1, "matches.b": 1 } },
+                ]
               # To get meaningful results, the entire result set should fit in a single batch. This should
               # be possible since both collections are small.
-              cursor: {batchSize: *num_docs_total}
+              cursor: { batchSize: *num_docs_total }
 
           # Untargeted $graphLookup from unsharded collection to sharded collection, depth unlimited
           - OperationMetricsName: UntargetedGraphLookupUnshardedToShardedDepthUnlimited
             OperationName: RunCommand
             OperationCommand:
               aggregate: *UnshardedColl1
-              pipeline: [{$graphLookup: {from: *ShardedColl2, startWith: "$c", connectFromField: "b", connectToField: "a", as: "matches"}}, {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}]
+              pipeline:
+                [
+                  {
+                    $graphLookup:
+                      {
+                        from: *ShardedColl2,
+                        startWith: "$c",
+                        connectFromField: "b",
+                        connectToField: "a",
+                        as: "matches",
+                      },
+                  },
+                  { $project: { a: 1, b: 1, "matches.a": 1, "matches.b": 1 } },
+                ]
               # To get meaningful results, the entire result set should fit in a single batch. This should
               # be possible since both collections are small.
-              cursor: {batchSize: *num_docs_total}
+              cursor: { batchSize: *num_docs_total }
           - OperationMetricsName: GraphLookupShardedToUnshardedOneToFew
             OperationName: RunCommand
             OperationCommand:
               aggregate: *ShardedColl0
-              pipeline: [{$graphLookup: {from: *UnshardedColl1, startWith: "$matchOne", connectFromField: "matchOne", connectToField: "secondMatchOne", as: "matches", maxDepth: 1}}, {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}]
-              cursor: {batchSize: *num_docs_total}
+              pipeline:
+                [
+                  {
+                    $graphLookup:
+                      {
+                        from: *UnshardedColl1,
+                        startWith: "$matchOne",
+                        connectFromField: "matchOne",
+                        connectToField: "secondMatchOne",
+                        as: "matches",
+                        maxDepth: 1,
+                      },
+                  },
+                  { $project: { a: 1, b: 1, "matches.a": 1, "matches.b": 1 } },
+                ]
+              cursor: { batchSize: *num_docs_total }
           - OperationMetricsName: GraphLookupShardedToUnshardedOneToMany
             OperationName: RunCommand
             OperationCommand:
               aggregate: *ShardedColl0
-              pipeline: [{$graphLookup: {from: *UnshardedColl1, startWith: "$matchFive", connectFromField: "matchFive", connectToField: "secondMatchFive", as: "matches", maxDepth: 1}}, {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}]
-              cursor: {batchSize: *num_docs_total}
+              pipeline:
+                [
+                  {
+                    $graphLookup:
+                      {
+                        from: *UnshardedColl1,
+                        startWith: "$matchFive",
+                        connectFromField: "matchFive",
+                        connectToField: "secondMatchFive",
+                        as: "matches",
+                        maxDepth: 1,
+                      },
+                  },
+                  { $project: { a: 1, b: 1, "matches.a": 1, "matches.b": 1 } },
+                ]
+              cursor: { batchSize: *num_docs_total }
           - OperationMetricsName: GraphLookupShardedToUnshardedMaxDepthZeroOneToOne
             OperationName: RunCommand
             OperationCommand:
               aggregate: *ShardedColl0
-              pipeline: [{$graphLookup: {from: *UnshardedColl1, startWith: "$matchOne", connectFromField: "matchOne", connectToField: "secondMatchOne", as: "matches", maxDepth: 0}}, {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}]
-              cursor: {batchSize: *num_docs_total}
+              pipeline:
+                [
+                  {
+                    $graphLookup:
+                      {
+                        from: *UnshardedColl1,
+                        startWith: "$matchOne",
+                        connectFromField: "matchOne",
+                        connectToField: "secondMatchOne",
+                        as: "matches",
+                        maxDepth: 0,
+                      },
+                  },
+                  { $project: { a: 1, b: 1, "matches.a": 1, "matches.b": 1 } },
+                ]
+              cursor: { batchSize: *num_docs_total }
           - OperationMetricsName: GraphLookupShardedToUnshardedMaxDepthZeroOneToTwo
             OperationName: RunCommand
             OperationCommand:
               aggregate: *ShardedColl0
-              pipeline: [{$graphLookup: {from: *UnshardedColl1, startWith: "$matchTwo", connectFromField: "matchTwo", connectToField: "matchTwo", as: "matches", maxDepth: 0}}, {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}]
-              cursor: {batchSize: *num_docs_total}
+              pipeline:
+                [
+                  {
+                    $graphLookup:
+                      {
+                        from: *UnshardedColl1,
+                        startWith: "$matchTwo",
+                        connectFromField: "matchTwo",
+                        connectToField: "matchTwo",
+                        as: "matches",
+                        maxDepth: 0,
+                      },
+                  },
+                  { $project: { a: 1, b: 1, "matches.a": 1, "matches.b": 1 } },
+                ]
+              cursor: { batchSize: *num_docs_total }
           - OperationMetricsName: GraphLookupShardedToUnshardedMaxDepthZeroOneToFive
             OperationName: RunCommand
             OperationCommand:
               aggregate: *ShardedColl0
-              pipeline: [{$graphLookup: {from: *UnshardedColl1, startWith: "$matchFive", connectFromField: "matchFive", connectToField: "matchFive", as: "matches", maxDepth: 0}}, {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}]
-              cursor: {batchSize: *num_docs_total}
+              pipeline:
+                [
+                  {
+                    $graphLookup:
+                      {
+                        from: *UnshardedColl1,
+                        startWith: "$matchFive",
+                        connectFromField: "matchFive",
+                        connectToField: "matchFive",
+                        as: "matches",
+                        maxDepth: 0,
+                      },
+                  },
+                  { $project: { a: 1, b: 1, "matches.a": 1, "matches.b": 1 } },
+                ]
+              cursor: { batchSize: *num_docs_total }
           - OperationMetricsName: GraphLookupShardedToUnshardedMaxDepthZeroOneToOneHundred
             OperationName: RunCommand
             OperationCommand:
               aggregate: *ShardedColl0
-              pipeline: [{$graphLookup: {from: *UnshardedColl1, startWith: "$matchOneHundred", connectFromField: "matchOneHundred", connectToField: "matchOneHundred", as: "matches", maxDepth: 0}}, {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}]
-              cursor: {batchSize: *num_docs_total}
+              pipeline:
+                [
+                  {
+                    $graphLookup:
+                      {
+                        from: *UnshardedColl1,
+                        startWith: "$matchOneHundred",
+                        connectFromField: "matchOneHundred",
+                        connectToField: "matchOneHundred",
+                        as: "matches",
+                        maxDepth: 0,
+                      },
+                  },
+                  { $project: { a: 1, b: 1, "matches.a": 1, "matches.b": 1 } },
+                ]
+              cursor: { batchSize: *num_docs_total }
           - OperationMetricsName: GraphLookupShardedToUnshardedMaxDepthZeroMatchAllShards
             OperationName: RunCommand
             OperationCommand:
               aggregate: *ShardedColl0
-              pipeline: [{$match: {matchOne: {$lte: 30}}}, {$graphLookup: {from: *UnshardedColl1, startWith: "$matchTen", connectFromField: "matchTen", connectToField: "matchTen", as: "matches", maxDepth: 0}}, {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}]
-              cursor: {batchSize: *num_docs_total}
+              pipeline:
+                [
+                  { $match: { matchOne: { $lte: 30 } } },
+                  {
+                    $graphLookup:
+                      {
+                        from: *UnshardedColl1,
+                        startWith: "$matchTen",
+                        connectFromField: "matchTen",
+                        connectToField: "matchTen",
+                        as: "matches",
+                        maxDepth: 0,
+                      },
+                  },
+                  { $project: { a: 1, b: 1, "matches.a": 1, "matches.b": 1 } },
+                ]
+              cursor: { batchSize: *num_docs_total }
           - OperationMetricsName: GraphLookupShardedToUnshardedMaxDepthZeroMatchSomeShards
             OperationName: RunCommand
             OperationCommand:
               aggregate: *ShardedColl0
-              pipeline: [{$match: {b: {$eq: 5}}}, {$graphLookup: {from: *UnshardedColl1, startWith: "$matchTen", connectFromField: "matchTen", connectToField: "matchTen", as: "matches", maxDepth: 0}}, {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}]
-              cursor: {batchSize: *num_docs_total}
+              pipeline:
+                [
+                  { $match: { b: { $eq: 5 } } },
+                  {
+                    $graphLookup:
+                      {
+                        from: *UnshardedColl1,
+                        startWith: "$matchTen",
+                        connectFromField: "matchTen",
+                        connectToField: "matchTen",
+                        as: "matches",
+                        maxDepth: 0,
+                      },
+                  },
+                  { $project: { a: 1, b: 1, "matches.a": 1, "matches.b": 1 } },
+                ]
+              cursor: { batchSize: *num_docs_total }
           - OperationMetricsName: GraphLookupShardedToUnshardedMatchAllShards
             OperationName: RunCommand
             OperationCommand:
               aggregate: *ShardedColl0
-              pipeline: [{$match: {matchOne: {$lte: 30}}}, {$graphLookup: {from: *UnshardedColl1, startWith: "$matchFive", connectFromField: "matchFive", connectToField: "secondMatchFive", as: "matches", maxDepth: 1}}, {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}]
-              cursor: {batchSize: *num_docs_total}
+              pipeline:
+                [
+                  { $match: { matchOne: { $lte: 30 } } },
+                  {
+                    $graphLookup:
+                      {
+                        from: *UnshardedColl1,
+                        startWith: "$matchFive",
+                        connectFromField: "matchFive",
+                        connectToField: "secondMatchFive",
+                        as: "matches",
+                        maxDepth: 1,
+                      },
+                  },
+                  { $project: { a: 1, b: 1, "matches.a": 1, "matches.b": 1 } },
+                ]
+              cursor: { batchSize: *num_docs_total }
           - OperationMetricsName: GraphLookupShardedToUnshardedMatchSomeShards
             OperationName: RunCommand
             OperationCommand:
               aggregate: *ShardedColl0
-              pipeline: [{$match: {b: {$eq: 5}}}, {$graphLookup: {from: *UnshardedColl1, startWith: "$matchFive", connectFromField: "matchFive", connectToField: "secondMatchFive", as: "matches", maxDepth: 1}}, {$project: {a: 1, b: 1, 'matches.a': 1, 'matches.b': 1}}]
-              cursor: {batchSize: *num_docs_total}
+              pipeline:
+                [
+                  { $match: { b: { $eq: 5 } } },
+                  {
+                    $graphLookup:
+                      {
+                        from: *UnshardedColl1,
+                        startWith: "$matchFive",
+                        connectFromField: "matchFive",
+                        connectToField: "secondMatchFive",
+                        as: "matches",
+                        maxDepth: 1,
+                      },
+                  },
+                  { $project: { a: 1, b: 1, "matches.a": 1, "matches.b": 1 } },
+                ]
+              cursor: { batchSize: *num_docs_total }
 
 AutoRun:
   - When:

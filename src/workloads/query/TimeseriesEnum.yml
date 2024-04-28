@@ -108,18 +108,18 @@ Actors:
                     ^RandomString:
                       length: 6
                       alphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-            heartrate: {^RandomInt: {min: 0, max: 220}}
-            state: {^RandomInt: {min: 1, max: 7}}
+            heartrate: { ^RandomInt: { min: 0, max: 220 } }
+            state: { ^RandomInt: { min: 1, max: 7 } }
 
   - Name: InsertEnumData
     Type: Insert
     Threads: 1
     Database: *database
     Phases:
-      - {Nop: true}
-      - {Nop: true}
-      - {Nop: true}
-      - {Nop: true}
+      - { Nop: true }
+      - { Nop: true }
+      - { Nop: true }
+      - { Nop: true }
       - Collection: *enumCollection
         Document: { id: 1, description: "state1" }
         Repeat: 1
@@ -141,13 +141,13 @@ Actors:
       - Collection: *enumCollection
         Document: { id: 7, description: "state7" }
         Repeat: 1
-      - {Nop: true}
-      - {Nop: true}
-      - {Nop: true}
-      - {Nop: true}
-      - {Nop: true}
+      - { Nop: true }
+      - { Nop: true }
+      - { Nop: true }
+      - { Nop: true }
+      - { Nop: true }
 
-# Ensure all data is synced to disk.
+  # Ensure all data is synced to disk.
   - Name: Quiesce
     Type: QuiesceActor
     Threads: 1
@@ -178,8 +178,11 @@ Actors:
               OperationCommand:
                 Pipeline:
                   [
-                    { $match: {state: {$in: [1,3,5]}} },
-                    { $group: {_id: "$state", "avgHR": {$avg: "$heartrate"}} }
+                    { $match: { state: { $in: [1, 3, 5] } } },
+                    {
+                      $group:
+                        { _id: "$state", "avgHR": { $avg: "$heartrate" } },
+                    },
                   ]
 
   - Name: NotInFilterGroup
@@ -200,8 +203,11 @@ Actors:
               OperationCommand:
                 Pipeline:
                   [
-                    { $match: {state: {$nin: [1,2,4,6,7]}} },
-                    { $group: {_id: "$state", "avgHR": {$avg: "$heartrate"}} }
+                    { $match: { state: { $nin: [1, 2, 4, 6, 7] } } },
+                    {
+                      $group:
+                        { _id: "$state", "avgHR": { $avg: "$heartrate" } },
+                    },
                   ]
 
   - Name: InFilterLookupGroup
@@ -222,9 +228,23 @@ Actors:
               OperationCommand:
                 Pipeline:
                   [
-                    { $match: {state: {$in: [1,3,5]}} },
-                    { $lookup: {from: *enumCollection, localField: "state", foreignField: "id", as: "stateDoc"} },
-                    { $group: {_id: "$stateDoc.description", "avgHR": {$avg: "$heartrate"}} }
+                    { $match: { state: { $in: [1, 3, 5] } } },
+                    {
+                      $lookup:
+                        {
+                          from: *enumCollection,
+                          localField: "state",
+                          foreignField: "id",
+                          as: "stateDoc",
+                        },
+                    },
+                    {
+                      $group:
+                        {
+                          _id: "$stateDoc.description",
+                          "avgHR": { $avg: "$heartrate" },
+                        },
+                    },
                   ]
 
   - Name: NotInFilterLookupGroup
@@ -245,9 +265,23 @@ Actors:
               OperationCommand:
                 Pipeline:
                   [
-                    { $match: {state: {$nin: [1,2,4,6,7]}} },
-                    { $lookup: {from: *enumCollection, localField: "state", foreignField: "id", as: "stateDoc"} },
-                    { $group: {_id: "$stateDoc.description", "avgHR": {$avg: "$heartrate"}} }
+                    { $match: { state: { $nin: [1, 2, 4, 6, 7] } } },
+                    {
+                      $lookup:
+                        {
+                          from: *enumCollection,
+                          localField: "state",
+                          foreignField: "id",
+                          as: "stateDoc",
+                        },
+                    },
+                    {
+                      $group:
+                        {
+                          _id: "$stateDoc.description",
+                          "avgHR": { $avg: "$heartrate" },
+                        },
+                    },
                   ]
 
 AutoRun:

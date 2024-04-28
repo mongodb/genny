@@ -27,7 +27,7 @@ Documents:
 OutputCollections:
   - &UnshardedCollOutput UnshardedCollOutput
   - &ShardedCollOutput ShardedCollOutput
-  - &ShardedCollOutputNss {^PreprocessorFormatString: {format: "%s.%s", withArgs: [*Database, *ShardedCollOutput]},}
+  - &ShardedCollOutputNss {^PreprocessorFormatString: {format: "%s.%s", withArgs: [*Database, *ShardedCollOutput]}}
 
 ActorTemplates:
   - TemplateName: AggOut

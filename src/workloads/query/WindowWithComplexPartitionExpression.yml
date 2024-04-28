@@ -17,10 +17,11 @@ Actors:
         DocumentCount: 10000
         BatchSize: &batchSize 10000
         Document:
-          partitionKey: {^RandomInt: {min: 1, max: 5}}
-          time: {^RandomDate: {min: "2020-01-01", max: "2020-01-02"}}
-          temp: {^RandomDouble: {distribution: normal, mean: 145, sigma: 30.0}}
-      - &Nop {Nop: true}
+          partitionKey: { ^RandomInt: { min: 1, max: 5 } }
+          time: { ^RandomDate: { min: "2020-01-01", max: "2020-01-02" } }
+          temp:
+            { ^RandomDouble: { distribution: normal, mean: 145, sigma: 30.0 } }
+      - &Nop { Nop: true }
       - *Nop
 
   - Name: Quiesce
@@ -45,8 +46,22 @@ Actors:
             OperationName: RunCommand
             OperationCommand:
               aggregate: Collection0
-              pipeline: [{$setWindowFields: {partitionBy: {$mod: ["$partitionKey", 3]}, sortBy: {time: 1}, output: {avg: {$avg: "$temp", window: {documents: [-5, 5]}}}}}]
-              cursor: {batchSize: *batchSize}
+              pipeline:
+                [
+                  {
+                    $setWindowFields:
+                      {
+                        partitionBy: { $mod: ["$partitionKey", 3] },
+                        sortBy: { time: 1 },
+                        output:
+                          {
+                            avg:
+                              { $avg: "$temp", window: { documents: [-5, 5] } },
+                          },
+                      },
+                  },
+                ]
+              cursor: { batchSize: *batchSize }
 
 AutoRun:
   - When:

@@ -24,14 +24,23 @@ Keywords:
   - latency
 
 GlobalDefaults:
-
   #### User Defined Parameters ####
 
   # Whether to use the BATCHED_DELETE query exec stage over DELETE.
-  UseBatchedDeleteStage: &UseBatchedDeleteStage {^Parameter: {Name: "UseBatchedDeleteStage", Default: 0}}
+  UseBatchedDeleteStage:
+    &UseBatchedDeleteStage {
+      ^Parameter: { Name: "UseBatchedDeleteStage", Default: 0 },
+    }
 
   # Configuration file to use: with no secondary indexes (default) or creating secondaries for the non-padding fields.
-  ConfigFile: &ConfigFile {^Parameter: {Name: "ConfigurationFile", Default: "../../phases/execution/config/MultiDeletes/Default.yml"}}
+  ConfigFile:
+    &ConfigFile {
+      ^Parameter:
+        {
+          Name: "ConfigurationFile",
+          Default: "../../phases/execution/config/MultiDeletes/Default.yml",
+        },
+    }
 
   ##### Constants ####
 
@@ -42,10 +51,15 @@ GlobalDefaults:
   NumPhases: &NumPhases 11
   LoaderThreads: &LoaderThreads 4
   # Delete by primary index always.
-  DeleteQuery: &DeleteQuery {_id: {$gte: {^ObjectId: "000000000000000000000000"}}}
+  DeleteQuery:
+    &DeleteQuery { _id: { $gte: { ^ObjectId: "000000000000000000000000" } } }
   # Only used for generating the Document padding.
   RandomStringLength: &RandomStringLength 6
-  RandomStringValue: &RandomStringValue {^FastRandomString: {length: *RandomStringLength, alphabet: "0123456789"}}
+  RandomStringValue:
+    &RandomStringValue {
+      ^FastRandomString:
+        { length: *RandomStringLength, alphabet: "0123456789" },
+    }
 
   #### Document Size Specifications ####
 
@@ -56,7 +70,15 @@ GlobalDefaults:
   DocumentPaddingSizeBytes_1KB: &DocumentPaddingSizeBytes_1KB
     ^NumExpr:
       withExpression: "target_size - id_length - (field_count * (field_length+value_length)) - padding_field"
-      andValues: {target_size: *TargetDocumentSizeBytes_1KB, id_length: 22, field_count: 7, field_length: 8, value_length: *RandomStringLength, padding_field: 14}
+      andValues:
+        {
+          target_size: *TargetDocumentSizeBytes_1KB,
+          id_length: 22,
+          field_count: 7,
+          field_length: 8,
+          value_length: *RandomStringLength,
+          padding_field: 14,
+        }
   # Insert same document for both default and with secondary indexes to remove one variable.
   DocumentToInsert_1KB: &DocumentToInsert_1KB
     a: *RandomStringValue
@@ -66,7 +88,7 @@ GlobalDefaults:
     e: *RandomStringValue
     f: *RandomStringValue
     g: *RandomStringValue # up to field_count fields
-    padding: {^FastRandomString: {length: *DocumentPaddingSizeBytes_1KB}}
+    padding: { ^FastRandomString: { length: *DocumentPaddingSizeBytes_1KB } }
 
   # __________  10MB Specifcations __________
   TargetDocumentSizeBytes_10MB: &TargetDocumentSizeBytes_10MB 10_485_760 # 10MB
@@ -75,7 +97,15 @@ GlobalDefaults:
   DocumentPaddingSizeBytes_10MB: &DocumentPaddingSizeBytes_10MB
     ^NumExpr:
       withExpression: "target_size - id_length - (field_count * (field_length+value_length)) - padding_field"
-      andValues: {target_size: *TargetDocumentSizeBytes_10MB, id_length: 22, field_count: 7, field_length: 8, value_length: *RandomStringLength, padding_field: 14}
+      andValues:
+        {
+          target_size: *TargetDocumentSizeBytes_10MB,
+          id_length: 22,
+          field_count: 7,
+          field_length: 8,
+          value_length: *RandomStringLength,
+          padding_field: 14,
+        }
   # Insert same document for both default and with secondary indexes to remove one variable.
   DocumentToInsert_10MB: &DocumentToInsert_10MB
     a: *RandomStringValue
@@ -85,17 +115,21 @@ GlobalDefaults:
     e: *RandomStringValue
     f: *RandomStringValue
     g: *RandomStringValue # up to field_count fields
-    padding: {^FastRandomString: {length: *DocumentPaddingSizeBytes_10MB}}
+    padding: { ^FastRandomString: { length: *DocumentPaddingSizeBytes_10MB } }
 
 ActorTemplates:
   - TemplateName: InitializeDatabase
     Config:
-      Name: {^Parameter: {Name: "Name", Default: "InitializeDatabaseDefaultName"}}
+      Name:
+        {
+          ^Parameter:
+            { Name: "Name", Default: "InitializeDatabaseDefaultName" },
+        }
       Type: RunCommand
       Threads: 1
       Phases:
         OnlyActiveInPhases:
-          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          Active: [{ ^Parameter: { Name: "OnlyActiveInPhase", Default: 1 } }]
           NopInPhasesUpTo: *NumPhases
           PhaseConfig:
             Repeat: 1
@@ -107,29 +141,40 @@ ActorTemplates:
 
   - TemplateName: PopulateInitialData
     Config:
-      Name: {^Parameter: {Name: "Name", Default: "PopulateInitialDataDefaultName"}}
+      Name:
+        {
+          ^Parameter:
+            { Name: "Name", Default: "PopulateInitialDataDefaultName" },
+        }
       Type: Loader
       Threads: 4
       Phases:
         OnlyActiveInPhases:
-          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          Active: [{ ^Parameter: { Name: "OnlyActiveInPhase", Default: 1 } }]
           NopInPhasesUpTo: *NumPhases
           PhaseConfig:
             Repeat: 1
             Database: *Database
             MultipleThreadsPerCollection: true
             CollectionCount: 1
-            DocumentCount: {^Parameter: {Name: "DocumentCount", Default: 1}}
-            BatchSize: {^Parameter: {Name: "BatchSize", Default: 1}}
-            Document: {^Parameter: {Name: "DocumentToInsert", Default: {defaultDoc: 1}}}
+            DocumentCount: { ^Parameter: { Name: "DocumentCount", Default: 1 } }
+            BatchSize: { ^Parameter: { Name: "BatchSize", Default: 1 } }
+            Document:
+              {
+                ^Parameter:
+                  { Name: "DocumentToInsert", Default: { defaultDoc: 1 } },
+              }
 
   - TemplateName: LargeMultiDelete
     Config:
-      Name: &Name {^Parameter: {Name: "Name", Default: "LargeMultiDeleteDefaultName"}}
+      Name:
+        &Name {
+          ^Parameter: { Name: "Name", Default: "LargeMultiDeleteDefaultName" },
+        }
       Type: CrudActor
       Phases:
         OnlyActiveInPhases:
-          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          Active: [{ ^Parameter: { Name: "OnlyActiveInPhase", Default: 1 } }]
           NopInPhasesUpTo: *NumPhases
           PhaseConfig:
             Repeat: 1
@@ -143,15 +188,16 @@ ActorTemplates:
                     - WriteCommand: deleteMany
                       Filter: *DeleteQuery
                       OperationOptions:
-                        WriteConcern: {Level: "majority"}
+                        WriteConcern: { Level: "majority" }
 
   - TemplateName: ConcurrentWrites
     Config:
-      Name: {^Parameter: {Name: "Name", Default: "ConcurrentWritesDefaultName"}}
+      Name:
+        { ^Parameter: { Name: "Name", Default: "ConcurrentWritesDefaultName" } }
       Type: CrudActor
       Phases:
         OnlyActiveInPhases:
-          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          Active: [{ ^Parameter: { Name: "OnlyActiveInPhase", Default: 1 } }]
           NopInPhasesUpTo: *NumPhases
           PhaseConfig:
             Blocking: None
@@ -161,7 +207,14 @@ ActorTemplates:
             Operations:
               - OperationName: insertOne
                 OperationCommand:
-                  Document: {^Parameter: {Name: "DocumentToInsert", Default: {defaultDoc: 1}}}
+                  Document:
+                    {
+                      ^Parameter:
+                        {
+                          Name: "DocumentToInsert",
+                          Default: { defaultDoc: 1 },
+                        },
+                    }
 
 Actors:
   # Phase 1: Select between DELETE and BATCHED_DELETE query exec stage.
@@ -298,4 +351,3 @@ Actors:
         Name: ConcurrentWrites_10MB
         DocumentToInsert: *DocumentToInsert_10MB
         OnlyActiveInPhase: 11
-
