@@ -62,8 +62,7 @@ IndexesForLoader: &IndexesForLoader
   - keys: {int5: 1, int6: 1}
 
 # The default indexes that will be used in the 'CreateIndexesTemplate'.
-IndexesForCreateCmd: # 10 indexes
-&IndexesForCreateCmd
+IndexesForCreateCmd: &IndexesForCreateCmd # 10 indexes
   - key: {t: 1, w: 1}
     name: "index_t_w" # 10 indexes
   - key: {y: 1}
