@@ -63,7 +63,7 @@ Actors:
           # authorIds are sequential ObjectIds in the format "000000000000000000000000", "000000000000000000000001", "000000000000000000000002"...
           authorId: {^ObjectId: {^FormatString: {"format": "%024d%s", "withArgs": [{^Inc: {start: 0}}, ""]}}}
       - {Nop: true}
-      - {Nop: true,}
+      - {Nop: true}
 
   - Name: FindBlogPostsById
     Type: CrudActor
@@ -78,10 +78,10 @@ Actors:
           - OperationName: find
             OperationCommand:
               Filter: {_id: {$in: {^FixedGeneratedValue: {fromGenerator: {
-                        # An array of distinct and sequential integers up to documentCount. It will make sure all documents in this filter are found.
-                        # The max ^Inc.start is documentCount - filterArraySize
-                        ^Array: {of: {^Inc: {start: {^RandomInt: {min: 0, max: 2028000}}}}, number: *filterArraySize}}}}}}
-      - {Nop: true,}
+                # An array of distinct and sequential integers up to documentCount. It will make sure all documents in this filter are found.
+                # The max ^Inc.start is documentCount - filterArraySize
+                ^Array: {of: {^Inc: {start: {^RandomInt: {min: 0, max: 2028000}}}}, number: *filterArraySize}}}}}}
+      - {Nop: true}
 
   - Name: FindBlogPostsByAuthor
     Type: CrudActor
@@ -96,10 +96,22 @@ Actors:
         Operations:
           - OperationName: find
             OperationCommand:
-              Filter: {authorId: {$in: {^FixedGeneratedValue: {fromGenerator: {
+              Filter: {
+                authorId: {
+                  $in: {
+                    ^FixedGeneratedValue: {
+                      fromGenerator: {
                         # An array of distinct and sequential ObjectIds up to documentCount. It will make sure all documents in this filter are found.
                         # The max ^Inc.start is documentCount - filterArraySize
-                        ^Array: {of: {^ObjectId: {^FormatString: {"format": "%024d%s", "withArgs": [{^Inc: {start: {^RandomInt: {min: 0, max: 2028000}}}}, ""]}}}, number: *filterArraySize}}}}}}
+                        ^Array: {
+                          of: {^ObjectId: {^FormatString: {"format": "%024d%s", "withArgs": [{^Inc: {start: {^RandomInt: {min: 0, max: 2028000}}}}, ""]}}},
+                          number: *filterArraySize
+                        }
+                      }
+                    }
+                  }
+                }
+              }
 
 AutoRun:
   - When:

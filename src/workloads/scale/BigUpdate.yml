@@ -96,7 +96,7 @@ Actors:
           - keys: {int3: 1}
           - keys: {int4: 1}
           - keys: {int5: 1, int6: 1}
-      - &Nop {Nop: true,}
+      - &Nop {Nop: true}
 
   - Name: MultiCollectionUpdate
     Type: MultiCollectionUpdate

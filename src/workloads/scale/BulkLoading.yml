@@ -85,17 +85,37 @@ GlobalDefaults:
   # This document layout leads to ~650% CPU utilization on the genny client,
   # so this is close to the maximum document complexity we can use here.
   # Using ^RandomDate for the timestamp is too compute intensive.
-  - &Document {sensorId: {^RandomInt: {min: 0, max: 200000000}}, timestamp: {^RandomInt: {min: 1577836800000, max: 1692020604000}}, eventId: {^RandomInt: {min: 1, max: 10}}, dataField1: {^FastRandomString: {length: 10}}, dataField2: {^FastRandomString: {length: 20}}, dataField3: {^FastRandomString: {length: 30}}, dataField4: {^FastRandomString: {length: 40}}, dataField5: {^FastRandomString: {length: 50}}}
+  - &Document {
+    sensorId: {^RandomInt: {min: 0, max: 200000000}},
+    timestamp: {^RandomInt: {min: 1577836800000, max: 1692020604000}},
+    eventId: {^RandomInt: {min: 1, max: 10}},
+    dataField1: {^FastRandomString: {length: 10}},
+    dataField2: {^FastRandomString: {length: 20}},
+    dataField3: {^FastRandomString: {length: 30}},
+    dataField4: {^FastRandomString: {length: 40}},
+    dataField5: {^FastRandomString: {length: 50}},
+  }
 
   # This workload uses a batch size of 100 for the bulk writes.
   # We evaluated the impact of different batch sizes and the document throughput
   # does not appear to be impacted by the batch size.
   - &WriteOp {WriteCommand: insertOne, Document: *Document}
   - &WriteOps10x [*WriteOp, *WriteOp, *WriteOp, *WriteOp, *WriteOp, *WriteOp, *WriteOp, *WriteOp, *WriteOp, *WriteOp]
-  - &WriteOps100x {^FlattenOnce: [*WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x]}
-  - &UpsertOp {WriteCommand: updateOne, Filter: {sensorId: {^RandomInt: {min: 0, max: 200000000}}}, Update: {$set: {eventId: 0, dataField1: {^FastRandomString: {length: 10}}}}, OperationOptions: {Upsert: true}}
+  - &WriteOps100x {
+    ^FlattenOnce: [*WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x]
+  }
+  - &UpsertOp {
+    WriteCommand: updateOne,
+    Filter: {sensorId: {^RandomInt: {min: 0, max: 200000000}}},
+    Update: {$set: {eventId: 0, dataField1: {^FastRandomString: {length: 10}}}},
+    OperationOptions: {Upsert: true}}
   - &UpsertOps10x [*UpsertOp, *UpsertOp, *UpsertOp, *UpsertOp, *UpsertOp, *UpsertOp, *UpsertOp, *UpsertOp, *UpsertOp, *UpsertOp]
-  - &UpsertOps100x {^FlattenOnce: [*UpsertOps10x, *UpsertOps10x, *UpsertOps10x, *UpsertOps10x, *UpsertOps10x, *UpsertOps10x, *UpsertOps10x, *UpsertOps10x, *UpsertOps10x, *UpsertOps10x],}
+  - &UpsertOps100x {
+    ^FlattenOnce: [
+      *UpsertOps10x, *UpsertOps10x, *UpsertOps10x, *UpsertOps10x, *UpsertOps10x,
+      *UpsertOps10x, *UpsertOps10x, *UpsertOps10x, *UpsertOps10x, *UpsertOps10x
+    ]
+  }
 
 ActorTemplates:
   - TemplateName: BulkWriterTemplate

@@ -77,7 +77,7 @@ Actors:
             Database: *LongLivedDB
             CollectionCount: *LongLivedCollectionCount
             DocumentCount: *LongLivedDocumentCount
-      - {Nop: true,}
+      - {Nop: true}
 
   - Name: LongLivedIndexReader
     Type: MultiCollectionQuery
@@ -142,7 +142,7 @@ Actors:
           Key: RollingSetupCmd
           Parameters:
             TrackProportion: *TrackProportion
-      - {Nop: true,}
+      - {Nop: true}
 
   - Name: RollingManage
     Type: RollingCollections
@@ -214,7 +214,7 @@ Actors:
           Key: HotDocumentLoaderCmd
           Parameters:
             Database: *HotDocumentDB
-      - {Nop: true,}
+      - {Nop: true}
 
   - Name: HotDocumentUpdater
     Type: CrudActor
@@ -241,7 +241,7 @@ Actors:
           Key: HotCollectionLoaderCmd
           Parameters:
             Database: *HotCollectionDB
-      - {Nop: true,}
+      - {Nop: true}
 
   - Name: HotCollectionUpdater
     Type: CrudActor
@@ -288,7 +288,7 @@ Actors:
             Database: *ScannerColdDB
             CollectionCount: *ScannerColdDBGigabytes
       - {Nop: true}
-      - {Nop: true,}
+      - {Nop: true}
 
   # A snapshot scanner begins a transaction prior to starting its scan
   # with read concern majority, which should pin the read for the

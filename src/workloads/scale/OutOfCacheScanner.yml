@@ -36,7 +36,7 @@ Actors:
           _id: {^Inc: {start: 0}}
           a: {^RandomString: {length: 100}}
       - {Nop: true}
-      - {Nop: true,}
+      - {Nop: true}
 
   - Name: HotSampler
     Type: RandomSampler

@@ -49,7 +49,7 @@ Actors:
             Database: *LongLivedDB
             CollectionCount: *LongLivedCollectionCount
             DocumentCount: *LongLivedDocumentCount
-      - {Nop: true,}
+      - {Nop: true}
 
   - Name: LongLivedReader
     Type: MultiCollectionQuery

@@ -27,7 +27,7 @@ Actors:
           Key: Loader
         Repeat: 1
         Threads: 1
-      - &Nop {Nop: true,}
+      - &Nop {Nop: true}
 
   - Name: Update
     Type: MultiCollectionUpdate

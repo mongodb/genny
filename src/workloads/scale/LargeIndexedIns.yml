@@ -38,7 +38,7 @@ Actors:
           _id: {^Inc: {start: 0}}
           hash: &randomString {^RandomString: {length: 22}}
           key: *randomString
-      - {Nop: true,}
+      - {Nop: true}
 
   - Name: FindLargeIn
     Type: CrudActor
