@@ -26,7 +26,12 @@ GlobalDefaults:
   ExpectedDocumentCount: &ExpectedDocumentCount 800000 # NumThreads * NumBatch1000xPerThread * 1000
 
   Channel: &Channel {^RandomInt: {min: 0, max: 10000}}
-  Url: &Url {^FormatString: {format: "https://www.nexmark.com/%s/%s/%s/item.htm?query=1&channel_id=%d", withArgs: [{^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}}, {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}}, {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}}, *Channel]}}
+  Url: &Url {^FormatString: {format: "https://www.nexmark.com/%s/%s/%s/item.htm?query=1&channel_id=%d", withArgs: [
+    {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}},
+    {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}},
+    {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}},
+    *Channel
+  ]}}
 
   Document: &Document
     auction: {^Inc: {start: 1000, multipler: 1}}
@@ -53,8 +58,19 @@ Actors:
             OperationCommand:
               streams_startStreamProcessor: ""
               name: *StreamProcessorName
-              pipeline: [{$source: {connectionName: "__testMemory"}}, {$project: {auction: 1, bidder: 1, dateTime: 1, price: {$multiply: ["$price", 0.908]}}}, {$merge: {into: {connectionName: "db", db: *DatabaseName, coll: *OutputCollectionName}}}]
-              connections: [{name: "__testMemory", type: "in_memory", options: {}}, {name: "db", type: "atlas", options: {uri: {^ClientURI: {Name: "Default"}}}}]
+              pipeline: [
+                {$source: {connectionName: "__testMemory"}},
+                {$project: {
+                  auction: 1,
+                  bidder: 1,
+                  dateTime: 1,
+                  price: {$multiply: ["$price", 0.908]}}},
+                {$merge: {into: {connectionName: "db", db: *DatabaseName, coll: *OutputCollectionName}}}
+              ]
+              connections: [
+                {name: "__testMemory", type: "in_memory", options: {}},
+                {name: "db", type: "atlas", options: {uri: {^ClientURI: {Name: "Default"}}}}
+              ]
               options: {}
       - Phase: 1
         Nop: true

@@ -26,7 +26,12 @@ GlobalDefaults:
   ExpectedDocumentCount: &ExpectedDocumentCount 800000 # NumThreads * NumInputDocumentsPerThread
 
   Channel: &Channel {^RandomInt: {min: 0, max: 10000}}
-  Url: &Url {^FormatString: {format: "https://www.nexmark.com/%s/%s/%s/item.htm?query=1&channel_id=%d", withArgs: [{^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}}, {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}}, {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}}, *Channel]}}
+  Url: &Url {^FormatString: {format: "https://www.nexmark.com/%s/%s/%s/item.htm?query=1&channel_id=%d", withArgs: [
+    {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}},
+    {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}},
+    {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}},
+    *Channel
+  ]}}
 
   # Used for `startAtOperationTime` when creating the stream processor so that it starts
   # consuming from the beginning of the mongo collection. It is important that this used
@@ -78,7 +83,12 @@ Actors:
             OperationCommand:
               streams_startStreamProcessor: ""
               name: *StreamProcessorName
-              pipeline: [{$source: {connectionName: "db", db: *DatabaseName, coll: *InputCollectionName, config: {startAtOperationTime: *StartTimestamp}}}, {$replaceRoot: {newRoot: "$fullDocument"}}, {$project: {auction: 1, bidder: 1, dateTime: 1, price: {$multiply: ["$price", 0.908]}}}, {$emit: {connectionName: "__noopSink"}}]
+              pipeline: [
+                {$source: {connectionName: "db", db: *DatabaseName, coll: *InputCollectionName, config: {startAtOperationTime: *StartTimestamp}}},
+                {$replaceRoot: {newRoot: "$fullDocument"}},
+                {$project: {auction: 1, bidder: 1, dateTime: 1, price: {$multiply: ["$price", 0.908]}}},
+                {$emit: {connectionName: "__noopSink"}}
+              ]
               connections: [{name: "db", type: "atlas", options: {uri: {^ClientURI: {Name: "Default"}}}}]
               options: {}
       - Phase: 2

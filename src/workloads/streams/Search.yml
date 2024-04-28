@@ -25,7 +25,12 @@ GlobalDefaults:
   ExpectedDocumentCount: &ExpectedDocumentCount 8000000 # NumThreads * NumBatch1000xPerThread * 1000
 
   Channel: &Channel {^RandomInt: {min: 0, max: 10000}}
-  Url: &Url {^FormatString: {format: "https://www.nexmark.com/%s/%s/%s/item.htm?query=1&channel_id=%d", withArgs: [{^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}}, {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}}, {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}}, *Channel]}}
+  Url: &Url {^FormatString: {format: "https://www.nexmark.com/%s/%s/%s/item.htm?query=1&channel_id=%d", withArgs: [
+    {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}},
+    {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}},
+    {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}},
+    *Channel
+  ]}}
 
   Document: &Document
     auction: {^Inc: {start: 1000, multipler: 1}}
@@ -52,7 +57,20 @@ Actors:
             OperationCommand:
               streams_startStreamProcessor: ""
               name: *StreamProcessorName
-              pipeline: [{$source: {connectionName: "__testMemory"}}, {$match: {$or: [{auction: 1007}, {auction: 1020}, {auction: 2001}, {auction: 2019}, {auction: 2087}]}}, {$project: {auction: 1, price: 1}}, {$emit: {connectionName: "__noopSink"}}]
+              pipeline: [
+                {$source: {connectionName: "__testMemory"}},
+                {$match: {
+                  $or: [
+                    {auction: 1007},
+                    {auction: 1020},
+                    {auction: 2001},
+                    {auction: 2019},
+                    {auction: 2087}
+                  ]
+                }},
+                {$project: {auction: 1, price: 1}},
+                {$emit: {connectionName: "__noopSink"}}
+              ]
               connections: [{name: "__testMemory", type: "in_memory", options: {}}]
               options: {}
       - Phase: 1
