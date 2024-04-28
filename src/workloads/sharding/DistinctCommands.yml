@@ -29,7 +29,7 @@ Actors:
         Document:
           shardKey: &RandomString {^FastRandomString: {length: 22}}
       - {Nop: true}
-      - {Nop: true,}
+      - {Nop: true}
 
   - Name: Distinct
     Type: RunCommand
@@ -44,7 +44,7 @@ Actors:
             OperationCommand:
               distinct: Collection0
               key: shardKey
-      - {Nop: true,}
+      - {Nop: true}
 
   - Name: Finds
     Type: CrudActor

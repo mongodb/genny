@@ -24,7 +24,7 @@ Actors:
         BatchSize: 10
       - {Nop: true}
       - {Nop: true}
-      - {Nop: true,}
+      - {Nop: true}
 
   # Our first demonstration of the sampling loader.
   - Name: BasicSamplingDemo
@@ -57,7 +57,7 @@ Actors:
         # Batches * InsertBatchSize.
         Batches: 2
       - {Nop: true}
-      - {Nop: true,}
+      - {Nop: true}
 
   # In this case we use multiple threads.
   # With multiple threads, each thread will share a sample which is gathered before the load starts.
@@ -79,7 +79,7 @@ Actors:
       - Repeat: 1
         Batches: 5
         InsertBatchSize: 20
-      - {Nop: true,}
+      - {Nop: true}
 
   # Now we'll demonstrate the ability to specify a pipeline suffix to tack on after the one with
   # $sample. Note it runs after the "_id" has been projected out. Also note that you should not put

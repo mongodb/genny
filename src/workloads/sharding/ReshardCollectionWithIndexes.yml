@@ -1,6 +1,56 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/sharding"
-Description: "This test measures the time for a sharded cluster to reshard a collection from one shard to two \nshards then to three shards. It was added August 2023 as part of PM-2322, to demonstrate planned \nresharding performance improvements. Note that the goal of this test is to show the performance \ngain on this setup rather than the performance difference on different kinds of data type.\n#magic___^_^___line\nThe test expects the target cluster is created using ebs snapshot with 1 billion 1KB records and \nhas 3 shards, named shard-00, shard-01, shard-02. The collection has 10 indexes including \n_id index, single-key index and compound index. The whole dataset is on 1 shard at the beginning.\nReshardCollection should use same-key resharding and use shardDistribution parameter to reshard \ninto 2 shards then 3 shards. There will be random CRUD operations during resharding but should \nrun at a very low rate.\n#magic___^_^___line\nThe workload consists of 3 phases:\n  1. Turning off balancer and make the sharded collection exists on only 1 shard.\n  2. Running read and write operations on the collection while it is being resharded to 2 shards.\n  3. Running read and write operations on the collection while it is being resharded to 3 shards.\n  #magic___^_^___line\nAll documents are generated through genny' data loader where the integer and length of short \nstring fields are randomly generated. The fields are designed like to form different combinations \nof indexes. The goal of having 10 indexes is to test resharding performance with indexes and the \nnumber 10 comes from design, which is arbitrary from testing perspective.\n  #magic___^_^___line\nThe inserted documents have the following form:\n  #magic___^_^___line\n    {\n      _id: integer(default _id index),\n      shardKey: integer(for the shard key),\n      counter: integer(used for counting updates),\n      num1: integer(random generated between [1, 1000000000]),\n      num2: integer(random generated between [1, 1000000000]),\n      str1: string(length <= 20),\n      str2: string(length <= 20),\n      padding: string(random string of bytes ...)\n    }\n      #magic___^_^___line\nThe indexes are:\n    [\n      {_id: 1},\n      {shardKey: 1},\n      {counter: 1},\n      {num1: 1},\n      {num2: 1},\n      {str1: 1},\n      {str2: 1},\n      {shardKey: 1, counter:1},\n      {str1: 1, num1: 1},\n      {num2:1, str2: 1}\n    ]\n      #magic___^_^___line\n"
+Description: |
+  This test measures the time for a sharded cluster to reshard a collection from one shard to two
+  shards then to three shards. It was added August 2023 as part of PM-2322, to demonstrate planned
+  resharding performance improvements. Note that the goal of this test is to show the performance
+  gain on this setup rather than the performance difference on different kinds of data type.
+
+  The test expects the target cluster is created using ebs snapshot with 1 billion 1KB records and
+  has 3 shards, named shard-00, shard-01, shard-02. The collection has 10 indexes including
+  _id index, single-key index and compound index. The whole dataset is on 1 shard at the beginning.
+  ReshardCollection should use same-key resharding and use shardDistribution parameter to reshard
+  into 2 shards then 3 shards. There will be random CRUD operations during resharding but should
+  run at a very low rate.
+
+  The workload consists of 3 phases:
+    1. Turning off balancer and make the sharded collection exists on only 1 shard.
+    2. Running read and write operations on the collection while it is being resharded to 2 shards.
+    3. Running read and write operations on the collection while it is being resharded to 3 shards.
+
+  All documents are generated through genny' data loader where the integer and length of short
+  string fields are randomly generated. The fields are designed like to form different combinations
+  of indexes. The goal of having 10 indexes is to test resharding performance with indexes and the
+  number 10 comes from design, which is arbitrary from testing perspective.
+
+  The inserted documents have the following form:
+
+      {
+        _id: integer(default _id index),
+        shardKey: integer(for the shard key),
+        counter: integer(used for counting updates),
+        num1: integer(random generated between [1, 1000000000]),
+        num2: integer(random generated between [1, 1000000000]),
+        str1: string(length <= 20),
+        str2: string(length <= 20),
+        padding: string(random string of bytes ...)
+      }
+
+  The indexes are:
+      [
+        {_id: 1},
+        {shardKey: 1},
+        {counter: 1},
+        {num1: 1},
+        {num2: 1},
+        {str1: 1},
+        {str2: 1},
+        {shardKey: 1, counter:1},
+        {str1: 1, num1: 1},
+        {num2:1, str2: 1}
+      ]
+
+
 Keywords:
   - resharding
   - indexes
@@ -26,7 +76,7 @@ GlobalDefaults:
   ShardName1: &Shard1 shard-01
   ShardName2: &Shard2 shard-02
 
-  # The CRUD operations here are to test that resharding won't fail with CRUD operations. We keep 
+  # The CRUD operations here are to test that resharding won't fail with CRUD operations. We keep
   # the rate small so it won't significantly affect the resharding performance. That says, these
   # CRUD operations should keep minimal and should not slow down resharding.
   ReadRate: &ReadRate 100 per 1 second

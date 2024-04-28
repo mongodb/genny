@@ -17,7 +17,7 @@ Actors:
         BatchSize: 1000
         Document:
           a: {^RandomInt: {min: 0, max: 1000}}
-      - {Nop: true,}
+      - {Nop: true}
 
   - Name: HotCollectionUpdater
     Type: CrudActor

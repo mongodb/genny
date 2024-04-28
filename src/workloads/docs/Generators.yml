@@ -7,38 +7,38 @@ Description: |
 # This workload demonstrates all the current Document and Value Generators. It creates documents
 # that look like this (simple)
 # {
-# 	"_id" : ObjectId("5fd7c984e0f8d74bdb04d3b4"),
-# 	"type" : "simple",
-# 	"int1" : NumberLong(15),
-# 	"int2" : NumberLong(19),
-# 	"int3" : NumberLong(7),
-# 	"int4" : NumberLong(1835),
-# 	"int5" : NumberLong(3),
-# 	"int6" : NumberLong(112),
-# 	"int7" : NumberLong(3),
-# 	"double" : 12.830223930995928,
-# 	"string1" : "T336d",
-# 	"string2" : "B2A54",
-# 	"string3" : "LChkGtHKBI",
-# 	"counter" : 1008,
-# 	"choose" : 12,
-# 	"join" : "This is a joined string",
-# 	"ip" : "77.220.130.163",
-# 	"location" : [17.31871956875809, -3.062558894823418],
-# 	"actorNum" : NumberLong(1),
-# 	"actorString" : "1",
-# 	"airportDataSet" : "KSC"
+#   "_id" : ObjectId("5fd7c984e0f8d74bdb04d3b4"),
+#   "type" : "simple",
+#   "int1" : NumberLong(15),
+#   "int2" : NumberLong(19),
+#   "int3" : NumberLong(7),
+#   "int4" : NumberLong(1835),
+#   "int5" : NumberLong(3),
+#   "int6" : NumberLong(112),
+#   "int7" : NumberLong(3),
+#   "double" : 12.830223930995928,
+#   "string1" : "T336d",
+#   "string2" : "B2A54",
+#   "string3" : "LChkGtHKBI",
+#   "counter" : 1008,
+#   "choose" : 12,
+#   "join" : "This is a joined string",
+#   "ip" : "77.220.130.163",
+#   "location" : [17.31871956875809, -3.062558894823418],
+#   "actorNum" : NumberLong(1),
+#   "actorString" : "1",
+#   "airportDataSet" : "KSC"
 # }
 
 # # And this (nested)
 # {
-# 	# "_id" : ObjectId("5fd7c984e0f8d74bdb04d3b8"),
-# 	# "type" : "nested",
-# 	# "a" : "cjyuclu2jVjxpo5nSG",
-# 	# "b" : "aaaaaaaaaa5phojR5oVp",
-# 	# "c" : "LcSd8voZ-Q7F3jXcT-clWnwH/N-XP7caBjG",
-# 	# "task_id" : "test-duH4N0/500",
-# 	# "id_with_actor" : "ActorId-7"
+#   # "_id" : ObjectId("5fd7c984e0f8d74bdb04d3b8"),
+#   # "type" : "nested",
+#   # "a" : "cjyuclu2jVjxpo5nSG",
+#   # "b" : "aaaaaaaaaa5phojR5oVp",
+#   # "c" : "LcSd8voZ-Q7F3jXcT-clWnwH/N-XP7caBjG",
+#   # "task_id" : "test-duH4N0/500",
+#   # "id_with_actor" : "ActorId-7"
 
 Parameters:
   - &DatabaseName {^Parameter: {Name: "DatabaseName", Default: mydb}}
@@ -202,7 +202,8 @@ Actors:
                     # # As min must be less than max, care must be taken to ensure that the min value range is always less than the max value range.
                     # # Other wise you might get unexpected results. For example the following should fail 25% of the time
                     # # (whenever 2100-05-31 is selected).
-                    # probablyNotWhatYouWant: {^RandomDate: {min: {^Choose: {from: ["2014-05-31", "2012-05-31", "2013-05-31", "2100-05-31"]}}, max: {^Now: {}} }}
+                    # probablyNotWhatYouWant:
+                    #   {^RandomDate: {min: {^Choose: {from: ["2014-05-31", "2012-05-31", "2013-05-31", "2100-05-31"]}}, max: {^Now: {}} }}
 
                 - WriteCommand: insertOne # Nested Generators
                   # You can nest generators to make complex values.
@@ -216,21 +217,40 @@ Actors:
                     b: {^Join: {array: ["aaaaaaaaaa", {^RandomString: {length: 10}}]}}
 
                     # Can Match common string formats
-                    c: {^Join: {array: [{^RandomString: {length: 8}}, {^RandomString: {length: 8}}, {^RandomString: {length: 8}}, {^RandomString: {length: 8}}], sep: "-"}}
+                    c: {
+                      ^Join: {
+                        array: [{^RandomString: {length: 8}}, {^RandomString: {length: 8}}, {^RandomString: {length: 8}}, {^RandomString: {length: 8}}],
+                        sep: "-"
+                      }
+                    }
 
                     # Or match different formats. Note that for ^Choose within a ^Join, all the entries in
                     # the from sequence must generate strings. You cannot embed a number or a document.
                     task_id: {^Join: {array: [{^Choose: {from: ["build", "test", "lint"]}}, {^RandomString: {length: 10}}], sep: "-"}}
 
                     # You can use Choose deterministically with Join.
-                    task_id_deterministic: {^Join: {array: [{^Choose: {from: ["build", "test", "lint"], deterministic: true}}, {^RandomString: {length: 10}}], sep: "-"}}
+                    task_id_deterministic: {
+                      ^Join: {array: [{^Choose: {from: ["build", "test", "lint"], deterministic: true}}, {^RandomString: {length: 10}}], sep: "-"}
+                    }
 
                     id_with_actor: {^Join: {array: ["ActorId-", {^ActorIdString: {}}]}}
 
                     # Generate some sequences.
                     seq10Ints: {^Array: {of: 1, number: 10}}
                     seq10Docs: {^Array: {of: {"a": 1}, number: 10}}
-                    seq10RandomDocs: {^Array: {of: {ts: {^Now: {}}, caid: {^RandomInt: {min: 0, max: 1000}}, cuid: {^RandomInt: {min: 0, max: 100000}}, prod: {^RandomInt: {min: 0, max: 10000}}, prid: {^RandomDouble: {min: 0.0, max: 1000.0}}, data: {^Join: {array: ["aaaaaaaaaa", {^FastRandomString: {length: {^RandomInt: {min: 0, max: 10}}}}]}}}, number: 10}}
+                    seq10RandomDocs: {
+                      ^Array: {
+                        of: {
+                          ts: {^Now: {}},
+                          caid: {^RandomInt: {min: 0, max: 1000}},
+                          cuid: {^RandomInt: {min: 0, max: 100000}},
+                          prod: {^RandomInt: {min: 0, max: 10000}},
+                          prid: {^RandomDouble: {min: 0.0, max: 1000.0}},
+                          data: {^Join: {array: ["aaaaaaaaaa", {^FastRandomString: {length: {^RandomInt: {min: 0, max: 10}}}}]}}
+                        },
+                        number: 10
+                      }
+                    }
 
                     # You can choose elements deterministically. 'from' is an array of values to pick from.
                     # If 'deterministic' = true, then we select values from the from array deterministically.
@@ -263,14 +283,23 @@ Actors:
                     # Note: the default alphabet used by RandomString is fine for key names. But see
                     # https://docs.mongodb.com/manual/core/dot-dollar-considerations/#std-label-crud-concepts-dot-dollar-considerations
                     # if other generators are used for the names.
-                    randomObject: {^Object: {withNEntries: 10, havingKeys: {^RandomString: {length: 10}}, andValues: {^RandomString: {length: 10}}, duplicatedKeys: insert}}
+                    randomObject: {^Object: {
+                      withNEntries: 10,
+                      havingKeys: {^RandomString: {length: 10}},
+                      andValues: {^RandomString: {length: 10}},
+                      duplicatedKeys: insert
+                    }}
 
                     # Generate an object with up to 3 key-value pairs. If the generator produces a repeated
                     # key name, it will be skipped. Thus, the generated object will contain 1, 2, or 3 keys.
                     # Note: setting `withNEntries` here to a number larger than 3 won't be flagged as an
                     # error and will generate the same universe of objects, but it's wasteful because the
                     # generator can produce at most 3 unique keys.
-                    randomObjectNoKeyDuplication: {^Object: {withNEntries: 3, havingKeys: {^RandomString: {length: 1, alphabet: abc}}, andValues: 42, duplicatedKeys: skip}}
+                    randomObjectNoKeyDuplication: {^Object: {
+                      withNEntries: 3,
+                      havingKeys: {^RandomString: {length: 1, alphabet: abc}},
+                      andValues: 42, duplicatedKeys: skip
+                    }}
 
                     # Large sequences of random strings can be expensive to generate.  FixedGeneratedValue
                     # can be used to generate an array once during initialization for re-use
@@ -288,9 +317,11 @@ Actors:
                     roid: {^ObjectId: {^RandomString: {length: 24, alphabet: "0123456789ABCDEF"}}}
 
                     # Ranged OID: "0000bbbbbbbbbbbbbbbbbbbb" ... "9999bbbbbbbbbbbbbbbbbbbb"
-                    rangedOid: {^ObjectId: {^FormatString: {"format": "%04d%s", "withArgs": [{^RandomInt: {min: 0, max: 9999}}, {^RandomString: {length: 20, alphabet: b}}]}}}
+                    rangedOid: {^ObjectId: {
+                      ^FormatString: {"format": "%04d%s", "withArgs": [{^RandomInt: {min: 0, max: 9999}}, {^RandomString: {length: 20, alphabet: b}}]}
+                    }}
 
-                    #Array of sequential ObjectIds in the format "000000000000000000000000", "000000000000000000000001", "000000000000000000000002"...
+                    # Array of sequential ObjectIds in the format "000000000000000000000000", "000000000000000000000001", "000000000000000000000002"...
                     sequentialObjectIds: {^Array: {of: {^ObjectId: {^FormatString: {"format": "%024d%s", "withArgs": [{^Inc: {start: 0}}, ""]}}}, number: 10}}
 
                     # Next OID
@@ -317,15 +348,18 @@ Actors:
                       # Long uuid
                       {^UUID: {hex: "00000000-1111-2222-3333-444444444444"}},
                       # Long uuid joined with last 2 digits
-                      {^UUID: {hex: {^Join: {array: ["00000000-4000-8000-0000-0000000000", {^RandomString: {length: 2, alphabet: "0123456789abcdef"}}], sep: ""}}}},
+                      {^UUID: {hex: {^Join: {array: ["00000000-4000-8000-0000-0000000000",
+                                                     {^RandomString: {length: 2, alphabet: "0123456789abcdef"}}], sep: ""}}}},
                       # Long uuid formatted with last 2 digits
                       {^UUID: {hex: {^FormatString: {format: "3b241101-e2bb-4255-8caf-4136c566a9%02x", withArgs: [{^RandomInt: {min: 0, max: 255}}]}}}},
                       # Long uuid random format
-                      {^UUID: {hex: {^FormatString: {format: "%08x-%04x-%04x-%04x-%012x", withArgs: [{^RandomInt: {min: 0, max: 0xFFFFFFFF}} #      4294967295
-, {^RandomInt: {min: 0, max: 0xFFFF}} #           65535
-, {^RandomInt: {min: 0, max: 0xFFFF}} #           65535
-, {^RandomInt: {min: 0, max: 0xFFFF}} #           65535
-, {^RandomInt: {min: 0, max: 0xFFFFFFFFFFFF}}]}}}} # 281474976710655
+                      {^UUID: {hex: {^FormatString: {format: "%08x-%04x-%04x-%04x-%012x", withArgs: [
+                        {^RandomInt: {min: 0, max: 0xFFFFFFFF}},    #      4294967295
+                        {^RandomInt: {min: 0, max: 0xFFFF}},        #           65535
+                        {^RandomInt: {min: 0, max: 0xFFFF}},        #           65535
+                        {^RandomInt: {min: 0, max: 0xFFFF}},        #           65535
+                        {^RandomInt: {min: 0, max: 0xFFFFFFFFFFFF}  # 281474976710655
+                        }]}}}}
                     ]
 
       # 10% of the findOnes will introduce a 60-second sleep.

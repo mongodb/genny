@@ -29,7 +29,7 @@ Actors:
           Hint: a_1 # Currently only support the index name.
           Comment: "Phase 1 loader"
       - {Nop: true}
-      - {Nop: true,}
+      - {Nop: true}
 
   - Name: CountScanner
     Type: CollectionScanner
@@ -48,7 +48,7 @@ Actors:
       - Duration: 2 minutes
         GlobalRate: 1 per 10 seconds
         ScanType: count
-      - {Nop: true,}
+      - {Nop: true}
 
   - Name: StandardScanner
     Type: CollectionScanner

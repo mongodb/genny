@@ -1,6 +1,26 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-perf"
-Description: "Run large insertMany's to stress checkpointing, journal flush and dirty memory with {w:majority}.\nThe workload runs a single CrudActor targeting:\n  - 'test' database, configurable via the Database parameter.\n  - 'Collection0' collection, configurable via the Collection parameter.\n  - 10 threads, configurable via the Threads parameter.\n  - 5000 iterations, configurable via the Iterations parameter.\n  - 1500 documents, configurable via the Documents parameter.\n  - {w:majority} insert options, configurable via the Options parameter.\nThe default documents have a very simple / flat structure as follows:\n  - _id: ObjectId\n  - x: a ~1KB fixed string \n  - id: 'User%07d' incrementing field.\nThere are no additional indexes (just _id).\nThe important ftdc metrics to look at are:\n  - ss opcounters insert\n  - ss average latency writes\n  - system memory dirty\n  - ss wt log log sync time duration\n  - ss wt transaction transaction checkpoint currently running\n  #magic___^_^___line\n"
+Description: |
+  Run large insertMany's to stress checkpointing, journal flush and dirty memory with {w:majority}.
+  The workload runs a single CrudActor targeting:
+    - 'test' database, configurable via the Database parameter.
+    - 'Collection0' collection, configurable via the Collection parameter.
+    - 10 threads, configurable via the Threads parameter.
+    - 5000 iterations, configurable via the Iterations parameter.
+    - 1500 documents, configurable via the Documents parameter.
+    - {w:majority} insert options, configurable via the Options parameter.
+  The default documents have a very simple / flat structure as follows:
+    - _id: ObjectId
+    - x: a ~1KB fixed string
+    - id: 'User%07d' incrementing field.
+  There are no additional indexes (just _id).
+  The important ftdc metrics to look at are:
+    - ss opcounters insert
+    - ss average latency writes
+    - system memory dirty
+    - ss wt log log sync time duration
+    - ss wt transaction transaction checkpoint currently running
+
 Keywords:
   - Flushing
   - IO
@@ -22,9 +42,25 @@ GlobalConstants:
     # Generate a string like 'x    x' (but with 1000 blank characters between the start and end x's.
     x: {^PreprocessorFormatString: {format: "x%*s", withArgs: [1000, "x"]}}
     id: {^Join: {array: [{^FormatString: {"format": "User%07d", "withArgs": [{^Inc: {start: 1}}]}}]}}
-  - &documentList10x {^FlattenOnce: [*defaultDocument, *defaultDocument, *defaultDocument, *defaultDocument, *defaultDocument, *defaultDocument, *defaultDocument, *defaultDocument, *defaultDocument, *defaultDocument]}
-  - &documentsList100x {^FlattenOnce: [*documentList10x, *documentList10x, *documentList10x, *documentList10x, *documentList10x, *documentList10x, *documentList10x, *documentList10x, *documentList10x, *documentList10x]}
-  - &defaultDocumentList {^FlattenOnce: [*documentsList100x, *documentsList100x, *documentsList100x, *documentsList100x, *documentsList100x, *documentsList100x, *documentsList100x, *documentsList100x, *documentsList100x, *documentsList100x, *documentsList100x, *documentsList100x, *documentsList100x, *documentsList100x, *documentsList100x],}
+  - &documentList10x {
+    ^FlattenOnce: [
+      *defaultDocument, *defaultDocument, *defaultDocument, *defaultDocument, *defaultDocument,
+      *defaultDocument, *defaultDocument, *defaultDocument, *defaultDocument, *defaultDocument
+    ]
+  }
+  - &documentsList100x {
+    ^FlattenOnce: [
+      *documentList10x, *documentList10x, *documentList10x, *documentList10x, *documentList10x,
+      *documentList10x, *documentList10x, *documentList10x, *documentList10x, *documentList10x
+    ]
+  }
+  - &defaultDocumentList {
+    ^FlattenOnce: [
+      *documentsList100x, *documentsList100x, *documentsList100x, *documentsList100x, *documentsList100x,
+      *documentsList100x, *documentsList100x, *documentsList100x, *documentsList100x, *documentsList100x,
+      *documentsList100x, *documentsList100x, *documentsList100x, *documentsList100x, *documentsList100x
+    ]
+  }
 
 Actors: # The size of each document is about 1kb.
   #  # Phase 0: insert.

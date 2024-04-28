@@ -42,7 +42,7 @@ Actors:
           - keys: {x6: 1}
           - keys: {x7: 1}
           - keys: {x8: 1}
-      - {Nop: true,}
+      - {Nop: true}
 
   - Name: LongLivedWriter
     Type: MultiCollectionUpdate

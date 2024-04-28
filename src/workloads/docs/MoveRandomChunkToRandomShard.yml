@@ -24,7 +24,7 @@ Actors:
             OperationCommand:
               shardCollection: test.collection0
               key: {Key: 1}
-      - {Nop: true,}
+      - {Nop: true}
 
   - Name: MoveRandomChunkToRandomShard
     Type: MoveRandomChunkToRandomShard

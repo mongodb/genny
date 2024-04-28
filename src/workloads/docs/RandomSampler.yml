@@ -23,7 +23,7 @@ Actors:
         BatchSize: 100
         Document:
           a: {^RandomString: {length: 100}}
-      - {Nop: true,}
+      - {Nop: true}
 
   - Name: DbHotSampler
     Type: RandomSampler

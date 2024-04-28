@@ -47,9 +47,19 @@ GlobalDefaults:
 
   - &UpdateOps10x [*UpdateOp, *UpdateOp, *UpdateOp, *UpdateOp, *UpdateOp, *UpdateOp, *UpdateOp, *UpdateOp, *UpdateOp, *UpdateOp]
 
-  - &UpdateOps100x {^FlattenOnce: [*UpdateOps10x, *UpdateOps10x, *UpdateOps10x, *UpdateOps10x, *UpdateOps10x, *UpdateOps10x, *UpdateOps10x, *UpdateOps10x, *UpdateOps10x, *UpdateOps10x]}
+  - &UpdateOps100x {
+    ^FlattenOnce: [
+      *UpdateOps10x, *UpdateOps10x, *UpdateOps10x, *UpdateOps10x, *UpdateOps10x,
+      *UpdateOps10x, *UpdateOps10x, *UpdateOps10x, *UpdateOps10x, *UpdateOps10x
+    ]
+  }
 
-  - &UpdateOps1000x {^FlattenOnce: [*UpdateOps100x, *UpdateOps100x, *UpdateOps100x, *UpdateOps100x, *UpdateOps100x, *UpdateOps100x, *UpdateOps100x, *UpdateOps100x, *UpdateOps100x, *UpdateOps100x],}
+  - &UpdateOps1000x {
+    ^FlattenOnce: [
+      *UpdateOps100x, *UpdateOps100x, *UpdateOps100x, *UpdateOps100x, *UpdateOps100x,
+      *UpdateOps100x, *UpdateOps100x, *UpdateOps100x, *UpdateOps100x, *UpdateOps100x
+    ]
+  }
 
 Clients:
   Default:

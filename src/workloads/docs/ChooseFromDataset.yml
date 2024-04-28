@@ -16,9 +16,19 @@ Actors:
     Phases:
       - Collection: "inserts"
         Document:
-          fullname: {^Join: {array: [{^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/names.txt"}}, {^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/familynames.txt"}}], sep: " "}} #  Kyle Ferguson
+          fullname: {
+            ^Join: {
+              array: [
+                {^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/names.txt"}},
+                {^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/familynames.txt"}}
+              ],
+              sep: " "
+            }
+          } #  Kyle Ferguson
           name: {^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/names.txt"}} #  Susan
           familyname: {^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/familynames.txt"}} #  Calhoun
           airport: {^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/airports_codes.txt"}} #  MBI
-          airport_ordered_skipfirst: {^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/airports_codes.txt", "sequential": true, "startFromLine": 1}}
+          airport_ordered_skipfirst: {
+            ^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/airports_codes.txt", "sequential": true, "startFromLine": 1}
+          }
         Repeat: 10
