@@ -226,7 +226,7 @@ Actors:
 
 This example has an additional `InsertRemove` Actor with 100 threads, where each thread inserts and removes a document as fast as possible. A user observing the database contents might notice a document appearing and disappearing rapidly. This Actor will output `InsertRemoveExample.Insert.ftdc` and `InsertRemoveExample.Remove.ftdc` time series outputs, showing the insertions and removals happening for 10 milliseconds at the phase start. (See [here](#orgec88ad4) for more details on outputs.)
 
-Note that even though the Actors are listed sequentially, all Actors are concurrent. [Example](../src/workloads/HelloWorld-MultiplePhases.yml).
+Note that even though the Actors are listed sequentially, all Actors are concurrent. [Example](../src/workloads/docs/HelloWorld-MultiplePhases.yml).
 
 Actor configurations expect the following keys:
 
@@ -506,7 +506,7 @@ This would set up the workload and print it as a list of Phases with the Actors 
 
     *Note:* [Skipping the compile step in sys-perf projects](https://github.com/10gen/performance-tooling-docs/blob/main/patch_testing.md#skipping-compilation-on-sys-perf-projects) can save some time when testing a genny workload.
 
-For more details on workload development, please check out our general docs on [Developing and Modifying Workloads](https://github.com/10gen/performance-tooling-docs/blob/main/new_workloads.md) and on [Basic Performance Patch Testing](https://github.com/10gen/performance-tooling-docs/blob/main/patch_testing.md).
+For more details on workload development, please check out our general docs on [Developing and Modifying Workloads](https://github.com/10gen/performance-tooling-docs/blob/main/workloads/new_workloads.md) and on [Basic Performance Patch Testing](https://github.com/10gen/performance-tooling-docs/blob/main/patch_testing.md).
 
 Users who would like a second look at their workloads can ask product performance. Users who have questions about their Genny usage can ask DEVPROD in #ask-devprod-performance.
 

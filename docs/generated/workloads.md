@@ -1558,6 +1558,27 @@ application deletes data within some time ranges.
 
 
 
+## [UniqueIndexes](https://www.github.com/mongodb/genny/blob/master/src/workloads/execution/UniqueIndexes.yml)
+### Owner 
+Storage Execution 
+
+
+### Support Channel
+[#server-storage-execution](https://mongodb.enterprise.slack.com/archives/C2RCHGB2L)
+
+
+### Description
+This workload tests concurrent insert/update/delete performance with unique indexes,
+a v2 unique index on 'a' and a v1 unique index on 'b'. The documents being inserted have
+duplicate keys across threads, and the uniqueness of indexes allows only one insertion
+to succeed. It first performs the operations with 8 threads, then 32, up to 128.
+
+  
+
+### Keywords
+insert, update, delete, unique indexes 
+
+
 ## [UpdateWithSecondaryIndexes](https://www.github.com/mongodb/genny/blob/master/src/workloads/execution/UpdateWithSecondaryIndexes.yml)
 ### Owner 
 Storage Execution 
