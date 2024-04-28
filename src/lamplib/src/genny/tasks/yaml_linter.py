@@ -49,7 +49,12 @@ def main(genny_repo_root: str, lint_format: bool):
 
     if lint_format:
         config_file_path = path.join(genny_repo_root, ".yamllint")
-        yamllint_argv = ["--strict", "--config-file", config_file_path] + all_yamls
+        yamllint_argv = (
+            ["--strict", "--config-file", config_file_path]
+            + workload_dirs
+            + resmoke_dirs
+            + evergreen_dirs
+        )
 
         SLOG.info(
             "Linting workload YAML files with yamllint",
