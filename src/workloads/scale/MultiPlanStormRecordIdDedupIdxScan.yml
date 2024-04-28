@@ -1,7 +1,13 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: >
-  The workload tests the server under a "multi-plan storm" which results in unbounded growth of the deduplicated set of RecordIds during an index scan. The same query requiring a multi-plan is executed by many threads, each of them triggering a multi-plan. Each of the plans in the multi-plan, on each thread, is index scanning a large number of documents, while maintaining a RecordId set. This causes the memory footprint to increase until the server is eventually OOM killed. #magic___^_^___line
+  The workload tests the server under a "multi-plan storm" which results in unbounded growth of the
+  deduplicated set of RecordIds during an index scan. The same query requiring a multi-plan is
+  executed by many threads, each of them triggering a multi-plan. Each of the plans in the
+  multi-plan, on each thread, is index scanning a large number of documents, while maintaining a
+  RecordId set. This causes the memory footprint to increase until the server is eventually OOM
+  killed.
+
 Keywords:
   - CrudActor
   - indexes
@@ -14,7 +20,7 @@ Keywords:
 GlobalDefaults:
   MaxPhases: &MaxPhases 2
   # The amount of documents here is important. Since trial-runs in the query planner "tournament"
-  # will only use ~30% of total document count, increasing the number of total documents helps
+  # will only use ~30% of total document count, increasing the number of total documents helps
   # reproduce the issue sooner.
   NumDocuments: &NumDocuments 30000000
   PerfTagDocs: &PerfTagDocs 300
@@ -78,7 +84,13 @@ Actors:
           Operations:
             - OperationName: find
               OperationCommand:
-                Filter: {$and: [{SpaceId: {$eq: 5}}, {Type: {$eq: 6}}, {Tags: {$regex: "/erf$/", $options: "i"}}, {Tags: {$regex: "/^per$/", $options: "i"}}, {Tags: {$regex: "/^perf$/", $options: "i"}}]}
+                Filter: {$and: [
+                  {SpaceId: {$eq: 5}},
+                  {Type: {$eq: 6}},
+                  {Tags: {$regex: "/erf$/", $options: "i"}},
+                  {Tags: {$regex: "/^per$/", $options: "i"}},
+                  {Tags: {$regex: "/^perf$/", $options: "i"}}
+                ]}
 
 # The workload is expected to cause an OOM kill. Keep AutoRun disabled.
 # AutoRun:

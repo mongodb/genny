@@ -29,7 +29,12 @@ GlobalDefaults:
   ExpectedDocumentCountAfterFlush: &ExpectedDocumentCountAfterFlush 2400016 # ExpectedDocumentCount + NumThreads
 
   Channel: &Channel {^RandomInt: {min: 0, max: 10000}}
-  Url: &Url {^FormatString: {format: "https://www.nexmark.com/%s/%s/%s/item.htm?query=1&channel_id=%d", withArgs: [{^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}}, {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}}, {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}}, *Channel]}}
+  Url: &Url {^FormatString: {format: "https://www.nexmark.com/%s/%s/%s/item.htm?query=1&channel_id=%d", withArgs: [
+    {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}},
+    {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}},
+    {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}},
+    *Channel
+  ]}}
 
   Document: &Document
     auction: {^Inc: {start: 1000, multiplier: *NumDocumentsPerThread}}
@@ -64,7 +69,32 @@ Actors:
             OperationCommand:
               streams_startStreamProcessor: ""
               name: *StreamProcessorName
-              pipeline: [{$source: {connectionName: "__testMemory", timeField: {$convert: {input: "$dateTime", to: "date"}}}}, {$tumblingWindow: {interval: {size: 1, unit: "second"}, allowedLateness: {size: 1, unit: "second"}, pipeline: [{$group: {_id: {auction: "$auction", url: "$url"}, minPrice: {$min: "$price"}, maxPrice: {$max: "$price"}, sumPrice: {$sum: "$price"}, avgPrice: {$avg: "$price"}}}]}}, {$emit: {connectionName: "__noopSink"}}]
+              pipeline: [
+                {
+                  $source: {
+                    connectionName: "__testMemory",
+                    timeField: {$convert: {input: "$dateTime", to: "date"}}
+                  }
+                },
+                {
+                  $tumblingWindow: {
+                    interval: {size: 1, unit: "second"},
+                    allowedLateness: {size: 1, unit: "second"},
+                    pipeline: [
+                      {
+                        $group: {
+                          _id: {auction: "$auction", url: "$url"},
+                          minPrice: {$min: "$price"},
+                          maxPrice: {$max: "$price"},
+                          sumPrice: {$sum: "$price"},
+                          avgPrice: {$avg: "$price"}
+                        }
+                      }
+                    ]
+                  }
+                },
+                {$emit: {connectionName: "__noopSink"}}
+              ]
               connections: [{name: "__testMemory", type: "in_memory", options: {}}]
               options: {}
       - Phase: 1..2

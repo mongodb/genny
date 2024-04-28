@@ -21,7 +21,7 @@ Actors:
           _id: {^Inc: {start: 0}}
           f: {^RandomString: {length: 10}}
       - {Nop: true}
-      - {Nop: true,}
+      - {Nop: true}
 
   - Name: Delete
     Type: CrudActor
@@ -37,7 +37,7 @@ Actors:
               WriteOperations:
                 - WriteCommand: deleteMany
                   Filter: {_id: {$lte: *docs}}
-      - {Nop: true,}
+      - {Nop: true}
 
   - Name: Find
     Type: CrudActor

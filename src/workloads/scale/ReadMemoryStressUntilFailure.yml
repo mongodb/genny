@@ -114,7 +114,17 @@ Actors:
                 # Loader default collection name.
                 aggregate: Collection0
                 # Sort *SortStep number of documents starting from a randomly chosen 'a'.
-                pipeline: [{$match: {$expr: {$let: {vars: {start: {^RandomInt: {min: 0, max: *NumDocs}}}, in: {$and: [{$gte: ["$a", "$$start"]}, {$lt: ["$a", {$add: ["$$start", *SortStep]}]}]}}}}}, {$sort: {b: 1}}]
+                pipeline: [
+                  { $match: {
+                    $expr: {
+                      $let: {
+                        vars: {start: {^RandomInt: {min: 0, max: *NumDocs}}},
+                        in: {$and: [{$gte: ["$a", "$$start"]}, {$lt: ["$a", {$add: ["$$start", *SortStep]}]}]}
+                      }
+                    }
+                  }},
+                  {$sort: {b: 1}}
+                ]
                 cursor: {batchSize: *SortBatchSize}
 
 # Commented out because this should not be regularly scheduled, as the task is expected to fail.
