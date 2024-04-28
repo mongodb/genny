@@ -24,7 +24,7 @@ GlobalDefaults:
   NumPhases: &NumPhases 23
 
 ActorTemplates:
-  # Template for populating the sharded and unsharded collections. 
+  # Template for populating the sharded and unsharded collections.
   - TemplateName: LoadDocuments
     Config:
       Name: LoadUnshardedInitialData
@@ -69,7 +69,14 @@ ActorTemplates:
               - OperationMetricsName: {^Parameter: {Name: "MetricsName", Default: "Lookup"}}
                 OperationName: aggregate
                 OperationCommand:
-                  Pipeline: [{$lookup: {from: {^Parameter: {Name: "Coll", Default: "localColl"}}, localField: "localField", foreignField: "localField", as: "joined"}}, {$limit: {^Parameter: {Name: "Limit", Default: 101}}}]
+                  Pipeline: [
+                    {$lookup: {
+                      from: {^Parameter: {Name: "Coll", Default: "localColl"}},
+                      localField: "localField",
+                      foreignField: "localField",
+                      as: "joined"}},
+                    {$limit: {^Parameter: {Name: "Limit", Default: 101}}}
+                  ]
                   Options:
                     BatchSize: {^Parameter: {Name: "Limit", Default: 101}}
                     AllowDiskUse: true
@@ -93,7 +100,14 @@ ActorTemplates:
               - OperationMetricsName: {^Parameter: {Name: "MetricsName", Default: "Lookup"}}
                 OperationName: aggregate
                 OperationCommand:
-                  Pipeline: [{$lookup: {from: {^Parameter: {Name: "Coll", Default: "localColl"}}, let: {local_field: "$localField"}, pipeline: [{$match: {$expr: {$eq: ['$localField', '$$local_field']}}}], as: "joined"}}, {$limit: {^Parameter: {Name: "Limit", Default: 101}}}]
+                  Pipeline: [
+                    {$lookup: {
+                      from: {^Parameter: {Name: "Coll", Default: "localColl"}},
+                      let: {local_field: "$localField"},
+                      pipeline: [{$match: {$expr: {$eq: ['$localField', '$$local_field']}}}],
+                      as: "joined"}},
+                    {$limit: {^Parameter: {Name: "Limit", Default: 101}}}
+                  ]
                   Options:
                     BatchSize: {^Parameter: {Name: "Limit", Default: 101}}
                     AllowDiskUse: true

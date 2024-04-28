@@ -113,25 +113,61 @@ Actors:
           - OperationMetricsName: FullByPartitionSmallStep
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$densify: {field: *field, partitionByFields: ["partitionKey"], range: {bounds: "full", step: *smallStep, unit: *unit}}}, {$limit: *limit}]
+              Pipeline: [
+                {$densify: {
+                  field: *field,
+                  partitionByFields: ["partitionKey"],
+                  range: {
+                    bounds: "full",
+                    step: *smallStep,
+                    unit: *unit
+                  }
+                }},
+                {$limit: *limit}
+              ]
               Options:
                 BatchSize: *limit
           - OperationMetricsName: FullByPartitionLargeStep
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$densify: {field: *field, partitionByFields: ["partitionKey"], range: {bounds: "full", step: *largeStep, unit: *unit}}}, {$limit: *limit}]
+              Pipeline: [
+                {$densify: {
+                  field: *field,
+                  partitionByFields: ["partitionKey"],
+                  range: {
+                    bounds: "full",
+                    step: *largeStep,
+                    unit: *unit
+                  }
+                }},
+                {$limit: *limit}
+              ]
               Options:
                 BatchSize: *limit
           - OperationMetricsName: PartitionedByPartitionSmallStep
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$densify: {field: *field, partitionByFields: ["partitionKey"], range: {bounds: "partition", unit: *unit, step: *smallStep}}}, {$limit: *limit}]
+              Pipeline: [
+                {$densify: {
+                  field: *field,
+                  partitionByFields: ["partitionKey"],
+                  range: {bounds: "partition", unit: *unit, step: *smallStep}
+                }},
+                {$limit: *limit}
+              ]
               Options:
                 BatchSize: *limit
           - OperationMetricsName: PartitionedByPartitionLargeStep
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$densify: {field: *field, partitionByFields: ["partitionKey"], range: {bounds: "partition", unit: *unit, step: *largeStep}}}, {$limit: *limit}]
+              Pipeline: [
+                {$densify: {
+                  field: *field,
+                  partitionByFields: ["partitionKey"],
+                  range: {bounds: "partition", unit: *unit, step: *largeStep}
+                }},
+                {$limit: *limit}
+              ]
               Options:
                 BatchSize: *limit
           - OperationMetricsName: ExplicitRangeSmallStep
@@ -149,13 +185,27 @@ Actors:
           - OperationMetricsName: ExplicitRangeByPartitionSmallStep
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$densify: {field: *field, partitionByFields: ["partitionKey"], range: {step: *smallStep, unit: *unit, bounds: *bounds}}}, {$limit: *limit}]
+              Pipeline: [{
+                $densify: {
+                  field: *field,
+                  partitionByFields: ["partitionKey"],
+                  range: {step: *smallStep, unit: *unit, bounds: *bounds}
+                }}, {
+                  $limit: *limit
+                }]
               Options:
                 BatchSize: *limit
           - OperationMetricsName: ExplicitRangeByPartitionLargeStep
             OperationName: aggregate
             OperationCommand:
-              Pipeline: [{$densify: {field: *field, partitionByFields: ["partitionKey"], range: {step: *largeStep, unit: *unit, bounds: *bounds}}}, {$limit: *limit}]
+              Pipeline: [
+                {$densify: {
+                  field: *field,
+                  partitionByFields: ["partitionKey"],
+                  range: {step: *largeStep, unit: *unit, bounds: *bounds}
+                }},
+                {$limit: *limit}
+              ]
               Options:
                 BatchSize: *limit
 
