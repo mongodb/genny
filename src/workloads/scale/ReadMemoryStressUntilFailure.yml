@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: Service Architecture
+Owner: Service Arch
 Description: |
   Used to test performance of the server under heavy memory pressure caused by read
   operations. This workload is expected to fail due to host(s) being unreachable as a

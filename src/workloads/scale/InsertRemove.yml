@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   Demonstrate the InsertRemove actor. The InsertRemove actor is a simple actor that inserts and then
   removes the same document from a collection in a loop. Each instance of the actor uses a different
@@ -28,7 +28,6 @@ AutoRun:
           - atlas
           - atlas-like-replica.2022-10
           - replica
-          - single-replica
           - standalone
           - shard
           - shard-80-feature-flags
@@ -38,4 +37,3 @@ AutoRun:
       atlas_setup:
         $neq:
           - M30-repl
-

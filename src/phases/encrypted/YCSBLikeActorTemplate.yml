@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/server-security"
+Owner: Server Security
 Description: |
   Phase definitions for encrypted YCSB-like workloads. This defines the YCSBLikeActor
   that emulates the MongoDB YCSB workloads.

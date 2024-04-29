@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/server-replication"
+Owner: Replication
 Description: |
   This workload loads a large number of small documents into a single collection, and then does a
   small multi-update which touches all of them.  It is intended to measure the impact of the load of
@@ -82,7 +82,6 @@ AutoRun:
           - replica-1dayhistory-15gbwtcache
           - replica-80-feature-flags
           - replica-all-feature-flags
-          - single-replica
           - standalone
       atlas_setup:
         $neq:

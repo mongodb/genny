@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: Atlas Serverless
+Owner: Atlas Serverless II
 Description: |
   This workload is an extension of scale/LargeIndexedIns.yml to run the workload
   on multiple serverless tenants, with some slight variations. The Clients are

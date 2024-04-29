@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-execution"
+Owner: Query Execution
 Description: |
   This workload measures performance for $in for arrays of different sizes. We add the array length
   for $in to the plan cache key since there is a possible explodeForSort optimization till we reach

@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/sharding"
+Owner: Cluster Scalability
 Description: |
   This workload is developed to test the amount of time it takes to remove and re-insert one
   million documents, with a fixed transaction batch size of one hundred.

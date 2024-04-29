@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/server-security"
+Owner: Server Security
 Description: |
   Example workload demonstrating encryption support in Genny's client pools.
   The CrudActor in this workload performs encrypted operations using a Client

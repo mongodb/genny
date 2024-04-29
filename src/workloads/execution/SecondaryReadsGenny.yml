@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: mongodb/server-replication"
+Owner: Replication
 Description: |
   Test performance of secondary reads while applying oplogs
 

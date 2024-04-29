@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: Storage Engines
+Owner: Storage Execution
 Description: |
   A workload to test/document the RollingCollections actor which has two modes of operation. A
   "Setup" operation which creates CollectionWindowSize collections and populates them with

@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/sharding"
+Owner: Cluster Scalability
 Description: |
   This test measures the time for a sharded cluster to reshard a collection from one shard to two
   shards then to three shards. It was added August 2023 as part of PM-2322, to demonstrate planned

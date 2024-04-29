@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: Storage Engines
+Owner: Storage Execution
 Description: |
   This workload is designed to test the effectiveness of durable history as
   described in PM-1986.
@@ -102,6 +102,6 @@ AutoRun:
       mongodb_setup:
         $eq:
           - replica-noflowcontrol
-          - single-replica
+          - replica
           - single-replica-classic-query-engine
           - single-replica-sbe

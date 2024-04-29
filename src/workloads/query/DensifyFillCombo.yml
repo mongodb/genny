@@ -415,7 +415,6 @@ AutoRun:
         $eq:
           - standalone
           - replica
-          - single-replica
       branch_name:
         $neq:
           - v4.0

@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: STM
+Owner: Performance Infrastructure
 Description: |
   Common definitions to support the workloads in scale/LargeScale. See
   LargeScaleSerial.yml for a general overview of what the large-scale workloads are

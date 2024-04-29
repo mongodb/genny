@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   This workload is a repro of SERVER-48522, a regression in the document
   remove rate. It loads, documents, removes them and then queries for

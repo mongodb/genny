@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-optimization"
+Owner: Query Optimization
 
 Description: |
   This workload measures performance of boolean expressions which can be simplified by
@@ -16,7 +16,6 @@ AutoRun:
       mongodb_setup:
         $eq:
           - replica
-          - single-replica
           - standalone
           - standalone-80-feature-flags
           - standalone-all-feature-flags

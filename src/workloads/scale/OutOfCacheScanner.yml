@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: Storage Engines
+Owner: Storage Execution
 Description: |
   A workload which creates 2 databases a "cold" database which is scanned periodically and a "hot"
   database which is read continuously throughout the workload. The intention is that the hot

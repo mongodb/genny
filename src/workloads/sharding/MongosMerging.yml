@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   This workload runs different types of aggregations where the query results
   will be merged on a mongos node. This workload reproduces a SERVER-29446,

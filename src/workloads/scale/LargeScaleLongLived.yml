@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: Storage Engines
+Owner: Storage Execution
 Description: |
   This workload consists of two phases intended to test the basic long lived reader writer actors
   created for the large scale workload automation project. It creates a database with 10K
@@ -96,7 +96,6 @@ AutoRun:
           - replica-all-feature-flags
           - shard
           - shard-80-feature-flags
-          - single-replica
           - single-replica-15gbwtcache
           - standalone
           - standalone-classic-query-engine

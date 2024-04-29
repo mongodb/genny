@@ -8,11 +8,18 @@ If you want to update the documentation please update the {{documentation_type}}
 
 {% for workload in workloads %}
 ## [{{ workload.name }}]({{workload.github_link}})
-### Owner
-{{ workload.owner }}
+### Owner 
+{{ workload.owner }} 
+
+{% if workload.support_channel_id and workload.support_channel_name %}
+### Support Channel
+[{{ workload.support_channel_name }}](https://mongodb.enterprise.slack.com/archives/{{ workload.support_channel_id }})
+{% endif %}
+
 ### Description
 {{ workload.description }}
 {% if workload.keywords %}  
+
 ### Keywords
 {{ workload.keywords|join(", ") }} 
 {% endif %}

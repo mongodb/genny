@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   This workload was created to reproduce SERVER-53853: Large buildup of mongos to mongod connections and
   low performance with secondaryPreferred reads. This workload was originally two separate files,
@@ -103,5 +103,4 @@ AutoRun:
           - replica
           - replica-80-feature-flags
           - replica-all-feature-flags
-          - single-replica
           - shard-single

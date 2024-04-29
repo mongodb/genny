@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/server-execution"
+Owner: Storage Execution
 Description: |
   Runs mass deletions over a set of 1KB documents, then mass deletions over a set of larger, 10MB documents.
   For each size of document:

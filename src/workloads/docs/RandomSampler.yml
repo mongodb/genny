@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: Storage Engines
+Owner: Storage Execution
 Description: |
   A workload to test/document the random sampler actor which reads random records in a database.
   It chooses collections and then documents from that collection using id based lookup. It has a
