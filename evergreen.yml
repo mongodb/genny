@@ -512,7 +512,7 @@ functions:
 modules:
 - name: mongo
   owner: mongodb
-  repo: mongo
+  repo: 10gen
   # This prefix is relative to the path in git.get_project
   # I.e., src/genny/../../src = ./src
   prefix: ../../src
