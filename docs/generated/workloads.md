@@ -5032,7 +5032,7 @@ result of mongos running out of memory.
 
 To achieve this, many threads are spawned to run an unfiltered find on a collection.
 The number and size of documents in that collection are tuned such, that the mongos is able
-to exhaust cursors on shards when pre-filling its buffers [<16MB per shard]. As a result, 
+to exhaust cursors on shards when pre-filling its buffers [<16MB per shard]. As a result,
 memory pressure on the shards remains low, while it's kept large on the mongos.
 
   
