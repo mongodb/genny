@@ -118,7 +118,7 @@ Actors:
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: 4
+      Active: [4]
       NopInPhasesUpTo: *maxPhases
       PhaseConfig:
         Repeat: 1
