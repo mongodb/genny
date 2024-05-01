@@ -5,7 +5,6 @@ Description: |
   a document in the collection.
   Each workload name consists of several parts: '{SyntaxType}{PredicateType}'.
   'SyntaxType' can be:
-    - 'AggregationExpression' means expressions which can be used inside $expr
     - 'MatchExpression' means operators of the find command match predicate language
   'PredicateType' can be:
     - 'NestedArray' means query which targets data that recursively nests arrays
@@ -28,7 +27,7 @@ GlobalDefaults:
   DocumentCount: &DocumentCount 1e6
   Repeat: &Repeat 50
   Threads: &Threads 1
-  MaxPhases: &MaxPhases 13
+  MaxPhases: &MaxPhases 8
 
 Actors:
 # Clear any pre-existing collection state.
@@ -100,7 +99,7 @@ Actors:
         Threads: *Threads
         Repeat: 1
 
-- Name: AggregationExpressionNestedArray
+- Name: MatchExpressionNestedArray
   Type: CrudActor
   Database: *Database
   Threads: *Threads
@@ -114,9 +113,9 @@ Actors:
         Operations:
         - OperationName: find
           OperationCommand:
-            Filter: {$expr: {$eq: ["$n1.b.c", 0]}}
+            Filter: {"n1.b.c": 0}
 
-- Name: MatchExpressionNestedArray
+- Name: MatchExpressionDeeplyNestedArray
   Type: CrudActor
   Database: *Database
   Threads: *Threads
@@ -130,9 +129,9 @@ Actors:
         Operations:
         - OperationName: find
           OperationCommand:
-            Filter: {"n1.b.c": 0}
+            Filter: {"n2.b.c.d.e.f": 0}
 
-- Name: AggregationExpressionDeeplyNestedArray
+- Name: MatchExpressionNestedArrayMissingPathSuffix
   Type: CrudActor
   Database: *Database
   Threads: *Threads
@@ -146,9 +145,9 @@ Actors:
         Operations:
         - OperationName: find
           OperationCommand:
-            Filter: {$expr: {$eq: ["$n2.b.c.d.e.f", 0]}}
+            Filter: {"n1.b.z": 0}
 
-- Name: MatchExpressionDeeplyNestedArray
+- Name: MatchExpressionDeeplyNestedArrayMissingPathSuffix
   Type: CrudActor
   Database: *Database
   Threads: *Threads
@@ -162,88 +161,7 @@ Actors:
         Operations:
         - OperationName: find
           OperationCommand:
-            Filter: {"n2.b.c.d.e.f": 0}
-
-# Set of queries which query a nested field which does not exist in any array element sub-object.
-- Name: AggregationExpressionNestedArrayMissingPathSuffix
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [7]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {$expr: {$eq: ["$n1.b.z", 0]}}
-
-- Name: MatchExpressionNestedArrayMissingPathSuffix
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [8]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {"n1.b.z": 0}
-
-- Name: AggregationExpressionDeeplyNestedArrayMissingPathSuffix
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [9]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {$expr: {$eq: ["$n2.b.c.d.e.z", 0]}}
-
-- Name: MatchExpressionDeeplyNestedArrayMissingPathSuffix
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [10]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
             Filter: {"n2.b.c.d.e.z": 0}
-
-- Name: AggregationExpressionArrayStressTest
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [11]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {$expr: {$eq: ["$n3.b", 0]}}
 
 - Name: MatchExpressionArrayStressTest
   Type: CrudActor
@@ -251,7 +169,7 @@ Actors:
   Threads: *Threads
   Phases:
     OnlyActiveInPhases:
-      Active: [12]
+      Active: [7]
       NopInPhasesUpTo: *MaxPhases
       PhaseConfig:
         Repeat: *Repeat
