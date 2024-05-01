@@ -43,7 +43,7 @@ GlobalDefaults:
   - &ShardKeyValueMin 1
   - &ShardKeyValueMax 1000
 
-  - &UpdateOp { 
+  - &UpdateOp {
       WriteCommand: updateOne,
       Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}},
       Update: {$inc: {counter: 1}},
@@ -74,7 +74,7 @@ Clients:
   Default:
     QueryOptions:
       maxPoolSize: 600
-      
+
 Actors:
 - Name: CreateShardedCollection
   Type: AdminCommand
@@ -137,8 +137,7 @@ AutoRun:
       $eq:
       - shard
       - shard-80-feature-flags
-      - shard-lite
+      - shard-all-feature-flags
       - shard-lite-80-feature-flags
-      - shard-lite-all-feature-flags
     branch_name:
       $gte: v8.0

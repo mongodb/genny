@@ -62,7 +62,7 @@ Clients:
     QueryOptions:
       socketTimeoutMS: -1
       maxPoolSize: 500
-    
+
 Actors:
 # Drop database to get rid of stale data. Useful when running locally multiple times.
 - Name: Setup
@@ -134,4 +134,4 @@ Actors:
 # - When:
 #     mongodb_setup:
 #       $eq:
-#       - shard-lite
+#       - shard
