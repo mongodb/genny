@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   This workload is intended to be used to stress a system that may show negative scaling behaviour.
   The workload will insert 100k documents and then run 100k finds across 256 threads. This workload

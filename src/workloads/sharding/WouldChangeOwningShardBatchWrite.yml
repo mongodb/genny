@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/sharding"
+Owner: Cluster Scalability
 Description: |
   Creates a sharded collection with 2 chunks on 2 different shards using ranged sharding and updates
   the shard key to trigger WouldChangeOwningShard errors.
@@ -90,9 +90,7 @@ AutoRun:
       - shard
       - shard-80-feature-flags
       - shard-all-feature-flags
-      - shard-lite
       - shard-lite-80-feature-flags
-      - shard-lite-all-feature-flags
     branch_name:
       $neq:
       - v4.0

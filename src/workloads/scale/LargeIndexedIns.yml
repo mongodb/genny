@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   This workload sends bursts of finds that use large $ins. The workload
   causes high CPU load as the server becomes bottlenecked on tcmalloc
@@ -66,6 +66,5 @@ AutoRun:
       - replica
       - replica-80-feature-flags
       - replica-all-feature-flags
-      - single-replica
       - single-replica-classic-query-engine
       - single-replica-sbe

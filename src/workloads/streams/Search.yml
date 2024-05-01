@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/altas-streams"
+Owner: Atlas Streams
 Description: |
   Pipeline: Memory -> Match -> Project -> Memory
   Input Documents: 8M

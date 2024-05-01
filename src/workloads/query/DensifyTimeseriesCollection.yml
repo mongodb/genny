@@ -135,7 +135,7 @@ Actors:
         }, {
           $limit: *limit
         }]
-        Options: 
+        Options:
           BatchSize:  *limit
   - *Nop
   - *Nop
@@ -178,7 +178,7 @@ Actors:
         }, {
           $limit: *limit
         }]
-        Options: 
+        Options:
           BatchSize:  *limit
   - *Nop
   - *Nop
@@ -221,7 +221,7 @@ Actors:
         }, {
           $limit: *limit
         }]
-        Options: 
+        Options:
           BatchSize:  *limit
   - *Nop
   - *Nop
@@ -264,7 +264,7 @@ Actors:
         }, {
           $limit: *limit
         }]
-        Options: 
+        Options:
           BatchSize:  *limit
   - *Nop
   - *Nop
@@ -308,7 +308,7 @@ Actors:
         }, {
           $limit: *limit
         }]
-        Options: 
+        Options:
           BatchSize:  *limit
   - *Nop
   - *Nop
@@ -351,7 +351,7 @@ Actors:
         }, {
           $limit: *limit
         }]
-        Options: 
+        Options:
           BatchSize:  *limit
   - *Nop
   - *Nop
@@ -395,7 +395,7 @@ Actors:
         }, {
           $limit: *limit
         }]
-        Options: 
+        Options:
           BatchSize:  *limit
 
 AutoRun:
@@ -404,7 +404,6 @@ AutoRun:
       $eq:
       - standalone
       - replica
-      - single-replica
     branch_name:
       $neq:
       - v4.0

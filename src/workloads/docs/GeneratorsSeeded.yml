@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/dev-prod-tips"
+Owner: Performance Analysis
 Description: |
   This workload demonstrates the usage of RandomSeed. Genny uses a PRNG and defaults to the
   same seed (see RNG_SEED_BASE from context.cpp). As a result every execution of the same workload

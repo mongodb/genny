@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: Storage Engines
+Owner: Storage Execution
 Description: |
   A workload to test/document the HotDocumentUpdater actor which updates a specified document in a
   specified collection.

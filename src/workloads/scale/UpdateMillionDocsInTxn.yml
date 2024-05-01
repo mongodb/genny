@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/sharding"
+Owner: Cluster Scalability
 Description: |
   This workload is developed to test the amount of time it takes to update a million documents in
   a single replica set transaction. At the moment, the average time taken raises above the default

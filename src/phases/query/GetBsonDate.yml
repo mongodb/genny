@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-execution"
+Owner: Query Execution
 Description: |
   This file defines a parameterized configuration 'GetBsonDate' to work around the issue of
   ISODate.

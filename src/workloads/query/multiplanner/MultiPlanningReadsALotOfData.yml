@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-execution"
+Owner: Query Execution
 Description: |
   Create collection with multiple indexes and run queries for which multi planner needs to read a lot
   of data in order to pick the best plan.

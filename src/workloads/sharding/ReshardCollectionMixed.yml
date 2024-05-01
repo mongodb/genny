@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/sharding"
+Owner: Cluster Scalability
 Description: |
   Runs the reshardCollection command while read and write operations are active on the collection
   being resharded.
@@ -187,9 +187,7 @@ AutoRun:
       - shard
       - shard-80-feature-flags
       - shard-all-feature-flags
-      - shard-lite
       - shard-lite-80-feature-flags
-      - shard-lite-all-feature-flags
     branch_name:
       $neq:
       - v4.0

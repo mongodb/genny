@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: STM
+Owner: Performance Infrastructure
 Description: |
   See LargeScaleSerial.yml for a general overview of what this workload does. The main
   difference here is that the update is parallel with the long-running query and

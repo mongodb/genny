@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: Storage Engines
+Owner: Storage Execution
 Description: |
   Basic workload to test/document the long lived reader actor, which utilizes the multi collection
   query actor under the hood. This actor reads a set of long lived collections over a period of

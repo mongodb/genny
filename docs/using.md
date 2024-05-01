@@ -441,11 +441,14 @@ Try using `python test_result_summary.py --help` for more options.
 
 1.  Create a yaml file in `./src/workloads` in whatever topical subdirectory you deem appropriate and populate it with appropriate configuration. If you have yaml configuration that may need loading, place it in `./src/phases` (and for more details about what that means, see [here](#org2078b23)). Consider whether existing Actors can be repurposed for your workload, or whether a new one is needed. For the latter, see [here](#org7e6c6bd).
 
+
     ```bash
     vim src/workloads/[workload_dir]/[workload_name.yml]
     vim src/phases/[phase_dir]/[phases_name.yml] # Only necessary if creating external configuration
     ./run-genny create-new-actor  # Only necessary if creating a new Actor
     ```
+    
+    Note: The `Owner` field in the workload yaml is expected to be a valid team in the [mothra](https://github.com/10gen/mothra/tree/main/mothra/teams) repo. Each team in Mothra that is referenced in Genny is expected to have a `support_slack_channel_name` and `support_slack_channel_id` in Mothra, if these values are not present you will need to add them before merging your workload.
 
 2.  Run the self-tests:
 

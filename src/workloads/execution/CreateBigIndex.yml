@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/server-execution"
+Owner: Storage Execution
 Description: |
   This workload tests the performance of index creation on replica sets, standalones, and sharded
   clusters. We use 2 main actors, InsertData and IndexCollection. For more information about these
@@ -209,7 +209,6 @@ AutoRun:
       - replica
       - replica-80-feature-flags
       - replica-all-feature-flags
-      - single-replica
       - standalone
       - standalone-80-feature-flags
       - standalone-all-feature-flags
