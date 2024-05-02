@@ -5,7 +5,7 @@ from typing import Optional
 import structlog
 import yaml
 
-MOTHRA_REPO = "git@github.com:10gen/mothra.git"
+MOTHRA_REPO = "https://github.com/10gen/mothra.git"
 TEAMS_DIR = "mothra/teams"
 TEAMS_FILES = ["cloud.yaml", "database.yaml", "rnd_dev_prod.yaml", "star.yaml"]
 TEAMS_FILES_PATHS = [f"{TEAMS_DIR}/{file}" for file in TEAMS_FILES]
