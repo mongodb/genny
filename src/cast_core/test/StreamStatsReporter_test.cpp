@@ -48,6 +48,7 @@ TEST_CASE_METHOD(MongoTestFixture, "StreamStatsReporter successfully connects to
           Phases:
           - Repeat: 1
             StreamProcessorName: sp
+            StreamProcessorId: spid
             ExpectedDocumentCount: 1
     )", __FILE__);
 

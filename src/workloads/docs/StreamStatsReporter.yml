@@ -8,7 +8,8 @@ Description: |
 GlobalDefaults:
   DatabaseName: &DatabaseName test
   TenantId: &TenantId test
-  StreamProcessorName: &StreamProcessorName sp1
+  StreamProcessorName: &StreamProcessorName sp
+  StreamProcessorId: &StreamProcessorId spid
   Document: &Document
     id: {^Inc: { start: 1000 }}
   BatchSize: &BatchSize 1000
@@ -32,6 +33,7 @@ Actors:
         streams_startStreamProcessor: ""
         tenantId: *TenantId
         name: *StreamProcessorName
+        processorId: *StreamProcessorId
         pipeline: [
           { $source: { connectionName: "__testMemory" } },
           { $emit: { connectionName: "__testMemory" } }
@@ -49,6 +51,7 @@ Actors:
         streams_stopStreamProcessor: ""
         tenantId: *TenantId
         name: *StreamProcessorName
+        processorId: *StreamProcessorId
 
 - Name: Inserter
   Type: RunCommand
@@ -66,6 +69,7 @@ Actors:
         streams_testOnlyInsert: ""
         tenantId: *TenantId
         name: *StreamProcessorName
+        processorId: *StreamProcessorId
         documents: *Batch1000x
   - Phase: 2
     Nop: true
@@ -81,6 +85,7 @@ Actors:
     Repeat: 1
     TenantId: *TenantId
     StreamProcessorName: *StreamProcessorName
+    StreamProcessorId: *StreamProcessorId
     ExpectedDocumentCount: *ExpectedDocumentCount
   - Phase: 2
     Nop: true

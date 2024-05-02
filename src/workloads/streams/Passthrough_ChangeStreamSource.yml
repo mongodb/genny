@@ -17,6 +17,7 @@ GlobalDefaults:
   DatabaseName: &DatabaseName test
   TenantId: &TenantId test
   StreamProcessorName: &StreamProcessorName sp
+  StreamProcessorId: &StreamProcessorId spid
   InputCollectionName: &InputCollectionName input
 
   # Genny workload client typically has 16 CPUs, so use 16 inserter threads each inserting
@@ -85,6 +86,7 @@ Actors:
         streams_startStreamProcessor: ""
         tenantId: *TenantId
         name: *StreamProcessorName
+        processorId: *StreamProcessorId
         pipeline: [
           {
             $source: {
@@ -121,6 +123,7 @@ Actors:
         streams_stopStreamProcessor: ""
         tenantId: *TenantId
         name: *StreamProcessorName
+        processorId: *StreamProcessorId
 
 - Name: Passthrough.ChangeStreamSource.Stats
   Type: StreamStatsReporter
@@ -134,6 +137,7 @@ Actors:
     Repeat: 1
     TenantId: *TenantId
     StreamProcessorName: *StreamProcessorName
+    StreamProcessorId: *StreamProcessorId
     ExpectedDocumentCount: *ExpectedDocumentCount
   - Phase: 3
     Nop: true
