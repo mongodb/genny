@@ -1,5 +1,6 @@
 from jinja2 import Environment, PackageLoader, select_autoescape
 from data_generation import generate_all_data
+import os.path
 
 env = Environment(
     loader=PackageLoader("qe_range_testing"), autoescape=select_autoescape()
@@ -157,6 +158,9 @@ def generate_rc_workloads(is_local):
     if is_local:
         basedir = "./src/workloads/contrib/qe_range_testing/"
         crypt_path = MONGO_CRYPT_PATH
+        if not os.path.exists(crypt_path):
+            print('Please point MONGO_CRYPT_PATH to the mongo_crypt_v1.so shared library for local workload generation.')
+            exit(1)
         wldir = "local"
     else:
         basedir = "./src/genny/src/workloads/contrib/qe_range_testing/"

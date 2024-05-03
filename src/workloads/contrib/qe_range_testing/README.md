@@ -14,7 +14,7 @@ poetry install
 
 ## General Usage
 
-Note: For local development, you will have to edit the `MONGO_CRYPT_PATH` constant in `experiment_generator.py` to point to `mongo_crypt_v1.so` on your local machine. The easiest way to get this file is to run the `crypt_create_lib` task in the `Amazon Linux 2 arm64 Crypt Compile` build variant and download the resulting shared library file. Otherwise, you'll have to compile the library yourself; instructions not attached.
+Note: In order to generate workloads which are locally testable, you will have to edit the `MONGO_CRYPT_PATH` constant in `experiment_generator.py` to point to `mongo_crypt_v1.so` on your local machine. The easiest way to get this file is to run the `crypt_create_lib` task in the `Amazon Linux 2 arm64 Crypt Compile` build variant and download the resulting shared library file. Otherwise, you'll have to compile the library yourself; instructions not attached. This is not required if you are only generating workloads to be run on Evergreen.
 
 Generate tests and runtime requirements by invoking the experiment generator as follows:
 
