@@ -1887,7 +1887,6 @@ This workload stresses path traversal over nested arrays. Crucially, these queri
 a document in the collection.
 Each workload name consists of several parts: '{SyntaxType}{PredicateType}'.
 'SyntaxType' can be:
-  - 'AggregationExpression' means expressions which can be used inside $expr
   - 'MatchExpression' means operators of the find command match predicate language
 'PredicateType' can be:
   - 'NestedArray' means query which targets data that recursively nests arrays
