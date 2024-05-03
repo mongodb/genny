@@ -16,15 +16,12 @@ GlobalDefaults:
     SleepBefore: {^TimeSpec: {value: 0, unit: seconds}}
   - To: Update
     Weight: 0.5
-    SleepBefore: {^TimeSpec: {value: 0, unit: seconds}}
-  
-
+    SleepBefore: {^TimeSpec: {value: 0, unit: seconds}} 
 
 Encryption:
   
   UseCryptSharedLib: true
-  CryptSharedLibPath: /data/workdir/mongocrypt/lib/mongo_crypt_v1.so
-  
+  CryptSharedLibPath: /data/workdir/mongocrypt/lib/mongo_crypt_v1.so 
   EncryptedCollections:
   - Database: *encrypted_db
     Collection: *encrypted_coll
@@ -33,9 +30,7 @@ Encryption:
     QueryableEncryptedFields:
       tm_retail_tx: { type: "long", queries: [{queryType: "range", min: 0, max: 1000000000000, contention: 4, sparsity: 2, trimFactor: 8}] }
       age_hospitals: { type: "int",  queries: [{queryType: "range", min: 0, max: 55000, contention: 8, sparsity: 2, trimFactor: 6}] }
-      bnk_bal: { type: "decimal", queries: [{queryType: "range", min: 0, max: 1000000, precision: 2, contention: 8, sparsity: 2, trimFactor: 6}] }
-
-
+      bnk_bal: { type: "decimal", queries: [{queryType: "range", min: 0, max: 1000000, precision: 2, contention: 8, sparsity: 2, trimFactor: 6}] } 
 Clients:
   EncryptedPool:
     QueryOptions:
@@ -45,977 +40,264 @@ Clients:
       KeyVaultDatabase: "keyvault"
       KeyVaultCollection: "datakeys"
       EncryptedCollections:
-      - genny_release_criteria.my_coll
+      - genny_release_criteria.my_coll 
+
+ActorTemplates:
+- TemplateName: InsertTemplate
+  Config: 
+    Name: {^Parameter: {Name: "Name", Default: "unused"}}
+    Type: CrudActor
+    Threads: 1
+    Database: *encrypted_db
+    ClientName: EncryptedPool
+    Phases: 
+    - Repeat: 6250
+      Collection: *encrypted_coll
+      MetricsName: "load"
+      Operations:
+      - OperationName: insertOne
+        OperationMetricsName: inserts
+        OperationCommand:
+          Document:
+            tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": &StartLine {^Parameter: {Name: "StartLine", Default: -1}}}}}}
+            age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": *StartLine}}}}
+            bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt", "sequential": true, "startFromLine": *StartLine}}}}
+
+    - *nop
+
+- TemplateName: FSMTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "unused"}}
+    Type: CrudActor
+    Threads: 1
+    Database: *encrypted_db
+    ClientName: EncryptedPool
+    
+    Phases: 
+    - *nop
+    - Repeat: 6250
+      Collection: *encrypted_coll
+      MetricsName: "FSM"
+      InitialStates:
+        - State: Query
+          Weight: 0.5
+        - State: Update
+          Weight: 0.5
+      States:
+        - Name: Query
+          Operations:
+          - OperationName: find
+            OperationMetricsName: range_query
+            OperationCommand:
+              Filter: { bnk_bal: {
+                  $gte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_min.txt", "sequential": true, "startFromLine": *StartLine}}}},
+                  $lte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_max.txt", "sequential": true, "startFromLine": *StartLine}}}}
+                }
+              }
+          Transitions: *transitions
+        - Name: Update
+          Operations:
+          - OperationName: updateOne
+            OperationMetricsName: update
+            OperationCommand:
+              Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
+              Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
+          Transitions: *transitions 
+Actors: 
   
-
-Actors:
-
-  
-  
-  - Name: InsertActor_Thread0
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    Phases:
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "load"
-      Operations:
-      - OperationName: insertOne
-        OperationMetricsName: inserts
-        OperationCommand:
-          Document:
-            tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 0}}}}
-            age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 0}}}}
-            bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt", "sequential": true, "startFromLine": 0}}}}
-
-            _id: {^Inc: {start: 0, multiplier: 500000}}
-    - *nop
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread0
+        StartLine: 0
     
-  - Name: InsertActor_Thread1
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    Phases:
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "load"
-      Operations:
-      - OperationName: insertOne
-        OperationMetricsName: inserts
-        OperationCommand:
-          Document:
-            tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 6250}}}}
-            age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 6250}}}}
-            bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt", "sequential": true, "startFromLine": 6250}}}}
-
-            _id: {^Inc: {start: 0, multiplier: 500000}}
-    - *nop
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread1
+        StartLine: 6250
     
-  - Name: InsertActor_Thread2
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    Phases:
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "load"
-      Operations:
-      - OperationName: insertOne
-        OperationMetricsName: inserts
-        OperationCommand:
-          Document:
-            tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 12500}}}}
-            age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 12500}}}}
-            bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt", "sequential": true, "startFromLine": 12500}}}}
-
-            _id: {^Inc: {start: 0, multiplier: 500000}}
-    - *nop
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread2
+        StartLine: 12500
     
-  - Name: InsertActor_Thread3
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    Phases:
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "load"
-      Operations:
-      - OperationName: insertOne
-        OperationMetricsName: inserts
-        OperationCommand:
-          Document:
-            tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 18750}}}}
-            age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 18750}}}}
-            bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt", "sequential": true, "startFromLine": 18750}}}}
-
-            _id: {^Inc: {start: 0, multiplier: 500000}}
-    - *nop
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread3
+        StartLine: 18750
     
-  - Name: InsertActor_Thread4
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    Phases:
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "load"
-      Operations:
-      - OperationName: insertOne
-        OperationMetricsName: inserts
-        OperationCommand:
-          Document:
-            tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 25000}}}}
-            age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 25000}}}}
-            bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt", "sequential": true, "startFromLine": 25000}}}}
-
-            _id: {^Inc: {start: 0, multiplier: 500000}}
-    - *nop
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread4
+        StartLine: 25000
     
-  - Name: InsertActor_Thread5
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    Phases:
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "load"
-      Operations:
-      - OperationName: insertOne
-        OperationMetricsName: inserts
-        OperationCommand:
-          Document:
-            tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 31250}}}}
-            age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 31250}}}}
-            bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt", "sequential": true, "startFromLine": 31250}}}}
-
-            _id: {^Inc: {start: 0, multiplier: 500000}}
-    - *nop
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread5
+        StartLine: 31250
     
-  - Name: InsertActor_Thread6
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    Phases:
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "load"
-      Operations:
-      - OperationName: insertOne
-        OperationMetricsName: inserts
-        OperationCommand:
-          Document:
-            tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 37500}}}}
-            age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 37500}}}}
-            bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt", "sequential": true, "startFromLine": 37500}}}}
-
-            _id: {^Inc: {start: 0, multiplier: 500000}}
-    - *nop
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread6
+        StartLine: 37500
     
-  - Name: InsertActor_Thread7
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    Phases:
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "load"
-      Operations:
-      - OperationName: insertOne
-        OperationMetricsName: inserts
-        OperationCommand:
-          Document:
-            tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 43750}}}}
-            age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 43750}}}}
-            bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt", "sequential": true, "startFromLine": 43750}}}}
-
-            _id: {^Inc: {start: 0, multiplier: 500000}}
-    - *nop
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread7
+        StartLine: 43750
     
-  - Name: InsertActor_Thread8
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    Phases:
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "load"
-      Operations:
-      - OperationName: insertOne
-        OperationMetricsName: inserts
-        OperationCommand:
-          Document:
-            tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 50000}}}}
-            age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 50000}}}}
-            bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt", "sequential": true, "startFromLine": 50000}}}}
-
-            _id: {^Inc: {start: 0, multiplier: 500000}}
-    - *nop
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread8
+        StartLine: 50000
     
-  - Name: InsertActor_Thread9
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    Phases:
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "load"
-      Operations:
-      - OperationName: insertOne
-        OperationMetricsName: inserts
-        OperationCommand:
-          Document:
-            tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 56250}}}}
-            age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 56250}}}}
-            bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt", "sequential": true, "startFromLine": 56250}}}}
-
-            _id: {^Inc: {start: 0, multiplier: 500000}}
-    - *nop
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread9
+        StartLine: 56250
     
-  - Name: InsertActor_Thread10
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    Phases:
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "load"
-      Operations:
-      - OperationName: insertOne
-        OperationMetricsName: inserts
-        OperationCommand:
-          Document:
-            tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 62500}}}}
-            age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 62500}}}}
-            bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt", "sequential": true, "startFromLine": 62500}}}}
-
-            _id: {^Inc: {start: 0, multiplier: 500000}}
-    - *nop
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread10
+        StartLine: 62500
     
-  - Name: InsertActor_Thread11
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    Phases:
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "load"
-      Operations:
-      - OperationName: insertOne
-        OperationMetricsName: inserts
-        OperationCommand:
-          Document:
-            tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 68750}}}}
-            age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 68750}}}}
-            bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt", "sequential": true, "startFromLine": 68750}}}}
-
-            _id: {^Inc: {start: 0, multiplier: 500000}}
-    - *nop
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread11
+        StartLine: 68750
     
-  - Name: InsertActor_Thread12
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    Phases:
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "load"
-      Operations:
-      - OperationName: insertOne
-        OperationMetricsName: inserts
-        OperationCommand:
-          Document:
-            tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 75000}}}}
-            age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 75000}}}}
-            bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt", "sequential": true, "startFromLine": 75000}}}}
-
-            _id: {^Inc: {start: 0, multiplier: 500000}}
-    - *nop
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread12
+        StartLine: 75000
     
-  - Name: InsertActor_Thread13
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    Phases:
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "load"
-      Operations:
-      - OperationName: insertOne
-        OperationMetricsName: inserts
-        OperationCommand:
-          Document:
-            tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 81250}}}}
-            age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 81250}}}}
-            bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt", "sequential": true, "startFromLine": 81250}}}}
-
-            _id: {^Inc: {start: 0, multiplier: 500000}}
-    - *nop
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread13
+        StartLine: 81250
     
-  - Name: InsertActor_Thread14
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    Phases:
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "load"
-      Operations:
-      - OperationName: insertOne
-        OperationMetricsName: inserts
-        OperationCommand:
-          Document:
-            tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 87500}}}}
-            age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 87500}}}}
-            bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt", "sequential": true, "startFromLine": 87500}}}}
-
-            _id: {^Inc: {start: 0, multiplier: 500000}}
-    - *nop
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread14
+        StartLine: 87500
     
-  - Name: InsertActor_Thread15
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    Phases:
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "load"
-      Operations:
-      - OperationName: insertOne
-        OperationMetricsName: inserts
-        OperationCommand:
-          Document:
-            tm_retail_tx: {^ConvertToInt: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt", "sequential": true, "startFromLine": 93750}}}}
-            age_hospitals: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt", "sequential": true, "startFromLine": 93750}}}}
-            bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt", "sequential": true, "startFromLine": 93750}}}}
-
-            _id: {^Inc: {start: 0, multiplier: 500000}}
-    - *nop
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread15
+        StartLine: 93750
     
+ 
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread0
+        StartLine: 0
 
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread1
+        StartLine: 6250
 
-  
-  - Name: FSMActor_Thread0
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    
-    Phases:
-    - *nop
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "FSM"
-      InitialStates:
-        - State: Query
-          Weight: 0.5
-        - State: Update
-          Weight: 0.5
-      States:
-        - Name: Query
-          Operations:
-          - OperationName: find
-            OperationMetricsName: range_query
-            OperationCommand:
-              Filter: { bnk_bal: {
-                  $gte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_min.txt", "sequential": true, "startFromLine": 0}}}},
-                  $lte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_max.txt", "sequential": true, "startFromLine": 0}}}}
-                }
-              }
-          Transitions: *transitions
-        - Name: Update
-          Operations:
-          - OperationName: updateOne
-            OperationMetricsName: update
-            OperationCommand:
-              Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
-              Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
-          Transitions: *transitions
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread2
+        StartLine: 12500
 
-  - Name: FSMActor_Thread1
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    
-    Phases:
-    - *nop
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "FSM"
-      InitialStates:
-        - State: Query
-          Weight: 0.5
-        - State: Update
-          Weight: 0.5
-      States:
-        - Name: Query
-          Operations:
-          - OperationName: find
-            OperationMetricsName: range_query
-            OperationCommand:
-              Filter: { bnk_bal: {
-                  $gte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_min.txt", "sequential": true, "startFromLine": 6250}}}},
-                  $lte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_max.txt", "sequential": true, "startFromLine": 6250}}}}
-                }
-              }
-          Transitions: *transitions
-        - Name: Update
-          Operations:
-          - OperationName: updateOne
-            OperationMetricsName: update
-            OperationCommand:
-              Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
-              Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
-          Transitions: *transitions
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread3
+        StartLine: 18750
 
-  - Name: FSMActor_Thread2
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    
-    Phases:
-    - *nop
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "FSM"
-      InitialStates:
-        - State: Query
-          Weight: 0.5
-        - State: Update
-          Weight: 0.5
-      States:
-        - Name: Query
-          Operations:
-          - OperationName: find
-            OperationMetricsName: range_query
-            OperationCommand:
-              Filter: { bnk_bal: {
-                  $gte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_min.txt", "sequential": true, "startFromLine": 12500}}}},
-                  $lte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_max.txt", "sequential": true, "startFromLine": 12500}}}}
-                }
-              }
-          Transitions: *transitions
-        - Name: Update
-          Operations:
-          - OperationName: updateOne
-            OperationMetricsName: update
-            OperationCommand:
-              Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
-              Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
-          Transitions: *transitions
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread4
+        StartLine: 25000
 
-  - Name: FSMActor_Thread3
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    
-    Phases:
-    - *nop
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "FSM"
-      InitialStates:
-        - State: Query
-          Weight: 0.5
-        - State: Update
-          Weight: 0.5
-      States:
-        - Name: Query
-          Operations:
-          - OperationName: find
-            OperationMetricsName: range_query
-            OperationCommand:
-              Filter: { bnk_bal: {
-                  $gte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_min.txt", "sequential": true, "startFromLine": 18750}}}},
-                  $lte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_max.txt", "sequential": true, "startFromLine": 18750}}}}
-                }
-              }
-          Transitions: *transitions
-        - Name: Update
-          Operations:
-          - OperationName: updateOne
-            OperationMetricsName: update
-            OperationCommand:
-              Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
-              Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
-          Transitions: *transitions
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread5
+        StartLine: 31250
 
-  - Name: FSMActor_Thread4
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    
-    Phases:
-    - *nop
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "FSM"
-      InitialStates:
-        - State: Query
-          Weight: 0.5
-        - State: Update
-          Weight: 0.5
-      States:
-        - Name: Query
-          Operations:
-          - OperationName: find
-            OperationMetricsName: range_query
-            OperationCommand:
-              Filter: { bnk_bal: {
-                  $gte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_min.txt", "sequential": true, "startFromLine": 25000}}}},
-                  $lte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_max.txt", "sequential": true, "startFromLine": 25000}}}}
-                }
-              }
-          Transitions: *transitions
-        - Name: Update
-          Operations:
-          - OperationName: updateOne
-            OperationMetricsName: update
-            OperationCommand:
-              Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
-              Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
-          Transitions: *transitions
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread6
+        StartLine: 37500
 
-  - Name: FSMActor_Thread5
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    
-    Phases:
-    - *nop
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "FSM"
-      InitialStates:
-        - State: Query
-          Weight: 0.5
-        - State: Update
-          Weight: 0.5
-      States:
-        - Name: Query
-          Operations:
-          - OperationName: find
-            OperationMetricsName: range_query
-            OperationCommand:
-              Filter: { bnk_bal: {
-                  $gte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_min.txt", "sequential": true, "startFromLine": 31250}}}},
-                  $lte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_max.txt", "sequential": true, "startFromLine": 31250}}}}
-                }
-              }
-          Transitions: *transitions
-        - Name: Update
-          Operations:
-          - OperationName: updateOne
-            OperationMetricsName: update
-            OperationCommand:
-              Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
-              Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
-          Transitions: *transitions
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread7
+        StartLine: 43750
 
-  - Name: FSMActor_Thread6
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    
-    Phases:
-    - *nop
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "FSM"
-      InitialStates:
-        - State: Query
-          Weight: 0.5
-        - State: Update
-          Weight: 0.5
-      States:
-        - Name: Query
-          Operations:
-          - OperationName: find
-            OperationMetricsName: range_query
-            OperationCommand:
-              Filter: { bnk_bal: {
-                  $gte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_min.txt", "sequential": true, "startFromLine": 37500}}}},
-                  $lte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_max.txt", "sequential": true, "startFromLine": 37500}}}}
-                }
-              }
-          Transitions: *transitions
-        - Name: Update
-          Operations:
-          - OperationName: updateOne
-            OperationMetricsName: update
-            OperationCommand:
-              Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
-              Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
-          Transitions: *transitions
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread8
+        StartLine: 50000
 
-  - Name: FSMActor_Thread7
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    
-    Phases:
-    - *nop
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "FSM"
-      InitialStates:
-        - State: Query
-          Weight: 0.5
-        - State: Update
-          Weight: 0.5
-      States:
-        - Name: Query
-          Operations:
-          - OperationName: find
-            OperationMetricsName: range_query
-            OperationCommand:
-              Filter: { bnk_bal: {
-                  $gte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_min.txt", "sequential": true, "startFromLine": 43750}}}},
-                  $lte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_max.txt", "sequential": true, "startFromLine": 43750}}}}
-                }
-              }
-          Transitions: *transitions
-        - Name: Update
-          Operations:
-          - OperationName: updateOne
-            OperationMetricsName: update
-            OperationCommand:
-              Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
-              Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
-          Transitions: *transitions
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread9
+        StartLine: 56250
 
-  - Name: FSMActor_Thread8
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    
-    Phases:
-    - *nop
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "FSM"
-      InitialStates:
-        - State: Query
-          Weight: 0.5
-        - State: Update
-          Weight: 0.5
-      States:
-        - Name: Query
-          Operations:
-          - OperationName: find
-            OperationMetricsName: range_query
-            OperationCommand:
-              Filter: { bnk_bal: {
-                  $gte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_min.txt", "sequential": true, "startFromLine": 50000}}}},
-                  $lte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_max.txt", "sequential": true, "startFromLine": 50000}}}}
-                }
-              }
-          Transitions: *transitions
-        - Name: Update
-          Operations:
-          - OperationName: updateOne
-            OperationMetricsName: update
-            OperationCommand:
-              Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
-              Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
-          Transitions: *transitions
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread10
+        StartLine: 62500
 
-  - Name: FSMActor_Thread9
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    
-    Phases:
-    - *nop
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "FSM"
-      InitialStates:
-        - State: Query
-          Weight: 0.5
-        - State: Update
-          Weight: 0.5
-      States:
-        - Name: Query
-          Operations:
-          - OperationName: find
-            OperationMetricsName: range_query
-            OperationCommand:
-              Filter: { bnk_bal: {
-                  $gte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_min.txt", "sequential": true, "startFromLine": 56250}}}},
-                  $lte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_max.txt", "sequential": true, "startFromLine": 56250}}}}
-                }
-              }
-          Transitions: *transitions
-        - Name: Update
-          Operations:
-          - OperationName: updateOne
-            OperationMetricsName: update
-            OperationCommand:
-              Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
-              Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
-          Transitions: *transitions
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread11
+        StartLine: 68750
 
-  - Name: FSMActor_Thread10
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    
-    Phases:
-    - *nop
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "FSM"
-      InitialStates:
-        - State: Query
-          Weight: 0.5
-        - State: Update
-          Weight: 0.5
-      States:
-        - Name: Query
-          Operations:
-          - OperationName: find
-            OperationMetricsName: range_query
-            OperationCommand:
-              Filter: { bnk_bal: {
-                  $gte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_min.txt", "sequential": true, "startFromLine": 62500}}}},
-                  $lte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_max.txt", "sequential": true, "startFromLine": 62500}}}}
-                }
-              }
-          Transitions: *transitions
-        - Name: Update
-          Operations:
-          - OperationName: updateOne
-            OperationMetricsName: update
-            OperationCommand:
-              Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
-              Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
-          Transitions: *transitions
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread12
+        StartLine: 75000
 
-  - Name: FSMActor_Thread11
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    
-    Phases:
-    - *nop
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "FSM"
-      InitialStates:
-        - State: Query
-          Weight: 0.5
-        - State: Update
-          Weight: 0.5
-      States:
-        - Name: Query
-          Operations:
-          - OperationName: find
-            OperationMetricsName: range_query
-            OperationCommand:
-              Filter: { bnk_bal: {
-                  $gte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_min.txt", "sequential": true, "startFromLine": 68750}}}},
-                  $lte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_max.txt", "sequential": true, "startFromLine": 68750}}}}
-                }
-              }
-          Transitions: *transitions
-        - Name: Update
-          Operations:
-          - OperationName: updateOne
-            OperationMetricsName: update
-            OperationCommand:
-              Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
-              Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
-          Transitions: *transitions
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread13
+        StartLine: 81250
 
-  - Name: FSMActor_Thread12
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    
-    Phases:
-    - *nop
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "FSM"
-      InitialStates:
-        - State: Query
-          Weight: 0.5
-        - State: Update
-          Weight: 0.5
-      States:
-        - Name: Query
-          Operations:
-          - OperationName: find
-            OperationMetricsName: range_query
-            OperationCommand:
-              Filter: { bnk_bal: {
-                  $gte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_min.txt", "sequential": true, "startFromLine": 75000}}}},
-                  $lte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_max.txt", "sequential": true, "startFromLine": 75000}}}}
-                }
-              }
-          Transitions: *transitions
-        - Name: Update
-          Operations:
-          - OperationName: updateOne
-            OperationMetricsName: update
-            OperationCommand:
-              Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
-              Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
-          Transitions: *transitions
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread14
+        StartLine: 87500
 
-  - Name: FSMActor_Thread13
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    
-    Phases:
-    - *nop
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "FSM"
-      InitialStates:
-        - State: Query
-          Weight: 0.5
-        - State: Update
-          Weight: 0.5
-      States:
-        - Name: Query
-          Operations:
-          - OperationName: find
-            OperationMetricsName: range_query
-            OperationCommand:
-              Filter: { bnk_bal: {
-                  $gte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_min.txt", "sequential": true, "startFromLine": 81250}}}},
-                  $lte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_max.txt", "sequential": true, "startFromLine": 81250}}}}
-                }
-              }
-          Transitions: *transitions
-        - Name: Update
-          Operations:
-          - OperationName: updateOne
-            OperationMetricsName: update
-            OperationCommand:
-              Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
-              Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
-          Transitions: *transitions
-
-  - Name: FSMActor_Thread14
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    
-    Phases:
-    - *nop
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "FSM"
-      InitialStates:
-        - State: Query
-          Weight: 0.5
-        - State: Update
-          Weight: 0.5
-      States:
-        - Name: Query
-          Operations:
-          - OperationName: find
-            OperationMetricsName: range_query
-            OperationCommand:
-              Filter: { bnk_bal: {
-                  $gte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_min.txt", "sequential": true, "startFromLine": 87500}}}},
-                  $lte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_max.txt", "sequential": true, "startFromLine": 87500}}}}
-                }
-              }
-          Transitions: *transitions
-        - Name: Update
-          Operations:
-          - OperationName: updateOne
-            OperationMetricsName: update
-            OperationCommand:
-              Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
-              Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
-          Transitions: *transitions
-
-  - Name: FSMActor_Thread15
-    Type: CrudActor
-    Threads: 1
-    Database: *encrypted_db
-    ClientName: EncryptedPool
-    
-    Phases:
-    - *nop
-    - *nop
-    - Repeat: 6250
-      Collection: *encrypted_coll
-      MetricsName: "FSM"
-      InitialStates:
-        - State: Query
-          Weight: 0.5
-        - State: Update
-          Weight: 0.5
-      States:
-        - Name: Query
-          Operations:
-          - OperationName: find
-            OperationMetricsName: range_query
-            OperationCommand:
-              Filter: { bnk_bal: {
-                  $gte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_min.txt", "sequential": true, "startFromLine": 93750}}}},
-                  $lte: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_max.txt", "sequential": true, "startFromLine": 93750}}}}
-                }
-              }
-          Transitions: *transitions
-        - Name: Update
-          Operations:
-          - OperationName: updateOne
-            OperationMetricsName: update
-            OperationCommand:
-              Filter: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt"}}}}}
-              Update: {$set: { bnk_bal: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt"} } } } } }
-          Transitions: *transitions
-
-
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread15
+        StartLine: 93750
+ 
 
   - Name: LoggingActor0
     Type: LoggingActor
