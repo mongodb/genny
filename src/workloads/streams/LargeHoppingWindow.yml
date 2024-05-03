@@ -105,7 +105,7 @@ Actors:
           { $emit: { connectionName: "__noopSink" } }
         ]
         connections: [{ name: "__testMemory", type: "in_memory", options: {} }]
-        options: {}
+        options: { featureFlags: {} }
   - Phase: 1..2
     Nop: true
   - Phase: 3

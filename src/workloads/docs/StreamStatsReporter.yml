@@ -39,6 +39,7 @@ Actors:
           { $emit: { connectionName: "__testMemory" } }
         ]
         connections: [{ name: "__testMemory", type: "in_memory", options: {} }]
+        options: { featureFlags: {} }
   - Phase: 1
     Nop: true
   - Phase: 2

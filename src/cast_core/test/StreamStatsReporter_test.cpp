@@ -75,6 +75,9 @@ TEST_CASE_METHOD(MongoTestFixture, "StreamStatsReporter successfully connects to
                 << "options" << bsoncxx::builder::stream::open_document << bsoncxx::builder::stream::close_document
                 << bsoncxx::builder::stream::close_document
                 << bsoncxx::builder::stream::close_array
+                << "options" << bsoncxx::builder::stream::open_document
+                << "featureFlags" << bsoncxx::builder::stream::open_document << bsoncxx::builder::stream::close_document
+                << bsoncxx::builder::stream::close_document
                 << bsoncxx::builder::stream::finalize;
             db.run_command(startCommand.view());
 

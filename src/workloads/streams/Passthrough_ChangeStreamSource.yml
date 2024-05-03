@@ -110,7 +110,7 @@ Actors:
           { $emit: { connectionName: "__noopSink" } }
         ]
         connections: [{ name: "db", type: "atlas", options: { uri: {^ClientURI: { Name: "Default" }}}}]
-        options: {}
+        options: { featureFlags: {} }
   - Phase: 2
     Nop: true
   - Phase: 3
