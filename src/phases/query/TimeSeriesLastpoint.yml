@@ -18,10 +18,10 @@ RunLastPointQuery:
   Repeat: 10
   Database: *db
   Operations:
-  - OperationMetricsName: RunLastPointQuery
+  - OperationMetricsName: Query
     OperationName: RunCommand
     OperationCommand:
-      aggregate: &coll {^Parameter: {Name: "IndexPattern", Default: "Collection0"}}
+      aggregate: &coll {^Parameter: {Name: "Collection", Default: "Collection0"}}
       pipeline:
         [
           &sortStage {$sort: &sortPattern {^Parameter: {Name: "SortPattern", Default: {}}}},
@@ -31,7 +31,7 @@ RunLastPointQuery:
       # In cases when we cannot optimize for a covered index sort, allow for external sorting.
       allowDiskUse: true
   # This predicate should select 90% of documents.
-  - OperationMetricsName: RunLastPointQueryWithLargePredicate
+  - OperationMetricsName: QueryWithLargePredicate
     OperationName: RunCommand
     OperationCommand:
       aggregate: *coll
@@ -45,7 +45,7 @@ RunLastPointQuery:
       # In cases when we cannot optimize for a covered index sort, allow for external sorting.
       allowDiskUse: true
   # This predicate should select 10% of documents.
-  - OperationMetricsName: RunLastPointQueryWithSmallPredicate
+  - OperationMetricsName: QueryWithSmallPredicate
     OperationName: RunCommand
     OperationCommand:
       aggregate: *coll
@@ -59,7 +59,7 @@ RunLastPointQuery:
       # In cases when we cannot optimize for a covered index sort, allow for external sorting.
       allowDiskUse: true
   # Test the lastpoint optimization with $top or $bottom.
-  - OperationMetricsName: RunLastPointQueryWithTopOrBottom
+  - OperationMetricsName: QueryWithTopOrBottom
     OperationName: RunCommand
     OperationCommand:
       aggregate: *coll

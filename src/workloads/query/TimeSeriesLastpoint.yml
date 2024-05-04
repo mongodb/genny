@@ -102,12 +102,12 @@ Actors:
     Collection: *coll
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 1000000
-    BatchSize: 100
+    DocumentCount: 100_000_000
+    BatchSize: 1_000
     Document:
       timestamp: {^RandomDate: {min: "2022-01-01", max: "2022-03-01"}}
       metadata: {
-        sensorId: {^RandomInt: {min: 0, max: 100}},
+        sensorId: {^RandomInt: {min: 0, max: 10_000}},
         type: "temperature"
       }
       temp: {^RandomDouble: {min: -30, max: 120}}
@@ -134,38 +134,8 @@ Actors:
   - *Nop
   - *Nop
 
-# Lastpoint query with a sort and group with meta subfield descending and time ascending, but no index.
-- Name: RunLastpointQueryWithMetaSubfieldAscendingTimeDescendingNoIndex
-  Type: RunCommand
-  Database: *db
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *LastpointQueryMetaAscTimeDesc
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-
 # Lastpoint query with a sort and group on meta subfield ascending and time descending.
-- Name: RunLastpointQueryWithMetaSubfieldAscendingTimeDescending
+- Name: MetaSubfieldAscTimeDesc
   Type: RunCommand
   Database: *db
   Phases:
@@ -205,38 +175,8 @@ Actors:
   - *Nop
   - *Nop
 
-# Lastpoint query with a sort and group with meta subfield descending and time ascending, but no index.
-- Name: RunLastpointQueryWithMetaSubfieldDescendingTimeDescendingNoIndex
-  Type: RunCommand
-  Database: *db
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *LastpointQueryMetaDescTimeDesc
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-
 # Lastpoint query with a compound index with meta subfield descending and time descending.
-- Name: RunLastpointQueryWithMetaSubfieldDescendingTimeDescending
+- Name: MetaSubfieldDescTimeDesc
   Type: RunCommand
   Database: *db
   Phases:
@@ -276,38 +216,8 @@ Actors:
   - *Nop
   - *Nop
 
-# Lastpoint query with a sort and group with meta subfield descending and time ascending, but no index.
-- Name: RunLastpointQueryWithMetaSubfieldDescendingTimeAscendingNoIndex
-  Type: RunCommand
-  Database: *db
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *LastpointQueryMetaDescTimeAsc
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-
 # Lastpoint query with a compound index with meta subfield descending and time ascending.
-- Name: RunLastpointQueryWithMetaSubfieldDescendingTimeAscending
+- Name: MetaSubfieldDescTimeAsc
   Type: RunCommand
   Database: *db
   Phases:
@@ -347,38 +257,8 @@ Actors:
   - *Nop
   - *Nop
 
-# Lastpoint query with a sort and group with meta subfield ascending and time ascending, but no index.
-- Name: RunLastpointQueryWithMetaSubfieldAscendingTimeAscendingNoIndex
-  Type: RunCommand
-  Database: *db
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *LastpointQueryMetaAscTimeAsc
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-
 # Lastpoint query with a compound index with meta subfield ascending and time ascending.
-- Name: RunLastpointQueryWithMetaSubfieldAscendingTimeAscending
+- Name: MetaSubfieldAscTimeAsc
   Type: RunCommand
   Database: *db
   Phases:
