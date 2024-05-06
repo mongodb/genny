@@ -133,8 +133,8 @@ AutoRun:
       mongodb_setup:
         $eq:
           - replica
-          - shard-lite
+          - shard
+          - shard-all-feature-flags
           - shard-lite-80-feature-flags
-          - shard-lite-all-feature-flags
           - single-replica-classic-query-engine
           - single-replica-sbe

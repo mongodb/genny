@@ -1889,7 +1889,6 @@ This workload stresses path traversal over nested arrays. Crucially, these queri
 a document in the collection.
 Each workload name consists of several parts: '{SyntaxType}{PredicateType}'.
 'SyntaxType' can be:
-  - 'AggregationExpression' means expressions which can be used inside $expr
   - 'MatchExpression' means operators of the find command match predicate language
 'PredicateType' can be:
   - 'NestedArray' means query which targets data that recursively nests arrays
@@ -3972,7 +3971,7 @@ timeseries, aggregate, group, sort
 ### Description
 This workload exercises '$unionWith' with two or more collections in multiple scenarios, including
 collections of high overlap, disjoint collections, multiple sequential unions, nested unions, and
-unions with complex subpipelines. These tests are run on standalones, replica sets, and sharded
+unions with complex subpipelines. These tests are run on standalones, and replica set
 environments.
 
 

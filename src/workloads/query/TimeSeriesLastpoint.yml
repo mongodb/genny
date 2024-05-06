@@ -434,6 +434,3 @@ AutoRun:
           - replica
           - replica-80-feature-flags
           - replica-all-feature-flags
-          - shard-lite
-          - shard-lite-80-feature-flags
-          - shard-lite-all-feature-flags

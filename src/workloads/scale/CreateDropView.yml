@@ -76,4 +76,3 @@ AutoRun:
       mongodb_setup:
         $eq:
           - replica
-          - shard-lite

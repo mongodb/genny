@@ -133,4 +133,4 @@ Actors:
 # - When:
 #     mongodb_setup:
 #       $eq:
-#       - shard-lite
+#       - shard
