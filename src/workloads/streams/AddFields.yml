@@ -14,7 +14,9 @@ Keywords:
 
 GlobalDefaults:
   DatabaseName: &DatabaseName test
+  TenantId: &TenantId test
   StreamProcessorName: &StreamProcessorName sp
+  StreamProcessorId: &StreamProcessorId spid
 
   # Genny workload client typically has 16 CPUs, so use 16 inserter threads each inserting
   # 500 batches of 1k documents, so a total of 8M documents, which will all have unique keys
@@ -62,7 +64,9 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         streams_startStreamProcessor: ""
+        tenantId: *TenantId
         name: *StreamProcessorName
+        processorId: *StreamProcessorId
         pipeline: [
           {
             $source: {
@@ -110,7 +114,7 @@ Actors:
           { $emit: { connectionName: "__noopSink" }}
         ]
         connections: [{ name: "__testMemory", type: "in_memory", options: {} }]
-        options: {}
+        options: { featureFlags: {} }
   - Phase: 1
     Nop: true
   - Phase: 2
@@ -121,7 +125,9 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         streams_stopStreamProcessor: ""
+        tenantId: *TenantId
         name: *StreamProcessorName
+        processorId: *StreamProcessorId
 
 - Name: Insert_Batch1000x
   Type: RunCommand
@@ -138,7 +144,9 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         streams_testOnlyInsert: ""
+        tenantId: *TenantId
         name: *StreamProcessorName
+        processorId: *StreamProcessorId
         documents: *Batch1000x
   - Phase: 2
     Nop: true
@@ -153,7 +161,9 @@ Actors:
     Nop: true
   - Phase: 1
     Repeat: 1
+    TenantId: *TenantId
     StreamProcessorName: *StreamProcessorName
+    StreamProcessorId: *StreamProcessorId
     ExpectedDocumentCount: *ExpectedDocumentCount
   - Phase: 2
     Nop: true

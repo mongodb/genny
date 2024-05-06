@@ -48,6 +48,7 @@ TEST_CASE_METHOD(MongoTestFixture, "StreamStatsReporter successfully connects to
           Phases:
           - Repeat: 1
             StreamProcessorName: sp
+            StreamProcessorId: spid
             ExpectedDocumentCount: 1
     )", __FILE__);
 
@@ -56,7 +57,9 @@ TEST_CASE_METHOD(MongoTestFixture, "StreamStatsReporter successfully connects to
         try {
             auto startCommand = bsoncxx::builder::stream::document{}
                 << "streams_startStreamProcessor" << ""
+                << "tenantId" << "test"
                 << "name" << "sp"
+                << "processorId" << "test_spid"
                 << "pipeline" << bsoncxx::builder::stream::open_array
                 << bsoncxx::builder::stream::open_document
                 << "$source" << bsoncxx::builder::stream::open_document << "connectionName" << "__testMemory" << bsoncxx::builder::stream::close_document
@@ -72,6 +75,9 @@ TEST_CASE_METHOD(MongoTestFixture, "StreamStatsReporter successfully connects to
                 << "options" << bsoncxx::builder::stream::open_document << bsoncxx::builder::stream::close_document
                 << bsoncxx::builder::stream::close_document
                 << bsoncxx::builder::stream::close_array
+                << "options" << bsoncxx::builder::stream::open_document
+                << "featureFlags" << bsoncxx::builder::stream::open_document << bsoncxx::builder::stream::close_document
+                << bsoncxx::builder::stream::close_document
                 << bsoncxx::builder::stream::finalize;
             db.run_command(startCommand.view());
 
