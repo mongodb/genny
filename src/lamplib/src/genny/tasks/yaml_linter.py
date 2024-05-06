@@ -33,7 +33,6 @@ class YamlLinter:
         workload_yamls, workload_error = self._traverse_yamls(workload_dirs)
         resmoke_yamls, resmoke_error = self._traverse_yamls(resmoke_dirs)
         evergreen_yamls, evergreen_error = self._traverse_yamls(evergreen_dirs)
-        all_yamls = workload_yamls + resmoke_yamls + evergreen_yamls
 
         if workload_error or resmoke_error or evergreen_error:
             SLOG.error(
@@ -62,6 +61,8 @@ class YamlLinter:
                 + resmoke_dirs
                 + evergreen_dirs
             )
+
+            all_yamls = workload_yamls + resmoke_yamls + evergreen_yamls
 
             SLOG.info(
                 "Linting workload YAML files with yamllint",
