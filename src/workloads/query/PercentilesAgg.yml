@@ -34,7 +34,7 @@ AutoRun:
         v7.0
 
 GlobalDefaults:
-  MaxPhases: &maxPhases 7
+  MaxPhases: &maxPhases 6
   Database: &db percentiles
 
   # The Loader actor creates collections named "Collection<N>" where N corresponds to the thread's
@@ -95,7 +95,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: CreateDataset
     TemplateParameters:
-      OnlyActiveInPhase: 1
+      OnlyActiveInPhase: 0
       Data: {^RandomDouble: {distribution: normal, mean: 50.0, sigma: 10.0}}
 
 - ActorFromTemplate:
@@ -103,14 +103,14 @@ Actors:
     TemplateParameters:
       Name: "normal_percentile"
       GroupBy: null
-      OnlyActiveInPhase: 2
+      OnlyActiveInPhase: 1
 
 - ActorFromTemplate:
     TemplateName: ComputePercentile
     TemplateParameters:
       Name: "normal_percentile_multi_groups"
       GroupBy: "$key"
-      OnlyActiveInPhase: 3
+      OnlyActiveInPhase: 2
 
 - Name: DropCollection
   Type: CrudActor
@@ -118,7 +118,7 @@ Actors:
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: [4]
+      Active: [3]
       NopInPhasesUpTo: *maxPhases
       PhaseConfig:
         Repeat: 1
@@ -130,7 +130,7 @@ Actors:
 - ActorFromTemplate:
     TemplateName: CreateDataset
     TemplateParameters:
-      OnlyActiveInPhase: 5
+      OnlyActiveInPhase: 4
       Data: {^Choose: {
         from: [
           {^RandomDouble: {distribution: normal, mean: 50.0, sigma: 10.0}},
@@ -147,13 +147,11 @@ Actors:
     TemplateParameters:
       Name: "mixed_percentile"
       GroupBy: null
-      OnlyActiveInPhase: 6
+      OnlyActiveInPhase: 5
 
 - ActorFromTemplate:
     TemplateName: ComputePercentile
     TemplateParameters:
       Name: "mixed_percentile_multi_groups"
       GroupBy: "$key"
-      OnlyActiveInPhase: 7
-
-
+      OnlyActiveInPhase: 6
