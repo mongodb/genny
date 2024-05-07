@@ -9,6 +9,7 @@ Description: |
   distributions, and therefore scoped down this test to create a normal distribution and a dataset
   created from 5 different distributions.
 
+# Phase descriptions:
 # 1 - create normal distribution collection
 # 2 - compute percentiles
 # 3 - compute percentiles with multiple groups
