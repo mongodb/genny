@@ -1,13 +1,16 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  The goal of this test is to exercise multiplanning. We create as many compound indexes as possible, each
-  comprising of tenantId and another field. We then run a query with an equality predicate on tenantId and 
-  other predicates a small number of fields, so we get all the plans that use relevant indexes.
+  This test exercises multiplanning in the presence of a common pattern, using "tenant IDs":
+  you have a single collection that conceptually is partitioned into one collection per user ("tenant"),
+  so each query has an extra equality predicate on tenantId, and each index is prefixed with 'tenantId: 1'.
 
-  We expect classic to have better latency and throughput than SBE on this workload,
-  and we expect the combination of classic planner + SBE execution (PM-3591) to perform about
-  as well as classic.
+  Otherwise this workload is the same as 'Simple.yml', so we expect it to behave the same:
+  classic should have better latency and throughput than SBE, and the combination of classic
+  planner + SBE execution (PM-3591) to perform about as well as classic.
+
+  TODO(CR) Storch noticed the selectivities don't make sense here: the data is too small since we carve up the same total size among many tenants.
+  Make a note or leave a TODO pointing to that fix.
 
 GlobalDefaults:
   dbname: &db test
