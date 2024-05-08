@@ -1194,67 +1194,109 @@ Models the Queryable Encryption acceptance criteria workloads
 
 
 ## [qe-range-age-100-0](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/qe-range-age-100-0.yml)
-### Owner
-@10gen/server-security
+### Owner 
+Server Security 
+
+
+### Support Channel
+[#server-security](https://mongodb.enterprise.slack.com/archives/CB3CW8M8C)
+
+
 ### Description
 QE Range Release Criteria Experiment
 
   
+
 ### Keywords
 Queryable Encryption 
 
 
 ## [qe-range-age-50-50](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/qe-range-age-50-50.yml)
-### Owner
-@10gen/server-security
+### Owner 
+Server Security 
+
+
+### Support Channel
+[#server-security](https://mongodb.enterprise.slack.com/archives/CB3CW8M8C)
+
+
 ### Description
 QE Range Release Criteria Experiment
 
   
+
 ### Keywords
 Queryable Encryption 
 
 
 ## [qe-range-balance-100-0](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/qe-range-balance-100-0.yml)
-### Owner
-@10gen/server-security
+### Owner 
+Server Security 
+
+
+### Support Channel
+[#server-security](https://mongodb.enterprise.slack.com/archives/CB3CW8M8C)
+
+
 ### Description
 QE Range Release Criteria Experiment
 
   
+
 ### Keywords
 Queryable Encryption 
 
 
 ## [qe-range-balance-50-50](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/qe-range-balance-50-50.yml)
-### Owner
-@10gen/server-security
+### Owner 
+Server Security 
+
+
+### Support Channel
+[#server-security](https://mongodb.enterprise.slack.com/archives/CB3CW8M8C)
+
+
 ### Description
 QE Range Release Criteria Experiment
 
   
+
 ### Keywords
 Queryable Encryption 
 
 
 ## [qe-range-timestamp-100-0](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/qe-range-timestamp-100-0.yml)
-### Owner
-@10gen/server-security
+### Owner 
+Server Security 
+
+
+### Support Channel
+[#server-security](https://mongodb.enterprise.slack.com/archives/CB3CW8M8C)
+
+
 ### Description
 QE Range Release Criteria Experiment
 
   
+
 ### Keywords
 Queryable Encryption 
 
 
 ## [qe-range-timestamp-50-50](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/qe-range-timestamp-50-50.yml)
-### Owner
-@10gen/server-security
+### Owner 
+Server Security 
+
+
+### Support Channel
+[#server-security](https://mongodb.enterprise.slack.com/archives/CB3CW8M8C)
+
+
 ### Description
 QE Range Release Criteria Experiment
 
   
+
 ### Keywords
 Queryable Encryption 
 
