@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/sharding"
+Owner: Cluster Scalability
 Description: |
   Runs the batched updateOne writes of type WithoutShardKeyWithId with a batch size of 1000.
 
@@ -133,8 +133,7 @@ AutoRun:
       $eq:
       - shard
       - shard-80-feature-flags
-      - shard-lite
+      - shard-all-feature-flags
       - shard-lite-80-feature-flags
-      - shard-lite-all-feature-flags
     branch_name:
       $gte: v8.0

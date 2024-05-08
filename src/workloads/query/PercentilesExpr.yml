@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-integration"
+Owner: Query Integration
 Description: |
   Run tests for $percentile expression over variously sized input arrays. We create a new collection
   for each array size as putting the fields into the same document might be impacted by how much

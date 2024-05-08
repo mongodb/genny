@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: Service Architecture
+Owner: Service Arch
 Description: |
   Used to test performance of the server under heavy memory pressure caused by read
   operations. This workload is expected to fail due to host(s) being unreachable as a
@@ -62,7 +62,7 @@ Clients:
     QueryOptions:
       socketTimeoutMS: -1
       maxPoolSize: 500
-    
+
 Actors:
 # Drop database to get rid of stale data. Useful when running locally multiple times.
 - Name: Setup
@@ -134,4 +134,4 @@ Actors:
 # - When:
 #     mongodb_setup:
 #       $eq:
-#       - shard-lite
+#       - shard

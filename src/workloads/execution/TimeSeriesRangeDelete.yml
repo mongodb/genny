@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/server-execution"
+Owner: Storage Execution
 Description: |
   This test establishes a baseline for time-based range deletes on time-series collections.
 
@@ -56,10 +56,7 @@ AutoRun:
 - When:
     mongodb_setup:
       $eq:
-      - shard-lite
       - replica
-      - shard-lite-80-feature-flags
-      - shard-lite-all-feature-flags
       - replica-80-feature-flags
       - replica-all-feature-flags
     branch_name:

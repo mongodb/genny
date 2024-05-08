@@ -104,10 +104,19 @@ private:
         // Maximum buffer size grpc will allow.
         args.SetInt(GRPC_ARG_HTTP2_WRITE_BUFFER_SIZE, GRPC_BUFFER_SIZE);
         // Local subchannels prohibit global sharing and forces multiple TCP connections.
+
+        auto channelUriBuilder = std::stringstream{} << "localhost:";
+        if (auto channelPortString = std::getenv("POPLAR_RPC_PORT")) {
+          channelUriBuilder << channelPortString;
+        } else {
+          channelUriBuilder << 2288;
+        }
+        const auto channelUri = channelUriBuilder.str();
+
         args.SetInt(GRPC_ARG_USE_LOCAL_SUBCHANNEL_POOL, 1);
         for (int i = 0; i < NUM_CHANNELS; i++) {
             _channels.push_back(grpc::CreateCustomChannel(
-                "localhost:2288", grpc::InsecureChannelCredentials(), args));
+                channelUri, grpc::InsecureChannelCredentials(), args));
         }
 
         return _channels;

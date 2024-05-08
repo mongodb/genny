@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/atlas-streams"
+Owner: Atlas Streams
 Description: |
   Generates load against a stream processor and has a stats reporter actor that will
   report stats about that stream processor after the insert phase is complete since
@@ -7,7 +7,9 @@ Description: |
 
 GlobalDefaults:
   DatabaseName: &DatabaseName test
-  StreamProcessorName: &StreamProcessorName sp1
+  TenantId: &TenantId test
+  StreamProcessorName: &StreamProcessorName sp
+  StreamProcessorId: &StreamProcessorId spid
   Document: &Document
     id: {^Inc: { start: 1000 }}
   BatchSize: &BatchSize 1000
@@ -29,12 +31,15 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         streams_startStreamProcessor: ""
+        tenantId: *TenantId
         name: *StreamProcessorName
+        processorId: *StreamProcessorId
         pipeline: [
           { $source: { connectionName: "__testMemory" } },
           { $emit: { connectionName: "__testMemory" } }
         ]
         connections: [{ name: "__testMemory", type: "in_memory", options: {} }]
+        options: { featureFlags: {} }
   - Phase: 1
     Nop: true
   - Phase: 2
@@ -45,7 +50,9 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         streams_stopStreamProcessor: ""
+        tenantId: *TenantId
         name: *StreamProcessorName
+        processorId: *StreamProcessorId
 
 - Name: Inserter
   Type: RunCommand
@@ -61,7 +68,9 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         streams_testOnlyInsert: ""
+        tenantId: *TenantId
         name: *StreamProcessorName
+        processorId: *StreamProcessorId
         documents: *Batch1000x
   - Phase: 2
     Nop: true
@@ -75,7 +84,9 @@ Actors:
     Nop: true
   - Phase: 1
     Repeat: 1
+    TenantId: *TenantId
     StreamProcessorName: *StreamProcessorName
+    StreamProcessorId: *StreamProcessorId
     ExpectedDocumentCount: *ExpectedDocumentCount
   - Phase: 2
     Nop: true

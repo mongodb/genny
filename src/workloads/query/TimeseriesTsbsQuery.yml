@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-integration"
+Owner: Query Integration
 Description: |
   This workload runs different time-series optimizations with the tsbs dataset. During development,
   This workload runs queries from the tsbs_query benchmark in Genny. It allows us to cross-check

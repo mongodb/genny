@@ -87,7 +87,8 @@ Actors:
           {$_internalInhibitOptimization: {}},
           {$skip: 1e10},
         ]
-        Hint: {m: 1, t: 1}
+        Options:
+          Hint: "m_1_t_1"
   - *Nop
 
 AutoRun:

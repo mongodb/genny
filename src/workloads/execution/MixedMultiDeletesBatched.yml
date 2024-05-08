@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/server-execution"
+Owner: Storage Execution
 Description: |
   Deletes a range of documents using the BATCHED_DELETE query exec stage both in isolation and while performing writes on another collection. Tests deletes on documents of size ~1KB then deletes on documents of ~10MB.
 

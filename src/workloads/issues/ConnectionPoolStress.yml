@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   This workload was created to reproduce issues discovered during sharded stress testing. The workload can cause
   low performance, spikes in latency and excessive connection creation (on mongos processes).

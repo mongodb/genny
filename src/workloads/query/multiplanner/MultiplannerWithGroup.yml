@@ -15,7 +15,13 @@ GlobalDefaults:
   dbname: &db test
   # Collection name used for queries.
   coll: &coll Collection0
+
   docCount: &docCount 1e5
+  resultCount: &resultCount 101
+  selectivity: &selectivity {^NumExpr: {
+    withExpression: "resultCount / docCount",
+    andValues: {resultCount: *resultCount, docCount: *docCount}}}
+
   maxPhase: &maxPhase 7
   queryRepeats: &queryRepeats 1000
 
@@ -272,7 +278,7 @@ Actors:
       repeat: *queryRepeats
       collection: *coll
       pipeline: &pipeline [{$match: {
-            x1: {$lte: 1},
+            x1: {$lt: *selectivity},
             x2: {$lte: 1},
             x3: {$lte: 1},
             x4: {$lte: 1},

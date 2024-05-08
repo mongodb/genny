@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   This workload tests the performance of the bulkWrite API, and compares it to normal writes.
   It is modeled as a collection of sensor data. It would be common for this use case to do batching using, e.g., AWS SQS.

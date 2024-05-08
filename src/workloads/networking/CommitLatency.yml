@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   Test latencies for a classic transaction of moving money from one account to another, using
   different write concern, read concern, sessions and transactions.  Based on

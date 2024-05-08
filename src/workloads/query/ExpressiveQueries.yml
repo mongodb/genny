@@ -191,7 +191,6 @@ AutoRun:
       - replica
       - replica-80-feature-flags
       - replica-all-feature-flags
-      - single-replica
       - standalone
       - standalone-classic-query-engine
       - standalone-query-stats

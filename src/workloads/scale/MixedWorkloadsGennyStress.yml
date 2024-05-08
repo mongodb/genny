@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   This workload is a more stressful version of MixedWorkloadsGenny.yml, which itself is a port of
   the mixed_workloads in the workloads,
@@ -11,7 +11,7 @@ Description: |
   starved out by writes.
 
   This more stressful version of the test only runs one test phase, using 1024 threads per operation
-  for 45 minutes.
+  for 10 minutes.
 
 # This workload does not support sharding yet.
 
@@ -29,7 +29,7 @@ Keywords:
 dbname: &dbname mix
 DocumentCount: &NumDocs 1024
 CollectionCount: &NumColls 512
-PhaseDuration: &PhaseDuration 15 minutes
+PhaseDuration: &PhaseDuration 10 minutes
 StringLength: &StringLength 950
 Filter: &filter {id: {^RandomInt: {min: 0, max: *NumDocs}}}
 Document: &doc

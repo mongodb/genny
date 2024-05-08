@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-execution"
+Owner: Query Execution
 Description: |
   This workload compares the query performance of SSB (star schema benchmark) queries with columnar indexes to performances without them.
 

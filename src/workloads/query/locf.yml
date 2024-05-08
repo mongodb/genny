@@ -253,7 +253,7 @@ Actors:
           },
           {$limit: *limit}
         ]
-        Options: 
+        Options:
           AllowDiskUse: true
   - Nop: true
   - Nop: true
@@ -300,7 +300,7 @@ Actors:
           },
           {$limit: *limit}
         ]
-        Options: 
+        Options:
           AllowDiskUse: true
   - Nop: true
   - Nop: true
@@ -351,7 +351,7 @@ Actors:
           },
           {$limit: *limit}
         ]
-        Options: 
+        Options:
           AllowDiskUse: true
   - Nop: true
   - Nop: true
@@ -398,7 +398,7 @@ Actors:
           },
           {$limit: *limit}
         ]
-        Options: 
+        Options:
           AllowDiskUse: true
   - Nop: true
   - Nop: true
@@ -445,7 +445,7 @@ Actors:
           },
           {$limit: *limit}
         ]
-        Options: 
+        Options:
           AllowDiskUse: true
   - Nop: true
   - Nop: true
@@ -496,7 +496,7 @@ Actors:
           },
           {$limit: *limit}
         ]
-        Options: 
+        Options:
           AllowDiskUse: true
 
 AutoRun:
@@ -511,7 +511,6 @@ AutoRun:
       - replica
       - replica-80-feature-flags
       - replica-all-feature-flags
-      - shard-lite
     branch_name:
       $neq:
       - v4.0

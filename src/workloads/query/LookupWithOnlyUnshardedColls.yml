@@ -71,7 +71,7 @@ Actors:
           }, {
           $limit: *NumDocs
           }]
-        Options: 
+        Options:
           BatchSize:  *NumDocs
     - OperationMetricsName: LookupOneToFewUnshardedToUnsharded
       OperationName: aggregate
@@ -89,7 +89,7 @@ Actors:
             }, {
             $limit: *NumDocs
           }]
-        Options: 
+        Options:
           BatchSize:  *NumDocs
     - OperationMetricsName: LookupOneToManyUnshardedToUnsharded
       OperationName: aggregate
@@ -108,7 +108,7 @@ Actors:
             $limit: *NumDocs
             }
           ]
-        Options: 
+        Options:
           BatchSize:  *NumDocs
 
 AutoRun:
@@ -116,9 +116,8 @@ AutoRun:
     mongodb_setup:
       $eq:
       - replica
-      - shard-lite
+      - shard
+      - shard-all-feature-flags
       - shard-lite-80-feature-flags
-      - shard-lite-all-feature-flags
-      - single-replica
       - single-replica-classic-query-engine
       - single-replica-sbe

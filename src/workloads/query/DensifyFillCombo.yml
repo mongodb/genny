@@ -171,7 +171,7 @@ Actors:
             }
           }
         ]
-        Options: 
+        Options:
           BatchSize:  *limit
           AllowDiskUse: true
   - *Nop
@@ -220,7 +220,7 @@ Actors:
           },
           $limit: *limit
         ]
-        Options: 
+        Options:
           BatchSize:  *limit
           AllowDiskUse: true
   - *Nop
@@ -268,7 +268,7 @@ Actors:
           },
           $limit: *limit
         ]
-        Options: 
+        Options:
           BatchSize:  *limit
           AllowDiskUse: true
   - *Nop
@@ -317,7 +317,7 @@ Actors:
           },
           $limit: *limit
         ]
-        Options: 
+        Options:
           BatchSize:  *limit
           AllowDiskUse: true
   - *Nop
@@ -365,7 +365,7 @@ Actors:
           },
           $limit: *limit
         ]
-        Options: 
+        Options:
           BatchSize:  *limit
           AllowDiskUse: true
 
@@ -375,7 +375,6 @@ AutoRun:
       $eq:
       - standalone
       - replica
-      - single-replica
     branch_name:
       $neq:
       - v4.0

@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/server-execution"
+Owner: Storage Execution
 Description: |
   This workload tests the impact of background TTL deletions in a heavily modified collection with
   concurrent crud operations on a second collection to simulate extreme ticket contention.
@@ -197,9 +197,9 @@ AutoRun:
 - When:
     mongodb_setup:
       $eq:
-      - single-replica
+      - replica
       - single-replica-80-feature-flags
-      - single-replica-all-feature-flags
+      - replica-all-feature-flags
     branch_name:
       $gte: v7.0
     infrastructure_provisioning:

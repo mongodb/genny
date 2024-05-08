@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/server-execution"
+Owner: Storage Execution
 Description: |
   This workload tests the impact of background TTL deletions in a heavily modified collection. This
   test does not quiesce between phases as we want the TTL deleter to be constantly running.
