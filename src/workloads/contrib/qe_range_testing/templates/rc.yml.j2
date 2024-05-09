@@ -154,8 +154,7 @@ Actors: {% if not encrypt %}
     Type: LoggingActor
     Threads: 1
     Phases:
-      - *nop
-      - Phase: 1..2
+      - Phase: 0..1
         LogEvery: 5 minutes
         Blocking: None
 
