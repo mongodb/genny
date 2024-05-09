@@ -30,6 +30,8 @@ Actors:
       - *Nop
       - *Nop
       - *Nop
+      - *Nop
+      - *Nop
       - Repeat: 1
         Database: test
         Operations:
@@ -37,10 +39,48 @@ Actors:
             OperationCommand:
               drop: *coll
 
+  # This index is created by default on versions 7.0.0+, but we must create this index for the
+  # aggregation to run on versions 6.X.X correctly.
+  - Name: IndexCollection
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      - *Nop
+      - Repeat: 1
+        Database: *db
+        Operations:
+          - OperationMetricsName: CreateDefaultTimeseriesIndex
+            OperationName: RunCommand
+            OperationCommand:
+              createIndexes: *coll
+              indexes:
+                - key: {m: 1, t: 1}
+                  name: "m_1_t_1"
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *db
+    Phases:
+      - *Nop
+      - *Nop
+      - Repeat: 1 # phase 2
+      - *Nop
+      - Repeat: 1 # phase 4
+      - *Nop
+      - *Nop
+
   - Name: InsertData
     Type: Loader
     Threads: 1
     Phases:
+      - *Nop
+      - *Nop
       - *Nop
       - Repeat: 1
         Database: *db
@@ -56,21 +96,12 @@ Actors:
       - *Nop
       - *Nop
 
-  - Name: Quiesce
-    Type: QuiesceActor
-    Threads: 1
-    Database: *db
-    Phases:
-      - *Nop
-      - *Nop
-      - Repeat: 1
-      - *Nop
-      - *Nop
-
   - Name: Queries
     Type: CrudActor
     Threads: 1
     Phases:
+      - *Nop
+      - *Nop
       - *Nop
       - *Nop
       - *Nop

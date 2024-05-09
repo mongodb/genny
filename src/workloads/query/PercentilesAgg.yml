@@ -9,6 +9,15 @@ Description: |
   distributions, and therefore scoped down this test to create a normal distribution and a dataset
   created from 5 different distributions.
 
+# Phase descriptions:
+# 1 - create normal distribution collection
+# 2 - compute percentiles
+# 3 - compute percentiles with multiple groups
+# 4 - drop collection
+# 5 - create mix distributions collection
+# 6 - compute percentiles
+# 7 - compute percentiles with multiple groups
+
 Keywords:
   - group
   - percentile
@@ -25,7 +34,7 @@ AutoRun:
         $gte: v7.0
 
 GlobalDefaults:
-  MaxPhases: &maxPhases 30
+  MaxPhases: &maxPhases 6
   Database: &db percentiles
 
   # The Loader actor creates collections named "Collection<N>" where N corresponds to the thread's
@@ -69,7 +78,7 @@ ActorTemplates:
           Active: [{ ^Parameter: { Name: "OnlyActiveInPhase", Default: 1024 } }]
           NopInPhasesUpTo: *maxPhases
           PhaseConfig:
-            Repeat: 20
+            Repeat: 200
             Database: *db
             Collection: *coll
             Operations:
@@ -97,91 +106,7 @@ ActorTemplates:
                       },
                     ]
 
-  # During development of $percentile we compared its performance to $min and $minN. We don't need to
-  # keep running the tests for these but we'd like to keep the templates around for reference and ease
-  # of rerunning the local experiments if needed in the future.
-  - TemplateName: ComputeMinN
-    Config:
-      Name: { ^Parameter: { Name: "Name", Default: "ComputeMinN" } }
-      Type: CrudActor
-      Threads: 1
-      Phases:
-        OnlyActiveInPhases:
-          Active: [{ ^Parameter: { Name: "OnlyActiveInPhase", Default: 1024 } }]
-          NopInPhasesUpTo: *maxPhases
-          PhaseConfig:
-            Repeat: 20
-            Database: *db
-            Collection: *coll
-            Operations:
-              - OperationName: aggregate
-                OperationCommand:
-                  Pipeline:
-                    [
-                      {
-                        $group:
-                          {
-                            _id:
-                              {
-                                ^Parameter: { Name: "GroupBy", Default: null },
-                              },
-                            p: { $minN: { n: 5000, input: "$data" } },
-                          },
-                      },
-                    ]
-
-  - TemplateName: ComputeMin
-    Config:
-      Name: { ^Parameter: { Name: "Name", Default: "ComputeMin" } }
-      Type: CrudActor
-      Threads: 1
-      Phases:
-        OnlyActiveInPhases:
-          Active: [{ ^Parameter: { Name: "OnlyActiveInPhase", Default: 1024 } }]
-          NopInPhasesUpTo: *maxPhases
-          PhaseConfig:
-            Repeat: 20
-            Database: *db
-            Collection: *coll
-            Operations:
-              - OperationName: aggregate
-                OperationCommand:
-                  Pipeline:
-                    [
-                      {
-                        $group:
-                          {
-                            _id:
-                              {
-                                ^Parameter: { Name: "GroupBy", Default: null },
-                              },
-                            p: { $min: "$data" },
-                          },
-                      },
-                    ]
-
-# *0 - create dataset
-# *1 - warm up or quiese but they don't seem to affect the numbers, so we are not doing either
-# *2 - compute percentiles
-# *3 - compute percentiles with multiple groups
-# [*4-*8] - compute something else on this dataset if so desired
-# *9 - drop the dataset
-
 Actors:
-  - Name: DropCollection
-    Type: CrudActor
-    Database: *db
-    Threads: 1
-    Phases:
-      OnlyActiveInPhases:
-        Active: [9, 19, 29]
-        NopInPhasesUpTo: *maxPhases
-        PhaseConfig:
-          Repeat: 1
-          Collection: *coll
-          Operations:
-            - OperationName: drop
-
   - ActorFromTemplate:
       TemplateName: CreateDataset
       TemplateParameters:
@@ -194,20 +119,34 @@ Actors:
       TemplateParameters:
         Name: "normal_percentile"
         GroupBy: null
-        OnlyActiveInPhase: 2
+        OnlyActiveInPhase: 1
 
   - ActorFromTemplate:
       TemplateName: ComputePercentile
       TemplateParameters:
         Name: "normal_percentile_multi_groups"
         GroupBy: "$key"
-        OnlyActiveInPhase: 3
+        OnlyActiveInPhase: 2
+
+  - Name: DropCollection
+    Type: CrudActor
+    Database: *db
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Collection: *coll
+          Operations:
+            - OperationName: drop
 
   # A mix of various distributions, including many duplicated values.
   - ActorFromTemplate:
       TemplateName: CreateDataset
       TemplateParameters:
-        OnlyActiveInPhase: 10
+        OnlyActiveInPhase: 4
         Data: { ^Choose: { from: [
           {
             ^RandomDouble:
@@ -234,11 +173,11 @@ Actors:
       TemplateParameters:
         Name: "mixed_percentile"
         GroupBy: null
-        OnlyActiveInPhase: 12
+        OnlyActiveInPhase: 5
 
   - ActorFromTemplate:
       TemplateName: ComputePercentile
       TemplateParameters:
         Name: "mixed_percentile_multi_groups"
         GroupBy: "$key"
-        OnlyActiveInPhase: 13
+        OnlyActiveInPhase: 6
