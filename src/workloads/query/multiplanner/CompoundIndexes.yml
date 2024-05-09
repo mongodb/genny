@@ -34,31 +34,31 @@ GlobalDefaults:
   queryRepeats: &queryRepeats 500
 
 Actors:
-- Name: DropCollection
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *maxPhase
-      PhaseConfig:
-        Repeat: 1
-        Database: *db
-        Operations:
-        - OperationName: RunCommand
-          OperationCommand:
-            drop: *coll
+  - Name: DropCollection
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *maxPhase
+        PhaseConfig:
+          Repeat: 1
+          Database: *db
+          Operations:
+            - OperationName: RunCommand
+              OperationCommand:
+                drop: *coll
 
-- Name: SetQueryKnobs
-  LoadConfig:
-    Path: "../../../phases/query/Multiplanner.yml"
-    Key: QueryKnobTemplate
-    Parameters:
+  - Name: SetQueryKnobs
+    LoadConfig:
+      Path: "../../../phases/query/Multiplanner.yml"
+      Key: QueryKnobTemplate
+      Parameters:
         # It's ok for this to run in parallel with 'DropCollection'.
         # It has to be a separate actor because they target different DBs.
-      active: [0]
-      nopInPhasesUpTo: *maxPhase
-      collection: *coll
+        active: [0]
+        nopInPhasesUpTo: *maxPhase
+        collection: *coll
 
 - Name: CreateDataset
   LoadConfig:
@@ -265,16 +265,16 @@ Actors:
       - keys: {tenantId: 1, x63: 1}
         options: {name: index63}
 
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *maxPhase
-      PhaseConfig:
-        Repeat: 1
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *db
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *maxPhase
+        PhaseConfig:
+          Repeat: 1
 
 - Name: MultiplannerWith64CompoundIndexes
   LoadConfig:
@@ -355,59 +355,59 @@ Actors:
         }
       }
 
-- Name: Hide48Indexes
-  LoadConfig:
-    Path: "../../../phases/query/Multiplanner.yml"
-    Key: Hide48IndexesTemplate
-    Parameters:
-      active: [4]
-      nopInPhasesUpTo: *maxPhase
-      repeat: *queryRepeats
-      database: *db
-      collection: *coll
+  - Name: Hide48Indexes
+    LoadConfig:
+      Path: "../../../phases/query/Multiplanner.yml"
+      Key: Hide48IndexesTemplate
+      Parameters:
+        active: [4]
+        nopInPhasesUpTo: *maxPhase
+        repeat: *queryRepeats
+        database: *db
+        collection: *coll
 
-- Name: MultiplannerWith16CompoundIndexes
-  LoadConfig:
-    Path: "../../../phases/query/Multiplanner.yml"
-    Key: QueryTemplate
-    Parameters:
-      active: [5]
-      nopInPhasesUpTo: *maxPhase
-      repeat: *queryRepeats
-      database: *db
-      collection: *coll
-      query: *query
+  - Name: MultiplannerWith16CompoundIndexes
+    LoadConfig:
+      Path: "../../../phases/query/Multiplanner.yml"
+      Key: QueryTemplate
+      Parameters:
+        active: [5]
+        nopInPhasesUpTo: *maxPhase
+        repeat: *queryRepeats
+        database: *db
+        collection: *coll
+        query: *query
 
-- Name: Hide14Indexes
-  LoadConfig:
-    Path: "../../../phases/query/Multiplanner.yml"
-    Key: Hide14IndexesTemplate
-    Parameters:
-      active: [6]
-      nopInPhasesUpTo: *maxPhase
-      repeat: *queryRepeats
-      database: *db
-      collection: *coll
+  - Name: Hide14Indexes
+    LoadConfig:
+      Path: "../../../phases/query/Multiplanner.yml"
+      Key: Hide14IndexesTemplate
+      Parameters:
+        active: [6]
+        nopInPhasesUpTo: *maxPhase
+        repeat: *queryRepeats
+        database: *db
+        collection: *coll
 
-- Name: MultiplannerWith2CompoundIndexes
-  LoadConfig:
-    Path: "../../../phases/query/Multiplanner.yml"
-    Key: QueryTemplate
-    Parameters:
-      active: [7]
-      nopInPhasesUpTo: *maxPhase
-      repeat: *queryRepeats
-      database: *db
-      collection: *coll
-      query: *query
+  - Name: MultiplannerWith2CompoundIndexes
+    LoadConfig:
+      Path: "../../../phases/query/Multiplanner.yml"
+      Key: QueryTemplate
+      Parameters:
+        active: [7]
+        nopInPhasesUpTo: *maxPhase
+        repeat: *queryRepeats
+        database: *db
+        collection: *coll
+        query: *query
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone-sbe
-      - standalone-80-feature-flags # At time of writing this will enable PM-3591.
-      - standalone-all-feature-flags  # At time of writing this will enable PM-3591.
-      - standalone-classic-query-engine
-    branch_name:
-      $gte: v7.3
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone-sbe
+          - standalone-80-feature-flags # At time of writing this will enable PM-3591.
+          - standalone-all-feature-flags # At time of writing this will enable PM-3591.
+          - standalone-classic-query-engine
+      branch_name:
+        $gte: v7.3

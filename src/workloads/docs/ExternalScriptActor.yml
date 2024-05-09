@@ -3,44 +3,45 @@ Owner: "@mongodb/query"
 Description: |
   This workload was created to test an external script runner as per PERF-3198.
   The execution stats of the script will be collected with metrics name "ExternalScript"
-  If the script writes and only writes an integer to stdout as result, the result will be collected to the specified metrics name (DefaultMetricsName as default)
+  If the script writes and only writes an integer to stdout as result, the result will be
+  collected to the specified metrics name (DefaultMetricsName as default)
 
 Actors:
-# Run JS script without connecting to a mongo db server
-- Name: MongoshScriptRunner
-  Type: ExternalScriptRunner
-  Threads: 5
-  Phases:
-  - Repeat: 5
-    # script command
-    Command: "mongosh"
-    MetricsName: MyMetrics
-    Script: "console.log(1)"
-# Connect to mongodb server and run JS script
-- Name: MongoshScriptRunnerWithDB
-  Type: ExternalScriptRunner
-  Threads: 5
-  Phases:
-  - Repeat: 5
-    # script command
-    Command: "mongosh"
-    MongoServerURI: "localhost:27017"
-    MetricsName: MyMetrics
-    Script: "db.collection.countDocuments({})"
-# Run shell script
-- Name: ShellScriptRunner
-  Type: ExternalScriptRunner
-  Threads: 5
-  Phases:
-  - Repeat: 5
-    # script command
-    Command: "sh"
-    MetricsName: MyMetrics
-    Script: "echo 1"
-- Name: PythonRunner
-  Type: Python
-  Threads: 5
-  Phases:
-  - Repeat: 5
-    Module: example_actor
-    Endpoint: hello_world
+  # Run JS script without connecting to a mongo db server
+  - Name: MongoshScriptRunner
+    Type: ExternalScriptRunner
+    Threads: 5
+    Phases:
+      - Repeat: 5
+        # script command
+        Command: "mongosh"
+        MetricsName: MyMetrics
+        Script: "console.log(1)"
+  # Connect to mongodb server and run JS script
+  - Name: MongoshScriptRunnerWithDB
+    Type: ExternalScriptRunner
+    Threads: 5
+    Phases:
+      - Repeat: 5
+        # script command
+        Command: "mongosh"
+        MongoServerURI: "localhost:27017"
+        MetricsName: MyMetrics
+        Script: "db.collection.countDocuments({})"
+  # Run shell script
+  - Name: ShellScriptRunner
+    Type: ExternalScriptRunner
+    Threads: 5
+    Phases:
+      - Repeat: 5
+        # script command
+        Command: "sh"
+        MetricsName: MyMetrics
+        Script: "echo 1"
+  - Name: PythonRunner
+    Type: Python
+    Threads: 5
+    Phases:
+      - Repeat: 5
+        Module: example_actor
+        Endpoint: hello_world

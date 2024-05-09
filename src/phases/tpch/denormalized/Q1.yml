@@ -4,48 +4,116 @@ Description: |
   Run TPC-H query 1 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
-query1Delta: &query1Delta {^Parameter: {Name: "Query1Delta", Default: -90}}
+batchSize: &batchSize { ^Parameter: { Name: "BatchSize", Default: 101 } }
+query1Delta: &query1Delta { ^Parameter: { Name: "Query1Delta", Default: -90 } }
 
 TPCHDenormalizedQuery1Aggregation: &TPCHDenormalizedQuery1Aggregation
   aggregate: customer
   pipeline:
     [
-      {$unwind: "$orders"},
-      {$addFields: {lineitem: "$orders.lineitem", "orders.lineitem": "$$REMOVE"}},
-      {$unwind: "$lineitem"},
-      {$replaceWith: "$lineitem"},
-      {$match: {$expr: {$lte: ["$l_shipdate", {$dateAdd: {startDate: {^Date: "1998-12-01"}, unit: "day", amount: *query1Delta}}]}}},
-      {$group: {_id: {l_returnflag: "$l_returnflag", l_linestatus: "$l_linestatus"}, sum_qty: {$sum: "$l_quantity"}, sum_base_price: {$sum: "$l_extendedprice"}, sum_disc_price: {$sum: {$multiply: ["$l_extendedprice", {$subtract: [1, "$l_discount"]}]}}, sum_charge: {$sum: {$multiply: ["$l_extendedprice", {$subtract: [1, "$l_discount"]}, {$add: [1, "$l_tax"]}]}}, avg_qty: {$avg: "$l_quantity"}, avg_price: {$avg: "$l_extendedprice"}, avg_disc: {$avg: "$l_discount"}, count_order: {$count: {}}}},
-      {$project: {_id: 0, l_returnflag: "$_id.l_returnflag", l_linestatus: "$_id.l_linestatus", sum_qty: 1, sum_base_price: 1, sum_disc_price: 1, sum_charge: 1, avg_qty: 1, avg_price: 1, avg_disc: 1, count_order: 1}},
-      {$sort: {l_returnflag: 1, l_linestatus: 1}}
+      { $unwind: "$orders" },
+      {
+        $addFields:
+          { lineitem: "$orders.lineitem", "orders.lineitem": "$$REMOVE" },
+      },
+      { $unwind: "$lineitem" },
+      { $replaceWith: "$lineitem" },
+      {
+        $match:
+          {
+            $expr:
+              {
+                $lte:
+                  [
+                    "$l_shipdate",
+                    {
+                      $dateAdd:
+                        {
+                          startDate: { ^Date: "1998-12-01" },
+                          unit: "day",
+                          amount: *query1Delta,
+                        },
+                    },
+                  ],
+              },
+          },
+      },
+      {
+        $group:
+          {
+            _id:
+              { l_returnflag: "$l_returnflag", l_linestatus: "$l_linestatus" },
+            sum_qty: { $sum: "$l_quantity" },
+            sum_base_price: { $sum: "$l_extendedprice" },
+            sum_disc_price:
+              {
+                $sum:
+                  {
+                    $multiply:
+                      ["$l_extendedprice", { $subtract: [1, "$l_discount"] }],
+                  },
+              },
+            sum_charge:
+              {
+                $sum:
+                  {
+                    $multiply:
+                      [
+                        "$l_extendedprice",
+                        { $subtract: [1, "$l_discount"] },
+                        { $add: [1, "$l_tax"] },
+                      ],
+                  },
+              },
+            avg_qty: { $avg: "$l_quantity" },
+            avg_price: { $avg: "$l_extendedprice" },
+            avg_disc: { $avg: "$l_discount" },
+            count_order: { $count: {} },
+          },
+      },
+      {
+        $project:
+          {
+            _id: 0,
+            l_returnflag: "$_id.l_returnflag",
+            l_linestatus: "$_id.l_linestatus",
+            sum_qty: 1,
+            sum_base_price: 1,
+            sum_disc_price: 1,
+            sum_charge: 1,
+            avg_qty: 1,
+            avg_price: 1,
+            avg_disc: 1,
+            count_order: 1,
+          },
+      },
+      { $sort: { l_returnflag: 1, l_linestatus: 1 } },
     ]
-  cursor: {batchSize: *batchSize}
+  cursor: { batchSize: *batchSize }
   allowDiskUse: true
 
 TPCHDenormalizedQuery1Warmup:
-  Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
+  Repeat: &Repeat { ^Parameter: { Name: "Repeat", Default: 1 } }
   Database: &db tpch
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedQuery1Aggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedQuery1Aggregation
 
 TPCHDenormalizedQuery1:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query1
-    OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedQuery1Aggregation
+    - OperationMetricsName: Query1
+      OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedQuery1Aggregation
 
 TPCHDenormalizedQuery1Explain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query1
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHDenormalizedQuery1Aggregation
-      verbosity:
-        executionStats
+    - OperationMetricsName: Query1
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHDenormalizedQuery1Aggregation
+        verbosity: executionStats

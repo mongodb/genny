@@ -10,62 +10,62 @@ Clients:
 
 Actors:
 
-# This query creates a view before running any workloads, and then destroys the view afterwards.
-- Name: TPCHDenormalizedQuery15SetupAndCleanup
-  Type: RunCommand
-  Database: &db tpch
-  Phases:
-  - LoadConfig:
-      Path: ../../../../phases/tpch/denormalized/Q15.yml
-      Key: TPCHDenormalizedQuery15CreateView
-  - &Nop {Nop: true}
-  - *Nop
-  - *Nop
-  - LoadConfig:
-      Path: ../../../../phases/tpch/denormalized/Q15.yml
-      Key: TPCHDenormalizedQuery15DropView
+  # This query creates a view before running any workloads, and then destroys the view afterwards.
+  - Name: TPCHDenormalizedQuery15SetupAndCleanup
+    Type: RunCommand
+    Database: &db tpch
+    Phases:
+      - LoadConfig:
+          Path: ../../../../phases/tpch/denormalized/Q15.yml
+          Key: TPCHDenormalizedQuery15CreateView
+      - &Nop {Nop: true}
+      - *Nop
+      - *Nop
+      - LoadConfig:
+          Path: ../../../../phases/tpch/denormalized/Q15.yml
+          Key: TPCHDenormalizedQuery15DropView
 
-# At the start of the workload, the mongod will have been restarted and all caches will have been cleared.
-# This is when we start the cold data run. We use 'executionStats' here to cause each command to run its
-# execution plan until no documents remain, which ensures that the query executes in its entirety.
-# This is also configured to log an explain for the query plan to help debug regressions.
-- Name: TPCHDenormalizedQuery15Cold
-  Type: RunCommand
-  Database: *db
-  Phases:
-  - *Nop
-  - LoadConfig:
-      Path: ../../../../phases/tpch/denormalized/Q15.yml
-      Key: TPCHDenormalizedQuery15Explain
-  - *Nop
-  - *Nop
-  - *Nop
+  # At the start of the workload, the mongod will have been restarted and all caches will have been cleared.
+  # This is when we start the cold data run. We use 'executionStats' here to cause each command to run its
+  # execution plan until no documents remain, which ensures that the query executes in its entirety.
+  # This is also configured to log an explain for the query plan to help debug regressions.
+  - Name: TPCHDenormalizedQuery15Cold
+    Type: RunCommand
+    Database: *db
+    Phases:
+      - *Nop
+      - LoadConfig:
+          Path: ../../../../phases/tpch/denormalized/Q15.yml
+          Key: TPCHDenormalizedQuery15Explain
+      - *Nop
+      - *Nop
+      - *Nop
 
-# After the cold run, we need to warm up our caches. This is necessary since running aggregations
-# with explain normally does not result in caching of plans.
-- Name: TPCHDenormalizedQuery15Warmup
-  Type: RunCommand
-  Database: *db
-  Phases:
-  - *Nop
-  - *Nop
-  - LoadConfig:
-      Path: ../../../../phases/tpch/denormalized/Q15.yml
-      Key: TPCHDenormalizedQuery15Warmup
-  - *Nop
-  - *Nop
+  # After the cold run, we need to warm up our caches. This is necessary since running aggregations
+  # with explain normally does not result in caching of plans.
+  - Name: TPCHDenormalizedQuery15Warmup
+    Type: RunCommand
+    Database: *db
+    Phases:
+      - *Nop
+      - *Nop
+      - LoadConfig:
+          Path: ../../../../phases/tpch/denormalized/Q15.yml
+          Key: TPCHDenormalizedQuery15Warmup
+      - *Nop
+      - *Nop
 
-# After the cold run, our caches should be warmed up.
-- Name: TPCHDenormalizedQuery15Hot
-  Type: RunCommand
-  Database: *db
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - LoadConfig:
-      Path: ../../../../phases/tpch/denormalized/Q15.yml
-      Key: TPCHDenormalizedQuery15
-      Parameters:
-        Repeat: 3
-  - *Nop
+  # After the cold run, our caches should be warmed up.
+  - Name: TPCHDenormalizedQuery15Hot
+    Type: RunCommand
+    Database: *db
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - LoadConfig:
+          Path: ../../../../phases/tpch/denormalized/Q15.yml
+          Key: TPCHDenormalizedQuery15
+          Parameters:
+            Repeat: 3
+      - *Nop

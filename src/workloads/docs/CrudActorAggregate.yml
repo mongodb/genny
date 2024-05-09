@@ -6,24 +6,24 @@ Description: |
   operations.
 
 Actors:
-- Name: CrudActorAggregateExample
-  Type: CrudActor
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    Database: test
-    Collection: crud_actor_aggregate
-    Operations:
-    - OperationMetricsName: PipelineWithoutOptions
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [{$match: {x: 42}}, {$group: {_id: "$y", sum: {$sum: "$z"}}}]
-    - OperationMetricsName: PipelineWithOptions
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [{$match: {x: 42}}, {$group: {_id: "$y", sum: {$sum: "$z"}}}]
-        # For a complete list of available options, see OptionsConversion.hpp.
-        Options:
-          AllowDiskUse: true
-          BatchSize: 1000
-          MaxTime: 5 minute
+  - Name: CrudActorAggregateExample
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      - Repeat: 1
+        Database: test
+        Collection: crud_actor_aggregate
+        Operations:
+          - OperationMetricsName: PipelineWithoutOptions
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline: [{$match: {x: 42}}, {$group: {_id: "$y", sum: {$sum: "$z"}}}]
+          - OperationMetricsName: PipelineWithOptions
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline: [{$match: {x: 42}}, {$group: {_id: "$y", sum: {$sum: "$z"}}}]
+              # For a complete list of available options, see OptionsConversion.hpp.
+              Options:
+                AllowDiskUse: true
+                BatchSize: 1000
+                MaxTime: 5 minute

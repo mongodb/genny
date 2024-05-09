@@ -4,51 +4,118 @@ Description: |
   Run TPC-H query 10 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
-query10Date: &query10Date {^Parameter: {Name: "Query10Date", Default: "1993-10-01"}}
+batchSize: &batchSize { ^Parameter: { Name: "BatchSize", Default: 101 } }
+query10Date:
+  &query10Date { ^Parameter: { Name: "Query10Date", Default: "1993-10-01" } }
 
 TPCHDenormalizedQuery10Aggregation: &TPCHDenormalizedQuery10Aggregation
   aggregate: customer
   pipeline:
     [
-      {$unwind: "$orders"},
-      {$match: {$and: [
-        {$expr: {$gte: ["$orders.o_orderdate", {^Date: *query10Date}]}},
-        {$expr: {$lt: ["$orders.o_orderdate", {$dateAdd: {startDate: {^Date: *query10Date}, unit: "month", amount: 3}}]}}]}},
-      {$addFields: {lineitem: "$orders.lineitem", "orders.lineitem": "$$REMOVE"}},
-      {$unwind: "$lineitem"},
-      {$match: {"lineitem.l_returnflag": "R"}},
-      {$group: {_id: {c_custkey: "$c_custkey", c_name: "$c_name", c_acctbal: "$c_acctbal", n_name: "$nation.n_name", c_address: "$c_address", c_phone: "$c_phone", c_comment: "$c_comment"}, revenue: {$sum: {$multiply: ["$lineitem.l_extendedprice", {$subtract: [1, "$lineitem.l_discount"]}]}}}},
-      {$project: {_id: 0, c_custkey: "$_id.c_custkey", c_name: "$_id.c_name", c_acctbal: "$_id.c_acctbal", n_name: "$_id.n_name", c_address: "$_id.c_address", c_phone: "$_id.c_phone", c_comment: "$_id.c_comment", revenue: 1}},
-      {$sort: {revenue: -1}},
-      {$limit: 20}
+      { $unwind: "$orders" },
+      {
+        $match:
+          {
+            $and:
+              [
+                {
+                  $expr:
+                    { $gte: ["$orders.o_orderdate", { ^Date: *query10Date }] },
+                },
+                {
+                  $expr:
+                    {
+                      $lt:
+                        [
+                          "$orders.o_orderdate",
+                          {
+                            $dateAdd:
+                              {
+                                startDate: { ^Date: *query10Date },
+                                unit: "month",
+                                amount: 3,
+                              },
+                          },
+                        ],
+                    },
+                },
+              ],
+          },
+      },
+      {
+        $addFields:
+          { lineitem: "$orders.lineitem", "orders.lineitem": "$$REMOVE" },
+      },
+      { $unwind: "$lineitem" },
+      { $match: { "lineitem.l_returnflag": "R" } },
+      {
+        $group:
+          {
+            _id:
+              {
+                c_custkey: "$c_custkey",
+                c_name: "$c_name",
+                c_acctbal: "$c_acctbal",
+                n_name: "$nation.n_name",
+                c_address: "$c_address",
+                c_phone: "$c_phone",
+                c_comment: "$c_comment",
+              },
+            revenue:
+              {
+                $sum:
+                  {
+                    $multiply:
+                      [
+                        "$lineitem.l_extendedprice",
+                        { $subtract: [1, "$lineitem.l_discount"] },
+                      ],
+                  },
+              },
+          },
+      },
+      {
+        $project:
+          {
+            _id: 0,
+            c_custkey: "$_id.c_custkey",
+            c_name: "$_id.c_name",
+            c_acctbal: "$_id.c_acctbal",
+            n_name: "$_id.n_name",
+            c_address: "$_id.c_address",
+            c_phone: "$_id.c_phone",
+            c_comment: "$_id.c_comment",
+            revenue: 1,
+          },
+      },
+      { $sort: { revenue: -1 } },
+      { $limit: 20 },
     ]
-  cursor: {batchSize: *batchSize}
+  cursor: { batchSize: *batchSize }
   allowDiskUse: true
 
 TPCHDenormalizedQuery10Warmup:
-  Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
+  Repeat: &Repeat { ^Parameter: { Name: "Repeat", Default: 1 } }
   Database: &db tpch
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedQuery10Aggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedQuery10Aggregation
 
 TPCHDenormalizedQuery10:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query10
-    OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedQuery10Aggregation
+    - OperationMetricsName: Query10
+      OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedQuery10Aggregation
 
 TPCHDenormalizedQuery10Explain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query10
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHDenormalizedQuery10Aggregation
-      verbosity:
-        executionStats
+    - OperationMetricsName: Query10
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHDenormalizedQuery10Aggregation
+        verbosity: executionStats

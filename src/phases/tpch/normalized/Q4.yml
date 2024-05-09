@@ -1,60 +1,92 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Run TPC-H query 4 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  Run TPC-H query 4 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema.
+  Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
-query4Date: &query4Date {^Parameter: {Name: "Query4Date", Default: "1993-07-01"}}
+batchSize: &batchSize { ^Parameter: { Name: "BatchSize", Default: 101 } }
+query4Date:
+  &query4Date { ^Parameter: { Name: "Query4Date", Default: "1993-07-01" } }
 
 TPCHNormalizedQuery4Aggregation: &TPCHNormalizedQuery4Aggregation
   aggregate: orders
   pipeline:
     [
-      {$match: {
-        $and: [
-          {$expr: {$gte: ["$o_orderdate", {^Date: *query4Date}]}},
-          {$expr: {$lt: ["$o_orderdate", {$dateAdd: {startDate: {^Date: *query4Date}, unit: "month", amount: 3}}]}}]}},
-      {$lookup: {
-        from: "lineitem",
-        localField: "o_orderkey",
-        foreignField: "l_orderkey",
-        pipeline: [{$match: {$expr: {$lt: ["$l_commitdate", "$l_receiptdate"]}}}, {$count: "count"}],
-        as: "lineitem"}},
-      {$unwind: "$lineitem"},
-      {$match: {$expr: {$gt: ["$lineitem.count", 0]}}},
-      {$group: {
-        _id: "$o_orderpriority",
-        order_count: {$count: {}}}},
-      {$project: {_id: 0, o_orderpriority: "$_id", order_count: 1}},
-      {$sort: {o_orderpriority: 1}},
+      {
+        $match:
+          {
+            $and:
+              [
+                { $expr: { $gte: ["$o_orderdate", { ^Date: *query4Date }] } },
+                {
+                  $expr:
+                    {
+                      $lt:
+                        [
+                          "$o_orderdate",
+                          {
+                            $dateAdd:
+                              {
+                                startDate: { ^Date: *query4Date },
+                                unit: "month",
+                                amount: 3,
+                              },
+                          },
+                        ],
+                    },
+                },
+              ],
+          },
+      },
+      {
+        $lookup:
+          {
+            from: "lineitem",
+            localField: "o_orderkey",
+            foreignField: "l_orderkey",
+            pipeline:
+              [
+                {
+                  $match:
+                    { $expr: { $lt: ["$l_commitdate", "$l_receiptdate"] } },
+                },
+                { $count: "count" },
+              ],
+            as: "lineitem",
+          },
+      },
+      { $unwind: "$lineitem" },
+      { $match: { $expr: { $gt: ["$lineitem.count", 0] } } },
+      { $group: { _id: "$o_orderpriority", order_count: { $count: {} } } },
+      { $project: { _id: 0, o_orderpriority: "$_id", order_count: 1 } },
+      { $sort: { o_orderpriority: 1 } },
     ]
-  cursor: {batchSize: *batchSize}
+  cursor: { batchSize: *batchSize }
   allowDiskUse: true
 
 TPCHNormalizedQuery4Warmup:
-  Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
+  Repeat: &Repeat { ^Parameter: { Name: "Repeat", Default: 1 } }
   Database: &db tpch
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHNormalizedQuery4Aggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHNormalizedQuery4Aggregation
 
 TPCHNormalizedQuery4:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query4
-    OperationName: RunCommand
-    OperationCommand: *TPCHNormalizedQuery4Aggregation
+    - OperationMetricsName: Query4
+      OperationName: RunCommand
+      OperationCommand: *TPCHNormalizedQuery4Aggregation
 
 TPCHNormalizedQuery4Explain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query4
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHNormalizedQuery4Aggregation
-      verbosity:
-        executionStats
+    - OperationMetricsName: Query4
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHNormalizedQuery4Aggregation
+        verbosity: executionStats

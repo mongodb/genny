@@ -11,7 +11,7 @@ Description: |
     - {w:majority} insert options, configurable via the Options parameter.
   The default documents have a very simple / flat structure as follows:
     - _id: ObjectId
-    - x: a ~1KB fixed string 
+    - x: a ~1KB fixed string
     - id: 'User%07d' incrementing field.
   There are no additional indexes (just _id).
   The important ftdc metrics to look at are:
@@ -38,25 +38,31 @@ GlobalConstants:
   - &defaultOptions
     WriteConcern:
       Level: majority
-  - &defaultDocument  # The size of each document is about 1kb.
+  - &defaultDocument
     # Generate a string like 'x    x' (but with 1000 blank characters between the start and end x's.
-    x: {^PreprocessorFormatString: {format: "x%*s", withArgs: [1000, "x" ]}}
-    id: { ^Join: { array: [ { ^FormatString: { "format": "User%07d", "withArgs": [ { ^Inc: { start: 1 } } ] } } ] } }
-  - &documentList10x {^FlattenOnce: [
-      *defaultDocument,*defaultDocument,*defaultDocument,*defaultDocument,*defaultDocument,
-      *defaultDocument,*defaultDocument,*defaultDocument,*defaultDocument,*defaultDocument,
-  ]}
-  - &documentsList100x {^FlattenOnce: [
+    x: {^PreprocessorFormatString: {format: "x%*s", withArgs: [1000, "x"]}}
+    id: {^Join: {array: [{^FormatString: {"format": "User%07d", "withArgs": [{^Inc: {start: 1}}]}}]}}
+  - &documentList10x {
+    ^FlattenOnce: [
+      *defaultDocument, *defaultDocument, *defaultDocument, *defaultDocument, *defaultDocument,
+      *defaultDocument, *defaultDocument, *defaultDocument, *defaultDocument, *defaultDocument
+    ]
+  }
+  - &documentsList100x {
+    ^FlattenOnce: [
       *documentList10x, *documentList10x, *documentList10x, *documentList10x, *documentList10x,
-      *documentList10x, *documentList10x, *documentList10x, *documentList10x, *documentList10x,
-  ]}
-  - &defaultDocumentList {^FlattenOnce: [
+      *documentList10x, *documentList10x, *documentList10x, *documentList10x, *documentList10x
+    ]
+  }
+  - &defaultDocumentList {
+    ^FlattenOnce: [
       *documentsList100x, *documentsList100x, *documentsList100x, *documentsList100x, *documentsList100x,
       *documentsList100x, *documentsList100x, *documentsList100x, *documentsList100x, *documentsList100x,
-      *documentsList100x, *documentsList100x, *documentsList100x, *documentsList100x, *documentsList100x,
-  ]}
+      *documentsList100x, *documentsList100x, *documentsList100x, *documentsList100x, *documentsList100x
+    ]
+  }
 
-Actors:
+Actors: # The size of each document is about 1kb.
   #  # Phase 0: insert.
   - Name: Insert
     Type: CrudActor
@@ -69,7 +75,7 @@ Actors:
         PhaseConfig:
           Repeat: {^Parameter: {Name: "Iterations", Default: *iterationsCount}}
           Database: {^Parameter: {Name: "Database", Default: *database}}
-          Collection:  {^Parameter: {Name: "Collection", Default: *collection}}
+          Collection: {^Parameter: {Name: "Collection", Default: *collection}}
           Operations:
             - OperationMetricsName: insertMany
               OperationName: insertMany

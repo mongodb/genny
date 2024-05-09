@@ -9,25 +9,7 @@ batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
 
 TPCHDenormalizedTotalOrderRevenueAggregation: &TPCHDenormalizedTotalOrderRevenueAggregation
   aggregate: customer
-  pipeline:
-    [
-      {
-        $project: {
-          totalPrice: '$orders.o_totalprice'
-        }
-      }, {
-        $unwind: {
-          path: '$totalPrice'
-        }
-      }, {
-        $group: {
-          _id: null,
-          totalRevenue: {
-            $sum: '$totalPrice'
-          }
-        }
-      }
-    ]
+  pipeline: [{$project: {totalPrice: '$orders.o_totalprice'}}, {$unwind: {path: '$totalPrice'}}, {$group: {_id: null, totalRevenue: {$sum: '$totalPrice'}}}]
   cursor: {batchSize: *batchSize}
   allowDiskUse: true
 
@@ -35,25 +17,24 @@ TPCHDenormalizedTotalOrderRevenueWarmup:
   Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
   Database: &db tpch
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedTotalOrderRevenueAggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedTotalOrderRevenueAggregation
 
 TPCHDenormalizedTotalOrderRevenue:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: TotalOrderRevenue
-    OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedTotalOrderRevenueAggregation
+    - OperationMetricsName: TotalOrderRevenue
+      OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedTotalOrderRevenueAggregation
 
 TPCHDenormalizedTotalOrderRevenueExplain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: TotalOrderRevenue
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHDenormalizedTotalOrderRevenueAggregation
-      verbosity:
-        executionStats
+    - OperationMetricsName: TotalOrderRevenue
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHDenormalizedTotalOrderRevenueAggregation
+        verbosity: executionStats

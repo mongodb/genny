@@ -10,38 +10,58 @@ InsertDataTemplate:
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: {^Parameter: {Name: "active", Default: [0]}}
-      NopInPhasesUpTo: {^Parameter: {Name: "nopInPhasesUpTo", Default: 5}}
+      Active: { ^Parameter: { Name: "active", Default: [0] } }
+      NopInPhasesUpTo: { ^Parameter: { Name: "nopInPhasesUpTo", Default: 5 } }
       PhaseConfig:
-        Repeat: {^Parameter: {Name: "repeat", Default: 1}}
-        Database: {^Parameter: {Name: "database", Default: test}}
-        MultipleThreadsPerCollection: {^Parameter: {Name: "multipleThreadsPerCollection", Default: true}}
-        CollectionCount: {^Parameter: {Name: "collectionCount", Default: 1}}
-        Collection: {^Parameter: {Name: "collection", Default: Collection0}}
-        DocumentCount: {^Parameter: {Name: "documentCount", Default: 1e6}}
-        BatchSize: {^Parameter: {Name: "batchSize", Default: 3000}}
+        Repeat: { ^Parameter: { Name: "repeat", Default: 1 } }
+        Database: { ^Parameter: { Name: "database", Default: test } }
+        MultipleThreadsPerCollection:
+          {
+            ^Parameter: { Name: "multipleThreadsPerCollection", Default: true },
+          }
+        CollectionCount: { ^Parameter: { Name: "collectionCount", Default: 1 } }
+        Collection: { ^Parameter: { Name: "collection", Default: Collection0 } }
+        DocumentCount: { ^Parameter: { Name: "documentCount", Default: 1e6 } }
+        BatchSize: { ^Parameter: { Name: "batchSize", Default: 3000 } }
         Document:
           # Since step = 349 ms and documentCount = 1,000,000, the first and last document would be 349,000,000 ms apart (roughly 4 days).
-          time: {^IncDate: {start: "2022-01-01", step: 349}}
-          symbol: {^Cycle: {ofLength: {^Parameter: {Name: "numGroups", Default: 100}}, fromGenerator: {^FormatString: {"format": "string%02d", "withArgs": [{^Inc: {start: 0}}]}}}}
-          price: {^RandomDouble: {min: 100.0, max: 1000.0}}
+          time: { ^IncDate: { start: "2022-01-01", step: 349 } }
+          symbol:
+            {
+              ^Cycle:
+                {
+                  ofLength: { ^Parameter: { Name: "numGroups", Default: 100 } },
+                  fromGenerator:
+                    {
+                      ^FormatString:
+                        {
+                          "format": "string%02d",
+                          "withArgs": [{ ^Inc: { start: 0 } }],
+                        },
+                    },
+                },
+            }
+          price: { ^RandomDouble: { min: 100.0, max: 1000.0 } }
 
 QueryTemplate:
-  Name: &Name {^Parameter: {Name: "name", Default: GroupStagesOnComputedFieldsTemplate}}
+  Name:
+    &Name {
+      ^Parameter:
+        { Name: "name", Default: GroupStagesOnComputedFieldsTemplate },
+    }
   Type: CrudActor
-  Database: &Database {^Parameter: {Name: "database", Default: test}}
-  Threads: {^Parameter: {Name: "threads", Default: 10}}
+  Database: &Database { ^Parameter: { Name: "database", Default: test } }
+  Threads: { ^Parameter: { Name: "threads", Default: 10 } }
   Phases:
     OnlyActiveInPhases:
-      Active: {^Parameter: {Name: "active", Default: [0]}}
-      NopInPhasesUpTo: {^Parameter: {Name: "nopInPhasesUpTo", Default: 5}}
+      Active: { ^Parameter: { Name: "active", Default: [0] } }
+      NopInPhasesUpTo: { ^Parameter: { Name: "nopInPhasesUpTo", Default: 5 } }
       PhaseConfig:
-        Repeat: {^Parameter: {Name: "repeat", Default: 10}}
+        Repeat: { ^Parameter: { Name: "repeat", Default: 10 } }
         Database: *Database
-        Collection: {^Parameter: {Name: "collection", Default: Collection0}}
+        Collection: { ^Parameter: { Name: "collection", Default: Collection0 } }
         Operations:
-        - OperationMetricsName: *Name
-          OperationName: aggregate
-          OperationCommand:
-            Pipeline: {^Parameter: {Name: "pipeline", Default: ""}}
-
+          - OperationMetricsName: *Name
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline: { ^Parameter: { Name: "pipeline", Default: "" } }

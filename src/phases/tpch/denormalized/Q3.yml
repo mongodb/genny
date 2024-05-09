@@ -4,53 +4,91 @@ Description: |
   Run TPC-H query 3 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
+batchSize: &batchSize { ^Parameter: { Name: "BatchSize", Default: 101 } }
 
-query3Segment: &query3Segment {^Parameter: {Name: "Query3Segment", Default: "BUILDING"}}
-query3Date: &query3Date {^Parameter: {Name: "Query3Date", Default: "1995-03-15"}}
+query3Segment:
+  &query3Segment { ^Parameter: { Name: "Query3Segment", Default: "BUILDING" } }
+query3Date:
+  &query3Date { ^Parameter: { Name: "Query3Date", Default: "1995-03-15" } }
 
 TPCHDenormalizedQuery3Aggregation: &TPCHDenormalizedQuery3Aggregation
   aggregate: customer
   pipeline:
     [
-      {$match: {$expr: {$eq: ["$c_mktsegment", *query3Segment]}}},
-      {$unwind: "$orders"},
-      {$match: {$expr: {$lt: ["$orders.o_orderdate", {^Date: *query3Date}]}}},
-      {$unwind: "$orders.lineitem"},
-      {$match: {$expr: {$gt: ["$orders.lineitem.l_shipdate", {^Date: *query3Date}]}}},
-      {$group: {
-        _id: {l_orderkey: "$orders.lineitem.l_orderkey", o_orderdate: "$orders.o_orderdate", o_shippriority: "$orders.o_shippriority"},
-        revenue: {$sum: {$multiply: ["$orders.lineitem.l_extendedprice", {$subtract: [1, "$orders.lineitem.l_discount"]}]}}}},
-      {$project: {_id: 0, l_orderkey: "$_id.l_orderkey", o_orderdate: "$_id.o_orderdate", o_shippriority: "$_id.o_shippriority", revenue: 1}},
-      {$sort: {revenue: -1, o_orderdate: 1}},
-      {$limit: 10}
+      { $match: { $expr: { $eq: ["$c_mktsegment", *query3Segment] } } },
+      { $unwind: "$orders" },
+      {
+        $match:
+          { $expr: { $lt: ["$orders.o_orderdate", { ^Date: *query3Date }] } },
+      },
+      { $unwind: "$orders.lineitem" },
+      {
+        $match:
+          {
+            $expr:
+              { $gt: ["$orders.lineitem.l_shipdate", { ^Date: *query3Date }] },
+          },
+      },
+      {
+        $group:
+          {
+            _id:
+              {
+                l_orderkey: "$orders.lineitem.l_orderkey",
+                o_orderdate: "$orders.o_orderdate",
+                o_shippriority: "$orders.o_shippriority",
+              },
+            revenue:
+              {
+                $sum:
+                  {
+                    $multiply:
+                      [
+                        "$orders.lineitem.l_extendedprice",
+                        { $subtract: [1, "$orders.lineitem.l_discount"] },
+                      ],
+                  },
+              },
+          },
+      },
+      {
+        $project:
+          {
+            _id: 0,
+            l_orderkey: "$_id.l_orderkey",
+            o_orderdate: "$_id.o_orderdate",
+            o_shippriority: "$_id.o_shippriority",
+            revenue: 1,
+          },
+      },
+      { $sort: { revenue: -1, o_orderdate: 1 } },
+      { $limit: 10 },
     ]
-  cursor: {batchSize: *batchSize}
+  cursor: { batchSize: *batchSize }
   allowDiskUse: true
 
 TPCHDenormalizedQuery3Warmup:
-  Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
+  Repeat: &Repeat { ^Parameter: { Name: "Repeat", Default: 1 } }
   Database: &db tpch
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedQuery3Aggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedQuery3Aggregation
 
 TPCHDenormalizedQuery3:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query3
-    OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedQuery3Aggregation
+    - OperationMetricsName: Query3
+      OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedQuery3Aggregation
 
 TPCHDenormalizedQuery3Explain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query3
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHDenormalizedQuery3Aggregation
-      verbosity:
-        executionStats
+    - OperationMetricsName: Query3
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHDenormalizedQuery3Aggregation
+        verbosity: executionStats

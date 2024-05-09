@@ -166,7 +166,7 @@ Server Security
 
 
 ### Description
-This workload evaluates the performance of Queryable Encryption against the established “Queryable Encryption Performance Release Criteria.” 
+This workload evaluates the performance of Queryable Encryption against the established “Queryable Encryption Performance Release Criteria.”
 
 
 
@@ -441,7 +441,8 @@ iteration.
 ### Description
 This workload was created to test an external script runner as per PERF-3198.
 The execution stats of the script will be collected with metrics name "ExternalScript"
-If the script writes and only writes an integer to stdout as result, the result will be collected to the specified metrics name (DefaultMetricsName as default)
+If the script writes and only writes an integer to stdout as result, the result will be
+collected to the specified metrics name (DefaultMetricsName as default)
 
 
 
@@ -519,7 +520,6 @@ Performance Analysis
 
 
 ### Description
-
 This workload illustrates how to think of Phases happening
 simultaneously and how to configure Repeat and Duration
 when you have more than one Actor in a Workload.
@@ -1193,6 +1193,114 @@ Models the Queryable Encryption acceptance criteria workloads
 
 
 
+## [qe-range-age-100-0](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/qe-range-age-100-0.yml)
+### Owner 
+Server Security 
+
+
+### Support Channel
+[#server-security](https://mongodb.enterprise.slack.com/archives/CB3CW8M8C)
+
+
+### Description
+QE Range Release Criteria Experiment
+
+  
+
+### Keywords
+Queryable Encryption 
+
+
+## [qe-range-age-50-50](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/qe-range-age-50-50.yml)
+### Owner 
+Server Security 
+
+
+### Support Channel
+[#server-security](https://mongodb.enterprise.slack.com/archives/CB3CW8M8C)
+
+
+### Description
+QE Range Release Criteria Experiment
+
+  
+
+### Keywords
+Queryable Encryption 
+
+
+## [qe-range-balance-100-0](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/qe-range-balance-100-0.yml)
+### Owner 
+Server Security 
+
+
+### Support Channel
+[#server-security](https://mongodb.enterprise.slack.com/archives/CB3CW8M8C)
+
+
+### Description
+QE Range Release Criteria Experiment
+
+  
+
+### Keywords
+Queryable Encryption 
+
+
+## [qe-range-balance-50-50](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/qe-range-balance-50-50.yml)
+### Owner 
+Server Security 
+
+
+### Support Channel
+[#server-security](https://mongodb.enterprise.slack.com/archives/CB3CW8M8C)
+
+
+### Description
+QE Range Release Criteria Experiment
+
+  
+
+### Keywords
+Queryable Encryption 
+
+
+## [qe-range-timestamp-100-0](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/qe-range-timestamp-100-0.yml)
+### Owner 
+Server Security 
+
+
+### Support Channel
+[#server-security](https://mongodb.enterprise.slack.com/archives/CB3CW8M8C)
+
+
+### Description
+QE Range Release Criteria Experiment
+
+  
+
+### Keywords
+Queryable Encryption 
+
+
+## [qe-range-timestamp-50-50](https://www.github.com/mongodb/genny/blob/master/src/workloads/encrypted/qe-range-timestamp-50-50.yml)
+### Owner 
+Server Security 
+
+
+### Support Channel
+[#server-security](https://mongodb.enterprise.slack.com/archives/CB3CW8M8C)
+
+
+### Description
+QE Range Release Criteria Experiment
+
+  
+
+### Keywords
+Queryable Encryption 
+
+
 ## [BackgroundIndexConstruction](https://www.github.com/mongodb/genny/blob/master/src/workloads/execution/BackgroundIndexConstruction.yml)
 ### Owner 
 Storage Execution 
@@ -1332,7 +1440,9 @@ Storage Execution
 
 
 ### Description
-Deletes a range of documents using the BATCHED_DELETE query exec stage both in isolation and while performing writes on another collection. Tests deletes on documents of size ~1KB then deletes on documents of ~10MB.
+Deletes a range of documents using the BATCHED_DELETE query exec stage both in isolation and while
+performing writes on another collection. Tests deletes on documents of size ~1KB then deletes on
+documents of ~10MB.
 
   
 
@@ -1651,7 +1761,7 @@ The workload runs a single CrudActor targeting:
   - {w:majority} insert options, configurable via the Options parameter.
 The default documents have a very simple / flat structure as follows:
   - _id: ObjectId
-  - x: a ~1KB fixed string 
+  - x: a ~1KB fixed string
   - id: 'User%07d' incrementing field.
 There are no additional indexes (just _id).
 The important ftdc metrics to look at are:
@@ -2478,7 +2588,6 @@ workloads to keep them in sync.
 
 Each densify workload has a metric to cover possible codepaths through the densify stage, namely
 different bounds types and whether or not to generate documents along partitions.
-
 
 Since $densify is a new aggregation stage, there isn't a known "good" runtime for aggregations
 that include it. Rather than comparing against a baseline initially, workloads with different
@@ -3802,8 +3911,8 @@ timeseries, aggregate
 
 
 ### Description
-The queries in this workload exercise group stage that uses the $count accumulator and the $count 
-aggregation stage. On FCV greater than or equal to 7.1 $group using $count is optimized to remove 
+The queries in this workload exercise group stage that uses the $count accumulator and the $count
+aggregation stage. On FCV greater than or equal to 7.1 $group using $count is optimized to remove
 the $unpack stage.
 
   
@@ -3837,8 +3946,8 @@ Query Integration
 
 
 ### Description
-This test exercises the behavior of the time series optimization when the collection has 
-fixed buckets. This workload uses tsbs data that is imported in the dsi configuration. See 
+This test exercises the behavior of the time series optimization when the collection has
+fixed buckets. This workload uses tsbs data that is imported in the dsi configuration. See
 'configurations/test_control/test_control.fixed_bucketing.yml' for all the details.
 The data is set up with the fixed bucketing parameters set to 3600 and the timeField is "time"
 and the metaField is "tags". There are 20736000 documents in the collection.
@@ -3879,9 +3988,9 @@ timeseries, aggregate
 
 
 ### Description
-This workload runs different math expressions on time-series optimizations with the tsbs dataset. 
-During development, This workload runs queries from the tsbs_query benchmark in Genny. It allows us 
-to cross-check the results of the TSBS benchmarks, collect additional measurements, profile individual 
+This workload runs different math expressions on time-series optimizations with the tsbs dataset.
+During development, This workload runs queries from the tsbs_query benchmark in Genny. It allows us
+to cross-check the results of the TSBS benchmarks, collect additional measurements, profile individual
 queries, and extend some of the queries as needed. The data is preloaded by the dsi configuration. See
 'configurations/test_control/test_control.tsbs_query_genny.yml' for all  the details. There are 20736000
 documents in the collection. There are some differences between the queries in this workload and tsbs,
@@ -4141,12 +4250,18 @@ The goal of this test is to exercise multiplanning. We create as many indexes as
 
 
 ### Description
+<<<<<<< HEAD
 This test exercises multi-planning in the presence of a common pattern, using "tenant IDs": we
 have a single collection that conceptually is partitioned into one collection per user ("tenant"),
 so each query has an extra equality predicate on tenantId, and each index is prefixed with
 'tenantId: 1'. We create as many compound indexes as possible, each with "tenantId" as the prefix
 of the index key pattern. We then run a conjunctive query with an equality predicate on tenantId
 as well as inequalities on all other indexed fields.
+=======
+The goal of this test is to exercise multiplanning. We create as many compound indexes as possible, each
+comprising of tenantId and another field. We then run a query with an equality predicate on tenantId and
+other predicates a small number of fields, so we get all the plans that use relevant indexes.
+>>>>>>> master
 
 This workload is the same as "Simple.yml" other than that it uses compound indexes with the
 "tenantId" prefix. We expect multi-planning performance to be similar to "Simple.yml", but this
@@ -4213,8 +4328,8 @@ indexes
 
 ### Description
 The goal of this test is to exercise multiplanning with multikey indexes. We create many indexes and
-run a query that makes all of them eligible, so we get as many competing plans as possible. Because 
-an IXSCAN of a multikey index has to deduplicate RIDs, a lot of space will be used. The classic 
+run a query that makes all of them eligible, so we get as many competing plans as possible. Because
+an IXSCAN of a multikey index has to deduplicate RIDs, a lot of space will be used. The classic
 multi-planner will behave more optimally than the SBE multiplanner because it will cut off execution
 when the one good plan reaches the end.
 
@@ -5710,7 +5825,6 @@ Performance Analysis
 
 
 ### Description
-
 This workload measures the overhead of Genny itself. There are 2 different
 configurations that run consecutively for 5 phases each. The first
 configuration runs with 100 threads and the second configuration runs
@@ -5984,16 +6098,16 @@ Cluster Scalability
 
 
 ### Description
-This test measures the time for a sharded cluster to reshard a collection from one shard to two 
-shards then to three shards. It was added August 2023 as part of PM-2322, to demonstrate planned 
-resharding performance improvements. Note that the goal of this test is to show the performance 
+This test measures the time for a sharded cluster to reshard a collection from one shard to two
+shards then to three shards. It was added August 2023 as part of PM-2322, to demonstrate planned
+resharding performance improvements. Note that the goal of this test is to show the performance
 gain on this setup rather than the performance difference on different kinds of data type.
 
-The test expects the target cluster is created using ebs snapshot with 1 billion 1KB records and 
-has 3 shards, named shard-00, shard-01, shard-02. The collection has 10 indexes including 
+The test expects the target cluster is created using ebs snapshot with 1 billion 1KB records and
+has 3 shards, named shard-00, shard-01, shard-02. The collection has 10 indexes including
 _id index, single-key index and compound index. The whole dataset is on 1 shard at the beginning.
-ReshardCollection should use same-key resharding and use shardDistribution parameter to reshard 
-into 2 shards then 3 shards. There will be random CRUD operations during resharding but should 
+ReshardCollection should use same-key resharding and use shardDistribution parameter to reshard
+into 2 shards then 3 shards. There will be random CRUD operations during resharding but should
 run at a very low rate.
 
 The workload consists of 3 phases:
@@ -6001,11 +6115,11 @@ The workload consists of 3 phases:
   2. Running read and write operations on the collection while it is being resharded to 2 shards.
   3. Running read and write operations on the collection while it is being resharded to 3 shards.
 
-All documents are generated through genny' data loader where the integer and length of short 
-string fields are randomly generated. The fields are designed like to form different combinations 
-of indexes. The goal of having 10 indexes is to test resharding performance with indexes and the 
+All documents are generated through genny' data loader where the integer and length of short
+string fields are randomly generated. The fields are designed like to form different combinations
+of indexes. The goal of having 10 indexes is to test resharding performance with indexes and the
 number 10 comes from design, which is arbitrary from testing perspective.
-  
+
 The inserted documents have the following form:
 
     {

@@ -5,474 +5,608 @@ Description: |
   documents with a large number of fields.
 
 Keywords:
-- Loader
-- CrudActor
-- QuiesceActor
-- insert
-- find
+  - Loader
+  - CrudActor
+  - QuiesceActor
+  - insert
+  - find
 
 GlobalDefaults:
-  Database: &Database {^Parameter: {Name: Database, Default: unused}}
-  DocumentCount: &DocumentCount {^Parameter: {Name: DocumentCount, Default: -1}}
-  Repeat: &Repeat {^Parameter: {Name: Repeat, Default: -1}}
+  Database: &Database { ^Parameter: { Name: Database, Default: unused } }
+  DocumentCount:
+    &DocumentCount { ^Parameter: { Name: DocumentCount, Default: -1 } }
+  Repeat: &Repeat { ^Parameter: { Name: Repeat, Default: -1 } }
   Collection: &Collection Collection0
   MaxPhases: &MaxPhases 26
 
   # Generates a random string of 5-50 characters.
-  RandomShortString: &RandomShortString {^FastRandomString: {
-    length: {^RandomInt: {min: 5, max: 50}}
-  }}
+  RandomShortString:
+    &RandomShortString {
+      ^FastRandomString: { length: { ^RandomInt: { min: 5, max: 50 } } },
+    }
   # Generates a random string of 50-500 characters.
-  RandomLongString: &RandomLongString {^FastRandomString: {
-    length: {^RandomInt: {min: 50, max: 500}}
-  }}
+  RandomLongString:
+    &RandomLongString {
+      ^FastRandomString: { length: { ^RandomInt: { min: 50, max: 500 } } },
+    }
   # Generates a random UUID.
-  RandomUUID: &RandomUUID {^UUID: {hex: {^FormatString: {format: "%08x-%04x-%04x-%04x-%012x",
-                                withArgs: [
-                                  {^RandomInt: {min: 0, max: 0xFFFFFFFF}},
-                                  {^RandomInt: {min: 0, max: 0xFFFF}},
-                                  {^RandomInt: {min: 0, max: 0xFFFF}},
-                                  {^RandomInt: {min: 0, max: 0xFFFF}},
-                                  {^RandomInt: {min: 0, max: 0xFFFFFFFFFFFF}}]}}}}  
+  RandomUUID:
+    &RandomUUID {
+      ^UUID:
+        {
+          hex:
+            {
+              ^FormatString:
+                {
+                  format: "%08x-%04x-%04x-%04x-%012x",
+                  withArgs:
+                    [
+                      { ^RandomInt: { min: 0, max: 0xFFFFFFFF } },
+                      { ^RandomInt: { min: 0, max: 0xFFFF } },
+                      { ^RandomInt: { min: 0, max: 0xFFFF } },
+                      { ^RandomInt: { min: 0, max: 0xFFFF } },
+                      { ^RandomInt: { min: 0, max: 0xFFFFFFFFFFFF } },
+                    ],
+                },
+            },
+        },
+    }
 
-  FieldNames: &FieldNames [
-    "bool",
-    "int",
-    "double",
-    "string",
-    "objectId",
-    "uuid",
-    "date",
-    "object",
-    "array",
-    "anytype",
-  ]
-  FieldValues: &FieldValues [
-    &RandomBool {^Choose: {from: [true, false, null]}},
-    &RandomInt {^RandomInt: {min: 0, max: 1_000_000_000}},
-    &RandomDouble {^RandomDouble: {min: 0, max: 1_000_000_000}},
-    &RandomString {^Choose: {from: [*RandomShortString, *RandomLongString, null]}},
-    &RandomObjectId {^ObjectId: {^RandomString: {length: 24, alphabet: "0123456789ABCDEF"}}},
-    *RandomUUID,
-    &RandomDate {^RandomDate: {min: "1980-01-01", max: "2025-01-01"}},
-    &RandomObject {^Object: {
-      withNEntries: {^RandomInt: {min: 1, max: 4}},
-      havingKeys: {^RandomString: {length: 10}},
-      andValues: &RandomValue {^Choose: {from: [
-        *RandomBool, *RandomInt, *RandomString, *RandomObjectId, *RandomDate, null
-      ]}},
-      duplicatedKeys: skip
-    }},
-    &RandomArray {^Array: {of: *RandomValue, number: {^RandomInt: {min: 0, max: 4}}}},
-    &AnyRandomValue {^Choose: {from: [
-      null,
-      *RandomBool,
-      *RandomInt,
-      *RandomDouble,
-      *RandomString,
-      *RandomObjectId,
+  FieldNames:
+    &FieldNames [
+      "bool",
+      "int",
+      "double",
+      "string",
+      "objectId",
+      "uuid",
+      "date",
+      "object",
+      "array",
+      "anytype",
+    ]
+  FieldValues:
+    &FieldValues [
+      &RandomBool { ^Choose: { from: [true, false, null] } },
+      &RandomInt { ^RandomInt: { min: 0, max: 1_000_000_000 } },
+      &RandomDouble { ^RandomDouble: { min: 0, max: 1_000_000_000 } },
+      &RandomString {
+        ^Choose: { from: [*RandomShortString, *RandomLongString, null] },
+      },
+      &RandomObjectId {
+        ^ObjectId:
+          { ^RandomString: { length: 24, alphabet: "0123456789ABCDEF" } },
+      },
       *RandomUUID,
-      *RandomDate,
-      *RandomObject,
-      *RandomArray,
-    ]}},
-  ]
+      &RandomDate { ^RandomDate: { min: "1980-01-01", max: "2025-01-01" } },
+      &RandomObject {
+        ^Object:
+          {
+            withNEntries: { ^RandomInt: { min: 1, max: 4 } },
+            havingKeys: { ^RandomString: { length: 10 } },
+            andValues:
+              &RandomValue {
+                ^Choose:
+                  {
+                    from:
+                      [
+                        *RandomBool,
+                        *RandomInt,
+                        *RandomString,
+                        *RandomObjectId,
+                        *RandomDate,
+                        null,
+                      ],
+                  },
+              },
+            duplicatedKeys: skip,
+          },
+      },
+      &RandomArray {
+        ^Array:
+          { of: *RandomValue, number: { ^RandomInt: { min: 0, max: 4 } } },
+      },
+      &AnyRandomValue {
+        ^Choose:
+          {
+            from:
+              [
+                null,
+                *RandomBool,
+                *RandomInt,
+                *RandomDouble,
+                *RandomString,
+                *RandomObjectId,
+                *RandomUUID,
+                *RandomDate,
+                *RandomObject,
+                *RandomArray,
+              ],
+          },
+      },
+    ]
 
-  GenComparisonOps: &GenComparisonOps {^Choose: {from: ["$eq", "$lt", "$lte", "$gt", "$gte"]}}
-  GenRandomComparisonAnyType: &GenRandomComparisonAnyType {^Object: {
-    withNEntries: 1,
-    havingKeys: *GenComparisonOps,
-    andValues: *AnyRandomValue,
-    duplicatedKeys: insert,
-  }}
+  GenComparisonOps:
+    &GenComparisonOps {
+      ^Choose: { from: ["$eq", "$lt", "$lte", "$gt", "$gte"] },
+    }
+  GenRandomComparisonAnyType:
+    &GenRandomComparisonAnyType {
+      ^Object:
+        {
+          withNEntries: 1,
+          havingKeys: *GenComparisonOps,
+          andValues: *AnyRandomValue,
+          duplicatedKeys: insert,
+        },
+    }
 
-  GenNumberedFieldNames: &GenNumberedFieldNames {^Join: {
-    array: [
-      {^Choose: {from: *FieldNames, deterministic: true}},
-      # Repeat each number from 1 to 10 ten times.
-      {^FormatString: {format: "%d", withArgs: [{^Repeat: {count: 10, fromGenerator: {^Cycle: {ofLength: 10, fromGenerator: {^Inc: {}}}}}}]}},
-    ],
-    sep: "",
-  }}
+  GenNumberedFieldNames: &GenNumberedFieldNames { ^Join: { array: [
+    { ^Choose: { from: *FieldNames, deterministic: true } },
+    # Repeat each number from 1 to 10 ten times.
+    {
+      ^FormatString:
+        {
+          format: "%d",
+          withArgs:
+            [
+              {
+                ^Repeat:
+                  {
+                    count: 10,
+                    fromGenerator:
+                      {
+                        ^Cycle:
+                          {
+                            ofLength: 10,
+                            fromGenerator: { ^Inc: {} },
+                          },
+                      },
+                  },
+              },
+            ],
+        },
+    },
+  ], sep: "" } }
 
   # Generates documents of the form {bool1: val, int1: val, ..., array10: val, anytype10: val}.
-  DocumentWith100Fields: &DocumentWith100Fields {^Object: {
-    withNEntries: 100,
-    havingKeys: *GenNumberedFieldNames,
-    andValues: &GenFieldValues {^Choose: {from: *FieldValues, deterministic: true}},
-    duplicatedKeys: insert,
-  }}
+  DocumentWith100Fields:
+    &DocumentWith100Fields {
+      ^Object:
+        {
+          withNEntries: 100,
+          havingKeys: *GenNumberedFieldNames,
+          andValues:
+            &GenFieldValues {
+              ^Choose: { from: *FieldValues, deterministic: true },
+            },
+          duplicatedKeys: insert,
+        },
+    }
 
-  DocumentWith50Fields: &DocumentWith50Fields {^Object: {
-    withNEntries: 50,
-    havingKeys: *GenNumberedFieldNames,
-    andValues: *GenFieldValues,
-    duplicatedKeys: insert,
-  }}
+  DocumentWith50Fields:
+    &DocumentWith50Fields {
+      ^Object:
+        {
+          withNEntries: 50,
+          havingKeys: *GenNumberedFieldNames,
+          andValues: *GenFieldValues,
+          duplicatedKeys: insert,
+        },
+    }
 
   # Generates predicates of the form {"a.bool1": val, "a.int1": val, ..., "a.array10": val, "a.anytype10": val}.
-  EqOn100Fields: &EqOn100Fields {^Object: {
-    withNEntries: 100,
-    havingKeys: &GenNumberedFieldPaths {^Join: {array: ["a", *GenNumberedFieldNames], sep: "."}},
-    andValues: *GenFieldValues,
-    duplicatedKeys: insert,
-  }}
+  EqOn100Fields:
+    &EqOn100Fields {
+      ^Object:
+        {
+          withNEntries: 100,
+          havingKeys:
+            &GenNumberedFieldPaths {
+              ^Join: { array: ["a", *GenNumberedFieldNames], sep: "." },
+            },
+          andValues: *GenFieldValues,
+          duplicatedKeys: insert,
+        },
+    }
 
-  EqOn50Fields: &EqOn50Fields {^Object: {
-    withNEntries: 50,
-    havingKeys: *GenNumberedFieldPaths,
-    andValues: *GenFieldValues,
-    duplicatedKeys: insert,
-  }}
+  EqOn50Fields:
+    &EqOn50Fields {
+      ^Object:
+        {
+          withNEntries: 50,
+          havingKeys: *GenNumberedFieldPaths,
+          andValues: *GenFieldValues,
+          duplicatedKeys: insert,
+        },
+    }
 
   # Generates predicates of the form {"a.bool1": cmp, "a.int1": cmp, ..., "a.array10": cmp, "a.anytype10": cmp},
   # where 'cmp' is can be any basic comparison (=, <, <=, >, >=) to a random value of any type.
-  MixedComparisonsOn100FieldsAnyType: &MixedComparisonsOn100FieldsAnyType {^Object: {
-    withNEntries: 100,
-    havingKeys: *GenNumberedFieldPaths,
-    andValues: *GenRandomComparisonAnyType,
-    duplicatedKeys: insert,
-  }}
+  MixedComparisonsOn100FieldsAnyType:
+    &MixedComparisonsOn100FieldsAnyType {
+      ^Object:
+        {
+          withNEntries: 100,
+          havingKeys: *GenNumberedFieldPaths,
+          andValues: *GenRandomComparisonAnyType,
+          duplicatedKeys: insert,
+        },
+    }
 
-  MixedComparisonsOn50FieldsAnyType: &MixedComparisonsOn50FieldsAnyType {^Object: {
-    withNEntries: 50,
-    havingKeys: *GenNumberedFieldPaths,
-    andValues: *GenRandomComparisonAnyType,
-    duplicatedKeys: insert,
-  }}
+  MixedComparisonsOn50FieldsAnyType:
+    &MixedComparisonsOn50FieldsAnyType {
+      ^Object:
+        {
+          withNEntries: 50,
+          havingKeys: *GenNumberedFieldPaths,
+          andValues: *GenRandomComparisonAnyType,
+          duplicatedKeys: insert,
+        },
+    }
 
   # Generates predicates of the form {"a.bool1": cmp, "a.int1": cmp, ..., "a.array10": cmp, "a.anytype10": cmp},
   # where 'cmp' is can be any basic comparison (=, <, <=, >, >=) to a random value of the same type.
-  MixedComparisonsOn100FieldsSameType: &MixedComparisonsOn100FieldsSameType {^Object: {
-    withNEntries: 100,
-    havingKeys: *GenNumberedFieldPaths,
-    andValues: &GenRandomComparisonSameType {^Object: {
-      withNEntries: 1,
-      havingKeys: *GenComparisonOps,
-      andValues: *GenFieldValues,
-      duplicatedKeys: insert,
-    }},
-    duplicatedKeys: insert,
-  }}
+  MixedComparisonsOn100FieldsSameType:
+    &MixedComparisonsOn100FieldsSameType {
+      ^Object:
+        {
+          withNEntries: 100,
+          havingKeys: *GenNumberedFieldPaths,
+          andValues:
+            &GenRandomComparisonSameType {
+              ^Object:
+                {
+                  withNEntries: 1,
+                  havingKeys: *GenComparisonOps,
+                  andValues: *GenFieldValues,
+                  duplicatedKeys: insert,
+                },
+            },
+          duplicatedKeys: insert,
+        },
+    }
 
-  MixedComparisonsOn50FieldsSameType: &MixedComparisonsOn50FieldsSameType {^Object: {
-    withNEntries: 50,
-    havingKeys: *GenNumberedFieldPaths,
-    andValues: *GenRandomComparisonSameType,
-    duplicatedKeys: insert,
-  }}
+  MixedComparisonsOn50FieldsSameType:
+    &MixedComparisonsOn50FieldsSameType {
+      ^Object:
+        {
+          withNEntries: 50,
+          havingKeys: *GenNumberedFieldPaths,
+          andValues: *GenRandomComparisonSameType,
+          duplicatedKeys: insert,
+        },
+    }
 
-  ExclusionProjection99Fields: &ExclusionProjection99Fields {^Object: {
-    withNEntries: 99,
-    havingKeys: *GenNumberedFieldNames,
-    andValues: 0,
-    duplicatedKeys: insert,
-  }}
+  ExclusionProjection99Fields:
+    &ExclusionProjection99Fields {
+      ^Object:
+        {
+          withNEntries: 99,
+          havingKeys: *GenNumberedFieldNames,
+          andValues: 0,
+          duplicatedKeys: insert,
+        },
+    }
 
-  InclusionProjection99Fields: &InclusionProjection99Fields {^Object: {
-    withNEntries: 99,
-    havingKeys: *GenNumberedFieldNames,
-    andValues: 1,
-    duplicatedKeys: insert,
-  }}
+  InclusionProjection99Fields:
+    &InclusionProjection99Fields {
+      ^Object:
+        {
+          withNEntries: 99,
+          havingKeys: *GenNumberedFieldNames,
+          andValues: 1,
+          duplicatedKeys: insert,
+        },
+    }
 
-  ExclusionProjection50Fields: &ExclusionProjection50Fields {^Object: {
-    withNEntries: 50,
-    havingKeys: *GenNumberedFieldNames,
-    andValues: 0,
-    duplicatedKeys: insert,
-  }}
+  ExclusionProjection50Fields:
+    &ExclusionProjection50Fields {
+      ^Object:
+        {
+          withNEntries: 50,
+          havingKeys: *GenNumberedFieldNames,
+          andValues: 0,
+          duplicatedKeys: insert,
+        },
+    }
 
-  InclusionProjection50Fields: &InclusionProjection50Fields {^Object: {
-    withNEntries: 50,
-    havingKeys: *GenNumberedFieldNames,
-    andValues: 1,
-    duplicatedKeys: insert,
-  }}
+  InclusionProjection50Fields:
+    &InclusionProjection50Fields {
+      ^Object:
+        {
+          withNEntries: 50,
+          havingKeys: *GenNumberedFieldNames,
+          andValues: 1,
+          duplicatedKeys: insert,
+        },
+    }
 
-  ExclusionProjection10Fields: &ExclusionProjection10Fields {^Object: {
-    withNEntries: 10,
-    havingKeys: *GenNumberedFieldNames,
-    andValues: 0,
-    duplicatedKeys: insert,
-  }}
+  ExclusionProjection10Fields:
+    &ExclusionProjection10Fields {
+      ^Object:
+        {
+          withNEntries: 10,
+          havingKeys: *GenNumberedFieldNames,
+          andValues: 0,
+          duplicatedKeys: insert,
+        },
+    }
 
-  InclusionProjection10Fields: &InclusionProjection10Fields {^Object: {
-    withNEntries: 10,
-    havingKeys: *GenNumberedFieldNames,
-    andValues: 1,
-    duplicatedKeys: insert,
-  }}
+  InclusionProjection10Fields:
+    &InclusionProjection10Fields {
+      ^Object:
+        {
+          withNEntries: 10,
+          havingKeys: *GenNumberedFieldNames,
+          andValues: 1,
+          duplicatedKeys: insert,
+        },
+    }
 
 ActorTemplates:
-- TemplateName: FindQueryTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "unused"}}
+  - TemplateName: FindQueryTemplate
+    Config:
+      Name: { ^Parameter: { Name: "Name", Default: "unused" } }
+      Type: CrudActor
+      Database: *Database
+      Threads: 1
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{ ^Parameter: { Name: "ActivePhase", Default: -1 } }]
+          NopInPhasesUpTo: *MaxPhases
+          PhaseConfig:
+            Repeat: *Repeat
+            Collection: *Collection
+            Operations:
+              - OperationName: find
+                OperationCommand:
+                  Filter:
+                    {
+                      ^Parameter:
+                        { Name: "Filter", Default: "undefinedFilter" },
+                    }
+                  Options: { ^Parameter: { Name: "Options", Default: {} } }
+
+Actors:
+  - Name: ClearCollection
     Type: CrudActor
     Database: *Database
     Threads: 1
     Phases:
       OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "ActivePhase", Default: -1}}]
+        Active: [0]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
-          Repeat: *Repeat
+          Repeat: 1
+          Threads: 1
           Collection: *Collection
           Operations:
-          - OperationName: find
-            OperationCommand:
-              Filter: {^Parameter: {Name: "Filter", Default: "undefinedFilter"}}
-              Options: {^Parameter: {Name: "Options", Default: {}}}
+            - OperationName: drop
 
-Actors:
-- Name: ClearCollection
-  Type: CrudActor
-  Database: *Database
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
-        Collection: *Collection
-        Operations:
-        - OperationName: drop
+  - Name: InsertData
+    Type: Loader
+    Threads: 4
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          MultipleThreadsPerCollection: true
+          CollectionCount: 1
+          DocumentCount: *DocumentCount
+          BatchSize: 1000
+          Document:
+            { a: *DocumentWith100Fields, arr: [{ a: *DocumentWith100Fields }] }
 
-- Name: InsertData
-  Type: Loader
-  Threads: 4
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        MultipleThreadsPerCollection: true
-        CollectionCount: 1
-        DocumentCount: *DocumentCount
-        BatchSize: 1000
-        Document: 
-          {
-            a: *DocumentWith100Fields,
-            arr: [{a: *DocumentWith100Fields}],
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: DocumentEq100Fields
+        ActivePhase: 3
+        Filter: &DocumentEq100FieldsQuery { a: *DocumentWith100Fields }
+
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: DocumentEq50Fields
+        ActivePhase: 4
+        Filter: &DocumentEq50FieldsQuery { a: *DocumentWith50Fields }
+
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: EqOn100Fields
+        ActivePhase: 5
+        Filter: &EqOn100FieldsQuery {
+          # Genny doesn't allow generators on the top-level.
+          $and: [*EqOn100Fields],
+        }
+
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: EqOn50Fields
+        ActivePhase: 6
+        Filter: &EqOn50FieldsQuery { $and: [*EqOn50Fields] }
+
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: EqOn1Field
+        ActivePhase: 7
+        Filter: &EqOn1FieldQuery { string1: *RandomLongString }
+
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: MixedComparisonsOn100FieldsAnyType
+        ActivePhase: 8
+        Filter:
+          &MixedComparisonsOn100FieldsAnyTypeQuery {
+            $and: [*MixedComparisonsOn100FieldsAnyType],
           }
 
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: MixedComparisonsOn50FieldsAnyType
+        ActivePhase: 9
+        Filter:
+          &MixedComparisonsOn50FieldsAnyTypeQuery {
+            $and: [*MixedComparisonsOn50FieldsAnyType],
+          }
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: DocumentEq100Fields
-      ActivePhase: 3
-      Filter:
-        &DocumentEq100FieldsQuery {a: *DocumentWith100Fields}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: MixedComparisonsOn100FieldsSameType
+        ActivePhase: 10
+        Filter:
+          &MixedComparisonsOn100FieldsSameTypeQuery {
+            $and: [*MixedComparisonsOn100FieldsSameType],
+          }
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: DocumentEq50Fields
-      ActivePhase: 4
-      Filter:
-        &DocumentEq50FieldsQuery {a: *DocumentWith50Fields}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: MixedComparisonsOn50FieldsSameType
+        ActivePhase: 11
+        Filter:
+          &MixedComparisonsOn50FieldsSameTypeQuery {
+            $and: [*MixedComparisonsOn50FieldsSameType],
+          }
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: EqOn100Fields
-      ActivePhase: 5
-      Filter:
-        # Genny doesn't allow generators on the top-level.
-        &EqOn100FieldsQuery {$and: [*EqOn100Fields]}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchDocumentEq100Fields
+        ActivePhase: 12
+        Filter: { arr: { $elemMatch: *DocumentEq100FieldsQuery } }
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: EqOn50Fields
-      ActivePhase: 6
-      Filter:
-        &EqOn50FieldsQuery {$and: [*EqOn50Fields]}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchDocumentEq50Fields
+        ActivePhase: 13
+        Filter: { arr: { $elemMatch: *DocumentEq50FieldsQuery } }
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: EqOn1Field
-      ActivePhase: 7
-      Filter:
-        &EqOn1FieldQuery {string1: *RandomLongString}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchEqOn100Fields
+        ActivePhase: 14
+        Filter: { arr: { $elemMatch: *EqOn100FieldsQuery } }
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: MixedComparisonsOn100FieldsAnyType
-      ActivePhase: 8
-      Filter:
-        &MixedComparisonsOn100FieldsAnyTypeQuery {$and: [*MixedComparisonsOn100FieldsAnyType]}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchEqOn50Fields
+        ActivePhase: 15
+        Filter: { arr: { $elemMatch: *EqOn50FieldsQuery } }
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: MixedComparisonsOn50FieldsAnyType
-      ActivePhase: 9
-      Filter:
-        &MixedComparisonsOn50FieldsAnyTypeQuery {$and: [*MixedComparisonsOn50FieldsAnyType]}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchEqOn1Field
+        ActivePhase: 16
+        Filter: { arr: { $elemMatch: *EqOn1FieldQuery } }
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: MixedComparisonsOn100FieldsSameType
-      ActivePhase: 10
-      Filter:
-        &MixedComparisonsOn100FieldsSameTypeQuery {$and: [*MixedComparisonsOn100FieldsSameType]}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchMixedComparisonsOn100FieldsAnyType
+        ActivePhase: 17
+        Filter:
+          { arr: { $elemMatch: *MixedComparisonsOn100FieldsAnyTypeQuery } }
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: MixedComparisonsOn50FieldsSameType
-      ActivePhase: 11
-      Filter:
-        &MixedComparisonsOn50FieldsSameTypeQuery {$and: [*MixedComparisonsOn50FieldsSameType]}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchMixedComparisonsOn50FieldsAnyType
+        ActivePhase: 18
+        Filter: { arr: { $elemMatch: *MixedComparisonsOn50FieldsAnyTypeQuery } }
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchDocumentEq100Fields
-      ActivePhase: 12
-      Filter:
-        {arr: {$elemMatch: *DocumentEq100FieldsQuery}}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchMixedComparisonsOn100FieldsSameType
+        ActivePhase: 19
+        Filter:
+          { arr: { $elemMatch: *MixedComparisonsOn100FieldsSameTypeQuery } }
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchDocumentEq50Fields
-      ActivePhase: 13
-      Filter:
-        {arr: {$elemMatch: *DocumentEq50FieldsQuery}}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchMixedComparisonsOn50FieldsSameType
+        ActivePhase: 20
+        Filter:
+          { arr: { $elemMatch: *MixedComparisonsOn50FieldsSameTypeQuery } }
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchEqOn100Fields
-      ActivePhase: 14
-      Filter:
-        {arr: {$elemMatch: *EqOn100FieldsQuery}}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ExclusionProjection99Fields
+        ActivePhase: 21
+        Filter: {}
+        Options:
+          Projection: { a: *ExclusionProjection99Fields }
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchEqOn50Fields
-      ActivePhase: 15
-      Filter:
-        {arr: {$elemMatch: *EqOn50FieldsQuery}}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: InclusionProjection99Fields
+        ActivePhase: 22
+        Filter: {}
+        Options:
+          Projection: { a: *InclusionProjection99Fields }
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchEqOn1Field
-      ActivePhase: 16
-      Filter:
-        {arr: {$elemMatch: *EqOn1FieldQuery}}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ExclusionProjection50Fields
+        ActivePhase: 23
+        Filter: {}
+        Options:
+          Projection: { a: *ExclusionProjection50Fields }
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchMixedComparisonsOn100FieldsAnyType
-      ActivePhase: 17
-      Filter:
-        {arr: {$elemMatch: *MixedComparisonsOn100FieldsAnyTypeQuery}}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: InclusionProjection50Fields
+        ActivePhase: 24
+        Filter: {}
+        Options:
+          Projection: { a: *InclusionProjection50Fields }
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchMixedComparisonsOn50FieldsAnyType
-      ActivePhase: 18
-      Filter:
-        {arr: {$elemMatch: *MixedComparisonsOn50FieldsAnyTypeQuery}}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ExclusionProjection10Fields
+        ActivePhase: 25
+        Filter: {}
+        Options:
+          Projection: { a: *ExclusionProjection10Fields }
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchMixedComparisonsOn100FieldsSameType
-      ActivePhase: 19
-      Filter:
-        {arr: {$elemMatch: *MixedComparisonsOn100FieldsSameTypeQuery}}
-
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchMixedComparisonsOn50FieldsSameType
-      ActivePhase: 20
-      Filter:
-        {arr: {$elemMatch: *MixedComparisonsOn50FieldsSameTypeQuery}}
-
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ExclusionProjection99Fields
-      ActivePhase: 21
-      Filter: {}
-      Options:
-        Projection:
-          {a: *ExclusionProjection99Fields}
-
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: InclusionProjection99Fields
-      ActivePhase: 22
-      Filter: {}
-      Options:
-        Projection:
-          {a: *InclusionProjection99Fields}
-
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ExclusionProjection50Fields
-      ActivePhase: 23
-      Filter: {}
-      Options:
-        Projection:
-          {a: *ExclusionProjection50Fields}
-
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: InclusionProjection50Fields
-      ActivePhase: 24
-      Filter: {}
-      Options:
-        Projection:
-          {a: *InclusionProjection50Fields}
-
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ExclusionProjection10Fields
-      ActivePhase: 25
-      Filter: {}
-      Options:
-        Projection:
-          {a: *ExclusionProjection10Fields}
-
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: InclusionProjection10Fields
-      ActivePhase: 26
-      Filter: {}
-      Options:
-        Projection:
-          {a: *InclusionProjection10Fields}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: InclusionProjection10Fields
+        ActivePhase: 26
+        Filter: {}
+        Options:
+          Projection: { a: *InclusionProjection10Fields }

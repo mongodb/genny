@@ -1,0 +1,45 @@
+workload_name: rc_experiment
+patches:
+  {{ patch_id }}: 
+    perf-shard-lite-fle.arm.aws.2023-11: {% for exp_name in experiments %}
+    - "qe_range_testing_workloads_evergreen_{{ exp_name }}"{% endfor %}
+genny_metrics:
+  tests: 
+{% for i in range(n_threads) %}
+  - "InsertActor_Thread{{i}}.load.inserts"
+  - "FSMActor_Thread{{i}}.FSM.range_query"
+  - "FSMActor_Thread{{i}}.FSM.update"{%endfor%}
+  metrics:
+  - "OperationsTotal"
+  - "DocumentsTotal"
+  - "SizeTotal"
+  - "DurationTotal"
+  - "OverheadTotal"
+  - "ErrorsTotal"
+  - "AverageLatency"
+  - "AverageSize"
+  - "OperationThroughput"
+  - "DocumentThroughput"
+  - "SizeThroughput"
+  - "LatencyMin"
+  - "LatencyMax"
+  - "Latency50thPercentile"
+  - "Latency80thPercentile"
+  - "Latency90thPercentile"
+  - "Latency95thPercentile"
+  - "Latency99thPercentile"
+  - "WorkersMin"
+  - "WorkersMax"
+  - "ErrorRate"
+storage_metrics:
+  tests: {% for exp_name in experiments %}
+    - "qe_range_testing_workloads_evergreen_{{ exp_name }} Storage Metrics"{% endfor %}
+  metrics:
+  - "Average Growth in /data/dbs/ (bytes/s)"
+  - "End size of /data/dbs/ (bytes)"
+timing_metrics:
+  tests: {% for exp_name in experiments %}
+    - "qe_range_testing_workloads_evergreen_{{ exp_name }} Timing Metrics"{% endfor %}
+  metrics:
+  - "Total Duration (s)"
+curator: "/home/ubuntu/genny/build/curator/curator"

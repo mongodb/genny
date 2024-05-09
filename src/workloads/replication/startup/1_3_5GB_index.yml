@@ -66,12 +66,12 @@ Description: |
   +-----------------------------------------------------------------+
   ```
 Keywords:
-- startup
-- hangIndexBuild
-- collections
-- indexes
-- stepdown
-- stepup
+  - startup
+  - hangIndexBuild
+  - collections
+  - indexes
+  - stepdown
+  - stepup
 
 Clients:
   Default:
@@ -84,30 +84,30 @@ GlobalDefaults:
   - Database: &database "startup_5GB"
 
 Actors:
-- HangIndexBuild:
-  LoadConfig:
-    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
-    Key: HangIndexBuildTemplate
-    Parameters:
-      active: [0]
-      nopInPhasesUpTo: *max_phase
+  - HangIndexBuild:
+    LoadConfig:
+      Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+      Key: HangIndexBuildTemplate
+      Parameters:
+        active: [0]
+        nopInPhasesUpTo: *max_phase
 
-- CreateIndexes:
-  LoadConfig:
-    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
-    Key: CreateIndexesTemplate
-    Parameters:
-      active: [1]
-      nopInPhasesUpTo: *max_phase
-      database: *database
+  - CreateIndexes:
+    LoadConfig:
+      Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+      Key: CreateIndexesTemplate
+      Parameters:
+        active: [1]
+        nopInPhasesUpTo: *max_phase
+        database: *database
 
-# During Phase 1, the execution of 'createIndexes' will be blocked due to enabling the failpoint in
-# Phase 0. Hence, stepping down the primary after 10 seconds within the same phase, allowing the
-# 'createIndexes' command to return with error without aborting the index build.
-- StepdownStepup:
-  LoadConfig:
-    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
-    Key: StepdownStepupCommandTemplate
-    Parameters:
-      active: [1]
-      nopInPhasesUpTo: *max_phase
+  # During Phase 1, the execution of 'createIndexes' will be blocked due to enabling the failpoint in
+  # Phase 0. Hence, stepping down the primary after 10 seconds within the same phase, allowing the
+  # 'createIndexes' command to return with error without aborting the index build.
+  - StepdownStepup:
+    LoadConfig:
+      Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+      Key: StepdownStepupCommandTemplate
+      Parameters:
+        active: [1]
+        nopInPhasesUpTo: *max_phase

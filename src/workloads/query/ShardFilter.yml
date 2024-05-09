@@ -12,131 +12,131 @@ GlobalDefaults:
   DocumentCount: &DocumentCount 1e6
 
 Actors:
-- Name: CreateShardedCollection
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: admin
-        Operations:
-        - OperationMetricsName: EnableSharding
-          OperationName: AdminCommand
-          OperationCommand:
-            enableSharding: *Database
-        - OperationMetricsName: ShardCollection
-          OperationName: AdminCommand
-          OperationCommand:
-            shardCollection: *Namespace
-            key: {sKey: 1}
+  - Name: CreateShardedCollection
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: admin
+          Operations:
+            - OperationMetricsName: EnableSharding
+              OperationName: AdminCommand
+              OperationCommand:
+                enableSharding: *Database
+            - OperationMetricsName: ShardCollection
+              OperationName: AdminCommand
+              OperationCommand:
+                shardCollection: *Namespace
+                key: {sKey: 1}
 
-- Name: InsertData
-  Type: Loader
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        Collection: *Collection
-        Threads: 1
-        CollectionCount: 1
-        DocumentCount: *DocumentCount
-        BatchSize: *DocumentCount
-        Document:
-          sKey: {^RandomInt: {min: 0, max: 10000}}
-          a: {^RandomInt: {min: 0, max: 10000}}
+  - Name: InsertData
+    Type: Loader
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          Collection: *Collection
+          Threads: 1
+          CollectionCount: 1
+          DocumentCount: *DocumentCount
+          BatchSize: *DocumentCount
+          Document:
+            sKey: {^RandomInt: {min: 0, max: 10000}}
+            a: {^RandomInt: {min: 0, max: 10000}}
 
-- Name: QueryByShardKey
-  Type: CrudActor
-  Database: *Database
-  Threads: 16
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Duration: 1 minute
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {sKey: {$gt: 5000}}
+  - Name: QueryByShardKey
+    Type: CrudActor
+    Database: *Database
+    Threads: 16
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Duration: 1 minute
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: {sKey: {$gt: 5000}}
 
-- Name: QueryByNonShardKey
-  Type: CrudActor
-  Database: *Database
-  Threads: 16
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Duration: 1 minute
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {a: {$gt: 5000}}
+  - Name: QueryByNonShardKey
+    Type: CrudActor
+    Database: *Database
+    Threads: 16
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Duration: 1 minute
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: {a: {$gt: 5000}}
 
-- Name: QueryByShardKeyExpression
-  Type: CrudActor
-  Database: *Database
-  Threads: 16
-  Phases:
-    OnlyActiveInPhases:
-      Active: [4]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Duration: 1 minute
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {sKey: {$in: [123, 5000, 6789]}}
+  - Name: QueryByShardKeyExpression
+    Type: CrudActor
+    Database: *Database
+    Threads: 16
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Duration: 1 minute
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: {sKey: {$in: [123, 5000, 6789]}}
 
-- Name: PointQueryByNonShardKey
-  Type: CrudActor
-  Database: *Database
-  Threads: 16
-  Phases:
-    OnlyActiveInPhases:
-      Active: [5]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Duration: 1 minute
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {a: 5000}
+  - Name: PointQueryByNonShardKey
+    Type: CrudActor
+    Database: *Database
+    Threads: 16
+    Phases:
+      OnlyActiveInPhases:
+        Active: [5]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Duration: 1 minute
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: {a: 5000}
 
-- Name: AllDocumentsQueryByNonShardKey
-  Type: CrudActor
-  Database: *Database
-  Threads: 16
-  Phases:
-    OnlyActiveInPhases:
-      Active: [6]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Duration: 1 minute
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {a: {$gt: -1}}
+  - Name: AllDocumentsQueryByNonShardKey
+    Type: CrudActor
+    Database: *Database
+    Threads: 16
+    Phases:
+      OnlyActiveInPhases:
+        Active: [6]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Duration: 1 minute
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: {a: {$gt: -1}}
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - shard
-      - shard-heuristic-bonsai
-    branch_name:
-      $gte: v7.2
+  - When:
+      mongodb_setup:
+        $eq:
+          - shard
+          - shard-heuristic-bonsai
+      branch_name:
+        $gte: v7.2

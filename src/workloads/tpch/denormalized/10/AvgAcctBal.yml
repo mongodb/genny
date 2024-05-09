@@ -10,10 +10,10 @@ Clients:
       socketTimeoutMS: -1
 
 Actors:
-- Name: TPCHDenormalizedAvgAcctBalExplain
-  Type: RunCommand
-  Database: tpch
-  Phases:
-  - LoadConfig:
-      Path: ../../../../phases/tpch/denormalized/AvgAcctBal.yml
-      Key: TPCHDenormalizedAvgAcctBalExplain
+  - Name: TPCHDenormalizedAvgAcctBalExplain
+    Type: RunCommand
+    Database: tpch
+    Phases:
+      - LoadConfig:
+          Path: ../../../../phases/tpch/denormalized/AvgAcctBal.yml
+          Key: TPCHDenormalizedAvgAcctBalExplain

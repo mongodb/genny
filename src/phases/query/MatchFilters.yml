@@ -5,323 +5,348 @@ Description: |
   performance coverage for said filters.
 
 Keywords:
-- Loader
-- CrudActor
-- QuiesceActor
-- insert
-- find
+  - Loader
+  - CrudActor
+  - QuiesceActor
+  - insert
+  - find
 
 GlobalDefaults:
-  Database: &Database {^Parameter: {Name: Database, Default: unused}}
-  DocumentCount: &DocumentCount {^Parameter: {Name: DocumentCount, Default: -1}}
+  Database: &Database { ^Parameter: { Name: Database, Default: unused } }
+  DocumentCount:
+    &DocumentCount { ^Parameter: { Name: DocumentCount, Default: -1 } }
   Collection: &Collection Collection0
   Repeat: &Repeat 10
   Threads: &Threads 1
   MaxPhases: &MaxPhases 16
 
 Actors:
-# Phase 0: Insert documents into the collection.
-- Name: InsertData
-  Type: Loader
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        Threads: 1
-        CollectionCount: 1
-        DocumentCount: *DocumentCount
-        BatchSize: 1000
-        Document:
-          # NOTE: These documents will not produce a match for any of the filters below, forcing
-          # each query to scan the entire collection.
-          a: 0
-          simple_arr: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-          arr_with_object_elements: [{^Repeat: {count: 10, fromGenerator: {b: 0, c: 0}}}]
-          str: "this string should never match :)"
-          bit_data: 15
+  # Phase 0: Insert documents into the collection.
+  - Name: InsertData
+    Type: Loader
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          Threads: 1
+          CollectionCount: 1
+          DocumentCount: *DocumentCount
+          BatchSize: 1000
+          Document:
+            # NOTE: These documents will not produce a match for any of the filters below, forcing
+            # each query to scan the entire collection.
+            a: 0
+            simple_arr: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+            arr_with_object_elements:
+              [{ ^Repeat: { count: 10, fromGenerator: { b: 0, c: 0 } } }]
+            str: "this string should never match :)"
+            bit_data: 15
 
-# Phase 1: Ensure all data is synced to disk.
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
+  # Phase 1: Ensure all data is synced to disk.
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
 
-# Phase 2-N: Run various queries with complex filters.
-- Name: MatchInWithRegexes
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {"str": {$in: ["a", "b", /^c/, /^d/, /e$/, /f$/]}}
+  # Phase 2-N: Run various queries with complex filters.
+  - Name: MatchInWithRegexes
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "str": { $in: ["a", "b", /^c/, /^d/, /e$/, /f$/] } }
 
-- Name: MatchElemMatchObject
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {"arr_with_object_elements": {$elemMatch: {$or: [{b: 1}, {c: 1}, {b: 2}, {c: 2}]}}}
+  - Name: MatchElemMatchObject
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter:
+                  {
+                    "arr_with_object_elements":
+                      {
+                        $elemMatch:
+                          { $or: [{ b: 1 }, { c: 1 }, { b: 2 }, { c: 2 }] },
+                      },
+                  }
 
-- Name: MatchElemMatchObjectWide
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [4]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {"arr_with_object_elements":
-                       {$elemMatch:
-                          {$or: [
-                            { "b": 1, "c": 2 },
-                            { "b": 2, "c": 3 },
-                            { "b": 3, "c": 4 },
-                            { "b": 4, "c": 5 },
-                            { "b": 5, "c": 6 },
-                            { "b": 6, "c": 7 },
-                            { "b": 7, "c": 8 },
-                            { "b": 8, "c": 9 },
-                            { "b": 10, "c": 11 },
-                            { "b": 11, "c": 12 },
-                            { "b": 12, "c": 13 },
-                            { "b": 13, "c": 14 },
-                            { "b": 14, "c": 15 },
-                            { "b": 15, "c": 16 },
-                            { "b": 16, "c": 17 },
-                            { "b": 17, "c": 18 },
-                            { "b": 18, "c": 19 },
-                            { "b": 19, "c": 20 },
-                            { "b": 20, "c": 21 },
-                            { "b": 22, "c": 23 },
-                            { "b": 23, "c": 24 },
-                            { "b": 24, "c": 25 },
-                            { "b": 25, "c": 26 },
-                            { "b": 26, "c": 27 },
-                            { "b": 27, "c": 28 },
-                            { "b": 28, "c": 29 }]}}}
+  - Name: MatchElemMatchObjectWide
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter:
+                  {
+                    "arr_with_object_elements":
+                      {
+                        $elemMatch:
+                          {
+                            $or:
+                              [
+                                { "b": 1, "c": 2 },
+                                { "b": 2, "c": 3 },
+                                { "b": 3, "c": 4 },
+                                { "b": 4, "c": 5 },
+                                { "b": 5, "c": 6 },
+                                { "b": 6, "c": 7 },
+                                { "b": 7, "c": 8 },
+                                { "b": 8, "c": 9 },
+                                { "b": 10, "c": 11 },
+                                { "b": 11, "c": 12 },
+                                { "b": 12, "c": 13 },
+                                { "b": 13, "c": 14 },
+                                { "b": 14, "c": 15 },
+                                { "b": 15, "c": 16 },
+                                { "b": 16, "c": 17 },
+                                { "b": 17, "c": 18 },
+                                { "b": 18, "c": 19 },
+                                { "b": 19, "c": 20 },
+                                { "b": 20, "c": 21 },
+                                { "b": 22, "c": 23 },
+                                { "b": 23, "c": 24 },
+                                { "b": 24, "c": 25 },
+                                { "b": 25, "c": 26 },
+                                { "b": 26, "c": 27 },
+                                { "b": 27, "c": 28 },
+                                { "b": 28, "c": 29 },
+                              ],
+                          },
+                      },
+                  }
 
-- Name: MatchElemMatchValue
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [5]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {"simple_arr": {$elemMatch: {$gt: 50, $lt: 100}}}
+  - Name: MatchElemMatchValue
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [5]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "simple_arr": { $elemMatch: { $gt: 50, $lt: 100 } } }
 
-- Name: MatchRegex
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [6]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {"a": {$regex: /^a/}}
+  - Name: MatchRegex
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [6]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "a": { $regex: /^a/ } }
 
-- Name: MatchExistsTrue
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [7]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {"this_field_does_not_exist": {$exists: true}}
+  - Name: MatchExistsTrue
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [7]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "this_field_does_not_exist": { $exists: true } }
 
-- Name: MatchExistsFalse
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [8]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {"a": {$exists: false}}
+  - Name: MatchExistsFalse
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [8]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "a": { $exists: false } }
 
-- Name: MatchTypeOneType
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [9]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {"a": {$type: "string"}}
+  - Name: MatchTypeOneType
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [9]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "a": { $type: "string" } }
 
-- Name: MatchTypeMultipleTypes
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [10]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {"a": {$type: ["string", "array", "object", "bool", "date", "null"]}}
+  - Name: MatchTypeMultipleTypes
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [10]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter:
+                  {
+                    "a":
+                      {
+                        $type:
+                          ["string", "array", "object", "bool", "date", "null"],
+                      },
+                  }
 
-- Name: MatchSize
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [11]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {"arr_with_object_elements": {$size: 100}}
+  - Name: MatchSize
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [11]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "arr_with_object_elements": { $size: 100 } }
 
-- Name: MatchMod
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [12]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {"a": {$mod: [2, 1]}}
+  - Name: MatchMod
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [12]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "a": { $mod: [2, 1] } }
 
-- Name: MatchBitsAnyClear
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [13]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {"bit_data": {$bitsAnyClear: [0, 1, 2, 3]}}
+  - Name: MatchBitsAnyClear
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [13]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "bit_data": { $bitsAnyClear: [0, 1, 2, 3] } }
 
-- Name: MatchBitsAllClear
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [14]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {"bit_data": {$bitsAllClear: [0, 1, 2, 3]}}
+  - Name: MatchBitsAllClear
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [14]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "bit_data": { $bitsAllClear: [0, 1, 2, 3] } }
 
-- Name: MatchBitsAnySet
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [15]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {"bit_data": {$bitsAnySet: [4, 5, 6, 7]}}
+  - Name: MatchBitsAnySet
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [15]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "bit_data": { $bitsAnySet: [4, 5, 6, 7] } }
 
-- Name: MatchBitsAllSet
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [16]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {"bit_data": {$bitsAllSet: [4, 5, 6, 7]}}
+  - Name: MatchBitsAllSet
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [16]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "bit_data": { $bitsAllSet: [4, 5, 6, 7] } }

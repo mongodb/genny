@@ -47,10 +47,10 @@ Description: |
   +------------------------------------------------------------------------------------+
   ```
 Keywords:
-- startup
-- stopCheckpointing
-- collections
-- indexes
+  - startup
+  - stopCheckpointing
+  - collections
+  - indexes
 
 Clients:
   Default:
@@ -63,22 +63,22 @@ GlobalDefaults:
   - CollectionCount: &collectionCount 5
 
 Actors:
-- StopCheckpointing:
-  LoadConfig:
-    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
-    Key: StopCheckpointTemplate
-    Parameters:
-      active: [0]
-      nopInPhasesUpTo: *max_phase
+  - StopCheckpointing:
+    LoadConfig:
+      Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+      Key: StopCheckpointTemplate
+      Parameters:
+        active: [0]
+        nopInPhasesUpTo: *max_phase
 
-- DDLAndCrudOperations:
-  LoadConfig:
-    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
-    Key: InsertDataTemplate
-    Parameters:
-      active: [1]
-      nopInPhasesUpTo: *max_phase
-      database: *database
-      collectionCount: *collectionCount
-      approxDocumentSize: 10000  # 10kB
-      documentCount: 100  # for an approximate total of ~1MB per collection, ~5MB total.
+  - DDLAndCrudOperations:
+    LoadConfig:
+      Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+      Key: InsertDataTemplate
+      Parameters:
+        active: [1]
+        nopInPhasesUpTo: *max_phase
+        database: *database
+        collectionCount: *collectionCount
+        approxDocumentSize: 10000 # 10kB
+        documentCount: 100 # for an approximate total of ~1MB per collection, ~5MB total.

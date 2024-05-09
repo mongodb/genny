@@ -5,11 +5,11 @@ Description: |
   share a common prefix. Crucially, these queries never match a document in the collection.
 
 Keywords:
-- Loader
-- CrudActor
-- QuiesceActor
-- insert
-- find
+  - Loader
+  - CrudActor
+  - QuiesceActor
+  - insert
+  - find
 
 GlobalDefaults:
   Database: &Database {^Parameter: {Name: Database, Default: unused}}
@@ -20,305 +20,258 @@ GlobalDefaults:
   MaxPhases: &MaxPhases 20
 
 ActorTemplates:
-- TemplateName: FindQueryTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "unused"}}
+  - TemplateName: FindQueryTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "unused"}}
+      Type: CrudActor
+      Database: *Database
+      Threads: 1
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "ActivePhase", Default: -1}}]
+          NopInPhasesUpTo: *MaxPhases
+          PhaseConfig:
+            Repeat: *Repeat
+            Collection: *Collection
+            Operations:
+              - OperationName: find
+                OperationCommand:
+                  Filter: {^Parameter: {Name: "Filter", Default: "invalid"}}
+
+Actors:
+  # Clear any pre-existing collection state.
+  - Name: ClearCollection
     Type: CrudActor
     Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+          Collection: *Collection
+          Operations:
+            - OperationName: drop
+
+  # Insert documents with 2 levels of nested arrays where the leaves contain many fields. This test
+  # targets workloads where the paths queried share a common prefix ("a.b.c", "a.b.d", and so on).
+  - Name: InsertRepeatedPathTraversalData
+    Type: Loader
     Threads: 1
     Phases:
       OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "ActivePhase", Default: -1}}]
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          Threads: 1
+          CollectionCount: 1
+          DocumentCount: *DocumentCount
+          BatchSize: 1000
+          Document: {
+            a: [{^Repeat: {count: 3, fromGenerator: {b: [&InnerDoc {c: 0, d: 0, e: 0, f: 0, g: 0, h: 0, i: 0, j: 0, k: 0, l: 0}]}}}],
+            # 5 levels deep
+            deep5: [{f1: [{f2: [{f3: [{f4: [{f5: [*InnerDoc]}, {f5: [*InnerDoc]}]}]}]}]}],
+            # 10 levels deep
+            deep10: [{f1: [{f2: [{f3: [{f4: [{f5: [{f6: [{f7: [{f8: [{f9: [{f10: [*InnerDoc]}, {f10: [*InnerDoc]}]}]}]}]}]}]}]}]}]}]}
+
+  - Name: QuiesceRepeatedPathTraversalData
+    Type: QuiesceActor
+    Threads: 1
+    Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+
+  - Name: AggregationExpressionRepeatedPathTraversal
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           Repeat: *Repeat
           Collection: *Collection
           Operations:
-          - OperationName: find
-            OperationCommand:
-              Filter: {^Parameter: {Name: "Filter", Default: "invalid"}}
+            - OperationName: find
+              OperationCommand:
+                Filter: {$expr: {$or: [{$eq: ["$a.b.c", 1]}, {$eq: ["$a.b.d", 1]}, {$eq: ["$a.b.e", 1]}, {$eq: ["$a.b.f", 1]}, {$eq: ["$a.b.g", 1]}]}}
 
-Actors:
-# Clear any pre-existing collection state.
-- Name: ClearCollection
-  Type: CrudActor
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
-        Collection: *Collection
-        Operations:
-        - OperationName: drop
+  - Name: MatchExpressionRepeatedPathTraversal
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: {$or: [{"a.b.c": 1}, {"a.b.d": 1}, {"a.b.e": 1}, {"a.b.f": 1}, {"a.b.g": 1}]}
 
-# Insert documents with 2 levels of nested arrays where the leaves contain many fields. This test
-# targets workloads where the paths queried share a common prefix ("a.b.c", "a.b.d", and so on).
-- Name: InsertRepeatedPathTraversalData
-  Type: Loader
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        Threads: 1
-        CollectionCount: 1
-        DocumentCount: *DocumentCount
-        BatchSize: 1000
-        Document: {
-          a: [{ ^Repeat: { count: 3, fromGenerator: { b: [&InnerDoc { c: 0, d: 0, e: 0, f: 0, g: 0, h: 0, i: 0, j: 0, k: 0, l: 0}]}}}],
-          # 5 levels deep
-          deep5: [
-            {f1: [
-              {f2: [
-                {f3: [
-                  {f4: [
-                    {f5: [*InnerDoc]},
-                    {f5: [*InnerDoc]},
-                  ]},
-                ]},
-              ]},
-            ]},
-          ],
-          # 10 levels deep
-          deep10: [
-            {f1: [
-              {f2: [
-                {f3: [
-                  {f4: [
-                    {f5: [
-                      {f6: [
-                        {f7: [
-                          {f8: [
-                            {f9: [
-                              {f10: [*InnerDoc]},
-                              {f10: [*InnerDoc]},
-                            ]},
-                          ]},
-                        ]},
-                      ]},
-                    ]},
-                  ]},
-                ]},
-              ]},
-            ]},
-          ],
-        }
+  - Name: AggregationExpressionRepeatedPathTraversalInequality
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [5]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: {$expr: {$or: [
+                  {$ne: ["$a.b.c", "$a.b.d"]},
+                  {$ne: ["$a.b.d", "$a.b.e"]},
+                  {$ne: ["$a.b.e", "$a.b.f"]},
+                  {$ne: ["$a.b.f", "$a.b.g"]},
+                  {$ne: ["$a.b.g", "$a.b.c"]}
+                ]}}
 
-- Name: QuiesceRepeatedPathTraversalData
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
+  - Name: MatchExpressionRepeatedPathTraversalInequality
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [6]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: {$or: [{"a.b.c": {$ne: 0}}, {"a.b.d": {$ne: 0}}, {"a.b.e": {$ne: 0}}, {"a.b.f": {$ne: 0}}, {"a.b.g": {$ne: 0}}]}
 
-- Name: AggregationExpressionRepeatedPathTraversal
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {$expr: {$or: [
-              {$eq: ["$a.b.c", 1]},
-              {$eq: ["$a.b.d", 1]},
-              {$eq: ["$a.b.e", 1]},
-              {$eq: ["$a.b.f", 1]},
-              {$eq: ["$a.b.g", 1]}]}}
+  # Double the number of clauses.
+  - Name: AggregationExpressionRepeatedPathTraversalWidePredicate
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [7]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: {$expr: {$or: [
+                  {$eq: ["$a.b.c", 1]},
+                  {$eq: ["$a.b.d", 1]},
+                  {$eq: ["$a.b.e", 1]},
+                  {$eq: ["$a.b.f", 1]},
+                  {$eq: ["$a.b.g", 1]},
+                  {$eq: ["$a.b.h", 1]},
+                  {$eq: ["$a.b.i", 1]},
+                  {$eq: ["$a.b.j", 1]},
+                  {$eq: ["$a.b.k", 1]},
+                  {$eq: ["$a.b.l", 1]}
+                ]}}
 
-- Name: MatchExpressionRepeatedPathTraversal
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [4]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: { $or: [
-              {"a.b.c": 1},
-              {"a.b.d": 1},
-              {"a.b.e": 1},
-              {"a.b.f": 1},
-              {"a.b.g": 1}]}
+  - Name: MatchExpressionRepeatedPathTraversalWidePredicate
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [8]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: {$or: [
+                  {"a.b.c": 1},
+                  {"a.b.d": 1},
+                  {"a.b.e": 1},
+                  {"a.b.f": 1},
+                  {"a.b.g": 1},
+                  {"a.b.h": 1},
+                  {"a.b.i": 1},
+                  {"a.b.j": 1},
+                  {"a.b.k": 1},
+                  {"a.b.l": 1}
+                ]}
 
-- Name: AggregationExpressionRepeatedPathTraversalInequality
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [5]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {$expr:
-                       {$or: [
-                         {$ne: ["$a.b.c", "$a.b.d"]},
-                         {$ne: ["$a.b.d", "$a.b.e"]},
-                         {$ne: ["$a.b.e", "$a.b.f"]},
-                         {$ne: ["$a.b.f", "$a.b.g"]},
-                         {$ne: ["$a.b.g", "$a.b.c"]}]}}
-
-- Name: MatchExpressionRepeatedPathTraversalInequality
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [6]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {$or: [{"a.b.c": {$ne: 0}},
-                           {"a.b.d": {$ne: 0}},
-                           {"a.b.e": {$ne: 0}},
-                           {"a.b.f": {$ne: 0}},
-                           {"a.b.g": {$ne: 0}}]}
-
-# Double the number of clauses.
-- Name: AggregationExpressionRepeatedPathTraversalWidePredicate
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [7]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter:
-              {$expr: {$or: [
-                {$eq: ["$a.b.c", 1]},
-                {$eq: ["$a.b.d", 1]},
-                {$eq: ["$a.b.e", 1]},
-                {$eq: ["$a.b.f", 1]},
-                {$eq: ["$a.b.g", 1]},
-                {$eq: ["$a.b.h", 1]},
-                {$eq: ["$a.b.i", 1]},
-                {$eq: ["$a.b.j", 1]},
-                {$eq: ["$a.b.k", 1]},
-                {$eq: ["$a.b.l", 1]}]}}
-
-- Name: MatchExpressionRepeatedPathTraversalWidePredicate
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [8]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {$or: [
-              {"a.b.c": 1},
-              {"a.b.d": 1},
-              {"a.b.e": 1},
-              {"a.b.f": 1},
-              {"a.b.g": 1},
-              {"a.b.h": 1},
-              {"a.b.i": 1},
-              {"a.b.j": 1},
-              {"a.b.k": 1},
-              {"a.b.l": 1}]}
-
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: MatchExpressionRepeatedPathTraversal5LevelsDeep
-      ActivePhase: 9
-      Filter:
-        {$or: [
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: MatchExpressionRepeatedPathTraversal5LevelsDeep
+        ActivePhase: 9
+        Filter: {$or: [
           {"deep5.f1.f2.f3.f4.f5.c": 1},
           {"deep5.f1.f2.f3.f4.f5.d": 1},
           {"deep5.f1.f2.f3.f4.f5.e": 1},
           {"deep5.f1.f2.f3.f4.f5.f": 1},
-          {"deep5.f1.f2.f3.f4.f5.g": 1}]}
+          {"deep5.f1.f2.f3.f4.f5.g": 1}
+        ]}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: MatchExpressionRepeatedPathTraversal10LevelsDeep
-      ActivePhase: 10
-      Filter:
-        {$or: [
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: MatchExpressionRepeatedPathTraversal10LevelsDeep
+        ActivePhase: 10
+        Filter: {$or: [
           {"deep10.f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.c": 1},
           {"deep10.f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.d": 1},
           {"deep10.f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.e": 1},
           {"deep10.f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.f": 1},
-          {"deep10.f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.g": 1}]}
+          {"deep10.f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.g": 1}
+        ]}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: MatchExpressionRepeatedPathTraversalInequality5LevelsDeep
-      ActivePhase: 11
-      Filter:
-        {$or: [
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: MatchExpressionRepeatedPathTraversalInequality5LevelsDeep
+        ActivePhase: 11
+        Filter: {$or: [
           {"deep5.f1.f2.f3.f4.f5.c": {$ne: 0}},
           {"deep5.f1.f2.f3.f4.f5.d": {$ne: 0}},
           {"deep5.f1.f2.f3.f4.f5.e": {$ne: 0}},
           {"deep5.f1.f2.f3.f4.f5.f": {$ne: 0}},
-          {"deep5.f1.f2.f3.f4.f5.g": {$ne: 0}}]}
+          {"deep5.f1.f2.f3.f4.f5.g": {$ne: 0}}
+        ]}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: MatchExpressionRepeatedPathTraversalInequality10LevelsDeep
-      ActivePhase: 12
-      Filter:
-        {$or: [
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: MatchExpressionRepeatedPathTraversalInequality10LevelsDeep
+        ActivePhase: 12
+        Filter: {$or: [
           {"deep10.f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.c": {$ne: 0}},
           {"deep10.f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.d": {$ne: 0}},
           {"deep10.f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.e": {$ne: 0}},
           {"deep10.f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.f": {$ne: 0}},
-          {"deep10.f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.g": {$ne: 0}}]}
+          {"deep10.f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.g": {$ne: 0}}
+        ]}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: MatchExpressionRepeatedPathTraversalWidePredicate5LevelsDeep
-      ActivePhase: 13
-      Filter:
-        {$or: [
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: MatchExpressionRepeatedPathTraversalWidePredicate5LevelsDeep
+        ActivePhase: 13
+        Filter: {$or: [
           {"deep5.f1.f2.f3.f4.f5.c": 1},
           {"deep5.f1.f2.f3.f4.f5.d": 1},
           {"deep5.f1.f2.f3.f4.f5.e": 1},
@@ -328,16 +281,15 @@ Actors:
           {"deep5.f1.f2.f3.f4.f5.i": 1},
           {"deep5.f1.f2.f3.f4.f5.j": 1},
           {"deep5.f1.f2.f3.f4.f5.k": 1},
-          {"deep5.f1.f2.f3.f4.f5.l": 1},
+          {"deep5.f1.f2.f3.f4.f5.l": 1}
         ]}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: MatchExpressionRepeatedPathTraversalWidePredicate10LevelsDeep
-      ActivePhase: 14
-      Filter:
-        {$or: [
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: MatchExpressionRepeatedPathTraversalWidePredicate10LevelsDeep
+        ActivePhase: 14
+        Filter: {$or: [
           {"deep10.f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.c": 1},
           {"deep10.f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.d": 1},
           {"deep10.f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.e": 1},
@@ -347,68 +299,67 @@ Actors:
           {"deep10.f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.i": 1},
           {"deep10.f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.j": 1},
           {"deep10.f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.k": 1},
-          {"deep10.f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.l": 1},
+          {"deep10.f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.l": 1}
         ]}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchMatchExpressionRepeatedPathTraversal5LevelsDeep
-      ActivePhase: 15
-      Filter:
-        {deep5: {$elemMatch: {$or: [
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchMatchExpressionRepeatedPathTraversal5LevelsDeep
+        ActivePhase: 15
+        Filter: {deep5: {$elemMatch: {$or: [
           {"f1.f2.f3.f4.f5.c": 1},
           {"f1.f2.f3.f4.f5.d": 1},
           {"f1.f2.f3.f4.f5.e": 1},
           {"f1.f2.f3.f4.f5.f": 1},
-          {"f1.f2.f3.f4.f5.g": 1}]}}}
+          {"f1.f2.f3.f4.f5.g": 1}
+        ]}}}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchMatchExpressionRepeatedPathTraversal10LevelsDeep
-      ActivePhase: 16
-      Filter:
-        {deep10: {$elemMatch: {$or: [
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchMatchExpressionRepeatedPathTraversal10LevelsDeep
+        ActivePhase: 16
+        Filter: {deep10: {$elemMatch: {$or: [
           {"f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.c": 1},
           {"f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.d": 1},
           {"f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.e": 1},
           {"f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.f": 1},
-          {"f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.g": 1}]}}}
+          {"f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.g": 1}
+        ]}}}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchMatchExpressionRepeatedPathTraversalInequality5LevelsDeep
-      ActivePhase: 17
-      Filter:
-        {deep5: {$elemMatch: {$or: [
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchMatchExpressionRepeatedPathTraversalInequality5LevelsDeep
+        ActivePhase: 17
+        Filter: {deep5: {$elemMatch: {$or: [
           {"f1.f2.f3.f4.f5.c": {$ne: 0}},
           {"f1.f2.f3.f4.f5.d": {$ne: 0}},
           {"f1.f2.f3.f4.f5.e": {$ne: 0}},
           {"f1.f2.f3.f4.f5.f": {$ne: 0}},
-          {"f1.f2.f3.f4.f5.g": {$ne: 0}}]}}}
+          {"f1.f2.f3.f4.f5.g": {$ne: 0}}
+        ]}}}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchMatchExpressionRepeatedPathTraversalInequality10LevelsDeep
-      ActivePhase: 18
-      Filter:
-        {deep10: {$elemMatch: {$or: [
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchMatchExpressionRepeatedPathTraversalInequality10LevelsDeep
+        ActivePhase: 18
+        Filter: {deep10: {$elemMatch: {$or: [
           {"f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.c": {$ne: 0}},
           {"f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.d": {$ne: 0}},
           {"f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.e": {$ne: 0}},
           {"f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.f": {$ne: 0}},
-          {"f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.g": {$ne: 0}}]}}}
+          {"f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.g": {$ne: 0}}
+        ]}}}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchMatchExpressionRepeatedPathTraversalWidePredicate5LevelsDeep
-      ActivePhase: 19
-      Filter:
-        {deep5: {$elemMatch: {$or: [
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchMatchExpressionRepeatedPathTraversalWidePredicate5LevelsDeep
+        ActivePhase: 19
+        Filter: {deep5: {$elemMatch: {$or: [
           {"f1.f2.f3.f4.f5.c": 1},
           {"f1.f2.f3.f4.f5.d": 1},
           {"f1.f2.f3.f4.f5.e": 1},
@@ -418,16 +369,15 @@ Actors:
           {"f1.f2.f3.f4.f5.i": 1},
           {"f1.f2.f3.f4.f5.j": 1},
           {"f1.f2.f3.f4.f5.k": 1},
-          {"f1.f2.f3.f4.f5.l": 1},
+          {"f1.f2.f3.f4.f5.l": 1}
         ]}}}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchMatchExpressionRepeatedPathTraversalWidePredicate10LevelsDeep
-      ActivePhase: 20
-      Filter:
-        {deep10: {$elemMatch: {$or: [
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchMatchExpressionRepeatedPathTraversalWidePredicate10LevelsDeep
+        ActivePhase: 20
+        Filter: {deep10: {$elemMatch: {$or: [
           {"f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.c": 1},
           {"f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.d": 1},
           {"f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.e": 1},
@@ -437,22 +387,22 @@ Actors:
           {"f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.i": 1},
           {"f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.j": 1},
           {"f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.k": 1},
-          {"f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.l": 1},
+          {"f1.f2.f3.f4.f5.f6.f7.f8.f9.f10.l": 1}
         ]}}}
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-      - standalone-all-feature-flags
-      - standalone-classic-query-engine
-      - standalone-heuristic-bonsai
-      - standalone-sampling-bonsai
-      - standalone-sbe
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
-      - v5.0
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone
+          - standalone-all-feature-flags
+          - standalone-classic-query-engine
+          - standalone-heuristic-bonsai
+          - standalone-sampling-bonsai
+          - standalone-sbe
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4
+          - v5.0

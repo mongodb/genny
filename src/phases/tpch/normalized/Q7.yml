@@ -1,65 +1,181 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Run TPC-H query 7 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  Run TPC-H query 7 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema.
+  Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
-query7Nation1: &query7Nation1 {^Parameter: {Name: "Query7Nation1", Default: "FRANCE"}}
-query7Nation2: &query7Nation2 {^Parameter: {Name: "Query7Nation2", Default: "GERMANY"}}
+batchSize: &batchSize { ^Parameter: { Name: "BatchSize", Default: 101 } }
+query7Nation1:
+  &query7Nation1 { ^Parameter: { Name: "Query7Nation1", Default: "FRANCE" } }
+query7Nation2:
+  &query7Nation2 { ^Parameter: { Name: "Query7Nation2", Default: "GERMANY" } }
 
 TPCHNormalizedQuery7Aggregation: &TPCHNormalizedQuery7Aggregation
   aggregate: supplier
   pipeline:
     [
-      {$project: {s_nationkey: 1, s_suppkey: 1}},
-      {$lookup: {from: "nation", localField: "s_nationkey", foreignField: "n_nationkey", as: "n1"}},
-      {$unwind: "$n1"},
-      {$lookup: {from: "lineitem", localField: "s_suppkey", foreignField: "l_suppkey", as: "lineitem", pipeline: [
-        {$match: {$and: [
-          {$expr: {$gte: ["$l_shipdate", {^Date: "1995-01-01"}]}},
-          {$expr: {$lte: ["$l_shipdate", {^Date: "1996-12-31"}]}}]}}]}},
-      {$unwind: "$lineitem"},
-      {$lookup: {from: "orders", localField: "lineitem.l_orderkey", foreignField: "o_orderkey", as: "orders"}},
-      {$unwind: "$orders"},
-      {$lookup: {from: "customer", localField: "orders.o_custkey", foreignField: "c_custkey", as: "customer"}},
-      {$unwind: "$customer"},
-      {$lookup: {from: "nation", localField: "customer.c_nationkey", foreignField: "n_nationkey", as: "n2"}},
-      {$unwind: "$n2"},
-      {$match: {$or: [
-        {$and: [{"n1.n_name": *query7Nation1}, {"n2.n_name": *query7Nation2}]},
-        {$and: [{"n1.n_name": *query7Nation2}, {"n2.n_name": *query7Nation1}]}]}},
-      {$project: {supp_nation: "$n1.n_name", cust_nation: "$n2.n_name", l_year: {$year: "$lineitem.l_shipdate"}, volume: {$multiply: ["$lineitem.l_extendedprice", {$subtract: [1, "$lineitem.l_discount"]}]}}},
-      {$group: {_id: {supp_nation: "$supp_nation", cust_nation: "$cust_nation", l_year: "$l_year"}, revenue: {$sum: "$volume"}}},
-      {$project: {_id: 0, supp_nation: "$_id.supp_nation", cust_nation: "$_id.cust_nation", l_year: "$_id.l_year", revenue: 1}},
-      {$sort: {supp_nation: 1, cust_nation: 1, l_year: 1}}
+      { $project: { s_nationkey: 1, s_suppkey: 1 } },
+      {
+        $lookup:
+          {
+            from: "nation",
+            localField: "s_nationkey",
+            foreignField: "n_nationkey",
+            as: "n1",
+          },
+      },
+      { $unwind: "$n1" },
+      {
+        $lookup:
+          {
+            from: "lineitem",
+            localField: "s_suppkey",
+            foreignField: "l_suppkey",
+            as: "lineitem",
+            pipeline:
+              [
+                {
+                  $match:
+                    {
+                      $and:
+                        [
+                          {
+                            $expr:
+                              {
+                                $gte: ["$l_shipdate", { ^Date: "1995-01-01" }],
+                              },
+                          },
+                          {
+                            $expr:
+                              {
+                                $lte: ["$l_shipdate", { ^Date: "1996-12-31" }],
+                              },
+                          },
+                        ],
+                    },
+                },
+              ],
+          },
+      },
+      { $unwind: "$lineitem" },
+      {
+        $lookup:
+          {
+            from: "orders",
+            localField: "lineitem.l_orderkey",
+            foreignField: "o_orderkey",
+            as: "orders",
+          },
+      },
+      { $unwind: "$orders" },
+      {
+        $lookup:
+          {
+            from: "customer",
+            localField: "orders.o_custkey",
+            foreignField: "c_custkey",
+            as: "customer",
+          },
+      },
+      { $unwind: "$customer" },
+      {
+        $lookup:
+          {
+            from: "nation",
+            localField: "customer.c_nationkey",
+            foreignField: "n_nationkey",
+            as: "n2",
+          },
+      },
+      { $unwind: "$n2" },
+      {
+        $match:
+          {
+            $or:
+              [
+                {
+                  $and:
+                    [
+                      { "n1.n_name": *query7Nation1 },
+                      { "n2.n_name": *query7Nation2 },
+                    ],
+                },
+                {
+                  $and:
+                    [
+                      { "n1.n_name": *query7Nation2 },
+                      { "n2.n_name": *query7Nation1 },
+                    ],
+                },
+              ],
+          },
+      },
+      {
+        $project:
+          {
+            supp_nation: "$n1.n_name",
+            cust_nation: "$n2.n_name",
+            l_year: { $year: "$lineitem.l_shipdate" },
+            volume:
+              {
+                $multiply:
+                  [
+                    "$lineitem.l_extendedprice",
+                    { $subtract: [1, "$lineitem.l_discount"] },
+                  ],
+              },
+          },
+      },
+      {
+        $group:
+          {
+            _id:
+              {
+                supp_nation: "$supp_nation",
+                cust_nation: "$cust_nation",
+                l_year: "$l_year",
+              },
+            revenue: { $sum: "$volume" },
+          },
+      },
+      {
+        $project:
+          {
+            _id: 0,
+            supp_nation: "$_id.supp_nation",
+            cust_nation: "$_id.cust_nation",
+            l_year: "$_id.l_year",
+            revenue: 1,
+          },
+      },
+      { $sort: { supp_nation: 1, cust_nation: 1, l_year: 1 } },
     ]
-  cursor: {batchSize: *batchSize}
+  cursor: { batchSize: *batchSize }
   allowDiskUse: true
 
 TPCHNormalizedQuery7Warmup:
-  Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
+  Repeat: &Repeat { ^Parameter: { Name: "Repeat", Default: 1 } }
   Database: &db tpch
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHNormalizedQuery7Aggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHNormalizedQuery7Aggregation
 
 TPCHNormalizedQuery7:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query7
-    OperationName: RunCommand
-    OperationCommand: *TPCHNormalizedQuery7Aggregation
+    - OperationMetricsName: Query7
+      OperationName: RunCommand
+      OperationCommand: *TPCHNormalizedQuery7Aggregation
 
 TPCHNormalizedQuery7Explain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query7
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHNormalizedQuery7Aggregation
-      verbosity:
-        executionStats
+    - OperationMetricsName: Query7
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHNormalizedQuery7Aggregation
+        verbosity: executionStats
