@@ -4250,18 +4250,12 @@ The goal of this test is to exercise multiplanning. We create as many indexes as
 
 
 ### Description
-<<<<<<< HEAD
 This test exercises multi-planning in the presence of a common pattern, using "tenant IDs": we
 have a single collection that conceptually is partitioned into one collection per user ("tenant"),
 so each query has an extra equality predicate on tenantId, and each index is prefixed with
 'tenantId: 1'. We create as many compound indexes as possible, each with "tenantId" as the prefix
 of the index key pattern. We then run a conjunctive query with an equality predicate on tenantId
 as well as inequalities on all other indexed fields.
-=======
-The goal of this test is to exercise multiplanning. We create as many compound indexes as possible, each
-comprising of tenantId and another field. We then run a query with an equality predicate on tenantId and
-other predicates a small number of fields, so we get all the plans that use relevant indexes.
->>>>>>> master
 
 This workload is the same as "Simple.yml" other than that it uses compound indexes with the
 "tenantId" prefix. We expect multi-planning performance to be similar to "Simple.yml", but this
