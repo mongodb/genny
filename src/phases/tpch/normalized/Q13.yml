@@ -1,49 +1,83 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Run TPC-H query 13 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  Run TPC-H query 13 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema.
+  Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
-query13Regex: &query13Regex {^Parameter: {Name: "Query13Regex", Default: "^.*special.*requests.*$"}}  # `^.*${query13Word1}.*${query13Word2}.*$`
+batchSize: &batchSize { ^Parameter: { Name: "BatchSize", Default: 101 } }
+query13Regex: &query13Regex {
+  ^Parameter: { Name: "Query13Regex", Default: "^.*special.*requests.*$" },
+} # `^.*${query13Word1}.*${query13Word2}.*$`
 
 TPCHNormalizedQuery13Aggregation: &TPCHNormalizedQuery13Aggregation
   aggregate: customer
   pipeline:
     [
-      {$lookup: {from: "orders", localField: "c_custkey", foreignField: "o_custkey", as: "orders", pipeline: [
-        {$match: {$expr: {$cond: {if: {$regexMatch: {input: "$o_comment", regex: *query13Regex, options: "si"}}, then: 0, else: 1}}}}]}},
-      {$project: {c_custkey: 1, c_count: {$size: "$orders"}}},
-      {$group: {_id: "$c_count", custdist: {$count: {}}}},
-      {$project: {_id: 0, c_count: "$_id", custdist: 1}},
-      {$sort: {custdist: -1, c_count: -1}}
+      {
+        $lookup:
+          {
+            from: "orders",
+            localField: "c_custkey",
+            foreignField: "o_custkey",
+            as: "orders",
+            pipeline:
+              [
+                {
+                  $match:
+                    {
+                      $expr:
+                        {
+                          $cond:
+                            {
+                              if:
+                                {
+                                  $regexMatch:
+                                    {
+                                      input: "$o_comment",
+                                      regex: *query13Regex,
+                                      options: "si",
+                                    },
+                                },
+                              then: 0,
+                              else: 1,
+                            },
+                        },
+                    },
+                },
+              ],
+          },
+      },
+      { $project: { c_custkey: 1, c_count: { $size: "$orders" } } },
+      { $group: { _id: "$c_count", custdist: { $count: {} } } },
+      { $project: { _id: 0, c_count: "$_id", custdist: 1 } },
+      { $sort: { custdist: -1, c_count: -1 } },
     ]
-  cursor: {batchSize: *batchSize}
+  cursor: { batchSize: *batchSize }
   allowDiskUse: true
 
 TPCHNormalizedQuery13Warmup:
-  Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
+  Repeat: &Repeat { ^Parameter: { Name: "Repeat", Default: 1 } }
   Database: &db tpch
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHNormalizedQuery13Aggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHNormalizedQuery13Aggregation
 
 TPCHNormalizedQuery13:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query13
-    OperationName: RunCommand
-    OperationCommand: *TPCHNormalizedQuery13Aggregation
+    - OperationMetricsName: Query13
+      OperationName: RunCommand
+      OperationCommand: *TPCHNormalizedQuery13Aggregation
 
 TPCHNormalizedQuery13Explain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query13
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHNormalizedQuery13Aggregation
-      verbosity:
-        executionStats
+    - OperationMetricsName: Query13
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHNormalizedQuery13Aggregation
+        verbosity: executionStats

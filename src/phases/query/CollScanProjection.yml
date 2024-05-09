@@ -4,240 +4,680 @@ Description: |
   This workload runs collscan queries with a large projection on around 20 fields.
 
 GlobalDefaults:
-  Database: &Database {^Parameter: {Name: Database, Default: unused}}
-  DocumentCount: &DocumentCount {^Parameter: {Name: DocumentCount, Default: -1}}
-  Repeat: &Repeat {^Parameter: {Name: Repeat, Default: -1}}
+  Database: &Database { ^Parameter: { Name: Database, Default: unused } }
+  DocumentCount:
+    &DocumentCount { ^Parameter: { Name: DocumentCount, Default: -1 } }
+  Repeat: &Repeat { ^Parameter: { Name: Repeat, Default: -1 } }
   Collection: &Collection Collection0
   MaxPhases: &MaxPhases 12
 
   # Generates a random numerical string of 1-10 characters.
-  RandomShortStringValue: &RandomShortStringValue {^FastRandomString: {
-    length: {^RandomInt: {min: 1, max: 10}}, alphabet: "0123456789"
-  }}
+  RandomShortStringValue:
+    &RandomShortStringValue {
+      ^FastRandomString:
+        { length: { ^RandomInt: { min: 1, max: 10 } }, alphabet: "0123456789" },
+    }
   # Generates a random numerical string of 50-250 characters.
-  RandomLongStringValue: &RandomLongStringValue {^FastRandomString: {
-    length: {^RandomInt: {min: 50, max: 250}}, alphabet: "0123456789"
-  }}
+  RandomLongStringValue:
+    &RandomLongStringValue {
+      ^FastRandomString:
+        {
+          length: { ^RandomInt: { min: 50, max: 250 } },
+          alphabet: "0123456789",
+        },
+    }
 
-  LargeInclusionProjection: &LargeInclusionProjection
-    {c: 1, d: 1, e: 1, f: 1, g: 1, h: 1, i: 1, j: 1, k: 1, l: 1, m: 1, n: 1, o: 1, p: 1, q: 1, r: 1, s: 1, t: 1, u: 1, v: 1}
+  LargeInclusionProjection:
+    &LargeInclusionProjection {
+      c: 1,
+      d: 1,
+      e: 1,
+      f: 1,
+      g: 1,
+      h: 1,
+      i: 1,
+      j: 1,
+      k: 1,
+      l: 1,
+      m: 1,
+      n: 1,
+      o: 1,
+      p: 1,
+      q: 1,
+      r: 1,
+      s: 1,
+      t: 1,
+      u: 1,
+      v: 1,
+    }
 
-  LargeExclusionProjection: &LargeExclusionProjection
-    {c: 1, d: 1, e: 1, f: 1, g: 1, h: 1, i: 1, j: 1, k: 1, l: 1, m: 1, n: 1, o: 1, p: 1, q: 1, r: 1, s: 1, t: 1, u: 1, v: 1}
+  LargeExclusionProjection:
+    &LargeExclusionProjection {
+      c: 1,
+      d: 1,
+      e: 1,
+      f: 1,
+      g: 1,
+      h: 1,
+      i: 1,
+      j: 1,
+      k: 1,
+      l: 1,
+      m: 1,
+      n: 1,
+      o: 1,
+      p: 1,
+      q: 1,
+      r: 1,
+      s: 1,
+      t: 1,
+      u: 1,
+      v: 1,
+    }
 
-  LargeRenamingProjection: &LargeRenamingProjection
-    {c1: '$c', d1: '$d', e1: '$e', f1: '$f', g1: '$g', h1: '$h', i1: '$i', j1: '$j', k1: '$k', l1: '$l', m1: '$m', n1: '$n', o1: '$o', p1: '$p', q1: '$q', r1: '$r', s1: '$s', t1: '$t', u1: '$u', v1: '$v'}
+  LargeRenamingProjection:
+    &LargeRenamingProjection {
+      c1: "$c",
+      d1: "$d",
+      e1: "$e",
+      f1: "$f",
+      g1: "$g",
+      h1: "$h",
+      i1: "$i",
+      j1: "$j",
+      k1: "$k",
+      l1: "$l",
+      m1: "$m",
+      n1: "$n",
+      o1: "$o",
+      p1: "$p",
+      q1: "$q",
+      r1: "$r",
+      s1: "$s",
+      t1: "$t",
+      u1: "$u",
+      v1: "$v",
+    }
 
-  LargeDottedPathInclusionProjection: &LargeDottedPathInclusionProjection
-    {a: {b: {c: 1, d: 1, e: 1, f: 1, g: 1, h: 1, i: 1, j: 1, k: 1, l: 1, m: 1, n: 1, o: 1, p: 1, q: 1, r: 1, s: 1, t: 1, u: 1, v: 1}}}
+  LargeDottedPathInclusionProjection:
+    &LargeDottedPathInclusionProjection {
+      a:
+        {
+          b:
+            {
+              c: 1,
+              d: 1,
+              e: 1,
+              f: 1,
+              g: 1,
+              h: 1,
+              i: 1,
+              j: 1,
+              k: 1,
+              l: 1,
+              m: 1,
+              n: 1,
+              o: 1,
+              p: 1,
+              q: 1,
+              r: 1,
+              s: 1,
+              t: 1,
+              u: 1,
+              v: 1,
+            },
+        },
+    }
 
-  LargeDottedPathExclusionProjection: &LargeDottedPathExclusionProjection
-    {a: {b: {c: 0, d: 0, e: 0, f: 0, g: 0, h: 0, i: 0, j: 0, k: 0, l: 0, m: 0, n: 0, o: 0, p: 0, q: 0, r: 0, s: 0, t: 0, u: 0, v: 0}}}
+  LargeDottedPathExclusionProjection:
+    &LargeDottedPathExclusionProjection {
+      a:
+        {
+          b:
+            {
+              c: 0,
+              d: 0,
+              e: 0,
+              f: 0,
+              g: 0,
+              h: 0,
+              i: 0,
+              j: 0,
+              k: 0,
+              l: 0,
+              m: 0,
+              n: 0,
+              o: 0,
+              p: 0,
+              q: 0,
+              r: 0,
+              s: 0,
+              t: 0,
+              u: 0,
+              v: 0,
+            },
+        },
+    }
 
-  LargeDottedPathRenamingProjection: &LargeDottedPathRenamingProjection
-    {a: {b: {c1: '$a.b.c', d1: '$a.b.d', e1: '$a.b.e', f1: '$a.b.f', g1: '$a.b.g', h1: '$a.b.h', i1: '$a.b.i', j1: '$a.b.j', k1: '$a.b.k', l1: '$a.b.l', m1: '$a.b.m', n1: '$a.b.n', o1: '$a.b.o', p1: '$a.b.p', q1: '$a.b.q', r1: '$a.b.r', s1: '$a.b.s', t1: '$a.b.t', u1: '$a.b.u', v1: '$a.b.v'}}}
+  LargeDottedPathRenamingProjection:
+    &LargeDottedPathRenamingProjection {
+      a:
+        {
+          b:
+            {
+              c1: "$a.b.c",
+              d1: "$a.b.d",
+              e1: "$a.b.e",
+              f1: "$a.b.f",
+              g1: "$a.b.g",
+              h1: "$a.b.h",
+              i1: "$a.b.i",
+              j1: "$a.b.j",
+              k1: "$a.b.k",
+              l1: "$a.b.l",
+              m1: "$a.b.m",
+              n1: "$a.b.n",
+              o1: "$a.b.o",
+              p1: "$a.b.p",
+              q1: "$a.b.q",
+              r1: "$a.b.r",
+              s1: "$a.b.s",
+              t1: "$a.b.t",
+              u1: "$a.b.u",
+              v1: "$a.b.v",
+            },
+        },
+    }
 
-  LargeMixedProjection: &LargeMixedProjection
-    {a: {b: {c: 1, d: 1, e: 1, f: 1, g: 1, h: 1, i: 1, j: 1, k: 1, l: 1, m1: '$a.b.m', n1: '$a.b.n', o1: '$a.b.o', p1: '$a.b.p', q1: '$a.b.q', r1: '$a.b.r', s1: '$a.b.s', t1: '$a.b.t', u1: '$a.b.u', v1: '$a.b.v'}}}
+  LargeMixedProjection:
+    &LargeMixedProjection {
+      a:
+        {
+          b:
+            {
+              c: 1,
+              d: 1,
+              e: 1,
+              f: 1,
+              g: 1,
+              h: 1,
+              i: 1,
+              j: 1,
+              k: 1,
+              l: 1,
+              m1: "$a.b.m",
+              n1: "$a.b.n",
+              o1: "$a.b.o",
+              p1: "$a.b.p",
+              q1: "$a.b.q",
+              r1: "$a.b.r",
+              s1: "$a.b.s",
+              t1: "$a.b.t",
+              u1: "$a.b.u",
+              v1: "$a.b.v",
+            },
+        },
+    }
 
-  LargeCommonPathPrefixInclusionProjection: &LargeCommonPathPrefixInclusionProjection
-    {a: {b: {c: {d: {e: 1, f: 1, g: 1, h: 1, i: 1, j: 1, k: 1, l: 1, m: 1, n: 1, o: 1, p: 1, q: 1, r: 1, s: 1, t: 1, u: 1, v: 1}}}}}
- 
-  LargeCommonPathPrefixExclusionProjection: &LargeCommonPathPrefixExclusionProjection
-    {a: {b: {c: {d: {e: 0, f: 0, g: 0, h: 0, i: 0, j: 0, k: 0, l: 0, m: 0, n: 0, o: 0, p: 0, q: 0, r: 0, s: 0, t: 0, u: 0, v: 0}}}}}
+  LargeCommonPathPrefixInclusionProjection:
+    &LargeCommonPathPrefixInclusionProjection {
+      a:
+        {
+          b:
+            {
+              c:
+                {
+                  d:
+                    {
+                      e: 1,
+                      f: 1,
+                      g: 1,
+                      h: 1,
+                      i: 1,
+                      j: 1,
+                      k: 1,
+                      l: 1,
+                      m: 1,
+                      n: 1,
+                      o: 1,
+                      p: 1,
+                      q: 1,
+                      r: 1,
+                      s: 1,
+                      t: 1,
+                      u: 1,
+                      v: 1,
+                    },
+                },
+            },
+        },
+    }
 
+  LargeCommonPathPrefixExclusionProjection:
+    &LargeCommonPathPrefixExclusionProjection {
+      a:
+        {
+          b:
+            {
+              c:
+                {
+                  d:
+                    {
+                      e: 0,
+                      f: 0,
+                      g: 0,
+                      h: 0,
+                      i: 0,
+                      j: 0,
+                      k: 0,
+                      l: 0,
+                      m: 0,
+                      n: 0,
+                      o: 0,
+                      p: 0,
+                      q: 0,
+                      r: 0,
+                      s: 0,
+                      t: 0,
+                      u: 0,
+                      v: 0,
+                    },
+                },
+            },
+        },
+    }
 
 ActorTemplates:
-- TemplateName: CollScanProjectionTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "unused"}}
+  - TemplateName: CollScanProjectionTemplate
+    Config:
+      Name: { ^Parameter: { Name: "Name", Default: "unused" } }
+      Type: CrudActor
+      Database: *Database
+      Threads: 1
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{ ^Parameter: { Name: "ActivePhase", Default: -1 } }]
+          NopInPhasesUpTo: *MaxPhases
+          PhaseConfig:
+            Repeat: *Repeat
+            Collection: *Collection
+            Operations:
+              - OperationName: find
+                OperationCommand:
+                  Filter: {}
+                  Options:
+                    Projection:
+                      { ^Parameter: { Name: "Projection", Default: "unused" } }
+
+Actors:
+  - Name: ClearCollection
     Type: CrudActor
     Database: *Database
     Threads: 1
     Phases:
       OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "ActivePhase", Default: -1}}]
+        Active: [0]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
-          Repeat: *Repeat
+          Repeat: 1
+          Threads: 1
           Collection: *Collection
           Operations:
-          - OperationName: find
-            OperationCommand:
-              Filter: {}
-              Options:
-                Projection: {^Parameter: {Name: "Projection", Default: "unused"}}
+            - OperationName: drop
 
-Actors:
-- Name: ClearCollection
-  Type: CrudActor
-  Database: *Database
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
-        Collection: *Collection
-        Operations:
-        - OperationName: drop
-
-- Name: InsertData
-  Type: Loader
-  Threads: 4
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        MultipleThreadsPerCollection: true
-        CollectionCount: 1
-        DocumentCount: *DocumentCount
-        BatchSize: 1000
-        Document: {
-          a: {
-            b: {
-              c: {
-                d: {
-                  e: [{a: {^RandomInt: {min: 0, max: 1000}}, b: {^Inc: {start: 11, step: 2}}}],
-                  f: [{^Array: {of: [[{^RandomInt: {min: 0, max: 10}}]], number: {^RandomInt: {min: 0, max: 10}}}}],
-                  g: {^RandomInt: {min: 0, max: 10}},
-                  h: {^RandomInt: {min: 0, max: 1000}},
-                  i: *RandomLongStringValue,
-                  j: [{a: {^RandomInt: {min: 0, max: 1000}}, b: {^Inc: {start: 11, step: 2}}}],
-                  k: [{^Array: {of: [[{^RandomInt: {min: 0, max: 10}}]], number: {^RandomInt: {min: 0, max: 10}}}}],
-                  l: {^RandomInt: {min: 0, max: 10}},
-                  m: {^RandomInt: {min: 0, max: 1000}},
-                  n: *RandomShortStringValue,
-                  o: [{a: {^RandomInt: {min: 0, max: 1000}}, b: {^Inc: {start: 11, step: 2}}}],
-                  p: [{^Array: {of: [[{^RandomInt: {min: 0, max: 10}}]], number: {^RandomInt: {min: 0, max: 10}}}}],
-                  q: {^RandomInt: {min: 0, max: 10}},
-                  r: {^RandomInt: {min: 0, max: 1000}},
-                  s: {^RandomInt: {min: 0, max: 10000}},
-                  t: *RandomShortStringValue,
-                  u: [{^Array: {of: [[{^RandomInt: {min: 0, max: 10}}]], number: {^RandomInt: {min: 0, max: 10}}}}],
-                  v: *RandomLongStringValue,
-                }
-              },
-              d: {^RandomInt: {min: 0, max: 10}},
-              e: [{a: {^RandomInt: {min: 0, max: 1000}}, b: {^Inc: {start: 11, step: 2}}}],
-              f: [{^Array: {of: [[{^RandomInt: {min: 0, max: 10}}]], number: {^RandomInt: {min: 0, max: 10}}}}],
-              g: {^RandomInt: {min: 0, max: 10}},
-              h: {^RandomInt: {min: 0, max: 1000}},
+  - Name: InsertData
+    Type: Loader
+    Threads: 4
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          MultipleThreadsPerCollection: true
+          CollectionCount: 1
+          DocumentCount: *DocumentCount
+          BatchSize: 1000
+          Document:
+            {
+              a:
+                {
+                  b:
+                    {
+                      c:
+                        {
+                          d:
+                            {
+                              e:
+                                [
+                                  {
+                                    a: { ^RandomInt: { min: 0, max: 1000 } },
+                                    b: { ^Inc: { start: 11, step: 2 } },
+                                  },
+                                ],
+                              f:
+                                [
+                                  {
+                                    ^Array:
+                                      {
+                                        of:
+                                          [
+                                            [
+                                              {
+                                                ^RandomInt: { min: 0, max: 10 },
+                                              },
+                                            ],
+                                          ],
+                                        number:
+                                          { ^RandomInt: { min: 0, max: 10 } },
+                                      },
+                                  },
+                                ],
+                              g: { ^RandomInt: { min: 0, max: 10 } },
+                              h: { ^RandomInt: { min: 0, max: 1000 } },
+                              i: *RandomLongStringValue,
+                              j:
+                                [
+                                  {
+                                    a: { ^RandomInt: { min: 0, max: 1000 } },
+                                    b: { ^Inc: { start: 11, step: 2 } },
+                                  },
+                                ],
+                              k:
+                                [
+                                  {
+                                    ^Array:
+                                      {
+                                        of:
+                                          [
+                                            [
+                                              {
+                                                ^RandomInt: { min: 0, max: 10 },
+                                              },
+                                            ],
+                                          ],
+                                        number:
+                                          { ^RandomInt: { min: 0, max: 10 } },
+                                      },
+                                  },
+                                ],
+                              l: { ^RandomInt: { min: 0, max: 10 } },
+                              m: { ^RandomInt: { min: 0, max: 1000 } },
+                              n: *RandomShortStringValue,
+                              o:
+                                [
+                                  {
+                                    a: { ^RandomInt: { min: 0, max: 1000 } },
+                                    b: { ^Inc: { start: 11, step: 2 } },
+                                  },
+                                ],
+                              p:
+                                [
+                                  {
+                                    ^Array:
+                                      {
+                                        of:
+                                          [
+                                            [
+                                              {
+                                                ^RandomInt: { min: 0, max: 10 },
+                                              },
+                                            ],
+                                          ],
+                                        number:
+                                          { ^RandomInt: { min: 0, max: 10 } },
+                                      },
+                                  },
+                                ],
+                              q: { ^RandomInt: { min: 0, max: 10 } },
+                              r: { ^RandomInt: { min: 0, max: 1000 } },
+                              s: { ^RandomInt: { min: 0, max: 10000 } },
+                              t: *RandomShortStringValue,
+                              u:
+                                [
+                                  {
+                                    ^Array:
+                                      {
+                                        of:
+                                          [
+                                            [
+                                              {
+                                                ^RandomInt: { min: 0, max: 10 },
+                                              },
+                                            ],
+                                          ],
+                                        number:
+                                          { ^RandomInt: { min: 0, max: 10 } },
+                                      },
+                                  },
+                                ],
+                              v: *RandomLongStringValue,
+                            },
+                        },
+                      d: { ^RandomInt: { min: 0, max: 10 } },
+                      e:
+                        [
+                          {
+                            a: { ^RandomInt: { min: 0, max: 1000 } },
+                            b: { ^Inc: { start: 11, step: 2 } },
+                          },
+                        ],
+                      f:
+                        [
+                          {
+                            ^Array:
+                              {
+                                of: [[{ ^RandomInt: { min: 0, max: 10 } }]],
+                                number: { ^RandomInt: { min: 0, max: 10 } },
+                              },
+                          },
+                        ],
+                      g: { ^RandomInt: { min: 0, max: 10 } },
+                      h: { ^RandomInt: { min: 0, max: 1000 } },
+                      i: *RandomLongStringValue,
+                      j:
+                        [
+                          {
+                            a: { ^RandomInt: { min: 0, max: 1000 } },
+                            b: { ^Inc: { start: 11, step: 2 } },
+                          },
+                        ],
+                      k:
+                        [
+                          {
+                            ^Array:
+                              {
+                                of: [[{ ^RandomInt: { min: 0, max: 10 } }]],
+                                number: { ^RandomInt: { min: 0, max: 10 } },
+                              },
+                          },
+                        ],
+                      l: { ^RandomInt: { min: 0, max: 10 } },
+                      m: { ^RandomInt: { min: 0, max: 1000 } },
+                      n: *RandomShortStringValue,
+                      o:
+                        [
+                          {
+                            a: { ^RandomInt: { min: 0, max: 1000 } },
+                            b: { ^Inc: { start: 11, step: 2 } },
+                          },
+                        ],
+                      p:
+                        [
+                          {
+                            ^Array:
+                              {
+                                of: [[{ ^RandomInt: { min: 0, max: 10 } }]],
+                                number: { ^RandomInt: { min: 0, max: 10 } },
+                              },
+                          },
+                        ],
+                      q: { ^RandomInt: { min: 0, max: 10 } },
+                      r: { ^RandomInt: { min: 0, max: 1000 } },
+                      s: { ^RandomInt: { min: 0, max: 10000 } },
+                      t: *RandomShortStringValue,
+                      u:
+                        [
+                          {
+                            ^Array:
+                              {
+                                of: [[{ ^RandomInt: { min: 0, max: 10 } }]],
+                                number: { ^RandomInt: { min: 0, max: 10 } },
+                              },
+                          },
+                        ],
+                      v: *RandomLongStringValue,
+                    },
+                },
+              b: { ^RandomInt: { min: 0, max: 10 } },
+              c: { ^RandomInt: { min: 0, max: 1000 } },
+              d: *RandomShortStringValue,
+              e:
+                [
+                  {
+                    a: { ^RandomInt: { min: 0, max: 1000 } },
+                    b: { ^Inc: { start: 11, step: 2 } },
+                  },
+                ],
+              f:
+                [
+                  {
+                    ^Array:
+                      {
+                        of: [[{ ^RandomInt: { min: 0, max: 10 } }]],
+                        number: { ^RandomInt: { min: 0, max: 10 } },
+                      },
+                  },
+                ],
+              g: { ^RandomInt: { min: 0, max: 10 } },
+              h: { ^RandomInt: { min: 0, max: 1000 } },
               i: *RandomLongStringValue,
-              j: [{a: {^RandomInt: {min: 0, max: 1000}}, b: {^Inc: {start: 11, step: 2}}}],
-              k: [{^Array: {of: [[{^RandomInt: {min: 0, max: 10}}]], number: {^RandomInt: {min: 0, max: 10}}}}],
-              l: {^RandomInt: {min: 0, max: 10}},
-              m: {^RandomInt: {min: 0, max: 1000}},
+              j:
+                [
+                  {
+                    a: { ^RandomInt: { min: 0, max: 1000 } },
+                    b: { ^Inc: { start: 11, step: 2 } },
+                  },
+                ],
+              k:
+                [
+                  {
+                    ^Array:
+                      {
+                        of: [[{ ^RandomInt: { min: 0, max: 10 } }]],
+                        number: { ^RandomInt: { min: 0, max: 10 } },
+                      },
+                  },
+                ],
+              l: { ^RandomInt: { min: 0, max: 10 } },
+              m: { ^RandomInt: { min: 0, max: 1000 } },
               n: *RandomShortStringValue,
-              o: [{a: {^RandomInt: {min: 0, max: 1000}}, b: {^Inc: {start: 11, step: 2}}}],
-              p: [{^Array: {of: [[{^RandomInt: {min: 0, max: 10}}]], number: {^RandomInt: {min: 0, max: 10}}}}],
-              q: {^RandomInt: {min: 0, max: 10}},
-              r: {^RandomInt: {min: 0, max: 1000}},
-              s: {^RandomInt: {min: 0, max: 10000}},
+              o:
+                [
+                  {
+                    a: { ^RandomInt: { min: 0, max: 1000 } },
+                    b: { ^Inc: { start: 11, step: 2 } },
+                  },
+                ],
+              p:
+                [
+                  {
+                    ^Array:
+                      {
+                        of: [[{ ^RandomInt: { min: 0, max: 10 } }]],
+                        number: { ^RandomInt: { min: 0, max: 10 } },
+                      },
+                  },
+                ],
+              q: { ^RandomInt: { min: 0, max: 10 } },
+              r: { ^RandomInt: { min: 0, max: 1000 } },
+              s: { ^RandomInt: { min: 0, max: 10000 } },
               t: *RandomShortStringValue,
-              u: [{^Array: {of: [[{^RandomInt: {min: 0, max: 10}}]], number: {^RandomInt: {min: 0, max: 10}}}}],
+              u:
+                [
+                  {
+                    ^Array:
+                      {
+                        of: [[{ ^RandomInt: { min: 0, max: 10 } }]],
+                        number: { ^RandomInt: { min: 0, max: 10 } },
+                      },
+                  },
+                ],
               v: *RandomLongStringValue,
             }
-          },
-          b: {^RandomInt: {min: 0, max: 10}},
-          c: {^RandomInt: {min: 0, max: 1000}},
-          d: *RandomShortStringValue,
-          e: [{a: {^RandomInt: {min: 0, max: 1000}}, b: {^Inc: {start: 11, step: 2}}}],
-          f: [{^Array: {of: [[{^RandomInt: {min: 0, max: 10}}]], number: {^RandomInt: {min: 0, max: 10}}}}],
-          g: {^RandomInt: {min: 0, max: 10}},
-          h: {^RandomInt: {min: 0, max: 1000}},
-          i: *RandomLongStringValue,
-          j: [{a: {^RandomInt: {min: 0, max: 1000}}, b: {^Inc: {start: 11, step: 2}}}],
-          k: [{^Array: {of: [[{^RandomInt: {min: 0, max: 10}}]], number: {^RandomInt: {min: 0, max: 10}}}}],
-          l: {^RandomInt: {min: 0, max: 10}},
-          m: {^RandomInt: {min: 0, max: 1000}},
-          n: *RandomShortStringValue,
-          o: [{a: {^RandomInt: {min: 0, max: 1000}}, b: {^Inc: {start: 11, step: 2}}}],
-          p: [{^Array: {of: [[{^RandomInt: {min: 0, max: 10}}]], number: {^RandomInt: {min: 0, max: 10}}}}],
-          q: {^RandomInt: {min: 0, max: 10}},
-          r: {^RandomInt: {min: 0, max: 1000}},
-          s: {^RandomInt: {min: 0, max: 10000}},
-          t: *RandomShortStringValue,
-          u: [{^Array: {of: [[{^RandomInt: {min: 0, max: 10}}]], number: {^RandomInt: {min: 0, max: 10}}}}],
-          v: *RandomLongStringValue,
-        }
 
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
 
-- ActorFromTemplate:
-    TemplateName: CollScanProjectionTemplate
-    TemplateParameters:
-      Name: LargeInclusionProjection
-      ActivePhase: 3
-      Projection: *LargeInclusionProjection
+  - ActorFromTemplate:
+      TemplateName: CollScanProjectionTemplate
+      TemplateParameters:
+        Name: LargeInclusionProjection
+        ActivePhase: 3
+        Projection: *LargeInclusionProjection
 
-- ActorFromTemplate:
-    TemplateName: CollScanProjectionTemplate
-    TemplateParameters:
-      Name: LargeExclusionProjection
-      ActivePhase: 4
-      Projection: *LargeExclusionProjection
+  - ActorFromTemplate:
+      TemplateName: CollScanProjectionTemplate
+      TemplateParameters:
+        Name: LargeExclusionProjection
+        ActivePhase: 4
+        Projection: *LargeExclusionProjection
 
-- ActorFromTemplate:
-    TemplateName: CollScanProjectionTemplate
-    TemplateParameters:
-      Name: LargeRenamingProjection
-      ActivePhase: 5
-      Projection: *LargeRenamingProjection
+  - ActorFromTemplate:
+      TemplateName: CollScanProjectionTemplate
+      TemplateParameters:
+        Name: LargeRenamingProjection
+        ActivePhase: 5
+        Projection: *LargeRenamingProjection
 
-- ActorFromTemplate:
-    TemplateName: CollScanProjectionTemplate
-    TemplateParameters:
-      Name: LargeDottedPathInclusionProjection
-      ActivePhase: 6
-      Projection: *LargeDottedPathInclusionProjection
+  - ActorFromTemplate:
+      TemplateName: CollScanProjectionTemplate
+      TemplateParameters:
+        Name: LargeDottedPathInclusionProjection
+        ActivePhase: 6
+        Projection: *LargeDottedPathInclusionProjection
 
-- ActorFromTemplate:
-    TemplateName: CollScanProjectionTemplate
-    TemplateParameters:
-      Name: LargeDottedPathExclusionProjection
-      ActivePhase: 7
-      Projection: *LargeDottedPathExclusionProjection
+  - ActorFromTemplate:
+      TemplateName: CollScanProjectionTemplate
+      TemplateParameters:
+        Name: LargeDottedPathExclusionProjection
+        ActivePhase: 7
+        Projection: *LargeDottedPathExclusionProjection
 
-- ActorFromTemplate:
-    TemplateName: CollScanProjectionTemplate
-    TemplateParameters:
-      Name: LargeDottedPathRenamingProjection
-      ActivePhase: 8
-      Projection: *LargeDottedPathRenamingProjection
+  - ActorFromTemplate:
+      TemplateName: CollScanProjectionTemplate
+      TemplateParameters:
+        Name: LargeDottedPathRenamingProjection
+        ActivePhase: 8
+        Projection: *LargeDottedPathRenamingProjection
 
-- ActorFromTemplate:
-    TemplateName: CollScanProjectionTemplate
-    TemplateParameters:
-      Name: LargeMixedProjection
-      ActivePhase: 9
-      Projection: *LargeMixedProjection
+  - ActorFromTemplate:
+      TemplateName: CollScanProjectionTemplate
+      TemplateParameters:
+        Name: LargeMixedProjection
+        ActivePhase: 9
+        Projection: *LargeMixedProjection
 
-- ActorFromTemplate:
-    TemplateName: CollScanProjectionTemplate
-    TemplateParameters:
-      Name: LargeCommonPathPrefixInclusionProjection
-      ActivePhase: 10
-      Projection: *LargeCommonPathPrefixInclusionProjection
+  - ActorFromTemplate:
+      TemplateName: CollScanProjectionTemplate
+      TemplateParameters:
+        Name: LargeCommonPathPrefixInclusionProjection
+        ActivePhase: 10
+        Projection: *LargeCommonPathPrefixInclusionProjection
 
-- ActorFromTemplate:
-    TemplateName: CollScanProjectionTemplate
-    TemplateParameters:
-      Name: LargeCommonPathPrefixExclusionProjection
-      ActivePhase: 11
-      Projection: *LargeCommonPathPrefixExclusionProjection
+  - ActorFromTemplate:
+      TemplateName: CollScanProjectionTemplate
+      TemplateParameters:
+        Name: LargeCommonPathPrefixExclusionProjection
+        ActivePhase: 11
+        Projection: *LargeCommonPathPrefixExclusionProjection

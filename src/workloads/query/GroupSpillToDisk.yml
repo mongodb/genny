@@ -3,13 +3,13 @@ Owner: "@mongodb/query"
 Description: |
   Runs $group queries which are designed to require spilling to disk.
 Keywords:
-- Loader
-- CrudActor
-- QuiesceActor
-- insert
-- aggregate
-- group
-- spill
+  - Loader
+  - CrudActor
+  - QuiesceActor
+  - insert
+  - aggregate
+  - group
+  - spill
 
 GlobalDefaults:
   Database: &Database test
@@ -20,126 +20,126 @@ GlobalDefaults:
   MaxPhases: &MaxPhases 5
 
 Actors:
-# The 'Setup' actor drops the database and runs in the 0th phase. This makes sure that there is no
-# stale data left over from previous test runs (which is useful when running the workload locally).
-- Name: Setup
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        Operations:
-        - OperationName: RunCommand
-          OperationCommand: {dropDatabase: 1}
+  # The 'Setup' actor drops the database and runs in the 0th phase. This makes sure that there is no
+  # stale data left over from previous test runs (which is useful when running the workload locally).
+  - Name: Setup
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          Operations:
+            - OperationName: RunCommand
+              OperationCommand: {dropDatabase: 1}
 
-# Phase 1: Insert documents into the collection.
-- Name: InsertData
-  Type: Loader
-  Threads: 4
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        MultipleThreadsPerCollection: true
-        CollectionCount: 1
-        DocumentCount: *DocumentCount
-        BatchSize: 1000
-        Document:
-          firstField: {^RandomInt: {min: 1, max: *FirstFieldUniqueValCount}}
-          secondField: {^RandomString: {length: *RandomStrLength, alphabet: "0123456789"}}
+  # Phase 1: Insert documents into the collection.
+  - Name: InsertData
+    Type: Loader
+    Threads: 4
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          MultipleThreadsPerCollection: true
+          CollectionCount: 1
+          DocumentCount: *DocumentCount
+          BatchSize: 1000
+          Document:
+            firstField: {^RandomInt: {min: 1, max: *FirstFieldUniqueValCount}}
+            secondField: {^RandomString: {length: *RandomStrLength, alphabet: "0123456789"}}
 
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
 
-# This query has a small number of groups, but each group is a very large set.
-- Name: GroupAddToSetAccumulatorWithLargeSets
-  Type: CrudActor
-  Database: *Database
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Collection: *Collection
-        Operations:
-        - OperationName: aggregate
-          OperationCommand:
-            Pipeline: [{$group: {_id: "$firstField", list: {$addToSet: "$secondField"}}}]
-            Options:
-              AllowDiskUse: true
+  # This query has a small number of groups, but each group is a very large set.
+  - Name: GroupAddToSetAccumulatorWithLargeSets
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Collection: *Collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline: [{$group: {_id: "$firstField", list: {$addToSet: "$secondField"}}}]
+                Options:
+                  AllowDiskUse: true
 
-# Similar to the previous query, but using $push rather than $addToSet.
-- Name: GroupPushAccumulatorConstructingLargeArrays
-  Type: CrudActor
-  Database: *Database
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [4]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Collection: *Collection
-        Operations:
-        - OperationName: aggregate
-          OperationCommand:
-            Pipeline: [{$group: {_id: "$firstField", list: {$push: "$secondField"}}}]
-            Options:
-              AllowDiskUse: true
+  # Similar to the previous query, but using $push rather than $addToSet.
+  - Name: GroupPushAccumulatorConstructingLargeArrays
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Collection: *Collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline: [{$group: {_id: "$firstField", list: {$push: "$secondField"}}}]
+                Options:
+                  AllowDiskUse: true
 
-# This query groups by "secondField", which has many distinct values. Spilling is required since
-# there are many groups, but the state for each individual group is small.
-- Name: GroupSumAccumulatorSpillDueToManyGroups
-  Type: CrudActor
-  Database: *Database
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [5]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Collection: *Collection
-        Operations:
-        - OperationName: aggregate
-          OperationCommand:
-            Pipeline: [{$group: {_id: "$secondField", count: {$sum: 1}}}]
-            Options:
-              AllowDiskUse: true
+  # This query groups by "secondField", which has many distinct values. Spilling is required since
+  # there are many groups, but the state for each individual group is small.
+  - Name: GroupSumAccumulatorSpillDueToManyGroups
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [5]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Collection: *Collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline: [{$group: {_id: "$secondField", count: {$sum: 1}}}]
+                Options:
+                  AllowDiskUse: true
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-      - standalone-80-feature-flags
-      - standalone-all-feature-flags
-      - standalone-classic-query-engine
-      - standalone-query-stats
-      - standalone-sbe
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
-      - v5.0
-      - v6.1
-      - v6.2
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone
+          - standalone-80-feature-flags
+          - standalone-all-feature-flags
+          - standalone-classic-query-engine
+          - standalone-query-stats
+          - standalone-sbe
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4
+          - v5.0
+          - v6.1
+          - v6.2

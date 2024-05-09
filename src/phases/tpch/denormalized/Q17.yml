@@ -4,55 +4,114 @@ Description: |
   Run TPC-H query 17 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
+batchSize: &batchSize { ^Parameter: { Name: "BatchSize", Default: 101 } }
 
-query17Brand: &query17Brand {^Parameter: {Name: "Query17Brand", Default: "Brand#23"}}
-query17Container: &query17Container {^Parameter: {Name: "Query17Container", Default: "MED BOX"}}
+query17Brand:
+  &query17Brand { ^Parameter: { Name: "Query17Brand", Default: "Brand#23" } }
+query17Container:
+  &query17Container {
+    ^Parameter: { Name: "Query17Container", Default: "MED BOX" },
+  }
 
 TPCHDenormalizedQuery17Aggregation: &TPCHDenormalizedQuery17Aggregation
   aggregate: part
   pipeline:
     [
-      {$match: {$and: [{$expr: {$eq: ["$p_brand", *query17Brand]}}, {$expr: {$eq: ["$p_container", *query17Container]}}]}},
-      {$lookup: {from: "customer", localField: "p_partkey", foreignField: "orders.lineitem.l_partkey", as: "lineitem", let: {p_partkey: "$p_partkey"}, pipeline: [
-        {$unwind: "$orders"},
-        {$unwind: "$orders.lineitem"},
-        {$replaceWith: "$orders.lineitem"},
-        {$match: {$expr: {$eq: ["$l_partkey", "$$p_partkey"]}}},
-        {$group: {_id: 0, avg_quantity: {$avg: "$l_quantity"}, lineitem: {$push: {l_extendedprice: "$l_extendedprice", l_quantity: "$l_quantity"}}}},
-        {$project: {_id: 0, avg_quantity: 1, lineitem: {$filter: {input: "$lineitem", cond: {$lt: ["$$this.l_quantity", {$multiply: [0.2, "$avg_quantity"]}]}}}}},
-        {$unwind: "$lineitem"},
-        {$replaceWith: "$lineitem"}]}},
-      {$unwind: "$lineitem"},
-      {$group: {_id: 0, avg_total: {$sum: "$lineitem.l_extendedprice"}}},
-      {$project: {_id: 0, avg_yearly: {$divide: ["$avg_total", 7.0]}}}
+      {
+        $match:
+          {
+            $and:
+              [
+                { $expr: { $eq: ["$p_brand", *query17Brand] } },
+                { $expr: { $eq: ["$p_container", *query17Container] } },
+              ],
+          },
+      },
+      {
+        $lookup:
+          {
+            from: "customer",
+            localField: "p_partkey",
+            foreignField: "orders.lineitem.l_partkey",
+            as: "lineitem",
+            let: { p_partkey: "$p_partkey" },
+            pipeline:
+              [
+                { $unwind: "$orders" },
+                { $unwind: "$orders.lineitem" },
+                { $replaceWith: "$orders.lineitem" },
+                { $match: { $expr: { $eq: ["$l_partkey", "$$p_partkey"] } } },
+                {
+                  $group:
+                    {
+                      _id: 0,
+                      avg_quantity: { $avg: "$l_quantity" },
+                      lineitem:
+                        {
+                          $push:
+                            {
+                              l_extendedprice: "$l_extendedprice",
+                              l_quantity: "$l_quantity",
+                            },
+                        },
+                    },
+                },
+                {
+                  $project:
+                    {
+                      _id: 0,
+                      avg_quantity: 1,
+                      lineitem:
+                        {
+                          $filter:
+                            {
+                              input: "$lineitem",
+                              cond:
+                                {
+                                  $lt:
+                                    [
+                                      "$$this.l_quantity",
+                                      { $multiply: [0.2, "$avg_quantity"] },
+                                    ],
+                                },
+                            },
+                        },
+                    },
+                },
+                { $unwind: "$lineitem" },
+                { $replaceWith: "$lineitem" },
+              ],
+          },
+      },
+      { $unwind: "$lineitem" },
+      { $group: { _id: 0, avg_total: { $sum: "$lineitem.l_extendedprice" } } },
+      { $project: { _id: 0, avg_yearly: { $divide: ["$avg_total", 7.0] } } },
     ]
-  cursor: {batchSize: *batchSize}
+  cursor: { batchSize: *batchSize }
   allowDiskUse: true
 
 TPCHDenormalizedQuery17Warmup:
-  Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
+  Repeat: &Repeat { ^Parameter: { Name: "Repeat", Default: 1 } }
   Database: &db tpch
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedQuery17Aggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedQuery17Aggregation
 
 TPCHDenormalizedQuery17:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query17
-    OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedQuery17Aggregation
+    - OperationMetricsName: Query17
+      OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedQuery17Aggregation
 
 TPCHDenormalizedQuery17Explain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query17
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHDenormalizedQuery17Aggregation
-      verbosity:
-        executionStats
+    - OperationMetricsName: Query17
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHDenormalizedQuery17Aggregation
+        verbosity: executionStats

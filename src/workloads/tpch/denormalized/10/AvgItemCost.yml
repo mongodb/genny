@@ -10,10 +10,10 @@ Clients:
       socketTimeoutMS: -1
 
 Actors:
-- Name: TPCHDenormalizedAvgItemCostExplain
-  Type: RunCommand
-  Database: tpch
-  Phases:
-  - LoadConfig:
-      Path: ../../../../phases/tpch/denormalized/AvgItemCost.yml
-      Key: TPCHDenormalizedAvgItemCostExplain
+  - Name: TPCHDenormalizedAvgItemCostExplain
+    Type: RunCommand
+    Database: tpch
+    Phases:
+      - LoadConfig:
+          Path: ../../../../phases/tpch/denormalized/AvgItemCost.yml
+          Key: TPCHDenormalizedAvgItemCostExplain

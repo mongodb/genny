@@ -1,20 +1,28 @@
+# -*-mode: yaml-*-
+
 extends: default
 
 rules:
+  anchors:
+    forbid-undeclared-aliases: true
+    forbid-duplicated-anchors: true
+    forbid-unused-anchors: false
   braces:
     max-spaces-inside: 1
   colons:
     max-spaces-before: 0
     max-spaces-after: 1
   line-length:
-    max: 1000
+    max: 160
   indentation:
     spaces: 2
-    indent-sequences: false
+    indent-sequences: true
     check-multi-line-strings: false
   comments:
     level: error
     require-starting-space: true
+    # Default is 2, use 1 to align with prettier-yaml
+    min-spaces-from-content: 1
   comments-indentation:
     level: error
   document-start:
@@ -23,5 +31,8 @@ rules:
   new-line-at-end-of-file: enable
   empty-lines: disable
   trailing-spaces: enable
+  octal-values:
+    forbid-implicit-octal: true
+    forbid-explicit-octal: true
   truthy:
     level: error

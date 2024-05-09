@@ -1,62 +1,182 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Run TPC-H query 5 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  Run TPC-H query 5 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema.
+  Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
-query5Region: &query5Region {^Parameter: {Name: "Query5Region", Default: "ASIA"}}
-query5Date: &query5Date {^Parameter: {Name: "Query5Date", Default: "1994-01-01"}}
+batchSize: &batchSize { ^Parameter: { Name: "BatchSize", Default: 101 } }
+query5Region:
+  &query5Region { ^Parameter: { Name: "Query5Region", Default: "ASIA" } }
+query5Date:
+  &query5Date { ^Parameter: { Name: "Query5Date", Default: "1994-01-01" } }
 
 TPCHNormalizedQuery5Aggregation: &TPCHNormalizedQuery5Aggregation
   aggregate: customer
   pipeline:
     [
-      {$lookup: {from: "orders", localField: "c_custkey", foreignField: "o_custkey", as: "orders", let: {c_nationkey: "$c_nationkey"}, pipeline: [
-        {$match: {$and: [
-          {$expr: {$gte: ["$o_orderdate", {^Date: *query5Date}]}},
-          {$expr: {$lt: ["$o_orderdate", {$dateAdd: {startDate: {^Date: *query5Date}, unit: "year", amount: 1}}]}}]}},
-        {$lookup: {from: "lineitem", localField: "o_orderkey", foreignField: "l_orderkey", as: "lineitem", let: {c_nationkey: "$$c_nationkey"}, pipeline: [
-          {$lookup: {from: "supplier", localField: "l_suppkey", foreignField: "s_suppkey", as: "supplier", pipeline: [
-            {$match: {$expr: {$eq: ["$s_nationkey", "$$c_nationkey"]}}},
-            {$lookup: {from: "nation", localField: "s_nationkey", foreignField: "n_nationkey", as: "nation", pipeline: [
-              {$lookup: {from: "region", localField: "n_regionkey", foreignField: "r_regionkey", as: "region", pipeline: [
-                {$match: {r_name: *query5Region}}]}},
-              {$unwind: "$region"}]}},
-            {$unwind: "$nation"}]}},
-          {$unwind: "$supplier"}]}},
-        {$unwind: "$lineitem"}]}},
-      {$unwind: "$orders"},
-      {$group: {_id: "$orders.lineitem.supplier.nation.n_name", revenue: {$sum: {$multiply: ["$orders.lineitem.l_extendedprice", {$subtract: [1, "$orders.lineitem.l_discount"]}]}}}},
-      {$project: {_id: 0, n_name: "$_id", revenue: 1}},
-      {$sort: {revenue: -1}}
+      {
+        $lookup:
+          {
+            from: "orders",
+            localField: "c_custkey",
+            foreignField: "o_custkey",
+            as: "orders",
+            let: { c_nationkey: "$c_nationkey" },
+            pipeline:
+              [
+                {
+                  $match:
+                    {
+                      $and:
+                        [
+                          {
+                            $expr:
+                              {
+                                $gte: ["$o_orderdate", { ^Date: *query5Date }],
+                              },
+                          },
+                          {
+                            $expr:
+                              {
+                                $lt:
+                                  [
+                                    "$o_orderdate",
+                                    {
+                                      $dateAdd:
+                                        {
+                                          startDate: { ^Date: *query5Date },
+                                          unit: "year",
+                                          amount: 1,
+                                        },
+                                    },
+                                  ],
+                              },
+                          },
+                        ],
+                    },
+                },
+                {
+                  $lookup:
+                    {
+                      from: "lineitem",
+                      localField: "o_orderkey",
+                      foreignField: "l_orderkey",
+                      as: "lineitem",
+                      let: { c_nationkey: "$$c_nationkey" },
+                      pipeline:
+                        [
+                          {
+                            $lookup:
+                              {
+                                from: "supplier",
+                                localField: "l_suppkey",
+                                foreignField: "s_suppkey",
+                                as: "supplier",
+                                pipeline:
+                                  [
+                                    {
+                                      $match:
+                                        {
+                                          $expr:
+                                            {
+                                              $eq:
+                                                [
+                                                  "$s_nationkey",
+                                                  "$$c_nationkey",
+                                                ],
+                                            },
+                                        },
+                                    },
+                                    {
+                                      $lookup:
+                                        {
+                                          from: "nation",
+                                          localField: "s_nationkey",
+                                          foreignField: "n_nationkey",
+                                          as: "nation",
+                                          pipeline:
+                                            [
+                                              {
+                                                $lookup:
+                                                  {
+                                                    from: "region",
+                                                    localField: "n_regionkey",
+                                                    foreignField: "r_regionkey",
+                                                    as: "region",
+                                                    pipeline:
+                                                      [
+                                                        {
+                                                          $match:
+                                                            {
+                                                              r_name: *query5Region,
+                                                            },
+                                                        },
+                                                      ],
+                                                  },
+                                              },
+                                              { $unwind: "$region" },
+                                            ],
+                                        },
+                                    },
+                                    { $unwind: "$nation" },
+                                  ],
+                              },
+                          },
+                          { $unwind: "$supplier" },
+                        ],
+                    },
+                },
+                { $unwind: "$lineitem" },
+              ],
+          },
+      },
+      { $unwind: "$orders" },
+      {
+        $group:
+          {
+            _id: "$orders.lineitem.supplier.nation.n_name",
+            revenue:
+              {
+                $sum:
+                  {
+                    $multiply:
+                      [
+                        "$orders.lineitem.l_extendedprice",
+                        { $subtract: [1, "$orders.lineitem.l_discount"] },
+                      ],
+                  },
+              },
+          },
+      },
+      { $project: { _id: 0, n_name: "$_id", revenue: 1 } },
+      { $sort: { revenue: -1 } },
     ]
-  cursor: {batchSize: *batchSize}
+  cursor: { batchSize: *batchSize }
   allowDiskUse: true
 
 TPCHNormalizedQuery5Warmup:
-  Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
+  Repeat: &Repeat { ^Parameter: { Name: "Repeat", Default: 1 } }
   Database: &db tpch
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHNormalizedQuery5Aggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHNormalizedQuery5Aggregation
 
 TPCHNormalizedQuery5:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query5
-    OperationName: RunCommand
-    OperationCommand: *TPCHNormalizedQuery5Aggregation
+    - OperationMetricsName: Query5
+      OperationName: RunCommand
+      OperationCommand: *TPCHNormalizedQuery5Aggregation
 
 TPCHNormalizedQuery5Explain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query5
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHNormalizedQuery5Aggregation
-      verbosity:
-        executionStats
+    - OperationMetricsName: Query5
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHNormalizedQuery5Aggregation
+        verbosity: executionStats

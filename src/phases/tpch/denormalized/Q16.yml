@@ -4,51 +4,141 @@ Description: |
   Run TPC-H query 16 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
+batchSize: &batchSize { ^Parameter: { Name: "BatchSize", Default: 101 } }
 
-query16Brand: &query16Brand {^Parameter: {Name: "Query16Brand", Default: "Brand#45"}}
-query16Type: &query16Type {^Parameter: {Name: "Query16Type", Default: "^MEDIUM POLISHED.*"}}  # ^${type}.*$"
-query16Sizes: &query16Sizes {^Parameter: {Name: "Query16Sizes", Default: [49, 14, 23, 45, 19, 3, 36, 9]}}
+query16Brand:
+  &query16Brand { ^Parameter: { Name: "Query16Brand", Default: "Brand#45" } }
+query16Type: &query16Type {
+  ^Parameter: { Name: "Query16Type", Default: "^MEDIUM POLISHED.*" },
+} # ^${type}.*$"
+query16Sizes:
+  &query16Sizes {
+    ^Parameter:
+      { Name: "Query16Sizes", Default: [49, 14, 23, 45, 19, 3, 36, 9] },
+  }
 
 TPCHDenormalizedQuery16Aggregation: &TPCHDenormalizedQuery16Aggregation
   aggregate: part
   pipeline:
     [
-      {$match: {$and: [{p_brand: {$ne: *query16Brand}}, {$expr: {$cond: {if: {$regexMatch: {input: "$p_type", regex: *query16Type, options: "si"}}, then: 0, else: 1}}}, {p_size: {$in: *query16Sizes}}]}},
-      {$lookup: {from: "partsupp", localField: "p_partkey", foreignField: "ps_partkey", as: "partsupp"}},
-      {$unwind: "$partsupp"},
-      {$lookup: {from: "supplier", localField: "partsupp.ps_suppkey", foreignField: "s_suppkey", pipeline: [{$match: {$expr: {$cond: {if: {$regexMatch: {input: "$s_comment", regex: "^.*Customer.*Complaints.*$", options: "si"}}, then: 1, else: 0}}}}], as: "supplier"}},
-      {$match: {supplier: {$eq: []}}},
-      {$group: {_id: {p_brand: "$p_brand", p_type: "$p_type", p_size: "$p_size"}, ps_suppkey: {$addToSet: "$partsupp.ps_suppkey"}}},
-      {$project: {_id: 0, p_brand: "$_id.p_brand", p_type: "$_id.p_type", p_size: "$_id.p_size", supplier_cnt: {$size: "$ps_suppkey"}}},
-      {$sort: {supplier_cnt: -1, p_brand: 1, p_type: 1, p_size: 1}}
+      {
+        $match:
+          {
+            $and:
+              [
+                { p_brand: { $ne: *query16Brand } },
+                {
+                  $expr:
+                    {
+                      $cond:
+                        {
+                          if:
+                            {
+                              $regexMatch:
+                                {
+                                  input: "$p_type",
+                                  regex: *query16Type,
+                                  options: "si",
+                                },
+                            },
+                          then: 0,
+                          else: 1,
+                        },
+                    },
+                },
+                { p_size: { $in: *query16Sizes } },
+              ],
+          },
+      },
+      {
+        $lookup:
+          {
+            from: "partsupp",
+            localField: "p_partkey",
+            foreignField: "ps_partkey",
+            as: "partsupp",
+          },
+      },
+      { $unwind: "$partsupp" },
+      {
+        $lookup:
+          {
+            from: "supplier",
+            localField: "partsupp.ps_suppkey",
+            foreignField: "s_suppkey",
+            pipeline:
+              [
+                {
+                  $match:
+                    {
+                      $expr:
+                        {
+                          $cond:
+                            {
+                              if:
+                                {
+                                  $regexMatch:
+                                    {
+                                      input: "$s_comment",
+                                      regex: "^.*Customer.*Complaints.*$",
+                                      options: "si",
+                                    },
+                                },
+                              then: 1,
+                              else: 0,
+                            },
+                        },
+                    },
+                },
+              ],
+            as: "supplier",
+          },
+      },
+      { $match: { supplier: { $eq: [] } } },
+      {
+        $group:
+          {
+            _id: { p_brand: "$p_brand", p_type: "$p_type", p_size: "$p_size" },
+            ps_suppkey: { $addToSet: "$partsupp.ps_suppkey" },
+          },
+      },
+      {
+        $project:
+          {
+            _id: 0,
+            p_brand: "$_id.p_brand",
+            p_type: "$_id.p_type",
+            p_size: "$_id.p_size",
+            supplier_cnt: { $size: "$ps_suppkey" },
+          },
+      },
+      { $sort: { supplier_cnt: -1, p_brand: 1, p_type: 1, p_size: 1 } },
     ]
-  cursor: {batchSize: *batchSize}
+  cursor: { batchSize: *batchSize }
   allowDiskUse: true
 
 TPCHDenormalizedQuery16Warmup:
-  Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
+  Repeat: &Repeat { ^Parameter: { Name: "Repeat", Default: 1 } }
   Database: &db tpch
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedQuery16Aggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedQuery16Aggregation
 
 TPCHDenormalizedQuery16:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query16
-    OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedQuery16Aggregation
+    - OperationMetricsName: Query16
+      OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedQuery16Aggregation
 
 TPCHDenormalizedQuery16Explain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query16
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHDenormalizedQuery16Aggregation
-      verbosity:
-        executionStats
+    - OperationMetricsName: Query16
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHDenormalizedQuery16Aggregation
+        verbosity: executionStats

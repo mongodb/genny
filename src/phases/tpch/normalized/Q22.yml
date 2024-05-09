@@ -1,66 +1,123 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Run TPC-H query 22 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  Run TPC-H query 22 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema.
+  Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
+batchSize: &batchSize { ^Parameter: { Name: "BatchSize", Default: 101 } }
 # Use $toString as a hack, because yml parses these strings into ints before outputting the pipeline.
-query22CountryCodes: &query22CountryCodes {^Parameter: {Name: "Query22CountryCodes", Default: [
-  {$toString: "13"},
-  {$toString: "31"},
-  {$toString: "23"},
-  {$toString: "29"},
-  {$toString: "30"},
-  {$toString: "18"},
-  {$toString: "17"}
-]}}
+query22CountryCodes:
+  &query22CountryCodes {
+    ^Parameter:
+      {
+        Name: "Query22CountryCodes",
+        Default:
+          [
+            { $toString: "13" },
+            { $toString: "31" },
+            { $toString: "23" },
+            { $toString: "29" },
+            { $toString: "30" },
+            { $toString: "18" },
+            { $toString: "17" },
+          ],
+      },
+  }
 
 TPCHNormalizedQuery22Aggregation: &TPCHNormalizedQuery22Aggregation
   aggregate: customer
   pipeline:
     [
-      {$lookup: {from: "orders", localField: "c_custkey", foreignField: "o_custkey", as: "custsale"}},
-      {$addFields: {cntrycode: { $substr: ["$c_phone", 0, 2]}, custsale: {$size: "$custsale"}}},
-      {$match: {$and: [{$expr: {$in: ["$cntrycode", *query22CountryCodes]}}, {$expr: {$gt: ["$c_acctbal", 0.00]}}]}},
-      {$facet: {
-        customer: [
-          {$project: {cntrycode: 1, c_acctbal: 1, custsale: 1}}],
-        "avg(c_acctbal)": [
-          {$group: {_id: {}, value: {$avg: "$c_acctbal"}}},
-          {$project: {_id: 0}}]}},
-      {$unwind: "$avg(c_acctbal)"},
-      {$unwind: "$customer"},
-      {$match: {$and: [{$expr: {$gt: ["$customer.c_acctbal", "$avg(c_acctbal).value"]}}, {"customer.custsale": 0}]}},
-      {$group: {_id: "$customer.cntrycode", numcust: {$count: {}}, totacctbal: {$sum: "$customer.c_acctbal"}}},
-      {$project: {_id: 0, cntrycode: "$_id", numcust: 1, totacctbal: 1}},
-      {$sort: {cntrycode: 1}}
+      {
+        $lookup:
+          {
+            from: "orders",
+            localField: "c_custkey",
+            foreignField: "o_custkey",
+            as: "custsale",
+          },
+      },
+      {
+        $addFields:
+          {
+            cntrycode: { $substr: ["$c_phone", 0, 2] },
+            custsale: { $size: "$custsale" },
+          },
+      },
+      {
+        $match:
+          {
+            $and:
+              [
+                { $expr: { $in: ["$cntrycode", *query22CountryCodes] } },
+                { $expr: { $gt: ["$c_acctbal", 0.00] } },
+              ],
+          },
+      },
+      {
+        $facet:
+          {
+            customer:
+              [{ $project: { cntrycode: 1, c_acctbal: 1, custsale: 1 } }],
+            "avg(c_acctbal)":
+              [
+                { $group: { _id: {}, value: { $avg: "$c_acctbal" } } },
+                { $project: { _id: 0 } },
+              ],
+          },
+      },
+      { $unwind: "$avg(c_acctbal)" },
+      { $unwind: "$customer" },
+      {
+        $match:
+          {
+            $and:
+              [
+                {
+                  $expr:
+                    { $gt: ["$customer.c_acctbal", "$avg(c_acctbal).value"] },
+                },
+                { "customer.custsale": 0 },
+              ],
+          },
+      },
+      {
+        $group:
+          {
+            _id: "$customer.cntrycode",
+            numcust: { $count: {} },
+            totacctbal: { $sum: "$customer.c_acctbal" },
+          },
+      },
+      { $project: { _id: 0, cntrycode: "$_id", numcust: 1, totacctbal: 1 } },
+      { $sort: { cntrycode: 1 } },
     ]
-  cursor: {batchSize: *batchSize}
+  cursor: { batchSize: *batchSize }
   allowDiskUse: true
 
 TPCHNormalizedQuery22Warmup:
-  Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
+  Repeat: &Repeat { ^Parameter: { Name: "Repeat", Default: 1 } }
   Database: &db tpch
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHNormalizedQuery22Aggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHNormalizedQuery22Aggregation
 
 TPCHNormalizedQuery22:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query22
-    OperationName: RunCommand
-    OperationCommand: *TPCHNormalizedQuery22Aggregation
+    - OperationMetricsName: Query22
+      OperationName: RunCommand
+      OperationCommand: *TPCHNormalizedQuery22Aggregation
 
 TPCHNormalizedQuery22Explain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query22
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHNormalizedQuery22Aggregation
-      verbosity: executionStats
+    - OperationMetricsName: Query22
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHNormalizedQuery22Aggregation
+        verbosity: executionStats

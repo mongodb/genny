@@ -23,8 +23,8 @@ Description: |
        - 'LookupOnlyXXX' actors
 
 Keywords:
-- lookup
-- aggregate
+  - lookup
+  - aggregate
 
 # Defines the database name.
 Database: &db lookup
@@ -62,23 +62,13 @@ ForeignLongStrTemplate: &ForeignLongStrTemplate
 # addition to the lookup field
 ForeignSmallObjTemplate: &ForeignSmallObjTemplate
   join_val: {^RandomInt: {min: 0, max: 9}}
-  obj_field: {^Object: {
-              withNEntries: 10,
-              havingKeys: {^RandomString: {length: 20}},
-              andValues: {^RandomString: {length: 30}},
-              duplicatedKeys: insert
-            }}
+  obj_field: {^Object: {withNEntries: 10, havingKeys: {^RandomString: {length: 20}}, andValues: {^RandomString: {length: 30}}, duplicatedKeys: insert}}
 
 # Defines a foreign collection with a large object field (100 key-value pairs, 50 bytes each) in
 # addition to the lookup field
 ForeignLargeObjTemplate: &ForeignLargeObjTemplate
   join_val: {^RandomInt: {min: 0, max: 9}}
-  obj_field: {^Object: {
-              withNEntries: 100,
-              havingKeys: {^RandomString: {length: 20}},
-              andValues: {^RandomString: {length: 30}},
-              duplicatedKeys: insert
-            }}
+  obj_field: {^Object: {withNEntries: 100, havingKeys: {^RandomString: {length: 20}}, andValues: {^RandomString: {length: 30}}, duplicatedKeys: insert}}
 
 # Defines foreign collection names.
 ForeignInt100: &ForeignInt100 foreign_int_100
@@ -229,290 +219,290 @@ LookupOnlyLargeObj10000: &LookupOnlyLargeObj10000
       f: *ForeignLargeObj10000
 
 ActorTemplates:
-# Template for loading data into the local collection.
-- TemplateName: LoadLocalTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "LoadLocalCollection"}}
-    Type: CrudActor
-    Database: *db
-    Threads: 1
-    Phases:
-    - Nop: true
-    - Repeat: {^Parameter: {Name: "Size", Default: 1}}
-      Threads: 1
-      Collection: {^Parameter: {Name: "Collection", Default: "Local"}}
-      Operations:
-      - OperationName: insertOne
-        OperationCommand:
-          Document: {^Parameter: {Name: "CollectionTemplate", Default: "LocalCollectionTemplate"}}
-    - Nop: true
-    - Nop: true
-
-# Template for loading data into the foreign collections.
-- TemplateName: LoadForeignTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "LoadForeignCollection"}}
-    Type: CrudActor
-    Database: *db
-    Threads: 1
-    Phases:
-    - Nop: true
-    - Repeat: {^Parameter: {Name: "Size", Default: 1}}
-      Threads: 1
-      Collection: {^Parameter: {Name: "Collection", Default: "ForeignInt"}}
-      Operations:
-      - OperationName: insertOne
-        OperationCommand:
-          Document: {^Parameter: {Name: "CollectionTemplate", Default: "ForeignCollectionTemplate"}}
-    - Nop: true
-    - Nop: true
-
-# Template for running and measuring the lookup performances.
-- TemplateName: RunQueryTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "LoadForeignCollection"}}
-    Type: RunCommand
-    Database: *db
-    Phases:
-    - Phase: 0..2
-      Nop: true
-    - Repeat: *TestRepeatCount
+  # Template for loading data into the local collection.
+  - TemplateName: LoadLocalTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "LoadLocalCollection"}}
+      Type: CrudActor
       Database: *db
-      Operations:
-      - OperationMetricsName: {^Parameter: {Name: "Metric100", Default: "Metric100"}}
-        OperationName: RunCommand
-        OperationCommand: {^Parameter: {Name: "Command100", Default: "Command100"}}
-      - OperationMetricsName: {^Parameter: {Name: "Metric1000", Default: "Metric1000"}}
-        OperationName: RunCommand
-        OperationCommand: {^Parameter: {Name: "Command1000", Default: "Command1000"}}
-      - OperationMetricsName: {^Parameter: {Name: "Metric10000", Default: "Metric10000"}}
-        OperationName: RunCommand
-        OperationCommand: {^Parameter: {Name: "Command10000", Default: "Command10000"}}
+      Threads: 1
+      Phases:
+        - Nop: true
+        - Repeat: {^Parameter: {Name: "Size", Default: 1}}
+          Threads: 1
+          Collection: {^Parameter: {Name: "Collection", Default: "Local"}}
+          Operations:
+            - OperationName: insertOne
+              OperationCommand:
+                Document: {^Parameter: {Name: "CollectionTemplate", Default: "LocalCollectionTemplate"}}
+        - Nop: true
+        - Nop: true
+
+  # Template for loading data into the foreign collections.
+  - TemplateName: LoadForeignTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "LoadForeignCollection"}}
+      Type: CrudActor
+      Database: *db
+      Threads: 1
+      Phases:
+        - Nop: true
+        - Repeat: {^Parameter: {Name: "Size", Default: 1}}
+          Threads: 1
+          Collection: {^Parameter: {Name: "Collection", Default: "ForeignInt"}}
+          Operations:
+            - OperationName: insertOne
+              OperationCommand:
+                Document: {^Parameter: {Name: "CollectionTemplate", Default: "ForeignCollectionTemplate"}}
+        - Nop: true
+        - Nop: true
+
+  # Template for running and measuring the lookup performances.
+  - TemplateName: RunQueryTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "LoadForeignCollection"}}
+      Type: RunCommand
+      Database: *db
+      Phases:
+        - Phase: 0..2
+          Nop: true
+        - Repeat: *TestRepeatCount
+          Database: *db
+          Operations:
+            - OperationMetricsName: {^Parameter: {Name: "Metric100", Default: "Metric100"}}
+              OperationName: RunCommand
+              OperationCommand: {^Parameter: {Name: "Command100", Default: "Command100"}}
+            - OperationMetricsName: {^Parameter: {Name: "Metric1000", Default: "Metric1000"}}
+              OperationName: RunCommand
+              OperationCommand: {^Parameter: {Name: "Command1000", Default: "Command1000"}}
+            - OperationMetricsName: {^Parameter: {Name: "Metric10000", Default: "Metric10000"}}
+              OperationName: RunCommand
+              OperationCommand: {^Parameter: {Name: "Command10000", Default: "Command10000"}}
 
 Actors:
-# The 'Setup' actor drops the database and runs in the 0th phase.
-- Name: Setup
-  Type: RunCommand
-  Database: *db
-  Thread: 1
-  Phases:
-  - Repeat: 1
+  # The 'Setup' actor drops the database and runs in the 0th phase.
+  - Name: Setup
+    Type: RunCommand
+    Database: *db
+    Thread: 1
+    Phases:
+      - Repeat: 1
+        Threads: 1
+        Database: *db
+        Operations:
+          - OperationName: RunCommand
+            OperationCommand: {dropDatabase: 1}
+      - Phase: 1..3
+        Nop: true
+
+  # The 'LoadLocal' and 'LoadForeign*' actors run in the 1st phase.
+  - ActorFromTemplate:
+      TemplateName: LoadLocalTemplate
+      TemplateParameters:
+        Name: LoadLocal20000
+        Size: 20000
+        Collection: *LocalColl
+        CollectionTemplate: *LocalTemplate
+
+  - ActorFromTemplate:
+      TemplateName: LoadForeignTemplate
+      TemplateParameters:
+        Name: LoadForeignInt100
+        Size: 100
+        Collection: *ForeignInt100
+        CollectionTemplate: *ForeignIntTemplate
+
+  - ActorFromTemplate:
+      TemplateName: LoadForeignTemplate
+      TemplateParameters:
+        Name: LoadForeignInt1000
+        Size: 1000
+        Collection: *ForeignInt1000
+        CollectionTemplate: *ForeignIntTemplate
+
+  - ActorFromTemplate:
+      TemplateName: LoadForeignTemplate
+      TemplateParameters:
+        Name: LoadForeignInt10000
+        Size: 10000
+        Collection: *ForeignInt10000
+        CollectionTemplate: *ForeignIntTemplate
+
+  - ActorFromTemplate:
+      TemplateName: LoadForeignTemplate
+      TemplateParameters:
+        Name: LoadForeignShortStr100
+        Size: 100
+        Collection: *ForeignShortStr100
+        CollectionTemplate: *ForeignShortStrTemplate
+
+  - ActorFromTemplate:
+      TemplateName: LoadForeignTemplate
+      TemplateParameters:
+        Name: LoadForeignShortStr1000
+        Size: 1000
+        Collection: *ForeignShortStr1000
+        CollectionTemplate: *ForeignShortStrTemplate
+
+  - ActorFromTemplate:
+      TemplateName: LoadForeignTemplate
+      TemplateParameters:
+        Name: LoadForeignShortStr10000
+        Size: 10000
+        Collection: *ForeignShortStr10000
+        CollectionTemplate: *ForeignShortStrTemplate
+
+  - ActorFromTemplate:
+      TemplateName: LoadForeignTemplate
+      TemplateParameters:
+        Name: LoadForeignLongStr100
+        Size: 100
+        Collection: *ForeignLongStr100
+        CollectionTemplate: *ForeignLongStrTemplate
+
+  - ActorFromTemplate:
+      TemplateName: LoadForeignTemplate
+      TemplateParameters:
+        Name: LoadForeignLongStr1000
+        Size: 1000
+        Collection: *ForeignLongStr1000
+        CollectionTemplate: *ForeignLongStrTemplate
+
+  - ActorFromTemplate:
+      TemplateName: LoadForeignTemplate
+      TemplateParameters:
+        Name: LoadForeignLongStr10000
+        Size: 10000
+        Collection: *ForeignLongStr10000
+        CollectionTemplate: *ForeignLongStrTemplate
+
+  - ActorFromTemplate:
+      TemplateName: LoadForeignTemplate
+      TemplateParameters:
+        Name: LoadForeignSmallObj100
+        Size: 100
+        Collection: *ForeignSmallObj100
+        CollectionTemplate: *ForeignSmallObjTemplate
+
+  - ActorFromTemplate:
+      TemplateName: LoadForeignTemplate
+      TemplateParameters:
+        Name: LoadForeignSmallObj1000
+        Size: 1000
+        Collection: *ForeignSmallObj1000
+        CollectionTemplate: *ForeignSmallObjTemplate
+
+  - ActorFromTemplate:
+      TemplateName: LoadForeignTemplate
+      TemplateParameters:
+        Name: LoadForeignSmallObj10000
+        Size: 10000
+        Collection: *ForeignSmallObj10000
+        CollectionTemplate: *ForeignSmallObjTemplate
+
+  - ActorFromTemplate:
+      TemplateName: LoadForeignTemplate
+      TemplateParameters:
+        Name: LoadForeignLargeObj100
+        Size: 100
+        Collection: *ForeignLargeObj100
+        CollectionTemplate: *ForeignLargeObjTemplate
+
+  - ActorFromTemplate:
+      TemplateName: LoadForeignTemplate
+      TemplateParameters:
+        Name: LoadForeignLargeObj1000
+        Size: 1000
+        Collection: *ForeignLargeObj1000
+        CollectionTemplate: *ForeignLargeObjTemplate
+
+  - ActorFromTemplate:
+      TemplateName: LoadForeignTemplate
+      TemplateParameters:
+        Name: LoadForeignLargeObj10000
+        Size: 10000
+        Collection: *ForeignLargeObj10000
+        CollectionTemplate: *ForeignLargeObjTemplate
+
+  # The 'Quiesce' actor calms down to avoid any trailing impacts from the previous phase and runs
+  # in the 2nd phase
+  - Name: Quiesce
+    Type: QuiesceActor
     Threads: 1
     Database: *db
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand: {dropDatabase: 1}
-  - Phase: 1..3
-    Nop: true
+    Phases:
+      - Nop: true
+      - Nop: true
+      - Repeat: 1
+      - Nop: true
 
-# The 'LoadLocal' and 'LoadForeign*' actors run in the 1st phase.
-- ActorFromTemplate:
-    TemplateName: LoadLocalTemplate
-    TemplateParameters:
-      Name: LoadLocal20000
-      Size: 20000
-      Collection: *LocalColl
-      CollectionTemplate: *LocalTemplate
+  # The 'LookupOnly*' actors measure the lookup performances and run in the 3rd phase.
+  - ActorFromTemplate:
+      TemplateName: RunQueryTemplate
+      TemplateParameters:
+        Name: LookupOnlyInt
+        Metric100: LookupOnly_ForeignInt100
+        Command100: *LookupOnlyInt100
+        Metric1000: LookupOnly_ForeignInt1000
+        Command1000: *LookupOnlyInt1000
+        Metric10000: LookupOnly_ForeignInt10000
+        Command10000: *LookupOnlyInt10000
 
-- ActorFromTemplate:
-    TemplateName: LoadForeignTemplate
-    TemplateParameters:
-      Name: LoadForeignInt100
-      Size: 100
-      Collection: *ForeignInt100
-      CollectionTemplate: *ForeignIntTemplate
+  - ActorFromTemplate:
+      TemplateName: RunQueryTemplate
+      TemplateParameters:
+        Name: LookupOnlyShortStr
+        Metric100: LookupOnly_ForeignShortStr100
+        Command100: *LookupOnlyShortStr100
+        Metric1000: LookupOnly_ForeignShortStr1000
+        Command1000: *LookupOnlyShortStr1000
+        Metric10000: LookupOnly_ForeignShortStr10000
+        Command10000: *LookupOnlyShortStr10000
 
-- ActorFromTemplate:
-    TemplateName: LoadForeignTemplate
-    TemplateParameters:
-      Name: LoadForeignInt1000
-      Size: 1000
-      Collection: *ForeignInt1000
-      CollectionTemplate: *ForeignIntTemplate
+  - ActorFromTemplate:
+      TemplateName: RunQueryTemplate
+      TemplateParameters:
+        Name: LookupOnlyLongStr
+        Metric100: LookupOnly_ForeignLongStr100
+        Command100: *LookupOnlyLongStr100
+        Metric1000: LookupOnly_ForeignLongStr1000
+        Command1000: *LookupOnlyLongStr1000
+        Metric10000: LookupOnly_ForeignLongStr10000
+        Command10000: *LookupOnlyLongStr10000
 
-- ActorFromTemplate:
-    TemplateName: LoadForeignTemplate
-    TemplateParameters:
-      Name: LoadForeignInt10000
-      Size: 10000
-      Collection: *ForeignInt10000
-      CollectionTemplate: *ForeignIntTemplate
+  - ActorFromTemplate:
+      TemplateName: RunQueryTemplate
+      TemplateParameters:
+        Name: LookupOnlySmallObj
+        Metric100: LookupOnly_ForeignSmallObj100
+        Command100: *LookupOnlySmallObj100
+        Metric1000: LookupOnly_ForeignSmallObj1000
+        Command1000: *LookupOnlySmallObj1000
+        Metric10000: LookupOnly_ForeignSmallObj10000
+        Command10000: *LookupOnlySmallObj10000
 
-- ActorFromTemplate:
-    TemplateName: LoadForeignTemplate
-    TemplateParameters:
-      Name: LoadForeignShortStr100
-      Size: 100
-      Collection: *ForeignShortStr100
-      CollectionTemplate: *ForeignShortStrTemplate
-
-- ActorFromTemplate:
-    TemplateName: LoadForeignTemplate
-    TemplateParameters:
-      Name: LoadForeignShortStr1000
-      Size: 1000
-      Collection: *ForeignShortStr1000
-      CollectionTemplate: *ForeignShortStrTemplate
-
-- ActorFromTemplate:
-    TemplateName: LoadForeignTemplate
-    TemplateParameters:
-      Name: LoadForeignShortStr10000
-      Size: 10000
-      Collection: *ForeignShortStr10000
-      CollectionTemplate: *ForeignShortStrTemplate
-
-- ActorFromTemplate:
-    TemplateName: LoadForeignTemplate
-    TemplateParameters:
-      Name: LoadForeignLongStr100
-      Size: 100
-      Collection: *ForeignLongStr100
-      CollectionTemplate: *ForeignLongStrTemplate
-
-- ActorFromTemplate:
-    TemplateName: LoadForeignTemplate
-    TemplateParameters:
-      Name: LoadForeignLongStr1000
-      Size: 1000
-      Collection: *ForeignLongStr1000
-      CollectionTemplate: *ForeignLongStrTemplate
-
-- ActorFromTemplate:
-    TemplateName: LoadForeignTemplate
-    TemplateParameters:
-      Name: LoadForeignLongStr10000
-      Size: 10000
-      Collection: *ForeignLongStr10000
-      CollectionTemplate: *ForeignLongStrTemplate
-
-- ActorFromTemplate:
-    TemplateName: LoadForeignTemplate
-    TemplateParameters:
-      Name: LoadForeignSmallObj100
-      Size: 100
-      Collection: *ForeignSmallObj100
-      CollectionTemplate: *ForeignSmallObjTemplate
-
-- ActorFromTemplate:
-    TemplateName: LoadForeignTemplate
-    TemplateParameters:
-      Name: LoadForeignSmallObj1000
-      Size: 1000
-      Collection: *ForeignSmallObj1000
-      CollectionTemplate: *ForeignSmallObjTemplate
-
-- ActorFromTemplate:
-    TemplateName: LoadForeignTemplate
-    TemplateParameters:
-      Name: LoadForeignSmallObj10000
-      Size: 10000
-      Collection: *ForeignSmallObj10000
-      CollectionTemplate: *ForeignSmallObjTemplate
-
-- ActorFromTemplate:
-    TemplateName: LoadForeignTemplate
-    TemplateParameters:
-      Name: LoadForeignLargeObj100
-      Size: 100
-      Collection: *ForeignLargeObj100
-      CollectionTemplate: *ForeignLargeObjTemplate
-
-- ActorFromTemplate:
-    TemplateName: LoadForeignTemplate
-    TemplateParameters:
-      Name: LoadForeignLargeObj1000
-      Size: 1000
-      Collection: *ForeignLargeObj1000
-      CollectionTemplate: *ForeignLargeObjTemplate
-
-- ActorFromTemplate:
-    TemplateName: LoadForeignTemplate
-    TemplateParameters:
-      Name: LoadForeignLargeObj10000
-      Size: 10000
-      Collection: *ForeignLargeObj10000
-      CollectionTemplate: *ForeignLargeObjTemplate
-
-# The 'Quiesce' actor calms down to avoid any trailing impacts from the previous phase and runs
-# in the 2nd phase
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-  - Nop: true
-  - Nop: true
-  - Repeat: 1
-  - Nop: true
-
-# The 'LookupOnly*' actors measure the lookup performances and run in the 3rd phase.
-- ActorFromTemplate:
-    TemplateName: RunQueryTemplate
-    TemplateParameters:
-      Name: LookupOnlyInt
-      Metric100: LookupOnly_ForeignInt100
-      Command100: *LookupOnlyInt100
-      Metric1000: LookupOnly_ForeignInt1000
-      Command1000: *LookupOnlyInt1000
-      Metric10000: LookupOnly_ForeignInt10000
-      Command10000: *LookupOnlyInt10000
-
-- ActorFromTemplate:
-    TemplateName: RunQueryTemplate
-    TemplateParameters:
-      Name: LookupOnlyShortStr
-      Metric100: LookupOnly_ForeignShortStr100
-      Command100: *LookupOnlyShortStr100
-      Metric1000: LookupOnly_ForeignShortStr1000
-      Command1000: *LookupOnlyShortStr1000
-      Metric10000: LookupOnly_ForeignShortStr10000
-      Command10000: *LookupOnlyShortStr10000
-
-- ActorFromTemplate:
-    TemplateName: RunQueryTemplate
-    TemplateParameters:
-      Name: LookupOnlyLongStr
-      Metric100: LookupOnly_ForeignLongStr100
-      Command100: *LookupOnlyLongStr100
-      Metric1000: LookupOnly_ForeignLongStr1000
-      Command1000: *LookupOnlyLongStr1000
-      Metric10000: LookupOnly_ForeignLongStr10000
-      Command10000: *LookupOnlyLongStr10000
-
-- ActorFromTemplate:
-    TemplateName: RunQueryTemplate
-    TemplateParameters:
-      Name: LookupOnlySmallObj
-      Metric100: LookupOnly_ForeignSmallObj100
-      Command100: *LookupOnlySmallObj100
-      Metric1000: LookupOnly_ForeignSmallObj1000
-      Command1000: *LookupOnlySmallObj1000
-      Metric10000: LookupOnly_ForeignSmallObj10000
-      Command10000: *LookupOnlySmallObj10000
-
-- ActorFromTemplate:
-    TemplateName: RunQueryTemplate
-    TemplateParameters:
-      Name: LookupOnlyLargeObj
-      Metric100: LookupOnly_ForeignLargeObj100
-      Command100: *LookupOnlyLargeObj100
-      Metric1000: LookupOnly_ForeignLargeObj1000
-      Command1000: *LookupOnlyLargeObj1000
-      Metric10000: LookupOnly_ForeignLargeObj10000
-      Command10000: *LookupOnlyLargeObj10000
+  - ActorFromTemplate:
+      TemplateName: RunQueryTemplate
+      TemplateParameters:
+        Name: LookupOnlyLargeObj
+        Metric100: LookupOnly_ForeignLargeObj100
+        Command100: *LookupOnlyLargeObj100
+        Metric1000: LookupOnly_ForeignLargeObj1000
+        Command1000: *LookupOnlyLargeObj1000
+        Metric10000: LookupOnly_ForeignLargeObj10000
+        Command10000: *LookupOnlyLargeObj10000
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-      - standalone-80-feature-flags
-      - standalone-all-feature-flags
-      - standalone-classic-query-engine
-      - standalone-sbe
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone
+          - standalone-80-feature-flags
+          - standalone-all-feature-flags
+          - standalone-classic-query-engine
+          - standalone-sbe
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4

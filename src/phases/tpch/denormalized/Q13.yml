@@ -4,44 +4,72 @@ Description: |
   Run TPC-H query 13 gainst the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
-query13Regex: &query13Regex {^Parameter: {Name: "Query13Regex", Default: "^.*special.*requests.*$"}}  # `^.*${query13Word1}.*${query13Word2}.*$`
+batchSize: &batchSize { ^Parameter: { Name: "BatchSize", Default: 101 } }
+query13Regex: &query13Regex {
+  ^Parameter: { Name: "Query13Regex", Default: "^.*special.*requests.*$" },
+} # `^.*${query13Word1}.*${query13Word2}.*$`
 
 TPCHDenormalizedQuery13Aggregation: &TPCHDenormalizedQuery13Aggregation
   aggregate: customer
   pipeline:
     [
-      {$project: {c_custkey: 1, c_count: {$size: {$filter: {input: "$orders", cond: {$not: {$regexMatch: {input: "$$this.o_comment", regex: *query13Regex, options: "si"}}}}}}}},
-      {$group: {_id: "$c_count", custdist: {$count: {}}}},
-      {$project: {_id: 0, c_count: "$_id", custdist: 1}},
-      {$sort: {custdist: -1, c_count: -1}}
+      {
+        $project:
+          {
+            c_custkey: 1,
+            c_count:
+              {
+                $size:
+                  {
+                    $filter:
+                      {
+                        input: "$orders",
+                        cond:
+                          {
+                            $not:
+                              {
+                                $regexMatch:
+                                  {
+                                    input: "$$this.o_comment",
+                                    regex: *query13Regex,
+                                    options: "si",
+                                  },
+                              },
+                          },
+                      },
+                  },
+              },
+          },
+      },
+      { $group: { _id: "$c_count", custdist: { $count: {} } } },
+      { $project: { _id: 0, c_count: "$_id", custdist: 1 } },
+      { $sort: { custdist: -1, c_count: -1 } },
     ]
-  cursor: {batchSize: *batchSize}
+  cursor: { batchSize: *batchSize }
   allowDiskUse: true
 
 TPCHDenormalizedQuery13Warmup:
-  Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
+  Repeat: &Repeat { ^Parameter: { Name: "Repeat", Default: 1 } }
   Database: &db tpch
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedQuery13Aggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedQuery13Aggregation
 
 TPCHDenormalizedQuery13:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query13
-    OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedQuery13Aggregation
+    - OperationMetricsName: Query13
+      OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedQuery13Aggregation
 
 TPCHDenormalizedQuery13Explain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query13
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHDenormalizedQuery13Aggregation
-      verbosity:
-        executionStats
+    - OperationMetricsName: Query13
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHDenormalizedQuery13Aggregation
+        verbosity: executionStats

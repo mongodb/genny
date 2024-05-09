@@ -5,7 +5,7 @@ Description: |
   framework.
 
 KeyWords:
-- IDHACK
+  - IDHACK
 
 GlobalDefaults:
   Database: &Database test
@@ -16,90 +16,90 @@ GlobalDefaults:
 Clients:
   Default:
     QueryOptions:
-      connectTimeoutMS: 3_600_000  # 1 hour
+      connectTimeoutMS: 3_600_000 # 1 hour
       maxPoolSize: 2000
-      socketTimeoutMS: 3_600_000  # 1 hour
+      socketTimeoutMS: 3_600_000 # 1 hour
 
 Actors:
-- Name: ClearCollection
-  Type: CrudActor
-  Database: *Database
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
+  - Name: ClearCollection
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+          Collection: *Collection
+          Operations:
+            - OperationName: drop
+  - Prepopulate:
+    LoadConfig:
+      Path: "../../phases/query/IDHack.yml"
+      Key: LoadIntIdTemplate
+      Parameters:
+        Name: Prepopulate
+        OnlyActiveInPhase: 1
+        NopInPhasesUpTo: *MaxPhases
+        Database: *Database
+        DocumentCount: *DocumentCount
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+
+  - IDHackAgg32Threads:
+    LoadConfig: &loadIdHackConfig
+      Path: "../../phases/query/IDHack.yml"
+      Key: IDHackIntIdAggTemplate
+      Parameters:
+        Name: IDHackAgg32Threads
+        Threads: 32
+        OnlyActiveInPhase: 3
+        NopInPhasesUpTo: *MaxPhases
+        Database: *Database
         Collection: *Collection
-        Operations:
-        - OperationName: drop
-- Prepopulate:
-  LoadConfig:
-    Path: "../../phases/query/IDHack.yml"
-    Key: LoadIntIdTemplate
-    Parameters:
-      Name: Prepopulate
-      OnlyActiveInPhase: 1
-      NopInPhasesUpTo: *MaxPhases
-      Database: *Database
-      DocumentCount: *DocumentCount
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
 
-- IDHackAgg32Threads:
-  LoadConfig: &loadIdHackConfig
-    Path: "../../phases/query/IDHack.yml"
-    Key: IDHackIntIdAggTemplate
-    Parameters:
-      Name: IDHackAgg32Threads
-      Threads: 32
-      OnlyActiveInPhase: 3
-      NopInPhasesUpTo: *MaxPhases
-      Database: *Database
-      Collection: *Collection
+  - IDHackAgg128Threads:
+    LoadConfig:
+      !!merge <<: *loadIdHackConfig
+      Parameters:
+        Name: IDHackAgg128Threads
+        Threads: 128
+        OnlyActiveInPhase: 4
+        NopInPhasesUpTo: *MaxPhases
+        Database: *Database
+        Collection: *Collection
 
-- IDHackAgg128Threads:
-  LoadConfig:
-    <<: *loadIdHackConfig
-    Parameters:
-      Name: IDHackAgg128Threads
-      Threads: 128
-      OnlyActiveInPhase: 4
-      NopInPhasesUpTo: *MaxPhases
-      Database: *Database
-      Collection: *Collection
-
-- IDHackAgg256Threads:
-  LoadConfig:
-    <<: *loadIdHackConfig
-    Parameters:
-      Name: IDHackAgg256Threads
-      Threads: 256
-      OnlyActiveInPhase: 5
-      NopInPhasesUpTo: *MaxPhases
-      Database: *Database
-      Collection: *Collection
+  - IDHackAgg256Threads:
+    LoadConfig:
+      !!merge <<: *loadIdHackConfig
+      Parameters:
+        Name: IDHackAgg256Threads
+        Threads: 256
+        OnlyActiveInPhase: 5
+        NopInPhasesUpTo: *MaxPhases
+        Database: *Database
+        Collection: *Collection
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone-80-feature-flags
-      - standalone-all-feature-flags
-      - standalone
-      - standalone-query-stats
-      - replica
-      - replica-query-stats-rate-limit
-      - atlas-like-replica.2022-10
-      - atlas-like-replica.2023-09
-      - atlas-like-replica-query-stats.2023-09
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone-80-feature-flags
+          - standalone-all-feature-flags
+          - standalone
+          - standalone-query-stats
+          - replica
+          - replica-query-stats-rate-limit
+          - atlas-like-replica.2022-10
+          - atlas-like-replica.2023-09
+          - atlas-like-replica-query-stats.2023-09

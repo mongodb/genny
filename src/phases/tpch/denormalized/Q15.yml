@@ -4,93 +4,144 @@ Description: |
   Run TPC-H query 15 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
-query15Date: &query15Date {^Parameter: {Name: "Query15Date", Default: "1996-01-01"}}
+batchSize: &batchSize { ^Parameter: { Name: "BatchSize", Default: 101 } }
+query15Date:
+  &query15Date { ^Parameter: { Name: "Query15Date", Default: "1996-01-01" } }
 
 TPCHDenormalizedQuery15CreateView: &TPCHDenormalizedQuery15CreateView
-  Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
+  Repeat: &Repeat { ^Parameter: { Name: "Repeat", Default: 1 } }
   Database: &db tpch
   Operations:
-  # TODO: disable metrics collection once TIG-4128 is complete.
-  - OperationName: RunCommand
-    OperationCommand:
-      create: &query15View revenue
-      viewOn: customer
-      pipeline:
-        [
-          {$unwind: "$orders"},
-          {$addFields: {lineitem: "$orders.lineitem", "orders.lineitem": "$$REMOVE"}},
-          {$unwind: "$lineitem"},
-          {$replaceWith: "$lineitem"},
-          {$match: {
-            $and: [
-              {$expr: {$gte: ["$l_shipdate", {^Date: *query15Date}]}},
-              {$expr: {
-                $lt: [
-                  "$l_shipdate",
-                  {$dateAdd: {startDate: {^Date: *query15Date}, unit: "month", amount: 3}}
-                ]}}]}},
-          {$group: {
-            _id: "$l_suppkey",
-            total_revenue:
-              {$sum: {$multiply: ["$l_extendedprice", {$subtract: [1, "$l_discount"]}]}}}},
-          {$project: {_id: 0, supplier_no: "$_id", total_revenue: 1}},
-        ]
+    # TODO: disable metrics collection once TIG-4128 is complete.
+    - OperationName: RunCommand
+      OperationCommand:
+        create: &query15View revenue
+        viewOn: customer
+        pipeline:
+          [
+            { $unwind: "$orders" },
+            {
+              $addFields:
+                { lineitem: "$orders.lineitem", "orders.lineitem": "$$REMOVE" },
+            },
+            { $unwind: "$lineitem" },
+            { $replaceWith: "$lineitem" },
+            {
+              $match:
+                {
+                  $and:
+                    [
+                      {
+                        $expr:
+                          { $gte: ["$l_shipdate", { ^Date: *query15Date }] },
+                      },
+                      {
+                        $expr:
+                          {
+                            $lt:
+                              [
+                                "$l_shipdate",
+                                {
+                                  $dateAdd:
+                                    {
+                                      startDate: { ^Date: *query15Date },
+                                      unit: "month",
+                                      amount: 3,
+                                    },
+                                },
+                              ],
+                          },
+                      },
+                    ],
+                },
+            },
+            {
+              $group:
+                {
+                  _id: "$l_suppkey",
+                  total_revenue:
+                    {
+                      $sum:
+                        {
+                          $multiply:
+                            [
+                              "$l_extendedprice",
+                              { $subtract: [1, "$l_discount"] },
+                            ],
+                        },
+                    },
+                },
+            },
+            { $project: { _id: 0, supplier_no: "$_id", total_revenue: 1 } },
+          ]
 
 TPCHDenormalizedQuery15Aggregation: &TPCHDenormalizedQuery15Aggregation
   aggregate: *query15View
   pipeline:
     [
-      {$group: {_id: "$total_revenue", supplier_no: {$push: "$supplier_no"}}},
-      {$sort: {_id: -1}},
-      {$limit: 1},
-      {$unwind: "$supplier_no"},
-      {$project: {_id: 0, total_revenue: "$_id", supplier_no: 1}},
-      {$lookup: {from: "supplier", localField: "supplier_no", foreignField: "s_suppkey", as: "supplier"}},
-      {$unwind: "$supplier"},
-      {$project: {
-        s_suppkey: "$supplier.s_suppkey",
-        s_name: "$supplier.s_name",
-        s_address: "$supplier.s_address",
-        s_phone: "$supplier.s_phone",
-        total_revenue: 1
-      }},
+      {
+        $group:
+          { _id: "$total_revenue", supplier_no: { $push: "$supplier_no" } },
+      },
+      { $sort: { _id: -1 } },
+      { $limit: 1 },
+      { $unwind: "$supplier_no" },
+      { $project: { _id: 0, total_revenue: "$_id", supplier_no: 1 } },
+      {
+        $lookup:
+          {
+            from: "supplier",
+            localField: "supplier_no",
+            foreignField: "s_suppkey",
+            as: "supplier",
+          },
+      },
+      { $unwind: "$supplier" },
+      {
+        $project:
+          {
+            s_suppkey: "$supplier.s_suppkey",
+            s_name: "$supplier.s_name",
+            s_address: "$supplier.s_address",
+            s_phone: "$supplier.s_phone",
+            total_revenue: 1,
+          },
+      },
     ]
-  cursor: {batchSize: *batchSize}
+  cursor: { batchSize: *batchSize }
   allowDiskUse: true
 
 TPCHDenormalizedQuery15Warmup:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedQuery15Aggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedQuery15Aggregation
 
 TPCHDenormalizedQuery15DropView: &TPCHDenormalizedQuery15DropView
   Repeat: *Repeat
   Database: *db
   Operations:
-  # TODO: disable metrics collection once TIG-4128 is complete.
-  - OperationName: RunCommand
-    OperationCommand:
-      drop: *query15View
+    # TODO: disable metrics collection once TIG-4128 is complete.
+    - OperationName: RunCommand
+      OperationCommand:
+        drop: *query15View
 
 TPCHDenormalizedQuery15:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query15
-    OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedQuery15Aggregation
+    - OperationMetricsName: Query15
+      OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedQuery15Aggregation
 
 TPCHDenormalizedQuery15Explain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query15
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHDenormalizedQuery15Aggregation
-      verbosity:
-        executionStats
+    - OperationMetricsName: Query15
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHDenormalizedQuery15Aggregation
+        verbosity: executionStats

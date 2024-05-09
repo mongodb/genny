@@ -4,16 +4,16 @@ executor:
   config:
     program_executable: ../../src/genny/build/src/cast_core/cast_core_test
     verbatim_arguments:
-    - "--reporter"
-    - "junit"
-    - "--durations"
-    - "yes"
-    - "--rng-seed"
-    - "12345"
-    - "--success"
-    - "--out"
-    - "../../build/XUnitXML/cast_core_test.junit.xml"
-    - "[three_node_replset]"
+      - "--reporter"
+      - "junit"
+      - "--durations"
+      - "yes"
+      - "--rng-seed"
+      - "12345"
+      - "--success"
+      - "--out"
+      - "../../build/XUnitXML/cast_core_test.junit.xml"
+      - "[three_node_replset]"
   fixture:
     class: ReplicaSetFixture
     mongod_options:

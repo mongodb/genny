@@ -12,125 +12,156 @@ GlobalDefaults:
   DocumentCount: &DocumentCount 10
 
 Keywords:
-- Loader
-- CrudActor
-- QuiesceActor
-- insert
-- Aggregation
-- matcher
-- expressions
+  - Loader
+  - CrudActor
+  - QuiesceActor
+  - insert
+  - Aggregation
+  - matcher
+  - expressions
 
 ActorTemplates:
-- TemplateName: MatchExpressionWithOrClausesTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "unused"}}
-    Type: CrudActor
-    Database: *Database
+  - TemplateName: MatchExpressionWithOrClausesTemplate
+    Config:
+      Name: { ^Parameter: { Name: "Name", Default: "unused" } }
+      Type: CrudActor
+      Database: *Database
+      Threads: 1
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{ ^Parameter: { Name: "ActivePhase", Default: -1 } }]
+          NopInPhasesUpTo: *MaxPhases
+          PhaseConfig:
+            Repeat: { ^Parameter: { Name: "Repeat", Default: 1 } }
+            Collection: *Collection
+            Operations:
+              - OperationName: aggregate
+                OperationCommand:
+                  Pipeline:
+                    [
+                      {
+                        $match:
+                          {
+                            $or:
+                              {
+                                ^Array:
+                                  {
+                                    of:
+                                      {
+                                        $and:
+                                          [
+                                            {
+                                              a:
+                                                {
+                                                  $gt: { ^Inc: { start: 10 } },
+                                                },
+                                            },
+                                            {
+                                              b:
+                                                {
+                                                  $gt: { ^Inc: { start: 10 } },
+                                                },
+                                            },
+                                          ],
+                                      },
+                                    number:
+                                      {
+                                        ^Parameter:
+                                          {
+                                            Name: "NumberOfClauses",
+                                            Default: -1,
+                                          },
+                                      },
+                                  },
+                              },
+                          },
+                      },
+                    ]
+
+Actors:
+  - Name: InsertData
+    Type: Loader
     Threads: 1
     Phases:
       OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "ActivePhase", Default: -1}}]
+        Active: [0]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
-          Repeat: {^Parameter: {Name: "Repeat", Default: 1}}
+          Repeat: 1
+          Database: *Database
           Collection: *Collection
-          Operations:
-          - OperationName: aggregate
-            OperationCommand:
-              Pipeline: [
-                {$match: {$or: {^Array: {of:
-                  {$and: [
-                    {a: {$gt: {^Inc: {start: 10}}}},
-                    {b: {$gt: {^Inc: {start: 10}}}}
-                  ]},
-                  number: {^Parameter: {Name: "NumberOfClauses", Default: -1}}
-                }}}}
-              ]
+          Threads: 1
+          CollectionCount: 1
+          DocumentCount: *DocumentCount
+          BatchSize: *DocumentCount
+          Document:
+            a: [0, 1]
+            b: [2, 3]
+            c: 4
+            d: 5
+            object: {}
 
-Actors:
-- Name: InsertData
-  Type: Loader
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        Collection: *Collection
-        Threads: 1
-        CollectionCount: 1
-        DocumentCount: *DocumentCount
-        BatchSize: *DocumentCount
-        Document:
-          a: [0, 1]
-          b: [2, 3]
-          c: 4
-          d: 5
-          object: {}
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
 
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
+  - ActorFromTemplate:
+      TemplateName: MatchExpressionWithOrClausesTemplate
+      TemplateParameters:
+        Name: RunMatchExpressionOrWith10Clauses
+        Repeat: 1000
+        ActivePhase: 2
+        NumberOfClauses: 10
 
-- ActorFromTemplate:
-    TemplateName: MatchExpressionWithOrClausesTemplate
-    TemplateParameters:
-      Name: RunMatchExpressionOrWith10Clauses
-      Repeat: 1000
-      ActivePhase: 2
-      NumberOfClauses: 10
+  - ActorFromTemplate:
+      TemplateName: MatchExpressionWithOrClausesTemplate
+      TemplateParameters:
+        Name: RunMatchExpressionOrWith25Clauses
+        Repeat: 1000
+        ActivePhase: 3
+        NumberOfClauses: 20
 
-- ActorFromTemplate:
-    TemplateName: MatchExpressionWithOrClausesTemplate
-    TemplateParameters:
-      Name: RunMatchExpressionOrWith25Clauses
-      Repeat: 1000
-      ActivePhase: 3
-      NumberOfClauses: 20
+  - ActorFromTemplate:
+      TemplateName: MatchExpressionWithOrClausesTemplate
+      TemplateParameters:
+        Name: RunMatchExpressionOrWith50Clauses
+        Repeat: 1000
+        ActivePhase: 4
+        NumberOfClauses: 50
 
-- ActorFromTemplate:
-    TemplateName: MatchExpressionWithOrClausesTemplate
-    TemplateParameters:
-      Name: RunMatchExpressionOrWith50Clauses
-      Repeat: 1000
-      ActivePhase: 4
-      NumberOfClauses: 50
+  - ActorFromTemplate:
+      TemplateName: MatchExpressionWithOrClausesTemplate
+      TemplateParameters:
+        Name: RunMatchExpressionOrWith100Clauses
+        Repeat: 1000
+        ActivePhase: 5
+        NumberOfClauses: 100
 
-- ActorFromTemplate:
-    TemplateName: MatchExpressionWithOrClausesTemplate
-    TemplateParameters:
-      Name: RunMatchExpressionOrWith100Clauses
-      Repeat: 1000
-      ActivePhase: 5
-      NumberOfClauses: 100
+  - ActorFromTemplate:
+      TemplateName: MatchExpressionWithOrClausesTemplate
+      TemplateParameters:
+        Name: RunMatchExpressionOrWith1000Clauses
+        Repeat: 100
+        ActivePhase: 6
+        NumberOfClauses: 1000
 
-- ActorFromTemplate:
-    TemplateName: MatchExpressionWithOrClausesTemplate
-    TemplateParameters:
-      Name: RunMatchExpressionOrWith1000Clauses
-      Repeat: 100
-      ActivePhase: 6
-      NumberOfClauses: 1000
-
-- ActorFromTemplate:
-    TemplateName: MatchExpressionWithOrClausesTemplate
-    TemplateParameters:
-      Name: RunMatchExpressionOrWith10000Clauses
-      Repeat: 10
-      ActivePhase: 7
-      NumberOfClauses: 10000
+  - ActorFromTemplate:
+      TemplateName: MatchExpressionWithOrClausesTemplate
+      TemplateParameters:
+        Name: RunMatchExpressionOrWith10000Clauses
+        Repeat: 10
+        ActivePhase: 7
+        NumberOfClauses: 10000
 
 # TODO: PERF-4993
-#- ActorFromTemplate:
+# - ActorFromTemplate:
 #    TemplateName: MatchExpressionWithOrClausesTemplate
 #    TemplateParameters:
 #      Name: RunMatchExpressionOrWith50000Clauses
@@ -139,16 +170,15 @@ Actors:
 #      NumberOfClauses: 50000
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-      - standalone-80-feature-flags
-      - standalone-all-feature-flags
-      - standalone-classic-query-engine
-      - standalone-heuristic-bonsai
-      - standalone-sampling-bonsai
-      - standalone-sbe
-    branch_name:
-      $gte:
-        v7.2
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone
+          - standalone-80-feature-flags
+          - standalone-all-feature-flags
+          - standalone-classic-query-engine
+          - standalone-heuristic-bonsai
+          - standalone-sampling-bonsai
+          - standalone-sbe
+      branch_name:
+        $gte: v7.2

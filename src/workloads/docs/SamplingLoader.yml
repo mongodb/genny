@@ -10,99 +10,99 @@ GlobalDefaults:
   Collection: &Collection sampling_loader_demo
 
 Actors:
-# This is just to seed the collection with 40 documents so that we'll have some sample data to draw
-# from.
-- Name: CollectionSeed
-  Type: MonotonicSingleLoader
-  Phases:
-  - Collection: *Collection
+  # This is just to seed the collection with 40 documents so that we'll have some sample data to draw
+  # from.
+  - Name: CollectionSeed
+    Type: MonotonicSingleLoader
+    Phases:
+      - Collection: *Collection
+        Database: *db
+        Repeat: 1
+        Document:
+          x: {^Inc: {}}
+        DocumentCount: 40
+        BatchSize: 10
+      - {Nop: true}
+      - {Nop: true}
+      - {Nop: true}
+
+  # Our first demonstration of the sampling loader.
+  - Name: BasicSamplingDemo
+    Type: SamplingLoader
     Database: *db
-    Repeat: 1
-    Document:
-      x: {^Inc: {}}
-    DocumentCount: 40
-    BatchSize: 10
-  - {Nop: true}
-  - {Nop: true}
-  - {Nop: true}
+    Collection: *Collection
+    Threads: 1
+    # Number of documents in the sample - required. The loader will cycle through the sampled docs,
+    # using them as templates for the ones to be incerted, until it inserts the requested number of
+    # batches.  For example, if the sample size is set to 1, exactly one document is sampled from the
+    # original dataset and reused as a template for _all_ of the inserted docs. And if the sample size
+    # is equal to the insert batch size, each sampled document will be "re-inserted" as many times as
+    # the number of batches.
+    #
+    # Using a small sample size may be useful if you want to measure performance of inserting many
+    # documents that don't need a variety of input data, as the small sample size allows for the
+    # random cursor optimization during sampling.
+    #
+    # Note that the sample size does not need to be correlated or a multiple of the insert batch size
+    # or number of batches.
+    SampleSize: 7
+    Phases:
+      - {Nop: true}
+      # "Repeat" is pretty redundant with "InsertBatchSize", but "InsertBatchSize" is preferred.
+      # Repetitions will still share the same sample.
+      - Repeat: 1
+        # Number of documents in a single insert operation.
+        InsertBatchSize: 5
+        # Number of insert operations. The total number of documents to be inserted is
+        # Batches * InsertBatchSize.
+        Batches: 2
+      - {Nop: true}
+      - {Nop: true}
 
-# Our first demonstration of the sampling loader.
-- Name: BasicSamplingDemo
-  Type: SamplingLoader
-  Database: *db
-  Collection: *Collection
-  Threads: 1
-  # Number of documents in the sample - required. The loader will cycle through the sampled docs,
-  # using them as templates for the ones to be incerted, until it inserts the requested number of
-  # batches.  For example, if the sample size is set to 1, exactly one document is sampled from the
-  # original dataset and reused as a template for _all_ of the inserted docs. And if the sample size
-  # is equal to the insert batch size, each sampled document will be "re-inserted" as many times as
-  # the number of batches.
+  # In this case we use multiple threads.
+  # With multiple threads, each thread will share a sample which is gathered before the load starts.
   #
-  # Using a small sample size may be useful if you want to measure performance of inserting many
-  # documents that don't need a variety of input data, as the small sample size allows for the
-  # random cursor optimization during sampling.
+  # The total number of documents inserted then will be Threads * Batches * InsertBatchSize, here
+  # 4 * 5 * 20 = 400.
   #
-  # Note that the sample size does not need to be correlated or a multiple of the insert batch size
-  # or number of batches.
-  SampleSize: 7
-  Phases:
-  - {Nop: true}
-  # "Repeat" is pretty redundant with "InsertBatchSize", but "InsertBatchSize" is preferred.
-  # Repetitions will still share the same sample.
-  - Repeat: 1
-    # Number of documents in a single insert operation.
-    InsertBatchSize: 5
-    # Number of insert operations. The total number of documents to be inserted is
-    # Batches * InsertBatchSize.
-    Batches: 2
-  - {Nop: true}
-  - {Nop: true}
+  # Note this is somewhat different than the configuration of 'Loader', 'MonotonicLoader', etc. which
+  # accept an overall document count target which gets divided amongst the threads.
+  - Name: MultiThreadedExample
+    Type: SamplingLoader
+    Database: *db
+    Collection: *Collection
+    SampleSize: 5
+    Threads: 4
+    Phases:
+      - {Nop: true}
+      - {Nop: true}
+      - Repeat: 1
+        Batches: 5
+        InsertBatchSize: 20
+      - {Nop: true}
 
-# In this case we use multiple threads.
-# With multiple threads, each thread will share a sample which is gathered before the load starts.
-#
-# The total number of documents inserted then will be Threads * Batches * InsertBatchSize, here
-# 4 * 5 * 20 = 400.
-#
-# Note this is somewhat different than the configuration of 'Loader', 'MonotonicLoader', etc. which
-# accept an overall document count target which gets divided amongst the threads.
-- Name: MultiThreadedExample
-  Type: SamplingLoader
-  Database: *db
-  Collection: *Collection
-  SampleSize: 5
-  Threads: 4
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - Repeat: 1
-    Batches: 5
-    InsertBatchSize: 20
-  - {Nop: true}
-
-# Now we'll demonstrate the ability to specify a pipeline suffix to tack on after the one with
-# $sample. Note it runs after the "_id" has been projected out. Also note that you should not put
-# stages like a $match in here - the actor is expecting only one-to-one transformations like the one
-# shown, to provide identifiability to the docs inserted.
-- Name: PipelineOptionExample
-  Type: SamplingLoader
-  Threads: 4
-  Database: *db
-  Collection: *Collection
-  SampleSize: 5
-  # Note again: each thread shares a sample. This means:
-  #
-  # - the pipeline is run only once to gather the sample, and so any document generators you use in
-  #   the pipeline specification will be instantiated once and only once.
-  #
-  # - this pipeline is run before the individual actors are generated (one per thread), so the actor
-  #   ID will not be available. You should not use the {^ActorId: {}} generator in this pipeline.
-  Pipeline: [{$set: {y: "SamplingLoader wuz here"}}]
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - {Nop: true}
-  - Repeat: 1
-    Batches: 5
-    InsertBatchSize: 20
+  # Now we'll demonstrate the ability to specify a pipeline suffix to tack on after the one with
+  # $sample. Note it runs after the "_id" has been projected out. Also note that you should not put
+  # stages like a $match in here - the actor is expecting only one-to-one transformations like the one
+  # shown, to provide identifiability to the docs inserted.
+  - Name: PipelineOptionExample
+    Type: SamplingLoader
+    Threads: 4
+    Database: *db
+    Collection: *Collection
+    SampleSize: 5
+    # Note again: each thread shares a sample. This means:
+    #
+    # - the pipeline is run only once to gather the sample, and so any document generators you use in
+    #   the pipeline specification will be instantiated once and only once.
+    #
+    # - this pipeline is run before the individual actors are generated (one per thread), so the actor
+    #   ID will not be available. You should not use the {^ActorId: {}} generator in this pipeline.
+    Pipeline: [{$set: {y: "SamplingLoader wuz here"}}]
+    Phases:
+      - {Nop: true}
+      - {Nop: true}
+      - {Nop: true}
+      - Repeat: 1
+        Batches: 5
+        InsertBatchSize: 20

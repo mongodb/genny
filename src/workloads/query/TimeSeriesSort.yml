@@ -14,7 +14,6 @@ Description: |
   - 500k more documents are inserted for spilling tests. A sort on time is run, where the bounded
     sort should not spill.
 
-
 GlobalDefaults:
   dbname: &db test
   batchSize: &batchSize 30000
@@ -25,292 +24,291 @@ GlobalDefaults:
   maxPhases: &maxPhases 21
 
 Actors:
-- Name: CreateTimeSeriesCollection
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - Repeat: 1 # Phase 0
-    Database: *db
-    Operation:
-      OperationMetricsName: CreateTimeSeriesCollection
-      OperationName: RunCommand
-      OperationCommand:
-        {create: &coll Collection0, timeseries: {timeField: "t", metaField: "m"}}
-  - Repeat: 1 # Phase 1
-    Database: *db
-    Operations:
-    - OperationMetricsName: DropAllIndexesUponCreation
-      OperationName: RunCommand
-      OperationCommand:
-        dropIndexes: *coll
-        index: "*"
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-
-- Name: IndexCollection
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: 1 # Phase 4
-    Database: *db
-    Operations:
-    - OperationMetricsName: CreateDescendingTimeIndex
-      OperationName: RunCommand
-      OperationCommand:
-        createIndexes: *coll
-        indexes:
-        - key: {t: -1}
-          name: DescendingTime
-  - *Nop
-  - *Nop
-  - Repeat: 1 # Phase 7
-    Database: *db
-    Operations:
-    - OperationMetricsName: DropDescendingTimeIndex
-      OperationName: RunCommand
-      OperationCommand:
-        dropIndexes: *coll
-        index: DescendingTime
-  - *Nop
-  - *Nop
-  - Repeat: 1 # Phase 10
-    Database: *db
-    Operations:
-    - OperationMetricsName: CreateMetaTimeIndex
-      OperationName: RunCommand
-      OperationCommand:
-        createIndexes: *coll
-        indexes:
-        - key: {m: 1, t: 1}
-          name: MetaTime
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: 1 # Phase 18
-    Database: *db
-    Operations:
-    - OperationMetricsName: DropMetaTimeIndex
-      OperationName: RunCommand
-      OperationCommand:
-        dropIndexes: *coll
-        index: MetaTime
-  - *Nop
-  - *Nop
-  - *Nop
-
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2, 5, 8, 12, 16, 20]
-      NopInPhasesUpTo: *maxPhases
-      PhaseConfig:
-        Repeat: 1
-
-- Name: InsertData
-  Type: Loader
-  Threads: 1
-  Phases:
-  - *Nop
-  - Repeat: 1 # Phase 1
-    Database: *db
-    Collection: *coll
+  - Name: CreateTimeSeriesCollection
+    Type: RunCommand
     Threads: 1
-    CollectionCount: 1
-    DocumentCount: 100000
-    BatchSize: *batchSize
-    Document:
-      t: {^IncDate: {start: "2022-01-01", step: 400}}
-      m: {^RandomInt: {min: 0, max: 1000}}
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: 1 # Phase 11
-    Database: *db
-    Collection: *coll
-    Threads: 1
-    CollectionCount: 1
-    DocumentCount: 5000
-    BatchSize: *batchSize
-    Document:
-      t: {^IncDate: {start: "2022-01-01", step: 400}}
-      m: 1001
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: 1 # Phase 15
-    Database: *db
-    Collection: *coll
-    Threads: 1
-    CollectionCount: 1
-    DocumentCount: 10
-    BatchSize: *batchSize
-    Document:
-      t: {^IncDate: {start: "2024-01-01", step: 400}}
-      m: 1002
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: 1 # Phase 19
-    Database: *db
-    Collection: *coll
-    Threads: 1
-    CollectionCount: 1
-    DocumentCount: 500000
-    BatchSize: *batchSize
-    Document:
-      t: {^IncDate: {start: "2023-01-01", step: 400}}
-      m: {^RandomInt: {min: 0, max: 1000}}
-  - *Nop
-  - *Nop
+    Phases:
+      - Repeat: 1 # Phase 0
+        Database: *db
+        Operation:
+          OperationMetricsName: CreateTimeSeriesCollection
+          OperationName: RunCommand
+          OperationCommand: {create: &coll Collection0, timeseries: {timeField: "t", metaField: "m"}}
+      - Repeat: 1 # Phase 1
+        Database: *db
+        Operations:
+          - OperationMetricsName: DropAllIndexesUponCreation
+            OperationName: RunCommand
+            OperationCommand:
+              dropIndexes: *coll
+              index: "*"
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
 
-- Name: Queries
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: &numQueryRuns 50 # Phase 3
+  - Name: IndexCollection
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - Repeat: 1 # Phase 4
+        Database: *db
+        Operations:
+          - OperationMetricsName: CreateDescendingTimeIndex
+            OperationName: RunCommand
+            OperationCommand:
+              createIndexes: *coll
+              indexes:
+                - key: {t: -1}
+                  name: DescendingTime
+      - *Nop
+      - *Nop
+      - Repeat: 1 # Phase 7
+        Database: *db
+        Operations:
+          - OperationMetricsName: DropDescendingTimeIndex
+            OperationName: RunCommand
+            OperationCommand:
+              dropIndexes: *coll
+              index: DescendingTime
+      - *Nop
+      - *Nop
+      - Repeat: 1 # Phase 10
+        Database: *db
+        Operations:
+          - OperationMetricsName: CreateMetaTimeIndex
+            OperationName: RunCommand
+            OperationCommand:
+              createIndexes: *coll
+              indexes:
+                - key: {m: 1, t: 1}
+                  name: MetaTime
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - Repeat: 1 # Phase 18
+        Database: *db
+        Operations:
+          - OperationMetricsName: DropMetaTimeIndex
+            OperationName: RunCommand
+            OperationCommand:
+              dropIndexes: *coll
+              index: MetaTime
+      - *Nop
+      - *Nop
+      - *Nop
+
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
     Database: *db
-    Operations:
-    - OperationMetricsName: SortQueryBoundedSort
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: *coll
-        pipeline: [{$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
-        cursor: {batchSize: *batchSize}
-  - *Nop
-  - *Nop
-  - Repeat: *numQueryRuns # Phase 6
-    Database: *db
-    Operations:
-    - OperationMetricsName: DescendingSortWithDescendingIndexQueryBoundedSort
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: *coll
-        pipeline: [{$sort: {t: -1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
-        cursor: {batchSize: *batchSize}
-        hint: "DescendingTime"
-  - *Nop
-  - *Nop
-  - Repeat: *numQueryRuns # Phase 9
-    Database: *db
-    Operations:
-    - OperationMetricsName: TimeToFirstResultQueryBoundedSort
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: *coll
-        pipeline: [{$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$limit: 1}]
-        cursor: {batchSize: *batchSize}
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: *numQueryRuns # Phase 13
-    Database: *db
-    Operations:
-    - OperationMetricsName: MetaPointPredicateTimeSortBoundedSortWithoutExplain
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: *coll
-        pipeline: [
-          {$match: {m: 1001}},  # this will match 5000 docs
-          {$sort: {t: 1}},
-          {$_internalInhibitOptimization: {}},
-          {$skip: 1e10}
-        ]
-        cursor: {batchSize: *batchSize}
-  - Repeat: *numQueryRuns # Phase 14
-    Database: *db
-    Operations:
-    - OperationMetricsName: MetaPointPredicateTimeSortBoundedSort
-      OperationName: RunCommand
-      OperationCommand:
-        explain:
-          aggregate: *coll
-          pipeline: [
-            {$match: {m: 1001}},  # this will match 5000 docs
-            {$sort: {t: 1}},
-            {$_internalInhibitOptimization: {}},
-            {$skip: 1e10}
-          ]
-          cursor: {batchSize: *batchSize}
-  - *Nop
-  - *Nop
-  - Repeat: *numQueryRuns # Phase 17
-    Database: *db
-    Operations:
-    - OperationMetricsName: SelectiveMetaPointPredicateTimeSortBoundedSort
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: *coll
-        pipeline: [
-          {$match: {m: 1002}},  # this will match 10 docs
-          {$sort: {t: 1}},
-          {$_internalInhibitOptimization: {}},
-          {$skip: 1e10}
-        ]
-        cursor: {batchSize: *batchSize}
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: *numQueryRuns # Phase 21
-    Database: *db
-    Operations:
-    - OperationMetricsName: SpillVsNoSpillSortQueryBoundedSort
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: *coll
-        pipeline: [{$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
-        cursor: {batchSize: *batchSize}
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2, 5, 8, 12, 16, 20]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+
+  - Name: InsertData
+    Type: Loader
+    Threads: 1
+    Phases:
+      - *Nop
+      - Repeat: 1 # Phase 1
+        Database: *db
+        Collection: *coll
+        Threads: 1
+        CollectionCount: 1
+        DocumentCount: 100000
+        BatchSize: *batchSize
+        Document:
+          t: {^IncDate: {start: "2022-01-01", step: 400}}
+          m: {^RandomInt: {min: 0, max: 1000}}
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - Repeat: 1 # Phase 11
+        Database: *db
+        Collection: *coll
+        Threads: 1
+        CollectionCount: 1
+        DocumentCount: 5000
+        BatchSize: *batchSize
+        Document:
+          t: {^IncDate: {start: "2022-01-01", step: 400}}
+          m: 1001
+      - *Nop
+      - *Nop
+      - *Nop
+      - Repeat: 1 # Phase 15
+        Database: *db
+        Collection: *coll
+        Threads: 1
+        CollectionCount: 1
+        DocumentCount: 10
+        BatchSize: *batchSize
+        Document:
+          t: {^IncDate: {start: "2024-01-01", step: 400}}
+          m: 1002
+      - *Nop
+      - *Nop
+      - *Nop
+      - Repeat: 1 # Phase 19
+        Database: *db
+        Collection: *coll
+        Threads: 1
+        CollectionCount: 1
+        DocumentCount: 500000
+        BatchSize: *batchSize
+        Document:
+          t: {^IncDate: {start: "2023-01-01", step: 400}}
+          m: {^RandomInt: {min: 0, max: 1000}}
+      - *Nop
+      - *Nop
+
+  - Name: Queries
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - Repeat: &numQueryRuns 50 # Phase 3
+        Database: *db
+        Operations:
+          - OperationMetricsName: SortQueryBoundedSort
+            OperationName: RunCommand
+            OperationCommand:
+              aggregate: *coll
+              pipeline: [{$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
+              cursor: {batchSize: *batchSize}
+      - *Nop
+      - *Nop
+      - Repeat: *numQueryRuns # Phase 6
+        Database: *db
+        Operations:
+          - OperationMetricsName: DescendingSortWithDescendingIndexQueryBoundedSort
+            OperationName: RunCommand
+            OperationCommand:
+              aggregate: *coll
+              pipeline: [{$sort: {t: -1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
+              cursor: {batchSize: *batchSize}
+              hint: "DescendingTime"
+      - *Nop
+      - *Nop
+      - Repeat: *numQueryRuns # Phase 9
+        Database: *db
+        Operations:
+          - OperationMetricsName: TimeToFirstResultQueryBoundedSort
+            OperationName: RunCommand
+            OperationCommand:
+              aggregate: *coll
+              pipeline: [{$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$limit: 1}]
+              cursor: {batchSize: *batchSize}
+      - *Nop
+      - *Nop
+      - *Nop
+      - Repeat: *numQueryRuns # Phase 13
+        Database: *db
+        Operations:
+          - OperationMetricsName: MetaPointPredicateTimeSortBoundedSortWithoutExplain
+            OperationName: RunCommand
+            OperationCommand:
+              aggregate: *coll
+              pipeline: [
+                {$match: {m: 1001}}, # this will match 5000 docs
+                {$sort: {t: 1}},
+                {$_internalInhibitOptimization: {}},
+                {$skip: 1e10}
+              ]
+              cursor: {batchSize: *batchSize}
+      - Repeat: *numQueryRuns # Phase 14
+        Database: *db
+        Operations:
+          - OperationMetricsName: MetaPointPredicateTimeSortBoundedSort
+            OperationName: RunCommand
+            OperationCommand:
+              explain:
+                aggregate: *coll
+                pipeline: [
+                  {$match: {m: 1001}}, # this will match 5000 docs
+                  {$sort: {t: 1}},
+                  {$_internalInhibitOptimization: {}},
+                  {$skip: 1e10}
+                ]
+                cursor: {batchSize: *batchSize}
+      - *Nop
+      - *Nop
+      - Repeat: *numQueryRuns # Phase 17
+        Database: *db
+        Operations:
+          - OperationMetricsName: SelectiveMetaPointPredicateTimeSortBoundedSort
+            OperationName: RunCommand
+            OperationCommand:
+              aggregate: *coll
+              pipeline: [
+                {$match: {m: 1002}}, # this will match 10 docs
+                {$sort: {t: 1}},
+                {$_internalInhibitOptimization: {}},
+                {$skip: 1e10}
+              ]
+              cursor: {batchSize: *batchSize}
+      - *Nop
+      - *Nop
+      - *Nop
+      - Repeat: *numQueryRuns # Phase 21
+        Database: *db
+        Operations:
+          - OperationMetricsName: SpillVsNoSpillSortQueryBoundedSort
+            OperationName: RunCommand
+            OperationCommand:
+              aggregate: *coll
+              pipeline: [{$sort: {t: 1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
+              cursor: {batchSize: *batchSize}
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica
-      - replica-80-feature-flags
-      - replica-all-feature-flags
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
-      - v5.0
-      - v5.1
-      - v5.2
-      - v5.3
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - replica-80-feature-flags
+          - replica-all-feature-flags
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4
+          - v5.0
+          - v5.1
+          - v5.2
+          - v5.3

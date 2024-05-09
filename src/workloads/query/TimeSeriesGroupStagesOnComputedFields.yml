@@ -5,9 +5,9 @@ Description: |
   on computed date fields on a timeseries collection.
 
 Keywords:
-- timeseries
-- aggregate
-- sbe
+  - timeseries
+  - aggregate
+  - sbe
 
 GlobalDefaults:
   Database: &Database test
@@ -15,119 +15,118 @@ GlobalDefaults:
   MaxPhases: &MaxPhases 5
 
 Actors:
-# Clear any pre-existing collection state.
-- Name: ClearCollection
-  Type: CrudActor
-  Database: *Database
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
-        Collection: *Collection
-        Operations:
-        - OperationName: drop
+  # Clear any pre-existing collection state.
+  - Name: ClearCollection
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+          Collection: *Collection
+          Operations:
+            - OperationName: drop
 
-- Name: CreateTimeSeriesCollection
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        Operation:
-          OperationMetricsName: CreateTimeSeriesCollection
-          OperationName: RunCommand
-          OperationCommand:
-            {create: *Collection, timeseries: {timeField: "time", metaField: "symbol", granularity: "seconds"}}
+  - Name: CreateTimeSeriesCollection
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          Operation:
+            OperationMetricsName: CreateTimeSeriesCollection
+            OperationName: RunCommand
+            OperationCommand: {create: *Collection, timeseries: {timeField: "time", metaField: "symbol", granularity: "seconds"}}
 
-- Name: DropAllIndexesUponCreation
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        Operation:
-          OperationMetricsName: DropAllIndexesUponCreation
-          OperationName: RunCommand
-          OperationCommand:
-            dropIndexes: *Collection
-            index: "*"
+  - Name: DropAllIndexesUponCreation
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          Operation:
+            OperationMetricsName: DropAllIndexesUponCreation
+            OperationName: RunCommand
+            OperationCommand:
+              dropIndexes: *Collection
+              index: "*"
 
-- InsertData:
-  LoadConfig:
-    Path: "../../phases/query/GroupStagesOnComputedFields.yml"
-    Key: InsertDataTemplate
-    Parameters:
-      active: [3]
-      nopInPhasesUpTo: *MaxPhases
+  - InsertData:
+    LoadConfig:
+      Path: "../../phases/query/GroupStagesOnComputedFields.yml"
+      Key: InsertDataTemplate
+      Parameters:
+        active: [3]
+        nopInPhasesUpTo: *MaxPhases
 
-# Phase 4: Ensure all data is synced to disk.
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [4]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
+  # Phase 4: Ensure all data is synced to disk.
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
 
-# Phase 5-7: Run queries.
-- TimeSeriesMultipleGroupStagesOnComputedFields:
-  LoadConfig:
-    Path: "./GroupStagesOnComputedFields.yml"
-    Key: MultipleGroupStagesOnComputedFields
-    Parameters:
-      name: TimeSeriesMultipleGroupStagesOnComputedFields
-      active: [5]
+  # Phase 5-7: Run queries.
+  - TimeSeriesMultipleGroupStagesOnComputedFields:
+    LoadConfig:
+      Path: "./GroupStagesOnComputedFields.yml"
+      Key: MultipleGroupStagesOnComputedFields
+      Parameters:
+        name: TimeSeriesMultipleGroupStagesOnComputedFields
+        active: [5]
 
-- TimeSeriesGroupStageOnDateComputationAfterMatch:
-  LoadConfig:
-    Path: "./GroupStagesOnComputedFields.yml"
-    Key: GroupStageOnDateComputationAfterMatch
-    Parameters:
-      name: TimeSeriesGroupStageOnDateComputationAfterMatch
-      active: [6]
+  - TimeSeriesGroupStageOnDateComputationAfterMatch:
+    LoadConfig:
+      Path: "./GroupStagesOnComputedFields.yml"
+      Key: GroupStageOnDateComputationAfterMatch
+      Parameters:
+        name: TimeSeriesGroupStageOnDateComputationAfterMatch
+        active: [6]
 
-- TimeSeriesGroupStageAfterSortAndAddFields:
-  LoadConfig:
-    Path: "./GroupStagesOnComputedFields.yml"
-    Key: GroupStageAfterSortAndAddFields
-    Parameters:
-      name: TimeSeriesGroupStageAfterSortAndAddFields
-      active: [7]
+  - TimeSeriesGroupStageAfterSortAndAddFields:
+    LoadConfig:
+      Path: "./GroupStagesOnComputedFields.yml"
+      Key: GroupStageAfterSortAndAddFields
+      Parameters:
+        name: TimeSeriesGroupStageAfterSortAndAddFields
+        active: [7]
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-      - standalone-classic-query-engine
-      # TODO: Enable the following variants when timeseries is eligible to run on SBE
-      # - standalone-all-feature-flags
-      # - standalone-sbe
-      - replica
-      - replica-80-feature-flags
-      - replica-all-feature-flags
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
-      - v5.0
-      - v5.1
-      - v5.2
-      - v5.3
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone
+          - standalone-classic-query-engine
+          # TODO: Enable the following variants when timeseries is eligible to run on SBE
+          # - standalone-all-feature-flags
+          # - standalone-sbe
+          - replica
+          - replica-80-feature-flags
+          - replica-all-feature-flags
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4
+          - v5.0
+          - v5.1
+          - v5.2
+          - v5.3

@@ -4,63 +4,189 @@ Description: |
   Run TPC-H query 9 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
+batchSize: &batchSize { ^Parameter: { Name: "BatchSize", Default: 101 } }
 
-query9Color: &query9Color {^Parameter: {Name: "Query9Color", Default: "^.*green.*$"}}  # ^.*${color}.*$
+query9Color: &query9Color {
+  ^Parameter: { Name: "Query9Color", Default: "^.*green.*$" },
+} # ^.*${color}.*$
 
 TPCHDenormalizedQuery9Aggregation: &TPCHDenormalizedQuery9Aggregation
   aggregate: customer
   pipeline:
     [
-      {$unwind: "$orders"},
-      {$lookup: {from: "part", as: "part", localField: "orders.lineitem.l_partkey", foreignField: "p_partkey", pipeline: [
-        {$match: {$expr: {$regexMatch: {input: "$p_name", regex: *query9Color, options: "si"}}}}]}},
-      {$project: {
-        o_year: {$year: "$orders.o_orderdate"},
-        part: {$map: {input: "$part", as: "part", in: {
-          $mergeObjects: ["$$part", {lineitem: {$filter: {input: "$orders.lineitem", as: "lineitem", cond: {$eq: ["$$part.p_partkey", "$$lineitem.l_partkey"]}}}}]}}}}},
-      {$unwind: "$part"},
-      {$unwind: "$part.lineitem"},
-      {$lookup: {from: "supplier", as: "partsupp", localField: "part.lineitem.l_suppkey", foreignField: "s_suppkey", let: {p_partkey: "$part.p_partkey"}, pipeline: [
-        {$lookup: {from: "partsupp", as: "partsupp", localField: "s_suppkey", foreignField: "ps_suppkey", pipeline: [
-          {$match: {$expr: {$eq: ["$$p_partkey", "$ps_partkey"]}}}]}},
-        {$unwind: "$partsupp"},
-        {$replaceWith: {$mergeObjects: ["$partsupp", {nation: "$nation.n_name"}]}}]}},
-      {$unwind: "$partsupp"},
-      {$group: {
-        _id: {nation: "$partsupp.nation", o_year: "$o_year"},
-        sum_profit: {$sum: {$subtract: [
-          {$multiply: ["$part.lineitem.l_extendedprice", {$subtract: [1, "$part.lineitem.l_discount"]}]},
-          {$multiply: ["$partsupp.ps_supplycost", "$part.lineitem.l_quantity"]}]}}}},
-      {$project: {_id: 0, nation: "$_id.nation", o_year: "$_id.o_year", sum_profit: 1}},
-      {$sort: {nation: 1, o_year: -1}}
+      { $unwind: "$orders" },
+      {
+        $lookup:
+          {
+            from: "part",
+            as: "part",
+            localField: "orders.lineitem.l_partkey",
+            foreignField: "p_partkey",
+            pipeline:
+              [
+                {
+                  $match:
+                    {
+                      $expr:
+                        {
+                          $regexMatch:
+                            {
+                              input: "$p_name",
+                              regex: *query9Color,
+                              options: "si",
+                            },
+                        },
+                    },
+                },
+              ],
+          },
+      },
+      {
+        $project:
+          {
+            o_year: { $year: "$orders.o_orderdate" },
+            part:
+              {
+                $map:
+                  {
+                    input: "$part",
+                    as: "part",
+                    in:
+                      {
+                        $mergeObjects:
+                          [
+                            "$$part",
+                            {
+                              lineitem:
+                                {
+                                  $filter:
+                                    {
+                                      input: "$orders.lineitem",
+                                      as: "lineitem",
+                                      cond:
+                                        {
+                                          $eq:
+                                            [
+                                              "$$part.p_partkey",
+                                              "$$lineitem.l_partkey",
+                                            ],
+                                        },
+                                    },
+                                },
+                            },
+                          ],
+                      },
+                  },
+              },
+          },
+      },
+      { $unwind: "$part" },
+      { $unwind: "$part.lineitem" },
+      {
+        $lookup:
+          {
+            from: "supplier",
+            as: "partsupp",
+            localField: "part.lineitem.l_suppkey",
+            foreignField: "s_suppkey",
+            let: { p_partkey: "$part.p_partkey" },
+            pipeline:
+              [
+                {
+                  $lookup:
+                    {
+                      from: "partsupp",
+                      as: "partsupp",
+                      localField: "s_suppkey",
+                      foreignField: "ps_suppkey",
+                      pipeline:
+                        [
+                          {
+                            $match:
+                              {
+                                $expr: { $eq: ["$$p_partkey", "$ps_partkey"] },
+                              },
+                          },
+                        ],
+                    },
+                },
+                { $unwind: "$partsupp" },
+                {
+                  $replaceWith:
+                    {
+                      $mergeObjects:
+                        ["$partsupp", { nation: "$nation.n_name" }],
+                    },
+                },
+              ],
+          },
+      },
+      { $unwind: "$partsupp" },
+      {
+        $group:
+          {
+            _id: { nation: "$partsupp.nation", o_year: "$o_year" },
+            sum_profit:
+              {
+                $sum:
+                  {
+                    $subtract:
+                      [
+                        {
+                          $multiply:
+                            [
+                              "$part.lineitem.l_extendedprice",
+                              { $subtract: [1, "$part.lineitem.l_discount"] },
+                            ],
+                        },
+                        {
+                          $multiply:
+                            [
+                              "$partsupp.ps_supplycost",
+                              "$part.lineitem.l_quantity",
+                            ],
+                        },
+                      ],
+                  },
+              },
+          },
+      },
+      {
+        $project:
+          {
+            _id: 0,
+            nation: "$_id.nation",
+            o_year: "$_id.o_year",
+            sum_profit: 1,
+          },
+      },
+      { $sort: { nation: 1, o_year: -1 } },
     ]
-  cursor: {batchSize: *batchSize}
+  cursor: { batchSize: *batchSize }
   allowDiskUse: true
 
 TPCHDenormalizedQuery9Warmup:
-  Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
+  Repeat: &Repeat { ^Parameter: { Name: "Repeat", Default: 1 } }
   Database: &db tpch
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedQuery9Aggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedQuery9Aggregation
 
 TPCHDenormalizedQuery9:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query9
-    OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedQuery9Aggregation
+    - OperationMetricsName: Query9
+      OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedQuery9Aggregation
 
 TPCHDenormalizedQuery9Explain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query9
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHDenormalizedQuery9Aggregation
-      verbosity:
-        executionStats
+    - OperationMetricsName: Query9
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHDenormalizedQuery9Aggregation
+        verbosity: executionStats

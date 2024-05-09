@@ -24,10 +24,7 @@ LastpointQueryMetaAscTimeDesc: &LastpointQueryMetaAscTimeDesc
       Collection: *coll
       SortPattern: &sortPatternMetaAscTimeDesc {"metadata.sensorId": 1, timestamp: -1}
       GroupPattern: {_id: "$metadata.sensorId", timestamp: {$first: "$timestamp"}, temp: {$first: "$temp"}}
-      GroupPatternTopOrBottom: {$top: {
-        sortBy: *sortPatternMetaAscTimeDesc,
-        output: &output {timestamp: "$timestamp", temp: "$temp"}
-      }}
+      GroupPatternTopOrBottom: {$top: {sortBy: *sortPatternMetaAscTimeDesc, output: &output {timestamp: "$timestamp", temp: "$temp"}}}
 LastpointQueryMetaDescTimeDesc: &LastpointQueryMetaDescTimeDesc
   LoadConfig:
     Path: *phasePath
@@ -57,387 +54,383 @@ LastpointQueryMetaAscTimeAsc: &LastpointQueryMetaAscTimeAsc
       GroupPatternTopOrBottom: {$bottom: {sortBy: *sortPatternMetaAscTimeAsc, output: *output}}
 
 Actors:
-- Name: CreateTimeSeriesCollection
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    Database: *db
-    Operation:
-      OperationMetricsName: CreateTimeSeriesCollection
-      OperationName: RunCommand
-      OperationCommand:
-        {create: *coll, timeseries: {timeField: "timestamp", metaField: "metadata"}}
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-
-- Name: InsertData
-  Type: Loader
-  Threads: 1
-  Phases:
-  - *Nop
-  - Repeat: 1
-    Database: *db
-    Collection: *coll
+  - Name: CreateTimeSeriesCollection
+    Type: RunCommand
     Threads: 1
-    CollectionCount: 1
-    DocumentCount: 1000000
-    BatchSize: 100
-    Document:
-      timestamp: {^RandomDate: {min: "2022-01-01", max: "2022-03-01"}}
-      metadata: {
-        sensorId: {^RandomInt: {min: 0, max: 100}},
-        type: "temperature"
-      }
-      temp: {^RandomDouble: {min: -30, max: 120}}
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+    Phases:
+      - Repeat: 1
+        Database: *db
+        Operation:
+          OperationMetricsName: CreateTimeSeriesCollection
+          OperationName: RunCommand
+          OperationCommand: {create: *coll, timeseries: {timeField: "timestamp", metaField: "metadata"}}
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
 
-# Lastpoint query with a sort and group with meta subfield descending and time ascending, but no index.
-- Name: RunLastpointQueryWithMetaSubfieldAscendingTimeDescendingNoIndex
-  Type: RunCommand
-  Database: *db
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *LastpointQueryMetaAscTimeDesc
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - Name: InsertData
+    Type: Loader
+    Threads: 1
+    Phases:
+      - *Nop
+      - Repeat: 1
+        Database: *db
+        Collection: *coll
+        Threads: 1
+        CollectionCount: 1
+        DocumentCount: 1000000
+        BatchSize: 100
+        Document:
+          timestamp: {^RandomDate: {min: "2022-01-01", max: "2022-03-01"}}
+          metadata: {sensorId: {^RandomInt: {min: 0, max: 100}}, type: "temperature"}
+          temp: {^RandomDouble: {min: -30, max: 120}}
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
 
-# Lastpoint query with a sort and group on meta subfield ascending and time descending.
-- Name: RunLastpointQueryWithMetaSubfieldAscendingTimeDescending
-  Type: RunCommand
-  Database: *db
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  # Lastpoint query with a sort and group with meta subfield descending and time ascending, but no index.
+  - Name: RunLastpointQueryWithMetaSubfieldAscendingTimeDescendingNoIndex
+    Type: RunCommand
+    Database: *db
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - *LastpointQueryMetaAscTimeDesc
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+
+  # Lastpoint query with a sort and group on meta subfield ascending and time descending.
+  - Name: RunLastpointQueryWithMetaSubfieldAscendingTimeDescending
+    Type: RunCommand
+    Database: *db
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - LoadConfig:
+          Path: *phasePath
+          Key: CreateIndex
+          Parameters:
+            Collection: *coll
+            IndexName: &metaAscTimeDesc "MetaSubfieldAscendingTimeDescending"
+            IndexPattern: *sortPatternMetaAscTimeDesc
+      - *Nop
+      - *LastpointQueryMetaAscTimeDesc
+      - LoadConfig:
+          Path: *phasePath
+          Key: DropIndex
+          Parameters:
+            Collection: *coll
+            IndexName: *metaAscTimeDesc
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+
+  # Lastpoint query with a sort and group with meta subfield descending and time ascending, but no index.
+  - Name: RunLastpointQueryWithMetaSubfieldDescendingTimeDescendingNoIndex
+    Type: RunCommand
+    Database: *db
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *LastpointQueryMetaDescTimeDesc
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+
+  # Lastpoint query with a compound index with meta subfield descending and time descending.
+  - Name: RunLastpointQueryWithMetaSubfieldDescendingTimeDescending
+    Type: RunCommand
+    Database: *db
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - LoadConfig:
+          Path: *phasePath
+          Key: CreateIndex
+          Parameters:
+            Collection: *coll
+            IndexName: &metaDescTimeDesc "MetaSubfieldDescendingTimeDescending"
+            IndexPattern: *sortPatternMetaDescTimeDesc
+      - *Nop
+      - *LastpointQueryMetaDescTimeDesc
+      - LoadConfig:
+          Path: *phasePath
+          Key: DropIndex
+          Parameters:
+            Collection: *coll
+            IndexName: *metaDescTimeDesc
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+
+  # Lastpoint query with a sort and group with meta subfield descending and time ascending, but no index.
+  - Name: RunLastpointQueryWithMetaSubfieldDescendingTimeAscendingNoIndex
+    Type: RunCommand
+    Database: *db
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *LastpointQueryMetaDescTimeAsc
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+
+  # Lastpoint query with a compound index with meta subfield descending and time ascending.
+  - Name: RunLastpointQueryWithMetaSubfieldDescendingTimeAscending
+    Type: RunCommand
+    Database: *db
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - LoadConfig:
+          Path: *phasePath
+          Key: CreateIndex
+          Parameters:
+            Collection: *coll
+            IndexName: &metaDescTimeAsc "MetaSubfieldDescendingTimeAscending"
+            IndexPattern: *sortPatternMetaDescTimeAsc
+      - *Nop
+      - *LastpointQueryMetaDescTimeAsc
+      - LoadConfig:
+          Path: *phasePath
+          Key: DropIndex
+          Parameters:
+            Collection: *coll
+            IndexName: *metaDescTimeAsc
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+
+  # Lastpoint query with a sort and group with meta subfield ascending and time ascending, but no index.
+  - Name: RunLastpointQueryWithMetaSubfieldAscendingTimeAscendingNoIndex
+    Type: RunCommand
+    Database: *db
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *LastpointQueryMetaAscTimeAsc
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+
+  # Lastpoint query with a compound index with meta subfield ascending and time ascending.
+  - Name: RunLastpointQueryWithMetaSubfieldAscendingTimeAscending
+    Type: RunCommand
+    Database: *db
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - LoadConfig:
+          Path: *phasePath
+          Key: CreateIndex
+          Parameters:
+            Collection: *coll
+            IndexName: &metaAscTimeAsc "MetaSubfieldAscendingTimeAscending"
+            IndexPattern: *sortPatternMetaAscTimeAsc
+      - *Nop
+      - *LastpointQueryMetaAscTimeAsc
+      - LoadConfig:
+          Path: *phasePath
+          Key: DropIndex
+          Parameters:
+            Collection: *coll
+            IndexName: *metaAscTimeAsc
+
   - LoadConfig:
       Path: *phasePath
-      Key: CreateIndex
+      Key: QuiesceActor
       Parameters:
-        Collection: *coll
-        IndexName: &metaAscTimeDesc "MetaSubfieldAscendingTimeDescending"
-        IndexPattern: *sortPatternMetaAscTimeDesc
-  - *Nop
-  - *LastpointQueryMetaAscTimeDesc
-  - LoadConfig:
-      Path: *phasePath
-      Key: DropIndex
-      Parameters:
-        Collection: *coll
-        IndexName: *metaAscTimeDesc
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-
-# Lastpoint query with a sort and group with meta subfield descending and time ascending, but no index.
-- Name: RunLastpointQueryWithMetaSubfieldDescendingTimeDescendingNoIndex
-  Type: RunCommand
-  Database: *db
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *LastpointQueryMetaDescTimeDesc
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-
-# Lastpoint query with a compound index with meta subfield descending and time descending.
-- Name: RunLastpointQueryWithMetaSubfieldDescendingTimeDescending
-  Type: RunCommand
-  Database: *db
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - LoadConfig:
-      Path: *phasePath
-      Key: CreateIndex
-      Parameters:
-        Collection: *coll
-        IndexName: &metaDescTimeDesc "MetaSubfieldDescendingTimeDescending"
-        IndexPattern: *sortPatternMetaDescTimeDesc
-  - *Nop
-  - *LastpointQueryMetaDescTimeDesc
-  - LoadConfig:
-      Path: *phasePath
-      Key: DropIndex
-      Parameters:
-        Collection: *coll
-        IndexName: *metaDescTimeDesc
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-
-# Lastpoint query with a sort and group with meta subfield descending and time ascending, but no index.
-- Name: RunLastpointQueryWithMetaSubfieldDescendingTimeAscendingNoIndex
-  Type: RunCommand
-  Database: *db
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *LastpointQueryMetaDescTimeAsc
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-
-# Lastpoint query with a compound index with meta subfield descending and time ascending.
-- Name: RunLastpointQueryWithMetaSubfieldDescendingTimeAscending
-  Type: RunCommand
-  Database: *db
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - LoadConfig:
-      Path: *phasePath
-      Key: CreateIndex
-      Parameters:
-        Collection: *coll
-        IndexName: &metaDescTimeAsc "MetaSubfieldDescendingTimeAscending"
-        IndexPattern: *sortPatternMetaDescTimeAsc
-  - *Nop
-  - *LastpointQueryMetaDescTimeAsc
-  - LoadConfig:
-      Path: *phasePath
-      Key: DropIndex
-      Parameters:
-        Collection: *coll
-        IndexName: *metaDescTimeAsc
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-
-# Lastpoint query with a sort and group with meta subfield ascending and time ascending, but no index.
-- Name: RunLastpointQueryWithMetaSubfieldAscendingTimeAscendingNoIndex
-  Type: RunCommand
-  Database: *db
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *LastpointQueryMetaAscTimeAsc
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-
-# Lastpoint query with a compound index with meta subfield ascending and time ascending.
-- Name: RunLastpointQueryWithMetaSubfieldAscendingTimeAscending
-  Type: RunCommand
-  Database: *db
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - LoadConfig:
-      Path: *phasePath
-      Key: CreateIndex
-      Parameters:
-        Collection: *coll
-        IndexName: &metaAscTimeAsc "MetaSubfieldAscendingTimeAscending"
-        IndexPattern: *sortPatternMetaAscTimeAsc
-  - *Nop
-  - *LastpointQueryMetaAscTimeAsc
-  - LoadConfig:
-      Path: *phasePath
-      Key: DropIndex
-      Parameters:
-        Collection: *coll
-        IndexName: *metaAscTimeAsc
-
-- LoadConfig:
-    Path: *phasePath
-    Key: QuiesceActor
-    Parameters:
-      MaxPhases: 23
+        MaxPhases: 23
 
 AutoRun:
-- When:
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
-      - v5.0
-      - v5.1
-    mongodb_setup:
-      $eq:
-      - standalone
-      - standalone-80-feature-flags
-      - standalone-all-feature-flags
-      - replica
-      - replica-80-feature-flags
-      - replica-all-feature-flags
+  - When:
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4
+          - v5.0
+          - v5.1
+      mongodb_setup:
+        $eq:
+          - standalone
+          - standalone-80-feature-flags
+          - standalone-all-feature-flags
+          - replica
+          - replica-80-feature-flags
+          - replica-all-feature-flags

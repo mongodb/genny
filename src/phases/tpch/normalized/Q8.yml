@@ -1,74 +1,182 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Run TPC-H query 8 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  Run TPC-H query 8 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema.
+  Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
+batchSize: &batchSize { ^Parameter: { Name: "BatchSize", Default: 101 } }
 
-query8Type: &query8Type {^Parameter: {Name: "Query8Type", Default: "ECONOMY ANODIZED STEEL"}}
-query8Region: &query8Region {^Parameter: {Name: "Query8Region", Default: "AMERICA"}}
-query8Nation: &query8Nation {^Parameter: {Name: "Query8Nation", Default: "BRAZIL"}}
+query8Type:
+  &query8Type {
+    ^Parameter: { Name: "Query8Type", Default: "ECONOMY ANODIZED STEEL" },
+  }
+query8Region:
+  &query8Region { ^Parameter: { Name: "Query8Region", Default: "AMERICA" } }
+query8Nation:
+  &query8Nation { ^Parameter: { Name: "Query8Nation", Default: "BRAZIL" } }
 
 TPCHNormalizedQuery8Aggregation: &TPCHNormalizedQuery8Aggregation
   aggregate: part
   pipeline:
     [
-      {$match: {p_type: {$eq: *query8Type}}},
-      {$lookup: {from: "lineitem", localField: "p_partkey", foreignField: "l_partkey", as: "lineitem"}},
-      {$unwind: "$lineitem"},
-      {$lookup: {from: "supplier", localField: "lineitem.l_suppkey", foreignField: "s_suppkey", as: "supplier"}},
-      {$unwind: "$supplier"},
-      {$lookup: {from: "nation", localField: "supplier.s_nationkey", foreignField: "n_nationkey", as: "n2"}},
-      {$unwind: "$n2"},
-      {$lookup: {from: "orders", localField: "lineitem.l_orderkey", foreignField: "o_orderkey", as: "orders"}},
-      {$unwind: "$orders"},
-      {$match: {$and: [
-        {$expr: {$lte: ["$orders.o_orderdate", {^Date: "1996-12-31"}]}},
-        {$expr: {$gte: ["$orders.o_orderdate", {^Date: "1995-01-01"}]}}]}},
-      {$lookup: {from: "customer", localField: "orders.o_custkey", foreignField: "c_custkey", as: "customer"}},
-      {$unwind: "$customer"},
-      {$lookup: {from: "nation", localField: "customer.c_nationkey", foreignField: "n_nationkey", as: "n1"}},
-      {$unwind: "$n1"},
-      {$lookup: {from: "region", localField: "n1.n_regionkey", foreignField: "r_regionkey", as: "region"}},
-      {$unwind: "$region"},
-      {$match: {"region.r_name": {$eq: *query8Region}}},
-      {$project: {
-        o_year: {$year: "$orders.o_orderdate"},
-        volume: {$multiply: ["$lineitem.l_extendedprice", {$subtract: [{$literal: 1}, "$lineitem.l_discount"]}]},
-        nation: "$n2.n_name"}},
-      {$group: {
-        _id: "$o_year", total_volume: {$sum: "$volume"},
-        nation_volume: {$sum: {$cond: { if: {$eq: ["$nation", *query8Nation]}, then: "$volume", else: 0}}}}},
-      {$project: {_id: 0, o_year: "$_id", mkt_share: {$divide: ["$nation_volume", "$total_volume"]}}},
-      {$sort: {o_year: 1}}
+      { $match: { p_type: { $eq: *query8Type } } },
+      {
+        $lookup:
+          {
+            from: "lineitem",
+            localField: "p_partkey",
+            foreignField: "l_partkey",
+            as: "lineitem",
+          },
+      },
+      { $unwind: "$lineitem" },
+      {
+        $lookup:
+          {
+            from: "supplier",
+            localField: "lineitem.l_suppkey",
+            foreignField: "s_suppkey",
+            as: "supplier",
+          },
+      },
+      { $unwind: "$supplier" },
+      {
+        $lookup:
+          {
+            from: "nation",
+            localField: "supplier.s_nationkey",
+            foreignField: "n_nationkey",
+            as: "n2",
+          },
+      },
+      { $unwind: "$n2" },
+      {
+        $lookup:
+          {
+            from: "orders",
+            localField: "lineitem.l_orderkey",
+            foreignField: "o_orderkey",
+            as: "orders",
+          },
+      },
+      { $unwind: "$orders" },
+      {
+        $match:
+          {
+            $and:
+              [
+                {
+                  $expr:
+                    { $lte: ["$orders.o_orderdate", { ^Date: "1996-12-31" }] },
+                },
+                {
+                  $expr:
+                    { $gte: ["$orders.o_orderdate", { ^Date: "1995-01-01" }] },
+                },
+              ],
+          },
+      },
+      {
+        $lookup:
+          {
+            from: "customer",
+            localField: "orders.o_custkey",
+            foreignField: "c_custkey",
+            as: "customer",
+          },
+      },
+      { $unwind: "$customer" },
+      {
+        $lookup:
+          {
+            from: "nation",
+            localField: "customer.c_nationkey",
+            foreignField: "n_nationkey",
+            as: "n1",
+          },
+      },
+      { $unwind: "$n1" },
+      {
+        $lookup:
+          {
+            from: "region",
+            localField: "n1.n_regionkey",
+            foreignField: "r_regionkey",
+            as: "region",
+          },
+      },
+      { $unwind: "$region" },
+      { $match: { "region.r_name": { $eq: *query8Region } } },
+      {
+        $project:
+          {
+            o_year: { $year: "$orders.o_orderdate" },
+            volume:
+              {
+                $multiply:
+                  [
+                    "$lineitem.l_extendedprice",
+                    { $subtract: [{ $literal: 1 }, "$lineitem.l_discount"] },
+                  ],
+              },
+            nation: "$n2.n_name",
+          },
+      },
+      {
+        $group:
+          {
+            _id: "$o_year",
+            total_volume: { $sum: "$volume" },
+            nation_volume:
+              {
+                $sum:
+                  {
+                    $cond:
+                      {
+                        if: { $eq: ["$nation", *query8Nation] },
+                        then: "$volume",
+                        else: 0,
+                      },
+                  },
+              },
+          },
+      },
+      {
+        $project:
+          {
+            _id: 0,
+            o_year: "$_id",
+            mkt_share: { $divide: ["$nation_volume", "$total_volume"] },
+          },
+      },
+      { $sort: { o_year: 1 } },
     ]
-  cursor: {batchSize: *batchSize}
+  cursor: { batchSize: *batchSize }
   allowDiskUse: true
 
 TPCHNormalizedQuery8Warmup:
-  Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
+  Repeat: &Repeat { ^Parameter: { Name: "Repeat", Default: 1 } }
   Database: &db tpch
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHNormalizedQuery8Aggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHNormalizedQuery8Aggregation
 
 TPCHNormalizedQuery8:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query8
-    OperationName: RunCommand
-    OperationCommand: *TPCHNormalizedQuery8Aggregation
+    - OperationMetricsName: Query8
+      OperationName: RunCommand
+      OperationCommand: *TPCHNormalizedQuery8Aggregation
 
 TPCHNormalizedQuery8Explain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query8
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHNormalizedQuery8Aggregation
-      verbosity:
-        executionStats
+    - OperationMetricsName: Query8
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHNormalizedQuery8Aggregation
+        verbosity: executionStats

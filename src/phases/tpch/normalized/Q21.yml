@@ -1,61 +1,138 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Run TPC-H query 21 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  Run TPC-H query 21 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema.
+  Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
-query21Nation: &query21Nation {^Parameter: {Name: "Query1Delta", Default: "SAUDI ARABIA"}}
+batchSize: &batchSize { ^Parameter: { Name: "BatchSize", Default: 101 } }
+query21Nation:
+  &query21Nation {
+    ^Parameter: { Name: "Query1Delta", Default: "SAUDI ARABIA" },
+  }
 
 TPCHNormalizedQuery21Aggregation: &TPCHNormalizedQuery21Aggregation
   aggregate: supplier
   pipeline:
     [
-      {$lookup: {from: "nation", localField: "s_nationkey", foreignField: "n_nationkey", as: "nation"}},
-      {$unwind: "$nation"},
-      {$match: {"nation.n_name": *query21Nation}},
-      {$lookup: {from: "lineitem", localField: "s_suppkey", foreignField: "l_suppkey", as: "l1", pipeline: [{$match: {$expr: {$gt: ["$l_receiptdate", "$l_commitdate"]}}}]}},
-      {$unwind: "$l1"},
-      {$lookup: {from: "orders", localField: "l1.l_orderkey", foreignField: "o_orderkey", as: "orders", pipeline: [{$match: {o_orderstatus: "F"}}]}},
-      {$unwind: "$orders"},
-      {$lookup: {from: "lineitem", let: {l1: "$l1"}, localField: "l1.l_orderkey", foreignField: "l_orderkey", as: "lineitem", pipeline: [
-        {$match: {$expr: {$ne: ["$$l1.l_suppkey", "$l_suppkey"]}}},
-        {$group: {_id: {}, l2_count: {$count: {}}, l3_count: {$sum: {$cond: {if: {$gt: ["$l_receiptdate", "$l_commitdate"]}, then: 1, else: 0}}}}}]}},
-      {$unwind: "$lineitem"},
-      {$match: {$and: [
-        {$expr: {$gt: ["$lineitem.l2_count", 0]}},
-        {$expr: {$eq: ["$lineitem.l3_count", 0]}}]}},
-      {$group: {_id: "$s_name", numwait: {$count: {}}}},
-      {$project: {_id: 0, s_name: "$_id", numwait: 1}},
-      {$sort: {numwait: -1, s_name: 1}},
-      {$limit: 100}
+      {
+        $lookup:
+          {
+            from: "nation",
+            localField: "s_nationkey",
+            foreignField: "n_nationkey",
+            as: "nation",
+          },
+      },
+      { $unwind: "$nation" },
+      { $match: { "nation.n_name": *query21Nation } },
+      {
+        $lookup:
+          {
+            from: "lineitem",
+            localField: "s_suppkey",
+            foreignField: "l_suppkey",
+            as: "l1",
+            pipeline:
+              [
+                {
+                  $match:
+                    { $expr: { $gt: ["$l_receiptdate", "$l_commitdate"] } },
+                },
+              ],
+          },
+      },
+      { $unwind: "$l1" },
+      {
+        $lookup:
+          {
+            from: "orders",
+            localField: "l1.l_orderkey",
+            foreignField: "o_orderkey",
+            as: "orders",
+            pipeline: [{ $match: { o_orderstatus: "F" } }],
+          },
+      },
+      { $unwind: "$orders" },
+      {
+        $lookup:
+          {
+            from: "lineitem",
+            let: { l1: "$l1" },
+            localField: "l1.l_orderkey",
+            foreignField: "l_orderkey",
+            as: "lineitem",
+            pipeline:
+              [
+                {
+                  $match: { $expr: { $ne: ["$$l1.l_suppkey", "$l_suppkey"] } },
+                },
+                {
+                  $group:
+                    {
+                      _id: {},
+                      l2_count: { $count: {} },
+                      l3_count:
+                        {
+                          $sum:
+                            {
+                              $cond:
+                                {
+                                  if:
+                                    {
+                                      $gt: ["$l_receiptdate", "$l_commitdate"],
+                                    },
+                                  then: 1,
+                                  else: 0,
+                                },
+                            },
+                        },
+                    },
+                },
+              ],
+          },
+      },
+      { $unwind: "$lineitem" },
+      {
+        $match:
+          {
+            $and:
+              [
+                { $expr: { $gt: ["$lineitem.l2_count", 0] } },
+                { $expr: { $eq: ["$lineitem.l3_count", 0] } },
+              ],
+          },
+      },
+      { $group: { _id: "$s_name", numwait: { $count: {} } } },
+      { $project: { _id: 0, s_name: "$_id", numwait: 1 } },
+      { $sort: { numwait: -1, s_name: 1 } },
+      { $limit: 100 },
     ]
-  cursor: {batchSize: *batchSize}
+  cursor: { batchSize: *batchSize }
   allowDiskUse: true
 
 TPCHNormalizedQuery21Warmup:
-  Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
+  Repeat: &Repeat { ^Parameter: { Name: "Repeat", Default: 1 } }
   Database: &db tpch
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHNormalizedQuery21Aggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHNormalizedQuery21Aggregation
 
 TPCHNormalizedQuery21:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query21
-    OperationName: RunCommand
-    OperationCommand: *TPCHNormalizedQuery21Aggregation
+    - OperationMetricsName: Query21
+      OperationName: RunCommand
+      OperationCommand: *TPCHNormalizedQuery21Aggregation
 
 TPCHNormalizedQuery21Explain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query21
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHNormalizedQuery21Aggregation
-      verbosity:
-        executionStats
+    - OperationMetricsName: Query21
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHNormalizedQuery21Aggregation
+        verbosity: executionStats

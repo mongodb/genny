@@ -4,54 +4,113 @@ Description: |
   Run TPC-H query 2 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
+batchSize: &batchSize { ^Parameter: { Name: "BatchSize", Default: 101 } }
 
-query2Size: &query2Size {^Parameter: {Name: "Query2Size", Default: 15}}
-query2Type: &query2Type {^Parameter: {Name: "Query2Type", Default: "^.*BRASS$"}}  # ^.*{type}$"
-query2Region: &query2Region {^Parameter: {Name: "Query2Region", Default: "EUROPE"}}
+query2Size: &query2Size { ^Parameter: { Name: "Query2Size", Default: 15 } }
+query2Type: &query2Type {
+  ^Parameter: { Name: "Query2Type", Default: "^.*BRASS$" },
+} # ^.*{type}$"
+query2Region:
+  &query2Region { ^Parameter: { Name: "Query2Region", Default: "EUROPE" } }
 
 TPCHDenormalizedQuery2Aggregation: &TPCHDenormalizedQuery2Aggregation
   aggregate: part
   pipeline:
     [
-      {$match: {$and: [{p_type: {$regex: *query2Type, $options: "si"}}, {p_size: {$eq: *query2Size}}]}},
-      {$lookup: {from: "partsupp", localField: "p_partkey", foreignField: "ps_partkey", as: "partsupp"}},
-      {$unwind: "$partsupp"},
-      {$lookup: {from: "supplier", localField: "partsupp.ps_suppkey", foreignField: "s_suppkey", as: "supplier", pipeline: [
-        {$match: {"nation.region.r_name": {$eq: *query2Region}}}]}},
-      {$unwind: "$supplier"},
-      {$sort: {"partsupp.ps_supplycost": 1}},
-      {$group: {_id: {p_partkey: "$p_partkey", p_mfgr: "$p_mfgr"}, supplier: {$first: {s_acctbal: "$supplier.s_acctbal", s_name: "$supplier.s_name", s_address: "$supplier.s_address", s_phone: "$supplier.s_phone", s_comment: "$supplier.s_comment", ps_supplycost: "$partsupp.ps_supplycost", n_name: "$supplier.nation.n_name"}}}},
-      {$project: {_id: 0, s_acctbal: "$supplier.s_acctbal", s_name: "$supplier.s_name", n_name: "$supplier.n_name", p_partkey: "$_id.p_partkey", p_mfgr: "$_id.p_mfgr", s_address: "$supplier.s_address", s_phone: "$supplier.s_phone", s_comment: "$supplier.s_comment"}},
-      {$sort: {s_acctbal: -1, n_name: 1, s_name: 1, p_partkey: 1}},
-      {$limit: 100}
+      {
+        $match:
+          {
+            $and:
+              [
+                { p_type: { $regex: *query2Type, $options: "si" } },
+                { p_size: { $eq: *query2Size } },
+              ],
+          },
+      },
+      {
+        $lookup:
+          {
+            from: "partsupp",
+            localField: "p_partkey",
+            foreignField: "ps_partkey",
+            as: "partsupp",
+          },
+      },
+      { $unwind: "$partsupp" },
+      {
+        $lookup:
+          {
+            from: "supplier",
+            localField: "partsupp.ps_suppkey",
+            foreignField: "s_suppkey",
+            as: "supplier",
+            pipeline:
+              [{ $match: { "nation.region.r_name": { $eq: *query2Region } } }],
+          },
+      },
+      { $unwind: "$supplier" },
+      { $sort: { "partsupp.ps_supplycost": 1 } },
+      {
+        $group:
+          {
+            _id: { p_partkey: "$p_partkey", p_mfgr: "$p_mfgr" },
+            supplier:
+              {
+                $first:
+                  {
+                    s_acctbal: "$supplier.s_acctbal",
+                    s_name: "$supplier.s_name",
+                    s_address: "$supplier.s_address",
+                    s_phone: "$supplier.s_phone",
+                    s_comment: "$supplier.s_comment",
+                    ps_supplycost: "$partsupp.ps_supplycost",
+                    n_name: "$supplier.nation.n_name",
+                  },
+              },
+          },
+      },
+      {
+        $project:
+          {
+            _id: 0,
+            s_acctbal: "$supplier.s_acctbal",
+            s_name: "$supplier.s_name",
+            n_name: "$supplier.n_name",
+            p_partkey: "$_id.p_partkey",
+            p_mfgr: "$_id.p_mfgr",
+            s_address: "$supplier.s_address",
+            s_phone: "$supplier.s_phone",
+            s_comment: "$supplier.s_comment",
+          },
+      },
+      { $sort: { s_acctbal: -1, n_name: 1, s_name: 1, p_partkey: 1 } },
+      { $limit: 100 },
     ]
-  cursor: {batchSize: *batchSize}
+  cursor: { batchSize: *batchSize }
   allowDiskUse: true
 
 TPCHDenormalizedQuery2Warmup:
-  Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
+  Repeat: &Repeat { ^Parameter: { Name: "Repeat", Default: 1 } }
   Database: &db tpch
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedQuery2Aggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedQuery2Aggregation
 
 TPCHDenormalizedQuery2:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query2
-    OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedQuery2Aggregation
+    - OperationMetricsName: Query2
+      OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedQuery2Aggregation
 
 TPCHDenormalizedQuery2Explain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query2
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHDenormalizedQuery2Aggregation
-      verbosity:
-        executionStats
+    - OperationMetricsName: Query2
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHDenormalizedQuery2Aggregation
+        verbosity: executionStats

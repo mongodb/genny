@@ -10,8 +10,8 @@ Clients:
       socketTimeoutMS: -1
 
 Actors:
-- Name: TPCHNormalizedValidate
-  Type: RunCommand
-  Database: tpch
-  Phases:
-  - Nop: true
+  - Name: TPCHNormalizedValidate
+    Type: RunCommand
+    Database: tpch
+    Phases:
+      - Nop: true

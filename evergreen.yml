@@ -41,276 +41,273 @@
 #
 #                                                                       🧞‍♀️
 
-
 ##                ⚡️ Variants ⚡️
 
 ignore:
-- "*.md"  # don't schedule tests if a commit only changes markdown files
+  - "*.md" # don't schedule tests if a commit only changes markdown files
 
 buildvariants:
-- name: amazon2
-  display_name: Amazon Linux 2 x64
-  modules: [mongo]
-  run_on:
-  - amazon2-build
-  tasks:
-  - name: tg_compile_and_test_with_server_on_amz
-  - name: t_compile_and_dry_run_asan
+  - name: amazon2
+    display_name: Amazon Linux 2 x64
+    modules: [mongo]
+    run_on:
+      - amazon2-build
+    tasks:
+      - name: tg_compile_and_test_with_server_on_amz
+      - name: t_compile_and_dry_run_asan
 
-- name: amazon2_arm64
-  display_name: Amazon Linux 2 arm64
-  modules: [mongo]
-  run_on:
-  - amazon2-arm64-large
-  tasks:
-  - name: tg_compile_and_test_with_server_on_amz
-  - name: t_compile_and_dry_run_asan
+  - name: amazon2_arm64
+    display_name: Amazon Linux 2 arm64
+    modules: [mongo]
+    run_on:
+      - amazon2-arm64-large
+    tasks:
+      - name: tg_compile_and_test_with_server_on_amz
+      - name: t_compile_and_dry_run_asan
 
-- name: amazon2023
-  display_name: Amazon Linux 2023 x64
-  modules: [mongo]
-  run_on:
-  - amazon2023.0-large
-  tasks:
-  - name: t_compile_and_dry_run
-  - name: t_compile_and_dry_run_asan
+  - name: amazon2023
+    display_name: Amazon Linux 2023 x64
+    modules: [mongo]
+    run_on:
+      - amazon2023.0-large
+    tasks:
+      - name: t_compile_and_dry_run
+      - name: t_compile_and_dry_run_asan
 
-- name: amazon2023_arm64
-  display_name: Amazon Linux 2023 arm64
-  modules: [mongo]
-  run_on:
-  - amazon2023.0-arm64-large
-  tasks:
-  - name: t_compile_and_dry_run
-  - name: t_compile_and_dry_run_asan
+  - name: amazon2023_arm64
+    display_name: Amazon Linux 2023 arm64
+    modules: [mongo]
+    run_on:
+      - amazon2023.0-arm64-large
+    tasks:
+      - name: t_compile_and_dry_run
+      - name: t_compile_and_dry_run_asan
 
-- name: rhel70
-  display_name: RHEL 7
-  modules: [mongo]
-  run_on:
-  - rhel70
-  tasks:
-  - name: tg_compile
+  - name: rhel70
+    display_name: RHEL 7
+    modules: [mongo]
+    run_on:
+      - rhel70
+    tasks:
+      - name: tg_compile
 
-- name: rhel8
-  display_name: RHEL 8
-  modules: [mongo]
-  run_on:
-  - rhel80-test
-  tasks:
-  - name: tg_compile
+  - name: rhel8
+    display_name: RHEL 8
+    modules: [mongo]
+    run_on:
+      - rhel80-test
+    tasks:
+      - name: tg_compile
 
-- name: ubuntu2204
-  display_name: Ubuntu 22.04
-  modules: [mongo]
-  run_on:
-  - ubuntu2204-large
-  tasks:
-  - name: tg_compile
+  - name: ubuntu2204
+    display_name: Ubuntu 22.04
+    modules: [mongo]
+    run_on:
+      - ubuntu2204-large
+    tasks:
+      - name: tg_compile
 
-- name: ubuntu1804
-  display_name: Ubuntu 18.04
-  modules: [mongo]
-  run_on:
-  - ubuntu1804-build
-  tasks:
-  - name: tg_compile
+  - name: ubuntu1804
+    display_name: Ubuntu 18.04
+    modules: [mongo]
+    run_on:
+      - ubuntu1804-build
+    tasks:
+      - name: tg_compile
 
-- name: macos-1100
-  display_name: macOS Big Sur x64
-  modules: [mongo]
-  run_on:
-  - macos-1100
-  tasks:
-  - name: tg_compile_and_test_with_server_on_macos
+  - name: macos-1100
+    display_name: macOS Big Sur x64
+    modules: [mongo]
+    run_on:
+      - macos-1100
+    tasks:
+      - name: tg_compile_and_test_with_server_on_macos
 
-- name: macos-1100-arm64
-  display_name: macOS Big Sur arm64
-  modules: [mongo]
-  run_on:
-  - macos-1100-arm64
-  tasks:
-  - name: tg_compile_and_test_with_server_on_macos
-
+  - name: macos-1100-arm64
+    display_name: macOS Big Sur arm64
+    modules: [mongo]
+    run_on:
+      - macos-1100-arm64
+    tasks:
+      - name: tg_compile_and_test_with_server_on_macos
 
 ##                ⚡️ Tasks ⚡️
 
 tasks:
-- name: t_compile
-  commands:
-  - func: f_fetch_source
-  - func: f_compile
+  - name: t_compile
+    commands:
+      - func: f_fetch_source
+      - func: f_compile
 
-- name: t_compile_and_dry_run
-  commands:
-  - func: f_fetch_source
-  - func: f_compile
-  - func: f_dry_run_variant_auto_tasks
-  - func: f_dry_run_workloads
+  - name: t_compile_and_dry_run
+    commands:
+      - func: f_fetch_source
+      - func: f_compile
+      - func: f_dry_run_variant_auto_tasks
+      - func: f_dry_run_workloads
 
-- name: t_compile_and_dry_run_asan
-  commands:
-  - func: f_fetch_source
-  - func: f_compile_asan
-  - func: f_dry_run_variant_auto_tasks
-  - func: f_dry_run_workloads_asan
+  - name: t_compile_and_dry_run_asan
+    commands:
+      - func: f_fetch_source
+      - func: f_compile_asan
+      - func: f_dry_run_variant_auto_tasks
+      - func: f_dry_run_workloads_asan
 
-- name: t_python_test
-  commands:
-  - func: f_python_test
+  - name: t_python_test
+    commands:
+      - func: f_python_test
 
-- name: t_lint_workloads
-  commands:
-  - func: f_lint_workloads
-  
-- name: t_check_generated_docs
-  commands:
-  - func: f_check_generated_docs
+  - name: t_lint_workloads
+    commands:
+      - func: f_lint_workloads
 
-- name: t_lint_python
-  commands:
-  - func: f_fetch_source
-  - func: f_lint_python
+  - name: t_check_generated_docs
+    commands:
+      - func: f_check_generated_docs
 
-- name: t_cmake_test
-  commands:
-  - func: f_cmake_test
+  - name: t_lint_python
+    commands:
+      - func: f_fetch_source
+      - func: f_lint_python
 
-- name: t_cmake_test_ignore_flaky
-  commands:
-  - func: f_cmake_test_ignore_flaky
+  - name: t_cmake_test
+    commands:
+      - func: f_cmake_test
 
-- name: t_benchmark_test
-  commands:
-  - func: f_benchmark_test
+  - name: t_cmake_test_ignore_flaky
+    commands:
+      - func: f_cmake_test_ignore_flaky
+
+  - name: t_benchmark_test
+    commands:
+      - func: f_benchmark_test
 
   # It's not possible to do a standalone version due to
   # some tests' reliance on an apm callback that doesn't
   # work on standalone. (Specifically, since read concern
   # is irrelevant on a standalone, recent driver versions
   # simply omit it.)
-- name: t_integration_test_single_node_replset
-  commands:
-  - command: subprocess.exec
-    params:
-      binary: ./src/genny/run-genny
-      args:
-      - -v
-      - resmoke-test
-      - --suites
-      - ../../src/genny/src/resmokeconfig/genny_single_node_replset.yml
+  - name: t_integration_test_single_node_replset
+    commands:
+      - command: subprocess.exec
+        params:
+          binary: ./src/genny/run-genny
+          args:
+            - -v
+            - resmoke-test
+            - --suites
+            - ../../src/genny/src/resmokeconfig/genny_single_node_replset.yml
 
-- name: t_integration_test_three_node_replset
-  commands:
-  - command: subprocess.exec
-    params:
-      binary: ./src/genny/run-genny
-      args:
-      - -v
-      - resmoke-test
-      - --suites
-      - ../../src/genny/src/resmokeconfig/genny_three_node_replset.yml
+  - name: t_integration_test_three_node_replset
+    commands:
+      - command: subprocess.exec
+        params:
+          binary: ./src/genny/run-genny
+          args:
+            - -v
+            - resmoke-test
+            - --suites
+            - ../../src/genny/src/resmokeconfig/genny_three_node_replset.yml
 
-- name: t_integration_test_sharded
-  commands:
-  - command: subprocess.exec
-    params:
-      binary: ./src/genny/run-genny
-      args:
-      - -v
-      - resmoke-test
-      - --suites
-      - ../../src/genny/src/resmokeconfig/genny_sharded.yml
+  - name: t_integration_test_sharded
+    commands:
+      - command: subprocess.exec
+        params:
+          binary: ./src/genny/run-genny
+          args:
+            - -v
+            - resmoke-test
+            - --suites
+            - ../../src/genny/src/resmokeconfig/genny_sharded.yml
 
-# Must run this task last to avoid polluting test results with tests generated
-# by the new actor.
-- name: t_test_create_new_actor_script
-  commands:
-  - func: f_run_create_new_actor_script
-  - func: f_compile
-  - func: f_dry_run_new_actor_script  # Test the generated yaml file is valid.
-  - command: subprocess.exec
-    params:
-      binary: ./src/genny/run-genny
-      args:
-      - -v
-      - resmoke-test
-      - --create-new-actor-test-suite
+  # Must run this task last to avoid polluting test results with tests generated
+  # by the new actor.
+  - name: t_test_create_new_actor_script
+    commands:
+      - func: f_run_create_new_actor_script
+      - func: f_compile
+      - func: f_dry_run_new_actor_script # Test the generated yaml file is valid.
+      - command: subprocess.exec
+        params:
+          binary: ./src/genny/run-genny
+          args:
+            - -v
+            - resmoke-test
+            - --create-new-actor-test-suite
 
 ##                ⚡️ Task Groups ⚡️
 
 task_groups:
+  - &a_compile_and_test
 
-- &a_compile_and_test
-  name: tg_compile_and_test
-  max_hosts: 1
-  teardown_task:
-  # Attaching results is prohibited in "teardown_group".
-  # So we call it in "teardown_task" but make the result file optional.
-  - func: f_report_test_results
-  tasks:
-  # Rely on implicit dependencies in task_groups where tasks are executed
-  # in the order they're defined. Tasks with explicit "depends_on" tasks
-  # may conflict with task_group's implicit dependency, causing
-  # unexpected behavior.
-  #
-  # For this task group, the implicit dependency is that t_*_test has to
-  # run after t_compile_and_dry_run.
-  - t_compile_and_dry_run
-  - t_python_test
-  #- t_lint_python
-  - t_lint_workloads
-  - t_check_generated_docs
-  - t_cmake_test
+    name: tg_compile_and_test
+    max_hosts: 1
+    teardown_task:
+      # Attaching results is prohibited in "teardown_group".
+      # So we call it in "teardown_task" but make the result file optional.
+      - func: f_report_test_results
+    tasks:
+      # Rely on implicit dependencies in task_groups where tasks are executed
+      # in the order they're defined. Tasks with explicit "depends_on" tasks
+      # may conflict with task_group's implicit dependency, causing
+      # unexpected behavior.
+      #
+      # For this task group, the implicit dependency is that t_*_test has to
+      # run after t_compile_and_dry_run.
+      - t_compile_and_dry_run
+      - t_python_test
+      # - t_lint_python
+      - t_lint_workloads
+      - t_check_generated_docs
+      - t_cmake_test
 
-- <<: *a_compile_and_test
-  name: tg_compile_and_benchmark
-  tasks:
-  - t_compile_and_dry_run
-  - t_benchmark_test
+  - !!merge <<: *a_compile_and_test
+    name: tg_compile_and_benchmark
+    tasks:
+      - t_compile_and_dry_run
+      - t_benchmark_test
 
-- <<: *a_compile_and_test
-  name: tg_compile_and_test_with_server_on_amz
-  tasks:
-  - t_compile
-  - t_python_test
-  #- t_lint_python
-  - t_lint_workloads
-  - t_check_generated_docs
-  - t_cmake_test
-  - t_integration_test_single_node_replset
-  - t_integration_test_three_node_replset
-  - t_integration_test_sharded
-  - t_test_create_new_actor_script  # Must run this task last.
+  - !!merge <<: *a_compile_and_test
+    name: tg_compile_and_test_with_server_on_amz
+    tasks:
+      - t_compile
+      - t_python_test
+      # - t_lint_python
+      - t_lint_workloads
+      - t_check_generated_docs
+      - t_cmake_test
+      - t_integration_test_single_node_replset
+      - t_integration_test_three_node_replset
+      - t_integration_test_sharded
+      - t_test_create_new_actor_script # Must run this task last.
 
-- <<: *a_compile_and_test
-  name: tg_compile_and_test_with_server_on_macos
-  tasks:
-  - t_compile_and_dry_run
-  - t_python_test
-  - t_cmake_test_ignore_flaky
-  - t_integration_test_single_node_replset
-  - t_integration_test_three_node_replset
-  - t_integration_test_sharded
-  - t_test_create_new_actor_script  # Must run this task last.
+  - !!merge <<: *a_compile_and_test
+    name: tg_compile_and_test_with_server_on_macos
+    tasks:
+      - t_compile_and_dry_run
+      - t_python_test
+      - t_cmake_test_ignore_flaky
+      - t_integration_test_single_node_replset
+      - t_integration_test_three_node_replset
+      - t_integration_test_sharded
+      - t_test_create_new_actor_script # Must run this task last.
 
-- name: tg_compile
-  max_hosts: 1
-  tasks:
-  - t_compile_and_dry_run
-
+  - name: tg_compile
+    max_hosts: 1
+    tasks:
+      - t_compile_and_dry_run
 
 ##                ⚡️ Functions ⚡️
 
 functions:
 
   f_fetch_source:
-  - command: manifest.load
-  - command: git.get_project
-    params:
-      directory: src/genny
-      revisions:
-        mongo: e61bf27c2f6a83fed36e5a13c008a32d563babe2
+    - command: manifest.load
+    - command: git.get_project
+      params:
+        directory: src/genny
+        revisions:
+          mongo: e61bf27c2f6a83fed36e5a13c008a32d563babe2
 
   ##
   # Compile the project in src/build.
@@ -320,86 +317,85 @@ functions:
   # previous (unsuccessful) builds in the gennytoolchain project.
   ##
   f_compile:
-  - command: subprocess.exec
-    params:
-      binary: ./src/genny/run-genny
-      args:
-      - -v
-      - install
+    - command: subprocess.exec
+      params:
+        binary: ./src/genny/run-genny
+        args:
+          - -v
+          - install
 
   f_compile_asan:
-  - command: subprocess.exec
-    params:
-      binary: ./src/genny/run-genny
-      args:
-      - -v
-      - install
-      - --sanitizer=asan
-  
+    - command: subprocess.exec
+      params:
+        binary: ./src/genny/run-genny
+        args:
+          - -v
+          - install
+          - --sanitizer=asan
+
   ##
   # Runs schedule_variant_auto_tasks as a dry run
   # to verify AutoRun logic in all workload YAML files.
   ##
   f_dry_run_variant_auto_tasks:
-  - command: subprocess.exec
-    params:
-      binary: ./src/genny/run-genny
-      args:
-      - auto-tasks
-      - --tasks
-      - variant_tasks
-      - --dry-run
-
+    - command: subprocess.exec
+      params:
+        binary: ./src/genny/run-genny
+        args:
+          - auto-tasks
+          - --tasks
+          - variant_tasks
+          - --dry-run
 
   ##
   # Runs each workload as a dry run
   # Requires f_compile to have been run first.
   ##
   f_dry_run_workloads:
-  - command: subprocess.exec
-    params:
-      binary: ./src/genny/run-genny
-      args:
-      - -v
-      - dry-run-workloads
+    - command: subprocess.exec
+      params:
+        binary: ./src/genny/run-genny
+        args:
+          - -v
+          - dry-run-workloads
 
   ##
   # Runs each workload as a dry run
   # Requires f_compile_asan to have been run first.
   ##
   f_dry_run_workloads_asan:
-  - command: subprocess.exec
-    params:
-      binary: ./src/genny/run-genny
-      args:
-      - -v
-      - dry-run-workloads
+    - command: subprocess.exec
+      params:
+        binary: ./src/genny/run-genny
+        args:
+          - -v
+          - dry-run-workloads
 
   ##
   # Dry-runs workload generated by f_run_create_new_actor_script
   # Requires f_compile to have been run first.
   ##
   f_dry_run_new_actor_script:
-  - command: subprocess.exec
-    params:
-      binary: ./src/genny/run-genny
-      args:
-      - -v
-      - dry-run-workloads
-      - --workload
-      - ./src/genny/src/workloads/docs/SelfTestActor.yml
+    - command: subprocess.exec
+      params:
+        binary: ./src/genny/run-genny
+        args:
+          - -v
+          - dry-run-workloads
+          - --workload
+          - ./src/genny/src/workloads/docs/SelfTestActor.yml
 
   ##
   # Runs tests via ctest.
   # Requires f_compile to have been run first.
   ##
   f_cmake_test:
-  - command: subprocess.exec
-    params:
-      binary: ./src/genny/run-genny
-      args:
-      - -v
-      - cmake-test
+    - command: subprocess.exec
+      params:
+        binary: ./src/genny/run-genny
+        args:
+          - -v
+          - cmake-test
 
   ##
   # Runs tests via ctest, ignoring flaky tests (see EVG-19909).
@@ -407,112 +403,111 @@ functions:
   # Feel free to update regex_clude per the latest test results
   ##
   f_cmake_test_ignore_flaky:
-  - command: subprocess.exec
-    params:
-      binary: ./src/genny/run-genny
-      args:
-      - -v
-      - cmake-test
-      - --regex-exclude
-      - "IgnoredOnMacOs"
+    - command: subprocess.exec
+      params:
+        binary: ./src/genny/run-genny
+        args:
+          - -v
+          - cmake-test
+          - --regex-exclude
+          - "IgnoredOnMacOs"
 
   ##
   # Runs benchmarks via ctest.
   # Requires f_compile to have been run first.
   ##
   f_benchmark_test:
-  - command: subprocess.exec
-    params:
-      binary: ./src/genny/run-genny
-      args:
-      - -v
-      - benchmark-test
+    - command: subprocess.exec
+      params:
+        binary: ./src/genny/run-genny
+        args:
+          - -v
+          - benchmark-test
 
   ##
   # Runs tests for the create_new_actor script.
   ##
   f_run_create_new_actor_script:
-  - command: subprocess.exec
-    params:
-      binary: ./src/genny/run-genny
-      args:
-      - -v
-      - create-new-actor
-      - SelfTestActor
+    - command: subprocess.exec
+      params:
+        binary: ./src/genny/run-genny
+        args:
+          - -v
+          - create-new-actor
+          - SelfTestActor
 
   ##
   # Runs python unit tests.
   ##
   f_python_test:
-  - command: subprocess.exec
-    params:
-      binary: ./src/genny/run-genny
-      args:
-      - -v
-      # TODO: rename to pytest
-      - self-test
+    - command: subprocess.exec
+      params:
+        binary: ./src/genny/run-genny
+        args:
+          - -v
+          # TODO: rename to pytest
+          - self-test
 
   ##
   # Runs the YAML linter for Genny workloads
   ##
   f_lint_workloads:
-  - command: subprocess.exec
-    params:
-      binary: ./src/genny/run-genny
-      args:
-      - -v
-      - lint-yaml
-
+    - command: subprocess.exec
+      params:
+        binary: ./src/genny/run-genny
+        args:
+          - -v
+          - lint-yaml
+          - --format
   ##
   # Lint python
   ##
   f_lint_python:
-  - command: subprocess.exec
-    params:
-      binary: ./src/genny/run-genny
-      args:
-      - -v
-      - lint-python
+    - command: subprocess.exec
+      params:
+        binary: ./src/genny/run-genny
+        args:
+          - -v
+          - lint-python
 
   f_check_generated_docs:
-  - command: shell.exec
-    params:
-      script: |
-        cd src/genny
+    - command: shell.exec
+      params:
+        script: |
+          cd src/genny
 
-        ./run-genny generate-docs
+          ./run-genny generate-docs
 
-        # Check for changes
-        if git diff --quiet; then
-            echo 'No changes in the repository'
-            exit 0
-        else
-            echo 'Workload documentation needs to be regenerated. Please run \`./run-genny generate-docs\` and commit the changes.'
-            exit 1
-        fi
+          # Check for changes
+          if git diff --quiet; then
+              echo 'No changes in the repository'
+              exit 0
+          else
+              echo 'Workload documentation needs to be regenerated. Please run \`./run-genny generate-docs\` and commit the changes.'
+              exit 1
+          fi
 
   ##
   # Reports test results to evergreen API.
   ##
   f_report_test_results:
-  - command: shell.exec
-    params:
-      script: |
-        pwd
-        find . -iname '*.xml'
-        ls build/XUnitXML/*.xml
-        cat build/XUnitXML/*.xml
-  - command: attach.xunit_results
-    params:
-      file: build/XUnitXML/*.xml
-
+    - command: shell.exec
+      params:
+        script: |
+          pwd
+          find . -iname '*.xml'
+          ls build/XUnitXML/*.xml
+          cat build/XUnitXML/*.xml
+    - command: attach.xunit_results
+      params:
+        file: build/XUnitXML/*.xml
 
 ##                ⚡️ Modules ⚡️
 
 modules:
-- name: mongo
-  repo: git@github.com:mongodb/mongo.git
-  # This prefix is relative to the path in git.get_project
-  # I.e., src/genny/../../src = ./src
-  prefix: ../../src
-  branch: master
+  - name: mongo
+    repo: git@github.com:mongodb/mongo.git
+    # This prefix is relative to the path in git.get_project
+    # I.e., src/genny/../../src = ./src
+    prefix: ../../src
+    branch: master
