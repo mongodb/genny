@@ -13,7 +13,7 @@ Description: |
 
   To measure this, we run the same query 7 times, each one with a different selectivity value.
   For example, in phase 'MultiplannerWith50ExpectedResults' we choose a selectivity of
-  '50 / collection size' to make the query return (approximately) 50 documents.
+  '50 / collectionSize' to make the query return (approximately) 50 documents.
 
   Unlike many of the other multiplanner/ workloads, we only test with 2 indexes here, because
   2 indexes is a worst case for throwing away results. Having more indexes increases planning
