@@ -6,7 +6,7 @@ Description: |
   get as many competing plans as possible. We also add a sort stage on an unindexed field,
   ensuring that every plan is a blocking plan. Because all plans are blocking and return as many
   documents as possible, multiplanning will hit "max works" instead of EOF or numToReturn.
-  This maximizes the overhead of multiplanning on both classic and SBE.
+  This maximizes the overhead of multiplanning.
 
   We expect classic to have better latency and throughput than SBE on this workload,
   and we expect the combination of classic planner + SBE execution (PM-3591) to perform about
