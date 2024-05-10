@@ -100,7 +100,7 @@ Actors:
 
 - Name: InsertData
   Type: Loader
-  Threads: 1
+  Threads: 8
   Phases:
     OnlyActiveInPhases:
       Active: [2]
@@ -109,10 +109,10 @@ Actors:
         Repeat: 1
         Database: *db
         Collection: *coll
-        Threads: 1
         CollectionCount: 1
+        MultipleThreadsPerCollection: true
         DocumentCount: 100_000_000
-        BatchSize: 1000
+        BatchSize: 1_000
         Document:
           timestamp: {^RandomDate: {min: "2022-01-01", max: "2022-03-01"}}
           metadata:
