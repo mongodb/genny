@@ -6,8 +6,9 @@ Description: |
   as many competing plans as possible. The collection is clustered and has very large strings as
   _id.
 
-  This workload is similar to 'Simple.yml' except for the collection being clustered.
-  Maybe we expect the larger record IDs to make fetching more expensive.
+  This workload is similar to 'Simple.yml' except that the collection is clustered. None of the
+  competing plans actually take advantage of the clustering (there is no bounded collection scan
+  plan). Maybe we expect the larger record IDs to make fetch take more wall clock time.
 
 GlobalDefaults:
   dbname: &db test
