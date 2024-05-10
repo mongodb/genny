@@ -6,7 +6,7 @@ Description: |
 
   When a query runs with Classic multiplanner + Classic execution, then when multiplanning finishes
   the query can resume running and reuse the partial results it gathered during multiplanning. By
-  contrast when running with SBE execution (regardless of choice of multiplanner), the query has
+  contrast when running with SBE execution, the query has
   to start over--unless it already finished during multiplanning. This means SBE has a
   discontinuity in performance as the size of the result set grows: when it crosses from 100 to
   102 documents, it has to recompute those first ~100 documents.
