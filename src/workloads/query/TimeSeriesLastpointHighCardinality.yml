@@ -1,0 +1,336 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This test exercises the behavior of lastpoint-type queries on time-series collections _with high
+  group cardinality_. The currently supported lastpoint aggregate pipelines that are tested here
+  include:
+    1. a $sort on a meta field (both ascending and descending) and time (descending) and $group with
+       _id on the meta field and only $first accumulators.
+    2. a $sort on a meta field (both ascending and descending) and time (ascending) and $group with
+       _id on the meta field and only $last accumulators.
+    3. any of the above pipelines with a preceding match predicate on a meta field.
+
+  This workload is a companion workload of TimeSeriesLastpoint.yml but focuses on the run-time
+  benefits of related optimizations by the high group cardinality by 100,000 sensorIds.
+
+# Parameters reused in multiple Actors.
+db: &db test
+coll: &coll Collection0
+phasePath: &phasePath ../../phases/query/TimeSeriesLastpointHighCardinality.yml
+MaxPhases: &MaxPhases 22
+
+# Operations reused in multiple Phases.
+Nop: &Nop {Nop: true}
+LastpointQueryMetaAscTimeDesc: &LastpointQueryMetaAscTimeDesc
+  LoadConfig:
+    Path: *phasePath
+    Key: RunLastPointQuery
+    Parameters:
+      Collection: *coll
+      SortPattern: &sortPatternMetaAscTimeDesc {"metadata.sensorId": 1, timestamp: -1}
+      GroupPattern: {_id: "$metadata.sensorId", timestamp: {$first: "$timestamp"}, temp: {$first: "$temp"}}
+      GroupPatternTopOrBottom:
+        $top:
+          sortBy: *sortPatternMetaAscTimeDesc
+          output: &output {timestamp: "$timestamp", temp: "$temp"}
+LastpointQueryMetaDescTimeDesc: &LastpointQueryMetaDescTimeDesc
+  LoadConfig:
+    Path: *phasePath
+    Key: RunLastPointQuery
+    Parameters:
+      Collection: *coll
+      SortPattern: &sortPatternMetaDescTimeDesc {"metadata.sensorId": -1, timestamp: -1}
+      GroupPattern: {_id: "$metadata.sensorId", timestamp: {$first: "$timestamp"}, temp: {$first: "$temp"}}
+      GroupPatternTopOrBottom: {$top: {sortBy: *sortPatternMetaDescTimeDesc, output: *output}}
+LastpointQueryMetaDescTimeAsc: &LastpointQueryMetaDescTimeAsc
+  LoadConfig:
+    Path: *phasePath
+    Key: RunLastPointQuery
+    Parameters:
+      Collection: *coll
+      SortPattern: &sortPatternMetaDescTimeAsc {"metadata.sensorId": -1, timestamp: 1}
+      GroupPattern: {_id: "$metadata.sensorId", timestamp: {$last: "$timestamp"}, temp: {$last: "$temp"}}
+      GroupPatternTopOrBottom: {$bottom: {sortBy: *sortPatternMetaDescTimeAsc, output: *output}}
+LastpointQueryMetaAscTimeAsc: &LastpointQueryMetaAscTimeAsc
+  LoadConfig:
+    Path: *phasePath
+    Key: RunLastPointQuery
+    Parameters:
+      Collection: *coll
+      SortPattern: &sortPatternMetaAscTimeAsc {"metadata.sensorId": 1, timestamp: 1}
+      GroupPattern: {_id: "$metadata.sensorId", timestamp: {$last: "$timestamp"}, temp: {$last: "$temp"}}
+      GroupPatternTopOrBottom: {$bottom: {sortBy: *sortPatternMetaAscTimeAsc, output: *output}}
+
+Actors:
+- Name: DropTimeSeriesCollection
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        Operation:
+          OperationName: RunCommand
+          OperationCommand: {drop: *coll}
+
+- Name: CreateTimeSeriesCollection
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [1]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        Operation:
+          OperationMetricsName: CreateTimeSeriesCollection
+          OperationName: RunCommand
+          OperationCommand:
+            {create: *coll, timeseries: {timeField: "timestamp", metaField: "metadata"}}
+
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [2]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        Collection: *coll
+        Threads: 1
+        CollectionCount: 1
+        DocumentCount: 100_000_000
+        BatchSize: 1000
+        Document:
+          timestamp: {^RandomDate: {min: "2022-01-01", max: "2022-03-01"}}
+          metadata:
+            sensorId: {^RandomInt: {min: 0, max: 100_000}}
+            type: "temperature"
+          temp: {^RandomDouble: {min: -30, max: 120}}
+
+# QuiesceActor will run in phase 3.
+
+####################################################################################################
+# Following 5 actors including the hidden QuiesceActor in phase 4&7 run a lastpoint query with a
+# sort and group on meta subfield ascending and time descending.
+- Name: CreateIdxForMetaAscTimeDesc
+  Type: RunCommand
+  Database: *db
+  Phases:
+    OnlyActiveInPhases:
+      Active: [4]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        LoadConfig:
+          Path: *phasePath
+          Key: CreateIndex
+          Parameters:
+            Collection: *coll
+            IndexName: &metaAscTimeDesc "meta_asc_time_desc"
+            IndexPattern: *sortPatternMetaAscTimeDesc
+
+# QuiesceActor will run in phase 5.
+
+- Name: MetaAscTimeDesc
+  Type: CrudActor
+  Database: *db
+  Phases:
+    OnlyActiveInPhases:
+      Active: [6]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        *LastpointQueryMetaAscTimeDesc
+
+- Name: DropIdxForMetaAscTimeDesc
+  Type: RunCommand
+  Database: *db
+  Phases:
+    OnlyActiveInPhases:
+      Active: [7]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        LoadConfig:
+          Path: *phasePath
+          Key: DropIndex
+          Parameters:
+            Collection: *coll
+            IndexName: *metaAscTimeDesc
+
+# QuiesceActor will run in phase 8.
+####################################################################################################
+
+####################################################################################################
+# Following 5 actors including the hidden QuiesceActor in phase 10&13 run a lastpoint query with a
+# sort and group on meta subfield ascending and time descending.
+- Name: CreateIndexForMetaDescTimeDesc
+  Type: RunCommand
+  Database: *db
+  Phases:
+    OnlyActiveInPhases:
+      Active: [9]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        LoadConfig:
+          Path: *phasePath
+          Key: CreateIndex
+          Parameters:
+            Collection: *coll
+            IndexName: &metaDescTimeDesc "meta_desc_time_desc"
+            IndexPattern: *sortPatternMetaDescTimeDesc
+
+# QuiesceActor will run in phase 10.
+
+- Name: MetaDescTimeDesc
+  Type: CrudActor
+  Database: *db
+  Phases:
+    OnlyActiveInPhases:
+      Active: [11]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        *LastpointQueryMetaDescTimeDesc
+
+- Name: DropIndexForMetaDescTimeDesc
+  Type: RunCommand
+  Database: *db
+  Phases:
+    OnlyActiveInPhases:
+      Active: [12]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        LoadConfig:
+          Path: *phasePath
+          Key: DropIndex
+          Parameters:
+            Collection: *coll
+            IndexName: *metaDescTimeDesc
+
+# QuiesceActor will run in phase 13.
+####################################################################################################
+
+####################################################################################################
+# Following 5 actors including the hidden QuiesceActor in phase 15&18 run a lastpoint query with a
+# sort and group on meta subfield ascending and time descending.
+- Name: CreateIndexForMetaDescTimeAsc
+  Type: RunCommand
+  Database: *db
+  Phases:
+    OnlyActiveInPhases:
+      Active: [14]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        LoadConfig:
+          Path: *phasePath
+          Key: CreateIndex
+          Parameters:
+            Collection: *coll
+            IndexName: *metaAscTimeDesc   # We need to flip the direction for the lastpoint query
+            IndexPattern: *sortPatternMetaAscTimeDesc
+
+# QuiesceActor will run in phase 15.
+
+- Name: MetaDescTimeAsc
+  Type: CrudActor
+  Database: *db
+  Phases:
+    OnlyActiveInPhases:
+      Active: [16]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        *LastpointQueryMetaDescTimeAsc
+
+- Name: DropIndexForMetaDescTimeAsc
+  Type: RunCommand
+  Database: *db
+  Phases:
+    OnlyActiveInPhases:
+      Active: [17]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        LoadConfig:
+          Path: *phasePath
+          Key: DropIndex
+          Parameters:
+            Collection: *coll
+            IndexName: *metaAscTimeDesc
+
+# QuiesceActor will run in phase 18.
+####################################################################################################
+
+####################################################################################################
+# Following 4 actors including the hidden QuiesceActor in phase 20 run a lastpoint query with a sort
+# and group on meta subfield ascending and time descending.
+- Name: CreateIndexForMetaAscTimeAsc
+  Type: RunCommand
+  Database: *db
+  Phases:
+    OnlyActiveInPhases:
+      Active: [19]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        LoadConfig:
+          Path: *phasePath
+          Key: CreateIndex
+          Parameters:
+            Collection: *coll
+            IndexName: *metaDescTimeDesc   # We need to flip the direction for the lastpoint query
+            IndexPattern: *sortPatternMetaDescTimeDesc
+
+# QuiesceActor will run in phase 20.
+
+- Name: MetaAscTimeAsc
+  Type: CrudActor
+  Database: *db
+  Phases:
+    OnlyActiveInPhases:
+      Active: [21]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        *LastpointQueryMetaAscTimeAsc
+
+- Name: DropIndexForMetaAscTimeAsc
+  Type: RunCommand
+  Database: *db
+  Phases:
+    OnlyActiveInPhases:
+      Active: [22]
+      NopInPhasesUpTo: *MaxPhases
+      PhaseConfig:
+        LoadConfig:
+          Path: *phasePath
+          Key: DropIndex
+          Parameters:
+            Collection: *coll
+            IndexName: *metaDescTimeDesc
+####################################################################################################
+
+- LoadConfig:
+    Path: *phasePath
+    Key: QuiesceActor
+    Parameters:
+      Active: [3, 5, 8, 10, 13, 15, 18, 20]
+      MaxPhases: *MaxPhases
+
+AutoRun:
+- When:
+    branch_name:
+      $neq:
+      - v4.0
+      - v4.2
+      - v4.4
+      - v5.0
+      - v5.1
+    mongodb_setup:
+      $eq:
+      - standalone
+      - standalone-80-feature-flags
+      - standalone-all-feature-flags
+      - replica
+      - replica-80-feature-flags
+      - replica-all-feature-flags

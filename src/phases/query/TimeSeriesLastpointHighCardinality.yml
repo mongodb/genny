@@ -1,0 +1,84 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  These are the phases used to measure performance of the last-point-in-time query optimization on timeseries collections.
+
+CreateIndex:
+  Repeat: 1
+  Database: &db test
+  Operations:
+  - OperationName: RunCommand
+    OperationMetricsName: CreateIndex
+    OperationCommand:
+      createIndexes: {^Parameter: {Name: "Collection", Default: "Collection0"}}
+      indexes:
+      - {key: {^Parameter: {Name: "IndexPattern", Default: {}}}, name: {^Parameter: {Name: "IndexName", Default: ""}}}
+
+RunLastPointQuery:
+  Repeat: 10
+  Database: *db
+  Collection: &coll {^Parameter: {Name: "Collection", Default: "Collection0"}}
+  Operations:
+  - OperationMetricsName: Query
+    OperationName: aggregate
+    OperationCommand:
+      Pipeline:
+        [
+          &sortStage {$sort: &sortPattern {^Parameter: {Name: "SortPattern", Default: {}}}},
+          &groupStage {$group: {^Parameter: {Name: "GroupPattern", Default: {}}}}
+        ]
+  # This predicate should select 90% of documents.
+  - OperationMetricsName: QueryWithLargePredicate
+    OperationName: aggregate
+    OperationCommand:
+      Pipeline:
+        [
+          {$match: {"metadata.sensorId": {$gt: 10}}},
+          *sortStage,
+          *groupStage
+        ]
+  # This predicate should select 10% of documents.
+  - OperationMetricsName: QueryWithSmallPredicate
+    OperationName: aggregate
+    OperationCommand:
+      Pipeline:
+        [
+          {$match: {"metadata.sensorId": {$lt: 10}}},
+          *sortStage,
+          *groupStage
+        ]
+  # Test the lastpoint optimization with $top or $bottom.
+  - OperationMetricsName: QueryWithTopOrBottom
+    OperationName: aggregate
+    OperationCommand:
+      Pipeline:
+        [
+          {$group: {
+            _id: "$metadata.sensorId",
+            mostRecent: {^Parameter: {Name: "GroupPatternTopOrBottom", Default: {}}}
+          }}
+        ]
+
+DropIndex:
+  Repeat: 1
+  Database: *db
+  Operations:
+  - OperationMetricsName: DropIndex
+    OperationName: RunCommand
+    OperationCommand:
+      dropIndexes: {^Parameter: {Name: "Collection", Default: "Collection0"}}
+      index: {^Parameter: {Name: "IndexName", Default: ""}}
+
+QuiesceActor:
+  Name: {^Parameter: {Name: "Name", Default: "QuiesceActor"}}
+  Type: QuiesceActor
+  Threads: 1
+  Database: {^Parameter: {Name: "Database", Default: admin}}
+  Phases:
+    OnlyActiveInPhases:
+      Active: {^Parameter: {Name: "Active", Default: [2, 5, 8, 11, 14, 17, 18, 21]}}
+      NopInPhasesUpTo: {^Parameter: {Name: "MaxPhases", Default: 23}}
+      PhaseConfig:
+        SleepBefore: 1 seconds
+        SleepAfter: 1 seconds
+        Repeat: 1
