@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-integration"
+Owner: Query Integration
 Description: |
   Run tests for $percentile accumulator over 2 data distributions. We create a new collection for
   each distribution as putting the fields into the same document might be impacted by how much
@@ -9,24 +9,32 @@ Description: |
   distributions, and therefore scoped down this test to create a normal distribution and a dataset
   created from 5 different distributions.
 
+# Phase descriptions:
+# 1 - create normal distribution collection
+# 2 - compute percentiles
+# 3 - compute percentiles with multiple groups
+# 4 - drop collection
+# 5 - create mix distributions collection
+# 6 - compute percentiles
+# 7 - compute percentiles with multiple groups
+
 Keywords:
-- group
-- percentile
+  - group
+  - percentile
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone-80-feature-flags
-      - standalone-all-feature-flags
-      - standalone-classic-query-engine
-      - standalone-sbe
-    branch_name:
-      $gte:
-        v7.0
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone-80-feature-flags
+          - standalone-all-feature-flags
+          - standalone-classic-query-engine
+          - standalone-sbe
+      branch_name:
+        $gte: v7.0
 
 GlobalDefaults:
-  MaxPhases: &maxPhases 30
+  MaxPhases: &maxPhases 6
   Database: &db percentiles
 
   # The Loader actor creates collections named "Collection<N>" where N corresponds to the thread's
@@ -36,172 +44,140 @@ GlobalDefaults:
   DocumentCount: &docCount 1e6
 
 ActorTemplates:
-- TemplateName: CreateDataset
-  Config:
-    Name: "CreateDataset"
-    Type: Loader
-    Threads: 1
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
-        NopInPhasesUpTo: *maxPhases
-        PhaseConfig:
-          Threads: 1
-          Repeat: 1
-          Database: *db
-          CollectionCount: 1
-          DocumentCount: *docCount
-          BatchSize: 1000
-          Document:
-            _id: {^Inc: {start: 0}}
-            data: {^Parameter: {Name: "Data", Default: 0}}
-            # We will use this field as our group key to test having 100 groups.
-            key: {^RandomInt: {min: 0, max: 100}}
+  - TemplateName: CreateDataset
+    Config:
+      Name: "CreateDataset"
+      Type: Loader
+      Threads: 1
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{ ^Parameter: { Name: "OnlyActiveInPhase", Default: 1024 } }]
+          NopInPhasesUpTo: *maxPhases
+          PhaseConfig:
+            Threads: 1
+            Repeat: 1
+            Database: *db
+            CollectionCount: 1
+            DocumentCount: *docCount
+            BatchSize: 1000
+            Document:
+              _id: { ^Inc: { start: 0 } }
+              data: { ^Parameter: { Name: "Data", Default: 0 } }
+              # We will use this field as our group key to test having 100 groups.
+              key: { ^RandomInt: { min: 0, max: 100 } }
 
-# The specific percentile and the number of them doesn't affect t-digest much as it spends most time
-# creating the representation of the inputs that is suitable for computing _any_ percentile.
-- TemplateName: ComputePercentile
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "ComputePercentile"}}
-    Type: CrudActor
-    Threads: 1
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
-        NopInPhasesUpTo: *maxPhases
-        PhaseConfig:
-          Repeat: 20
-          Database: *db
-          Collection: *coll
-          Operations:
-          - OperationName: aggregate
-            OperationCommand:
-              Pipeline: [
-                {$group: {
-                  _id: {^Parameter: {Name: "GroupBy", Default: null}},
-                  p: {$percentile: {p: [0.01, 0.5, 0.99], input: "$data", method: "approximate" }}
-                }},
-              ]
-
-# During development of $percentile we compared its performance to $min and $minN. We don't need to
-# keep running the tests for these but we'd like to keep the templates around for reference and ease
-# of rerunning the local experiments if needed in the future.
-- TemplateName: ComputeMinN
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "ComputeMinN"}}
-    Type: CrudActor
-    Threads: 1
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
-        NopInPhasesUpTo: *maxPhases
-        PhaseConfig:
-          Repeat: 20
-          Database: *db
-          Collection: *coll
-          Operations:
-          - OperationName: aggregate
-            OperationCommand:
-              Pipeline: [
-                {$group: {
-                  _id: {^Parameter: {Name: "GroupBy", Default: null}},
-                  p: {$minN: {n: 5000, input: "$data"}}
-                }},
-              ]
-
-- TemplateName: ComputeMin
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "ComputeMin"}}
-    Type: CrudActor
-    Threads: 1
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
-        NopInPhasesUpTo: *maxPhases
-        PhaseConfig:
-          Repeat: 20
-          Database: *db
-          Collection: *coll
-          Operations:
-          - OperationName: aggregate
-            OperationCommand:
-              Pipeline: [
-                {$group: {
-                  _id: {^Parameter: {Name: "GroupBy", Default: null}},
-                  p: {$min: "$data"}
-                }},
-              ]
-
-# *0 - create dataset
-# *1 - warm up or quiese but they don't seem to affect the numbers, so we are not doing either
-# *2 - compute percentiles
-# *3 - compute percentiles with multiple groups
-# [*4-*8] - compute something else on this dataset if so desired
-# *9 - drop the dataset
+  # The specific percentile and the number of them doesn't affect t-digest much as it spends most time
+  # creating the representation of the inputs that is suitable for computing _any_ percentile.
+  - TemplateName: ComputePercentile
+    Config:
+      Name: { ^Parameter: { Name: "Name", Default: "ComputePercentile" } }
+      Type: CrudActor
+      Threads: 1
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{ ^Parameter: { Name: "OnlyActiveInPhase", Default: 1024 } }]
+          NopInPhasesUpTo: *maxPhases
+          PhaseConfig:
+            Repeat: 200
+            Database: *db
+            Collection: *coll
+            Operations:
+              - OperationName: aggregate
+                OperationCommand:
+                  Pipeline:
+                    [
+                      {
+                        $group:
+                          {
+                            _id:
+                              {
+                                ^Parameter: { Name: "GroupBy", Default: null },
+                              },
+                            p:
+                              {
+                                $percentile:
+                                  {
+                                    p: [0.01, 0.5, 0.99],
+                                    input: "$data",
+                                    method: "approximate",
+                                  },
+                              },
+                          },
+                      },
+                    ]
 
 Actors:
-- Name: DropCollection
-  Type: CrudActor
-  Database: *db
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [9, 19, 29]
-      NopInPhasesUpTo: *maxPhases
-      PhaseConfig:
-        Repeat: 1
-        Collection: *coll
-        Operations:
-        - OperationName: drop
+  - ActorFromTemplate:
+      TemplateName: CreateDataset
+      TemplateParameters:
+        OnlyActiveInPhase: 0
+        Data:
+          { ^RandomDouble: { distribution: normal, mean: 50.0, sigma: 10.0 } }
 
-- ActorFromTemplate:
-    TemplateName: CreateDataset
-    TemplateParameters:
-      OnlyActiveInPhase: 0
-      Data: {^RandomDouble: {distribution: normal, mean: 50.0, sigma: 10.0}}
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "normal_percentile"
+        GroupBy: null
+        OnlyActiveInPhase: 1
 
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "normal_percentile"
-      GroupBy: null
-      OnlyActiveInPhase: 2
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "normal_percentile_multi_groups"
+        GroupBy: "$key"
+        OnlyActiveInPhase: 2
 
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "normal_percentile_multi_groups"
-      GroupBy: "$key"
-      OnlyActiveInPhase: 3
+  - Name: DropCollection
+    Type: CrudActor
+    Database: *db
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Collection: *coll
+          Operations:
+            - OperationName: drop
 
-# A mix of various distributions, including many duplicated values.
-- ActorFromTemplate:
-    TemplateName: CreateDataset
-    TemplateParameters:
-      OnlyActiveInPhase: 10
-      Data: {^Choose: {
-        from: [
-          {^RandomDouble: {distribution: normal, mean: 50.0, sigma: 10.0}},
-          {^RandomDouble: {distribution: exponential, lambda: 1.0}},
-          {^RandomDouble: {distribution: uniform, min: 0.0, max: 100.0}},
-          {^RandomDouble: {distribution: weibull, a: 1.0, b: 0.5}},
+  # A mix of various distributions, including many duplicated values.
+  - ActorFromTemplate:
+      TemplateName: CreateDataset
+      TemplateParameters:
+        OnlyActiveInPhase: 4
+        Data: { ^Choose: { from: [
+          {
+            ^RandomDouble:
+              { distribution: normal, mean: 50.0, sigma: 10.0 },
+          },
+          {
+            ^RandomDouble: { distribution: exponential, lambda: 1.0 },
+          },
+          {
+            ^RandomDouble:
+              { distribution: uniform, min: 0.0, max: 100.0 },
+          },
+          {
+            ^RandomDouble: { distribution: weibull, a: 1.0, b: 0.5 },
+          },
           # on 1e6 docs this will produce duplicates, including in the tails of other distributions
-          {^RandomInt: {distribution: uniform, min: 0, max: 1000}},
-        ]
-      }}
+          {
+            ^RandomInt: { distribution: uniform, min: 0, max: 1000 },
+          },
+        ] } }
 
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "mixed_percentile"
-      GroupBy: null
-      OnlyActiveInPhase: 12
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "mixed_percentile"
+        GroupBy: null
+        OnlyActiveInPhase: 5
 
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "mixed_percentile_multi_groups"
-      GroupBy: "$key"
-      OnlyActiveInPhase: 13
-
-
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "mixed_percentile_multi_groups"
+        GroupBy: "$key"
+        OnlyActiveInPhase: 6

@@ -1,8 +1,7 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/dev-prod-tips"
+Owner: Performance Analysis
 
 Description: |
-
   This workload measures the overhead of Genny itself. There are 2 different
   configurations that run consecutively for 5 phases each. The first
   configuration runs with 100 threads and the second configuration runs
@@ -28,47 +27,47 @@ Description: |
   be run with the smallest MongoDB setup.
 
 Actors:
-- Name: GennyOverhead100T
-  Type: NopMetrics
-  Threads: 100
-  Phases:
-  - MetricsName: LoopOnlyFixedTime
-    Duration: 10 milliseconds  # This test produces 20GB of metrics per second.
-  - MetricsName: LoopOnly
-    Repeat: 1e4  # Repeat 10k times per thread for a total of 1e6 iterations.
-  - MetricsName: LoopNRateLimit
-    Repeat: 100  # Repeat 100 times per thread for a total of 1e4 iterations.
-    GlobalRate: 1 per 1 millisecond
-  - MetricsName: LoopNSleepBefore
-    Repeat: 100  # Repeat 100 times per thread for a total of 1e4 iterations.
-    SleepBefore: 1 millisecond
-  - MetricsName: LoopNSleepAfter
-    Repeat: 100  # Repeat 100 times per thread for a total of 1e4 iterations.
-    SleepAfter: 1 millisecond
-  - Phase: 5..9
-    Nop: true
+  - Name: GennyOverhead100T
+    Type: NopMetrics
+    Threads: 100
+    Phases:
+      - MetricsName: LoopOnlyFixedTime
+        Duration: 10 milliseconds # This test produces 20GB of metrics per second.
+      - MetricsName: LoopOnly
+        Repeat: 1e4 # Repeat 10k times per thread for a total of 1e6 iterations.
+      - MetricsName: LoopNRateLimit
+        Repeat: 100 # Repeat 100 times per thread for a total of 1e4 iterations.
+        GlobalRate: 1 per 1 millisecond
+      - MetricsName: LoopNSleepBefore
+        Repeat: 100 # Repeat 100 times per thread for a total of 1e4 iterations.
+        SleepBefore: 1 millisecond
+      - MetricsName: LoopNSleepAfter
+        Repeat: 100 # Repeat 100 times per thread for a total of 1e4 iterations.
+        SleepAfter: 1 millisecond
+      - Phase: 5..9
+        Nop: true
 
-- Name: GennyOverhead1T
-  Type: NopMetrics
-  Threads: 1
-  Phases:
-  - Phase: 0..4
-    Nop: true
-  - MetricsName: LoopOnlyFixedTime
-    Duration: 10 milliseconds
-  - MetricsName: LoopOnly
-    Repeat: 1e6
-  - MetricsName: LoopNRateLimit
-    Repeat: 1e4
-    GlobalRate: 1 per 1 millisecond
-  - MetricsName: LoopNSleepBefore
-    Repeat: 1e4
-    SleepBefore: 1 millisecond
-  - MetricsName: LoopNSleepAfter
-    Repeat: 1e4
-    SleepAfter: 1 millisecond
+  - Name: GennyOverhead1T
+    Type: NopMetrics
+    Threads: 1
+    Phases:
+      - Phase: 0..4
+        Nop: true
+      - MetricsName: LoopOnlyFixedTime
+        Duration: 10 milliseconds
+      - MetricsName: LoopOnly
+        Repeat: 1e6
+      - MetricsName: LoopNRateLimit
+        Repeat: 1e4
+        GlobalRate: 1 per 1 millisecond
+      - MetricsName: LoopNSleepBefore
+        Repeat: 1e4
+        SleepBefore: 1 millisecond
+      - MetricsName: LoopNSleepAfter
+        Repeat: 1e4
+        SleepAfter: 1 millisecond
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq: standalone
+  - When:
+      mongodb_setup:
+        $eq: standalone

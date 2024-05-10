@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   Demonstrate the InsertRemove actor. The InsertRemove actor is a simple actor that inserts and then
   removes the same document from a collection in a loop. Each instance of the actor uses a different
@@ -7,29 +7,29 @@ Description: |
   remove.
 
 Keywords:
-- InsertRemove
-- docs
+  - InsertRemove
+  - docs
 
 Actors:
-- Name: InsertWithNopTest
-  Type: Insert
-  Threads: 100
-  Database: "test2"
-  Phases:
-  - {Nop: true}
-  - Collection: "inserts"
-    Document: {"a": {^RandomInt: {min: 50, max: 60}}}
-    Repeat: 1
-  - {Nop: true}
-  - {Nop: true}
-  - Collection: "inserts"
-    Document: {"b": {^RandomString: {length: {^RandomInt: {min: 5, max: 15}}, alphabet: abcde}}}
-    Repeat: 1
-  - Collection: "inserts"
-    Document: {"a": {^RandomInt: {min: 63, max: 70}}}
-    Repeat: 1
-  - {Nop: true}
-  - Collection: "inserts"
-    Document: {"b": {^RandomString: {length: {^RandomInt: {min: 15, max: 25}}, alphabet: abcde}}}
-    Repeat: 1
-  - {Nop: true}
+  - Name: InsertWithNopTest
+    Type: Insert
+    Threads: 100
+    Database: "test2"
+    Phases:
+      - {Nop: true}
+      - Collection: "inserts"
+        Document: {"a": {^RandomInt: {min: 50, max: 60}}}
+        Repeat: 1
+      - {Nop: true}
+      - {Nop: true}
+      - Collection: "inserts"
+        Document: {"b": {^RandomString: {length: {^RandomInt: {min: 5, max: 15}}, alphabet: abcde}}}
+        Repeat: 1
+      - Collection: "inserts"
+        Document: {"a": {^RandomInt: {min: 63, max: 70}}}
+        Repeat: 1
+      - {Nop: true}
+      - Collection: "inserts"
+        Document: {"b": {^RandomString: {length: {^RandomInt: {min: 15, max: 25}}, alphabet: abcde}}}
+        Repeat: 1
+      - {Nop: true}

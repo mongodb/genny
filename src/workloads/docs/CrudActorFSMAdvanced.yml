@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 
 Description: |
   This example extends CrudActorFSM.yml, with the addition of operations associated with
@@ -38,145 +38,145 @@ Clients:
       maxPoolSize: 100
 
 Actors:
-# Preload some documents
-- Name: SetupDemo
-  Type: CrudActor
-  Threads: 1
-  Database: StateTest
-  Phases:
-  - Repeat: 1
-    Collection: CrudDemo
-    Operations:
-    - OperationName: bulkWrite
-      OperationCommand:
-        WriteOperations:
-        - WriteCommand: insertOne
-          Document: {phoneID: 1, currentPhoneState: PhoneIsOff}
-        - WriteCommand: insertOne
-          Document: {phoneID: 2, currentPhoneState: PhoneIsOff}
-        - WriteCommand: insertOne
-          Document: {phoneID: 3, currentPhoneState: PhoneIsOff}
-        - WriteCommand: insertOne
-          Document: {phoneID: 4, currentPhoneState: PhoneIsOff}
-        - WriteCommand: insertOne
-          Document: {phoneID: 5, currentPhoneState: PhoneIsOff}
-        - WriteCommand: insertOne
-          Document: {statistic: OnOff, count: 0}
-        - WriteCommand: insertOne
-          Document: {statistic: OnSleep, count: 0}
-        - WriteCommand: insertOne
-          Document: {statistic: OnError, count: 0}
-  - &nop {Nop: true}
-
-- Name: StateSmartPhoneDemo
-  Type: CrudActor
-  Threads: 5
-  Database: StateTest
-  Phases:
-  - *nop
-  - Duration: 30 seconds
-    Collection: CrudDemo
-    States:
-    - Name: "On"  # The device is on
-
-      # The states support the keywords Repeat, SleepBefore, SleepAfter, and Duration. These
-      # keywords behave the same as in Phase Control, but operate per state (i.e., per actor
-      # instance as it goes through the state machine.
-      Repeat: 1
-      Operations:
-      # A state can have (optional) a set of operations that execute upon entering the state. This
-      # state updates a specific document to indicate it is in state On.
-
-      # Note: Following the analogy to phases -- phases may be blocking or non-blocking. States are
-      # always non-blocking. When the phase ends, the state machine will finish any open operations,
-      # and then exit. It if is waiting for a delay, it will exit immediately. This is required as
-      # there may be states with long delays.
-      - OperationName: updateOne
-        OperationCommand:
-          Filter: &filter {phoneID: {^ActorId: {}}}
-          Update:
-            $set: {currentPhoneState: PhoneIsOn}
-
-      # Transitions specifies next states, delays, and operations. The On state can transition to
-      # each of the three other states
-      Transitions:
-      - To: "Off"  # Transition to this state
-
-        # Transitions are probabilistically chosen based on weight. A transition with weight 2 is
-        # twice as likely to be picked as a transition with weight 1. Weights must be greater than
-        # 0.
-        Weight: 1
-
-        # Transitions also support the phase keywords of sleepBefore, sleepAfter, and repeat.
-        # ^TimeSpec is a proposed generator to randomly generate acceptable TimeSpecs with units. It
-        # accepts any valid int or double generator or constant for value.
-        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
-
-        # In this advanced case, operations may also be associated with transitions.
+  # Preload some documents
+  - Name: SetupDemo
+    Type: CrudActor
+    Threads: 1
+    Database: StateTest
+    Phases:
+      - Repeat: 1
+        Collection: CrudDemo
         Operations:
-        - OperationName: updateOne
-          OperationCommand:
-            Filter: {statistic: OnOff}
-            Update:
-              $inc: {count: 1}
-      - To: Sleep
-        Weight: 2
-        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
-        Operations:
-        - OperationName: updateOne
-          OperationCommand:
-            Filter: {statistic: OnSleep}
-            Update:
-              $inc: {count: 1}
-      - To: Error
-        Weight: 0.2
-        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
-        Operations:
-        - OperationName: updateOne
-          OperationCommand:
-            Filter: {statistic: OnError}
-            Update:
-              $inc: {count: 1}
+          - OperationName: bulkWrite
+            OperationCommand:
+              WriteOperations:
+                - WriteCommand: insertOne
+                  Document: {phoneID: 1, currentPhoneState: PhoneIsOff}
+                - WriteCommand: insertOne
+                  Document: {phoneID: 2, currentPhoneState: PhoneIsOff}
+                - WriteCommand: insertOne
+                  Document: {phoneID: 3, currentPhoneState: PhoneIsOff}
+                - WriteCommand: insertOne
+                  Document: {phoneID: 4, currentPhoneState: PhoneIsOff}
+                - WriteCommand: insertOne
+                  Document: {phoneID: 5, currentPhoneState: PhoneIsOff}
+                - WriteCommand: insertOne
+                  Document: {statistic: OnOff, count: 0}
+                - WriteCommand: insertOne
+                  Document: {statistic: OnSleep, count: 0}
+                - WriteCommand: insertOne
+                  Document: {statistic: OnError, count: 0}
+      - &nop {Nop: true}
 
-    - Name: "Off"  # The device is Off
-      Operations:
-      - OperationName: updateOne
-        OperationCommand:
-          Filter: *filter
-          Update:
-            $set: {currentPhoneState: PhoneIsOff}
-      Transitions:  # Can only go to On from Off
-      - To: "On"
-        Weight: 1
-        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
+  - Name: StateSmartPhoneDemo
+    Type: CrudActor
+    Threads: 5
+    Database: StateTest
+    Phases:
+      - *nop
+      - Duration: 30 seconds
+        Collection: CrudDemo
+        States:
+          - Name: "On" # The device is on
 
-    - Name: Sleep
-      Operations:
-      - OperationName: updateOne
-        OperationCommand:
-          Filter: *filter
-          Update:
-            $set: {currentPhoneState: PhoneIsSleeping}
-      Transitions:  # Can only go to On or Off from sleep
-      - To: "On"
-        Weight: 1
-        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
-      - To: "Off"
-        Weight: 1
-        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
-    - Name: Error
-      Operations:
-      - OperationName: updateOne
-        OperationCommand:
-          Filter: *filter
-          Update:
-            $set: {currentPhoneState: PhoneIsInError}
-      Transitions:  # Turn off on error
-      - To: "Off"
-        Weight: 1
-        SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
+            # The states support the keywords Repeat, SleepBefore, SleepAfter, and Duration. These
+            # keywords behave the same as in Phase Control, but operate per state (i.e., per actor
+            # instance as it goes through the state machine.
+            Repeat: 1
+            Operations:
+              # A state can have (optional) a set of operations that execute upon entering the state. This
+              # state updates a specific document to indicate it is in state On.
 
-    # In this example we always start in the off State
-    InitialStates:
-    - State: "Off"
-      Weight: 1
+              # Note: Following the analogy to phases -- phases may be blocking or non-blocking. States are
+              # always non-blocking. When the phase ends, the state machine will finish any open operations,
+              # and then exit. It if is waiting for a delay, it will exit immediately. This is required as
+              # there may be states with long delays.
+              - OperationName: updateOne
+                OperationCommand:
+                  Filter: &filter {phoneID: {^ActorId: {}}}
+                  Update:
+                    $set: {currentPhoneState: PhoneIsOn}
+
+            # Transitions specifies next states, delays, and operations. The On state can transition to
+            # each of the three other states
+            Transitions:
+              - To: "Off" # Transition to this state
+
+                # Transitions are probabilistically chosen based on weight. A transition with weight 2 is
+                # twice as likely to be picked as a transition with weight 1. Weights must be greater than
+                # 0.
+                Weight: 1
+
+                # Transitions also support the phase keywords of sleepBefore, sleepAfter, and repeat.
+                # ^TimeSpec is a proposed generator to randomly generate acceptable TimeSpecs with units. It
+                # accepts any valid int or double generator or constant for value.
+                SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
+
+                # In this advanced case, operations may also be associated with transitions.
+                Operations:
+                  - OperationName: updateOne
+                    OperationCommand:
+                      Filter: {statistic: OnOff}
+                      Update:
+                        $inc: {count: 1}
+              - To: Sleep
+                Weight: 2
+                SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
+                Operations:
+                  - OperationName: updateOne
+                    OperationCommand:
+                      Filter: {statistic: OnSleep}
+                      Update:
+                        $inc: {count: 1}
+              - To: Error
+                Weight: 0.2
+                SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
+                Operations:
+                  - OperationName: updateOne
+                    OperationCommand:
+                      Filter: {statistic: OnError}
+                      Update:
+                        $inc: {count: 1}
+
+          - Name: "Off" # The device is Off
+            Operations:
+              - OperationName: updateOne
+                OperationCommand:
+                  Filter: *filter
+                  Update:
+                    $set: {currentPhoneState: PhoneIsOff}
+            Transitions: # Can only go to On from Off
+              - To: "On"
+                Weight: 1
+                SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
+
+          - Name: Sleep
+            Operations:
+              - OperationName: updateOne
+                OperationCommand:
+                  Filter: *filter
+                  Update:
+                    $set: {currentPhoneState: PhoneIsSleeping}
+            Transitions: # Can only go to On or Off from sleep
+              - To: "On"
+                Weight: 1
+                SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
+              - To: "Off"
+                Weight: 1
+                SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
+          - Name: Error
+            Operations:
+              - OperationName: updateOne
+                OperationCommand:
+                  Filter: *filter
+                  Update:
+                    $set: {currentPhoneState: PhoneIsInError}
+            Transitions: # Turn off on error
+              - To: "Off"
+                Weight: 1
+                SleepBefore: {^TimeSpec: {value: {^RandomDouble: {min: 0, max: 15}}, unit: seconds}}
+
+        # In this example we always start in the off State
+        InitialStates:
+          - State: "Off"
+            Weight: 1

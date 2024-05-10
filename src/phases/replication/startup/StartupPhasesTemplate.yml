@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: mongodb/server-replication"
+Owner: Replication
 Description: |
   Common definitions to support the workloads in replication/startup.
 
@@ -12,7 +12,7 @@ Document: &Doc
   w: {^RandomInt: {distribution: geometric, p: 0.1}}
   x: 0
   y: 1000 # Same key for all documents.
-  z: {^RandomInt: {min: 0, max: 2147483647}}  # This is for max int for low probability of conflicts
+  z: {^RandomInt: {min: 0, max: 2147483647}} # This is for max int for low probability of conflicts
   int0: &int {^RandomInt: {min: 0, max: 2147483647}}
   int1: *int
   int2: *int
@@ -25,15 +25,15 @@ Document: &Doc
   int8: *int
   int9: *int
   intArray:
-  - 1000
-  - 2000
-  - 3000
-  - 4000
-  - 5000
-  - 6000
-  - 7000
-  - 8000
-  - 9000
+    - 1000
+    - 2000
+    - 3000
+    - 4000
+    - 5000
+    - 6000
+    - 7000
+    - 8000
+    - 9000
   string0: &string {^RandomString: {length: {^RandomInt: {min: 5, max: 15}}}}
   string1: *string
   string2: *string
@@ -49,40 +49,40 @@ Document: &Doc
   padding: {^FastRandomString: {length: {^Parameter: {Name: "approxDocumentSize", Default: 100}}}}
 
 # The default indexes that will be used in the 'InsertDataTemplate'.
-IndexesForLoader: &IndexesForLoader  # 10 indexes
-- keys: {t: 1, w: 1}
-- keys: {y: 1}
-- keys: {t: 1, stringShort: 1}
-- keys: {string0: 1}
-- keys: {stringLong: 1}
-- keys: {stringShort: 1, y: 1}
-- keys: {int0: 1, int1: 1, int2: 1}
-- keys: {int3: 1}
-- keys: {int4: 1}
-- keys: {int5: 1, int6: 1}
+IndexesForLoader: &IndexesForLoader
+  - keys: {t: 1, w: 1}
+  - keys: {y: 1}
+  - keys: {t: 1, stringShort: 1}
+  - keys: {string0: 1}
+  - keys: {stringLong: 1}
+  - keys: {stringShort: 1, y: 1}
+  - keys: {int0: 1, int1: 1, int2: 1}
+  - keys: {int3: 1}
+  - keys: {int4: 1}
+  - keys: {int5: 1, int6: 1}
 
 # The default indexes that will be used in the 'CreateIndexesTemplate'.
-IndexesForCreateCmd: &IndexesForCreateCmd  # 10 indexes
-- key: {t: 1, w: 1}
-  name: "index_t_w"
-- key: {y: 1}
-  name: "index_y"
-- key: {t: 1, stringShort: 1}
-  name: "index_t_stringShort"
-- key: {string0: 1}
-  name: "index_string0"
-- key: {stringLong: 1}
-  name: "index_stringLong"
-- key: {stringShort: 1, y: 1}
-  name: "index_stringShort_y"
-- key: {int0: 1, int1: 1, int2: 1}
-  name: "index_int0_int1_int2"
-- key: {int3: 1}
-  name: "index_int3"
-- key: {int4: 1}
-  name: "index_int4"
-- key: {int5: 1, int6: 1}
-  name: "index_int5_int6"
+IndexesForCreateCmd: &IndexesForCreateCmd # 10 indexes
+  - key: {t: 1, w: 1}
+    name: "index_t_w" # 10 indexes
+  - key: {y: 1}
+    name: "index_y"
+  - key: {t: 1, stringShort: 1}
+    name: "index_t_stringShort"
+  - key: {string0: 1}
+    name: "index_string0"
+  - key: {stringLong: 1}
+    name: "index_stringLong"
+  - key: {stringShort: 1, y: 1}
+    name: "index_stringShort_y"
+  - key: {int0: 1, int1: 1, int2: 1}
+    name: "index_int0_int1_int2"
+  - key: {int3: 1}
+    name: "index_int3"
+  - key: {int4: 1}
+    name: "index_int4"
+  - key: {int5: 1, int6: 1}
+    name: "index_int5_int6"
 
 # Template that uses the 'Loader' actor to create and populate collections for startup workloads.
 InsertDataTemplate:
@@ -119,10 +119,10 @@ CrudOperationsTemplate:
         GlobalRate: 100 per 31 milliseconds
         CollectionCount: {^Parameter: {Name: "collectionCount", Default: 1}}
         Operations:
-        - OperationName: updateMany
-          OperationCommand:
-            Filter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
-            Update: {$inc: {x: 1}}
+          - OperationName: updateMany
+            OperationCommand:
+              Filter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
+              Update: {$inc: {x: 1}}
 
 # Template that uses the 'CrudActor' to issue 'find' operations to random collections.
 ReadOperationsTemplate:
@@ -140,11 +140,11 @@ ReadOperationsTemplate:
         GlobalRate: 100 per 31 milliseconds
         CollectionCount: {^Parameter: {Name: "collectionCount", Default: 1}}
         Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
-            Options:
-              Limit: 100
+          - OperationName: find
+            OperationCommand:
+              Filter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
+              Options:
+                Limit: 100
 
 # Template that uses the 'RunCommand' to create indexes for a specific collection.
 CreateIndexesTemplate:
@@ -161,15 +161,15 @@ CreateIndexesTemplate:
         # Stepdown will cause the command to return with error.
         ThrowOnFailure: false
         Operations:
-        - OperationName: RunCommand
-          OperationCommand:
-            dropIndexes: {^Parameter: {Name: "collection", Default: Collection0}}
-            # This will drop all non-essential indexes (_id and any shard key index remain)
-            index: '*'
-        - OperationName: RunCommand
-          OperationCommand:
-            createIndexes: {^Parameter: {Name: "collection", Default: Collection0}}
-            indexes: {^Parameter: {Name: "indexes", Default: *IndexesForCreateCmd}}
+          - OperationName: RunCommand
+            OperationCommand:
+              dropIndexes: {^Parameter: {Name: "collection", Default: Collection0}}
+              # This will drop all non-essential indexes (_id and any shard key index remain)
+              index: '*'
+          - OperationName: RunCommand
+            OperationCommand:
+              createIndexes: {^Parameter: {Name: "collection", Default: Collection0}}
+              indexes: {^Parameter: {Name: "indexes", Default: *IndexesForCreateCmd}}
 
 # Template that waits 10 seconds then uses the 'AdminCommand' to initiate a primary stepdown and
 # then subsequently step it up again.
@@ -186,15 +186,15 @@ StepdownStepupCommandTemplate:
         SleepBefore: 10 seconds
         ThrowOnFailure: false
         Operations:
-        - OperationMetricsName: "Stepdown"
-          OperationName: AdminCommand
-          OperationCommand:
-            replSetStepDown: 60
-          OperationAwaitStepdown: true
-        - OperationMetricsName: "StepUp"
-          OperationName: AdminCommand
-          OperationCommand:
-            replSetStepUp: 1
+          - OperationMetricsName: "Stepdown"
+            OperationName: AdminCommand
+            OperationCommand:
+              replSetStepDown: 60
+            OperationAwaitStepdown: true
+          - OperationMetricsName: "StepUp"
+            OperationName: AdminCommand
+            OperationCommand:
+              replSetStepUp: 1
 
 # Template that uses the 'AdminCommand' to enable 'disableSnapshotting' failpoint which stops mongod
 # from taking more checkpoints.
@@ -210,10 +210,10 @@ StopCheckpointTemplate:
         Repeat: 1
         Database: admin
         Operations:
-        - OperationName: AdminCommand
-          OperationCommand:
-            configureFailPoint: "disableSnapshotting"
-            mode: "alwaysOn"
+          - OperationName: AdminCommand
+            OperationCommand:
+              configureFailPoint: "disableSnapshotting"
+              mode: "alwaysOn"
 
 # Template that uses the 'AdminCommand' to enable 'hangAfterInitializingIndexBuild' failpoint which
 # hangs any index build.
@@ -229,10 +229,10 @@ HangIndexBuildTemplate:
         Repeat: 1
         Database: admin
         Operations:
-        - OperationName: AdminCommand
-          OperationCommand:
-            configureFailPoint: "hangAfterInitializingIndexBuild"
-            mode: "alwaysOn"
+          - OperationName: AdminCommand
+            OperationCommand:
+              configureFailPoint: "hangAfterInitializingIndexBuild"
+              mode: "alwaysOn"
 
 # Template that uses the 'AdminCommand' to set default write concern to local.
 SetDefaultWCToLocalTemplate:
@@ -247,7 +247,7 @@ SetDefaultWCToLocalTemplate:
         Repeat: 1
         Database: admin
         Operations:
-        - OperationName: AdminCommand
-          OperationCommand:
-            setDefaultRWConcern: 1
-            defaultWriteConcern: {"w": 1}
+          - OperationName: AdminCommand
+            OperationCommand:
+              setDefaultRWConcern: 1
+              defaultWriteConcern: {"w": 1}

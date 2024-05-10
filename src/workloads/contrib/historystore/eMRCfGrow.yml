@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: Storage Engines
+Owner: Storage Execution
 Description: |
   Test workload to evaluate Storage Engine behavior when running in a
   degraded replica set with or without eMRCf enabled.  A "degraded" replica
@@ -24,7 +24,7 @@ GlobalDefaults:
   RandomMediumString: &rand_medium_string {^RandomString: {length: {^RandomInt: {min: 160, max: 960}}}}
   RandomLargeString: &rand_large_string {^RandomString: {length: {^RandomInt: {min: 960, max: 4960}}}}
 
-  TestDB: &TestDB test  # Name of test database
+  TestDB: &TestDB test # Name of test database
 
   SmallDocCount: &small_doc_count 10000000
   LargeDocCount: &large_doc_count 1000000
@@ -80,99 +80,99 @@ LargeDocument: &large_doc
 # typically delete documents with a bunch of history.
 
 Actors:
-- Name: SmallDocChurn
-  Type: CrudActor
-  Database: *TestDB
-  Threads: 10
-  Phases:
-  - Repeat: 50000
-    Collection: Collection0
-    Operations:
-    - OperationName: updateOne
-      OperationCommand:
-        Filter: {key1: *small_doc_key}
-        Update: {$set: {data1: *rand_4b_int}}
-    - OperationName: updateOne
-      OperationCommand:
-        Filter: {key1: *small_doc_key}
-        Update: {$set: {data2: *rand_4b_int}}
-    - OperationName: updateOne
-      OperationCommand:
-        Filter: {key1: *small_doc_key}
-        Update: {$set: {data3: *rand_10k_int}}
-    - OperationName: updateOne
-      OperationCommand:
-        Filter: {key1: *small_doc_key}
-        Update: {$inc: {data4: 1}}
-    - OperationName: updateOne
-      OperationCommand:
-        Filter: {key1: *small_doc_key}
-        Update: {$inc: {data4: -1}}
-    - OperationName: updateOne
-      OperationCommand:
-        Filter: {key1: *small_doc_key}
-        Update: {$set: {tag: *short_string}}
-    - OperationName: updateOne
-      OperationCommand:
-        Filter: {key1: *small_doc_key}
-        Update: {$set: {payload: *rand_short_string}}
-    - OperationName: updateMany
-      OperationCommand:
-        Filter: {$and: [{key1: *small_doc_key}, {key2: {$gt: 900}}]}
-        Update: {$set: {data2: *rand_4b_int}}
-    - OperationName: insertOne
-      OperationCommand:
-        Document: *small_doc
-    - OperationName: deleteOne
-      OperationCommand:
-        Filter: {key1: *small_doc_key}
+  - Name: SmallDocChurn
+    Type: CrudActor
+    Database: *TestDB
+    Threads: 10
+    Phases:
+      - Repeat: 50000
+        Collection: Collection0
+        Operations:
+          - OperationName: updateOne
+            OperationCommand:
+              Filter: {key1: *small_doc_key}
+              Update: {$set: {data1: *rand_4b_int}}
+          - OperationName: updateOne
+            OperationCommand:
+              Filter: {key1: *small_doc_key}
+              Update: {$set: {data2: *rand_4b_int}}
+          - OperationName: updateOne
+            OperationCommand:
+              Filter: {key1: *small_doc_key}
+              Update: {$set: {data3: *rand_10k_int}}
+          - OperationName: updateOne
+            OperationCommand:
+              Filter: {key1: *small_doc_key}
+              Update: {$inc: {data4: 1}}
+          - OperationName: updateOne
+            OperationCommand:
+              Filter: {key1: *small_doc_key}
+              Update: {$inc: {data4: -1}}
+          - OperationName: updateOne
+            OperationCommand:
+              Filter: {key1: *small_doc_key}
+              Update: {$set: {tag: *short_string}}
+          - OperationName: updateOne
+            OperationCommand:
+              Filter: {key1: *small_doc_key}
+              Update: {$set: {payload: *rand_short_string}}
+          - OperationName: updateMany
+            OperationCommand:
+              Filter: {$and: [{key1: *small_doc_key}, {key2: {$gt: 900}}]}
+              Update: {$set: {data2: *rand_4b_int}}
+          - OperationName: insertOne
+            OperationCommand:
+              Document: *small_doc
+          - OperationName: deleteOne
+            OperationCommand:
+              Filter: {key1: *small_doc_key}
 
-- Name: LargeDocChurn
-  Type: CrudActor
-  Database: *TestDB
-  Threads: 1
-  Phases:
-  - Repeat: 50000
-    Collection: Collection0
-    Operations:
-    - OperationName: updateOne
-      OperationCommand:
-        Filter: {key1: *large_doc_key}
-        Update: {$set: {data1: *rand_4b_int}}
-    - OperationName: updateOne
-      OperationCommand:
-        Filter: {key1: *large_doc_key}
-        Update: {$set: {data2: *rand_4b_int}}
-    - OperationName: updateOne
-      OperationCommand:
-        Filter: {key1: *large_doc_key}
-        Update: {$set: {data3: *rand_10k_int}}
-    - OperationName: updateOne
-      OperationCommand:
-        Filter: {key1: *large_doc_key}
-        Update: {$inc: {data4: 1}}
-    - OperationName: updateOne
-      OperationCommand:
-        Filter: {key1: *large_doc_key}
-        Update: {$inc: {data4: -1}}
-    - OperationName: updateOne
-      OperationCommand:
-        Filter: {key1: *large_doc_key}
-        Update: {$set: {tag: *short_string}}
-    - OperationName: updateOne
-      OperationCommand:
-        Filter: {key1: *large_doc_key}
-        Update: {$set: {payload: *rand_medium_string}}
-    - OperationName: updateMany
-      OperationCommand:
-        Filter: {$and: [{key1: *large_doc_key}, {key2: {$gt: 900}}]}
-        Update: {$set: {data2: *rand_4b_int}}
-    - OperationName: insertOne
-      OperationCommand:
-        Document: *large_doc
-    - OperationName: deleteOne
-      OperationCommand:
-        Filter: {key1: *large_doc_key}
+  - Name: LargeDocChurn
+    Type: CrudActor
+    Database: *TestDB
+    Threads: 1
+    Phases:
+      - Repeat: 50000
+        Collection: Collection0
+        Operations:
+          - OperationName: updateOne
+            OperationCommand:
+              Filter: {key1: *large_doc_key}
+              Update: {$set: {data1: *rand_4b_int}}
+          - OperationName: updateOne
+            OperationCommand:
+              Filter: {key1: *large_doc_key}
+              Update: {$set: {data2: *rand_4b_int}}
+          - OperationName: updateOne
+            OperationCommand:
+              Filter: {key1: *large_doc_key}
+              Update: {$set: {data3: *rand_10k_int}}
+          - OperationName: updateOne
+            OperationCommand:
+              Filter: {key1: *large_doc_key}
+              Update: {$inc: {data4: 1}}
+          - OperationName: updateOne
+            OperationCommand:
+              Filter: {key1: *large_doc_key}
+              Update: {$inc: {data4: -1}}
+          - OperationName: updateOne
+            OperationCommand:
+              Filter: {key1: *large_doc_key}
+              Update: {$set: {tag: *short_string}}
+          - OperationName: updateOne
+            OperationCommand:
+              Filter: {key1: *large_doc_key}
+              Update: {$set: {payload: *rand_medium_string}}
+          - OperationName: updateMany
+            OperationCommand:
+              Filter: {$and: [{key1: *large_doc_key}, {key2: {$gt: 900}}]}
+              Update: {$set: {data2: *rand_4b_int}}
+          - OperationName: insertOne
+            OperationCommand:
+              Document: *large_doc
+          - OperationName: deleteOne
+            OperationCommand:
+              Filter: {key1: *large_doc_key}
 
 # WARNING: Future versions of Genny won't support the cvs-ftdc metrics format.
 Metrics:

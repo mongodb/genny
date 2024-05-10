@@ -1,8 +1,7 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/dev-prod-tips"
+Owner: Performance Analysis
 
 Description: |
-
   This workload illustrates how to think of Phases happening
   simultaneously and how to configure Repeat and Duration
   when you have more than one Actor in a Workload.
@@ -95,26 +94,24 @@ Description: |
      (which is almost certainly a mis-configuration) at setup
      time.
 
-
 # Start by reading here:
-
 
 Actors:
 
-- Type: HelloWorld
-  Name: A
-  Threads: 10
-  Phases:
-  - Message: A.0
-    Duration: 2 seconds
-  - Message: A.1
-    Blocking: None
+  - Type: HelloWorld
+    Name: A
+    Threads: 10
+    Phases:
+      - Message: A.0
+        Duration: 2 seconds
+      - Message: A.1
+        Blocking: None
 
-- Type: HelloWorld
-  Name: B
-  Threads: 2
-  Phases:
-  - Message: B.0
-    Repeat: 10
-  - Message: B.1
-    Repeat: 1e3
+  - Type: HelloWorld
+    Name: B
+    Threads: 2
+    Phases:
+      - Message: B.0
+        Repeat: 10
+      - Message: B.1
+        Repeat: 1e3

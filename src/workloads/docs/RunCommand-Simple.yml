@@ -1,22 +1,22 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/dev-prod-tips"
+Owner: Performance Analysis
 Description: |
   This workload demonstrates the RunCommand actor, which can be used
   to execute a command against the server.
 
 Actors:
-- Name: ServerStatusInsert
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - Repeat: 100
-    Database: test
-    Operations:
-    - OperationMetricsName: ServerStatus
-      OperationName: RunCommand
-      OperationCommand:
-        serverStatus: 1
-    - OperationName: RunCommand
-      OperationCommand:
-        insert: myCollection
-        documents: [{name: {^RandomString: {length: {^RandomInt: {min: 2, max: 5}}}}, rating: 10, address: someAddress, cuisine: italian}]
+  - Name: ServerStatusInsert
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      - Repeat: 100
+        Database: test
+        Operations:
+          - OperationMetricsName: ServerStatus
+            OperationName: RunCommand
+            OperationCommand:
+              serverStatus: 1
+          - OperationName: RunCommand
+            OperationCommand:
+              insert: myCollection
+              documents: [{name: {^RandomString: {length: {^RandomInt: {min: 2, max: 5}}}}, rating: 10, address: someAddress, cuisine: italian}]

@@ -1,62 +1,163 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Run TPC-H query 9 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  Run TPC-H query 9 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema.
+  Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
+batchSize: &batchSize { ^Parameter: { Name: "BatchSize", Default: 101 } }
 
-query9Color: &query9Color {^Parameter: {Name: "Query9Color", Default: "^.*green.*$"}}  # ^.*${color}.*$
+query9Color: &query9Color {
+  ^Parameter: { Name: "Query9Color", Default: "^.*green.*$" },
+} # ^.*${color}.*$
 
 TPCHNormalizedQuery9Aggregation: &TPCHNormalizedQuery9Aggregation
   aggregate: part
   pipeline:
     [
-      {$match: {$expr: {$regexMatch: {input: "$p_name", regex: *query9Color, options: "si"}}}},
-      {$lookup: {from: "partsupp", as: "partsupp", localField: "p_partkey", foreignField: "ps_partkey"}},
-      {$unwind: "$partsupp"},
-      {$lookup: {from: "supplier", as: "supplier", localField: "partsupp.ps_suppkey", foreignField: "s_suppkey", pipeline: [
-        {$lookup: {from: "nation", as: "nation", localField: "s_nationkey", foreignField: "n_nationkey"}},
-        {$unwind: "$nation"}]}},
-      {$unwind: "$supplier"},
-      {$project: {p_partkey: 1, s_suppkey: "$supplier.s_suppkey", nation: "$supplier.nation.n_name", partsupp: 1}},
-      {$lookup: {from: "lineitem", as: "lineitem", localField: "p_partkey", foreignField: "l_partkey", let: {s_suppkey: "$s_suppkey"}, pipeline: [
-        {$match: {$expr: {$eq: ["$$s_suppkey", "$l_suppkey"]}}},
-        {$lookup: {from: "orders", as: "orders", localField: "l_orderkey", foreignField: "o_orderkey"}},
-        {$unwind: "$orders"}]}},
-      {$unwind: "$lineitem"},
-      {$group: {_id: {nation: "$nation", o_year: {$year: "$lineitem.orders.o_orderdate"}}, sum_profit: {$sum: {$subtract: [
-        {$multiply: ["$lineitem.l_extendedprice", {$subtract: [1, "$lineitem.l_discount"]}]},
-        {$multiply: ["$partsupp.ps_supplycost", "$lineitem.l_quantity"]}]}}}},
-      {$project: {_id: 0, nation: "$_id.nation", o_year: "$_id.o_year", sum_profit: 1}},
-      {$sort: {nation: 1, o_year: -1}}
+      {
+        $match:
+          {
+            $expr:
+              {
+                $regexMatch:
+                  { input: "$p_name", regex: *query9Color, options: "si" },
+              },
+          },
+      },
+      {
+        $lookup:
+          {
+            from: "partsupp",
+            as: "partsupp",
+            localField: "p_partkey",
+            foreignField: "ps_partkey",
+          },
+      },
+      { $unwind: "$partsupp" },
+      {
+        $lookup:
+          {
+            from: "supplier",
+            as: "supplier",
+            localField: "partsupp.ps_suppkey",
+            foreignField: "s_suppkey",
+            pipeline:
+              [
+                {
+                  $lookup:
+                    {
+                      from: "nation",
+                      as: "nation",
+                      localField: "s_nationkey",
+                      foreignField: "n_nationkey",
+                    },
+                },
+                { $unwind: "$nation" },
+              ],
+          },
+      },
+      { $unwind: "$supplier" },
+      {
+        $project:
+          {
+            p_partkey: 1,
+            s_suppkey: "$supplier.s_suppkey",
+            nation: "$supplier.nation.n_name",
+            partsupp: 1,
+          },
+      },
+      {
+        $lookup:
+          {
+            from: "lineitem",
+            as: "lineitem",
+            localField: "p_partkey",
+            foreignField: "l_partkey",
+            let: { s_suppkey: "$s_suppkey" },
+            pipeline:
+              [
+                { $match: { $expr: { $eq: ["$$s_suppkey", "$l_suppkey"] } } },
+                {
+                  $lookup:
+                    {
+                      from: "orders",
+                      as: "orders",
+                      localField: "l_orderkey",
+                      foreignField: "o_orderkey",
+                    },
+                },
+                { $unwind: "$orders" },
+              ],
+          },
+      },
+      { $unwind: "$lineitem" },
+      {
+        $group:
+          {
+            _id:
+              {
+                nation: "$nation",
+                o_year: { $year: "$lineitem.orders.o_orderdate" },
+              },
+            sum_profit:
+              {
+                $sum:
+                  {
+                    $subtract:
+                      [
+                        {
+                          $multiply:
+                            [
+                              "$lineitem.l_extendedprice",
+                              { $subtract: [1, "$lineitem.l_discount"] },
+                            ],
+                        },
+                        {
+                          $multiply:
+                            ["$partsupp.ps_supplycost", "$lineitem.l_quantity"],
+                        },
+                      ],
+                  },
+              },
+          },
+      },
+      {
+        $project:
+          {
+            _id: 0,
+            nation: "$_id.nation",
+            o_year: "$_id.o_year",
+            sum_profit: 1,
+          },
+      },
+      { $sort: { nation: 1, o_year: -1 } },
     ]
-  cursor: {batchSize: *batchSize}
+  cursor: { batchSize: *batchSize }
   allowDiskUse: true
 
 TPCHNormalizedQuery9Warmup:
-  Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
+  Repeat: &Repeat { ^Parameter: { Name: "Repeat", Default: 1 } }
   Database: &db tpch
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHNormalizedQuery9Aggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHNormalizedQuery9Aggregation
 
 TPCHNormalizedQuery9:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query9
-    OperationName: RunCommand
-    OperationCommand: *TPCHNormalizedQuery9Aggregation
+    - OperationMetricsName: Query9
+      OperationName: RunCommand
+      OperationCommand: *TPCHNormalizedQuery9Aggregation
 
 TPCHNormalizedQuery9Explain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query9
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHNormalizedQuery9Aggregation
-      verbosity:
-        executionStats
+    - OperationMetricsName: Query9
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHNormalizedQuery9Aggregation
+        verbosity: executionStats

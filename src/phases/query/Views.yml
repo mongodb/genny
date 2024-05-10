@@ -5,16 +5,34 @@ Description: |
 
 # Creates an identity view (view with an empty pipeline that acts as a no-op) over the given collection.
 CreateIdentityView:
-  Name: {^Parameter: {Name: "Name", Default: "CreateIdentityView"}}
+  Name: { ^Parameter: { Name: "Name", Default: "CreateIdentityView" } }
   Type: RunCommand
   Threads: 1
   Phases:
     OnlyActiveInPhases:
-      Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
-      NopInPhasesUpTo: {^Parameter: {Name: "NopInPhasesUpTo", Default: 99}}
+      Active:
+        [
+          {
+            ^Parameter:
+              {
+                Name: "OnlyActiveInPhase",
+                Default:
+                  {
+                    unused: "please specify in which phases this actor should be active.",
+                  },
+              },
+          },
+        ]
+      NopInPhasesUpTo: { ^Parameter: { Name: "NopInPhasesUpTo", Default: 99 } }
       PhaseConfig:
         Repeat: 1
-        Database: {^Parameter: {Name: "Database", Default: test}}
+        Database: { ^Parameter: { Name: "Database", Default: test } }
         Operations:
-        - OperationName: RunCommand
-          OperationCommand: {create: {^Parameter: {Name: "View", Default: Collection0}}, viewOn: {^Parameter: {Name: "Collection", Default: Collection0}}, pipeline: []}
+          - OperationName: RunCommand
+            OperationCommand:
+              {
+                create: { ^Parameter: { Name: "View", Default: Collection0 } },
+                viewOn:
+                  { ^Parameter: { Name: "Collection", Default: Collection0 } },
+                pipeline: [],
+              }

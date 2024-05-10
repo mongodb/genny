@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/sharding"
+Owner: Cluster Scalability
 Description: |
 
 GlobalDefaults:
@@ -8,8 +8,8 @@ GlobalDefaults:
 
   # Note that the exact document size may exceed ApproxDocumentSize because of field names and other
   # fields in the document.
-  ApproxDocumentSize: &ApproxDocumentSize 2000  # = 2kB
-  ApproxDocumentSize50Pct: &ApproxDocumentSize50Pct 1000  # = 1kB
+  ApproxDocumentSize: &ApproxDocumentSize 2000 # = 2kB
+  ApproxDocumentSize50Pct: &ApproxDocumentSize50Pct 1000 # = 1kB
   DocumentCount: &DocumentCount 100_000
 
   MaxPhase: &MaxPhase 22
@@ -27,371 +27,370 @@ Clients:
       maxPoolSize: 1000
 
 ActorTemplates:
-- TemplateName: ShardedCollectionUpdate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Transactions"}}
-    Type: CrudActor
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
-    Database: *Database0
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
-        NopInPhasesUpTo: *MaxPhase
-        PhaseConfig:
-          Duration: 1 minute
-          Collection: Collection0
-          ThrowOnFailure: false  # Transactions are allowed to fail.
-          RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
-          Operations:
-          - OperationName: withTransaction
-            OperationCommand:
-              OnSession: true
-              OperationsInTransaction:
-              - <<: *UpdateOperation
-              - <<: *UpdateOperation
-              - <<: *UpdateOperation
-              - <<: *UpdateOperation
-              - <<: *UpdateOperation
-              - <<: *UpdateOperation
-              - <<: *UpdateOperation
-              - <<: *UpdateOperation
-              - <<: *UpdateOperation
-              - <<: *UpdateOperation
+  - TemplateName: ShardedCollectionUpdate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Transactions"}}
+      Type: CrudActor
+      Threads: {^Parameter: {Name: "Threads", Default: 1}}
+      Database: *Database0
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
+          NopInPhasesUpTo: *MaxPhase
+          PhaseConfig:
+            Duration: 1 minute
+            Collection: Collection0
+            ThrowOnFailure: false # Transactions are allowed to fail.
+            RecordFailure: true # We still want to record the metrics even if the transaction is rolled back.
+            Operations:
+              - OperationName: withTransaction
+                OperationCommand:
+                  OnSession: true
+                  OperationsInTransaction:
+                    - !!merge <<: *UpdateOperation
+                    - !!merge <<: *UpdateOperation
+                    - !!merge <<: *UpdateOperation
+                    - !!merge <<: *UpdateOperation
+                    - !!merge <<: *UpdateOperation
+                    - !!merge <<: *UpdateOperation
+                    - !!merge <<: *UpdateOperation
+                    - !!merge <<: *UpdateOperation
+                    - !!merge <<: *UpdateOperation
+                    - !!merge <<: *UpdateOperation
 
-- TemplateName: ShardedAndNonShardedCollectionsUpdate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Transactions"}}
-    Type: CrudActor
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
-    Database: *Database0
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
-        NopInPhasesUpTo: *MaxPhase
-        PhaseConfig:
-          Duration: 1 minute
-          ThrowOnFailure: false  # Transactions are allowed to fail.
-          RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
-          Collection: Collection0
-          Operations:
-          - OperationName: withTransaction
-            OperationCommand:
-              OnSession: true
-              OperationsInTransaction:
-              - <<: *UpdateOperation
-                Collection: Collection0
-              - <<: *UpdateOperation
-                Collection: Collection0
-              - <<: *UpdateOperation
-                Collection: Collection0
-              - <<: *UpdateOperation
-                Collection: Collection0
-              - <<: *UpdateOperation
-                Collection: Collection0
-              - <<: *UpdateOperation
-                Collection: Collection1
-              - <<: *UpdateOperation
-                Collection: Collection1
-              - <<: *UpdateOperation
-                Collection: Collection1
-              - <<: *UpdateOperation
-                Collection: Collection1
-              - <<: *UpdateOperation
-                Collection: Collection1
+  - TemplateName: ShardedAndNonShardedCollectionsUpdate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Transactions"}}
+      Type: CrudActor
+      Threads: {^Parameter: {Name: "Threads", Default: 1}}
+      Database: *Database0
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
+          NopInPhasesUpTo: *MaxPhase
+          PhaseConfig:
+            Duration: 1 minute
+            ThrowOnFailure: false # Transactions are allowed to fail.
+            RecordFailure: true # We still want to record the metrics even if the transaction is rolled back.
+            Collection: Collection0
+            Operations:
+              - OperationName: withTransaction
+                OperationCommand:
+                  OnSession: true
+                  OperationsInTransaction:
+                    - !!merge <<: *UpdateOperation
+                      Collection: Collection0
+                    - !!merge <<: *UpdateOperation
+                      Collection: Collection0
+                    - !!merge <<: *UpdateOperation
+                      Collection: Collection0
+                    - !!merge <<: *UpdateOperation
+                      Collection: Collection0
+                    - !!merge <<: *UpdateOperation
+                      Collection: Collection0
+                    - !!merge <<: *UpdateOperation
+                      Collection: Collection1
+                    - !!merge <<: *UpdateOperation
+                      Collection: Collection1
+                    - !!merge <<: *UpdateOperation
+                      Collection: Collection1
+                    - !!merge <<: *UpdateOperation
+                      Collection: Collection1
+                    - !!merge <<: *UpdateOperation
+                      Collection: Collection1
 
-- TemplateName: DifferentDatabasesNonShardedCollectionsUpdate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Transactions"}}
-    Type: CrudActor
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
-    Database: *Database0
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
-        NopInPhasesUpTo: *MaxPhase
-        PhaseConfig:
-          Duration: 1 minute
-          ThrowOnFailure: false  # Transactions are allowed to fail.
-          RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
-          Collection: Collection1
-          Operations:
-          - OperationName: withTransaction
-            OperationCommand:
-              OnSession: true
-              OperationsInTransaction:
-              - <<: *UpdateOperation
-                Database: *Database0
-              - <<: *UpdateOperation
-                Database: *Database0
-              - <<: *UpdateOperation
-                Database: *Database0
-              - <<: *UpdateOperation
-                Database: *Database0
-              - <<: *UpdateOperation
-                Database: *Database0
-              - <<: *UpdateOperation
-                Database: *Database1
-              - <<: *UpdateOperation
-                Database: *Database1
-              - <<: *UpdateOperation
-                Database: *Database1
-              - <<: *UpdateOperation
-                Database: *Database1
-              - <<: *UpdateOperation
-                Database: *Database1
+  - TemplateName: DifferentDatabasesNonShardedCollectionsUpdate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Transactions"}}
+      Type: CrudActor
+      Threads: {^Parameter: {Name: "Threads", Default: 1}}
+      Database: *Database0
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
+          NopInPhasesUpTo: *MaxPhase
+          PhaseConfig:
+            Duration: 1 minute
+            ThrowOnFailure: false # Transactions are allowed to fail.
+            RecordFailure: true # We still want to record the metrics even if the transaction is rolled back.
+            Collection: Collection1
+            Operations:
+              - OperationName: withTransaction
+                OperationCommand:
+                  OnSession: true
+                  OperationsInTransaction:
+                    - !!merge <<: *UpdateOperation
+                      Database: *Database0
+                    - !!merge <<: *UpdateOperation
+                      Database: *Database0
+                    - !!merge <<: *UpdateOperation
+                      Database: *Database0
+                    - !!merge <<: *UpdateOperation
+                      Database: *Database0
+                    - !!merge <<: *UpdateOperation
+                      Database: *Database0
+                    - !!merge <<: *UpdateOperation
+                      Database: *Database1
+                    - !!merge <<: *UpdateOperation
+                      Database: *Database1
+                    - !!merge <<: *UpdateOperation
+                      Database: *Database1
+                    - !!merge <<: *UpdateOperation
+                      Database: *Database1
+                    - !!merge <<: *UpdateOperation
+                      Database: *Database1
 
-- TemplateName: DifferentDatabasesShardedCollectionsUpdate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Transactions"}}
-    Type: CrudActor
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
-    Database: *Database0
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
-        NopInPhasesUpTo: *MaxPhase
-        PhaseConfig:
-          Duration: 1 minute
-          ThrowOnFailure: false  # Transactions are allowed to fail.
-          RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
-          Collection: Collection0
-          Operations:
-          - OperationName: withTransaction
-            OperationCommand:
-              OnSession: true
-              OperationsInTransaction:
-              - <<: *UpdateOperation
-                Database: *Database0
-              - <<: *UpdateOperation
-                Database: *Database0
-              - <<: *UpdateOperation
-                Database: *Database0
-              - <<: *UpdateOperation
-                Database: *Database0
-              - <<: *UpdateOperation
-                Database: *Database0
-              - <<: *UpdateOperation
-                Database: *Database1
-              - <<: *UpdateOperation
-                Database: *Database1
-              - <<: *UpdateOperation
-                Database: *Database1
-              - <<: *UpdateOperation
-                Database: *Database1
-              - <<: *UpdateOperation
-                Database: *Database1
+  - TemplateName: DifferentDatabasesShardedCollectionsUpdate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Transactions"}}
+      Type: CrudActor
+      Threads: {^Parameter: {Name: "Threads", Default: 1}}
+      Database: *Database0
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
+          NopInPhasesUpTo: *MaxPhase
+          PhaseConfig:
+            Duration: 1 minute
+            ThrowOnFailure: false # Transactions are allowed to fail.
+            RecordFailure: true # We still want to record the metrics even if the transaction is rolled back.
+            Collection: Collection0
+            Operations:
+              - OperationName: withTransaction
+                OperationCommand:
+                  OnSession: true
+                  OperationsInTransaction:
+                    - !!merge <<: *UpdateOperation
+                      Database: *Database0
+                    - !!merge <<: *UpdateOperation
+                      Database: *Database0
+                    - !!merge <<: *UpdateOperation
+                      Database: *Database0
+                    - !!merge <<: *UpdateOperation
+                      Database: *Database0
+                    - !!merge <<: *UpdateOperation
+                      Database: *Database0
+                    - !!merge <<: *UpdateOperation
+                      Database: *Database1
+                    - !!merge <<: *UpdateOperation
+                      Database: *Database1
+                    - !!merge <<: *UpdateOperation
+                      Database: *Database1
+                    - !!merge <<: *UpdateOperation
+                      Database: *Database1
+                    - !!merge <<: *UpdateOperation
+                      Database: *Database1
 
 Actors:
-- Name: CreateShardedCollection
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhase
-      PhaseConfig:
-        Repeat: 1
-        Database: admin
-        Operations:
-        - OperationName: AdminCommand
-          OperationCommand:
-            enableSharding: *Database0
-        - OperationName: AdminCommand
-          OperationCommand:
-            enableSharding: *Database1
-        - OperationName: AdminCommand
-          OperationCommand:
-            shardCollection: databaseForMultiShardTestingIndex0.Collection0
-            key: {_id: hashed}
-        - OperationName: AdminCommand
-          OperationCommand:
-            shardCollection: databaseForMultiShardTestingIndex1.Collection0
-            key: {_id: hashed}
-        - OperationName: AdminCommand
-          OperationCommand:
-            movePrimary: *Database0
-            to: rs0
-        - OperationName: AdminCommand
-          OperationCommand:
-            movePrimary: *Database1
-            to: rs1
+  - Name: CreateShardedCollection
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhase
+        PhaseConfig:
+          Repeat: 1
+          Database: admin
+          Operations:
+            - OperationName: AdminCommand
+              OperationCommand:
+                enableSharding: *Database0
+            - OperationName: AdminCommand
+              OperationCommand:
+                enableSharding: *Database1
+            - OperationName: AdminCommand
+              OperationCommand:
+                shardCollection: databaseForMultiShardTestingIndex0.Collection0
+                key: {_id: hashed}
+            - OperationName: AdminCommand
+              OperationCommand:
+                shardCollection: databaseForMultiShardTestingIndex1.Collection0
+                key: {_id: hashed}
+            - OperationName: AdminCommand
+              OperationCommand:
+                movePrimary: *Database0
+                to: rs0
+            - OperationName: AdminCommand
+              OperationCommand:
+                movePrimary: *Database1
+                to: rs1
 
-- Name: LoadDataDatabase0
-  Type: MonotonicLoader
-  Threads: 4
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhase
-      PhaseConfig:
-        Repeat: 1
+  - Name: LoadDataDatabase0
+    Type: MonotonicLoader
+    Threads: 4
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhase
+        PhaseConfig:
+          Repeat: 1
+          Threads: 4
+          BatchSize: 1000
+          DocumentCount: *DocumentCount
+          CollectionCount: 2
+          Database: *Database0
+          Document: &Document
+            counter: 0
+            padding: {^FastRandomString: {length: {^RandomInt: {min: *ApproxDocumentSize50Pct, max: *ApproxDocumentSize}}}}
+
+  - Name: LoadDataDatabase1
+    Type: MonotonicLoader
+    Threads: 4
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhase
+        PhaseConfig:
+          Repeat: 1
+          Threads: 4
+          BatchSize: 1000
+          DocumentCount: *DocumentCount
+          CollectionCount: 2
+          Database: *Database1
+          Document: *Document
+
+  - Name: QuiesceDatabase0
+    Type: QuiesceActor
+    Threads: 1
+    Database: *Database0
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3, 8, 13, 18]
+        NopInPhasesUpTo: *MaxPhase
+        PhaseConfig:
+          Repeat: 1
+
+  - Name: QuiesceDatabase1
+    Type: QuiesceActor
+    Threads: 1
+    Database: *Database1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3, 8, 13, 18]
+        NopInPhasesUpTo: *MaxPhase
+        PhaseConfig:
+          Repeat: 1
+
+  - ActorFromTemplate:
+      TemplateName: ShardedCollectionUpdate
+      TemplateParameters:
+        Name: "ShardedCollectionUpdate_4"
         Threads: 4
-        BatchSize: 1000
-        DocumentCount: *DocumentCount
-        CollectionCount: 2
-        Database: *Database0
-        Document: &Document
-          counter: 0
-          padding: {^FastRandomString: {length: {^RandomInt: {min: *ApproxDocumentSize50Pct, max: *ApproxDocumentSize}}}}
+        OnlyActiveInPhase: 4
 
-- Name: LoadDataDatabase1
-  Type: MonotonicLoader
-  Threads: 4
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhase
-      PhaseConfig:
-        Repeat: 1
+  - ActorFromTemplate:
+      TemplateName: ShardedAndNonShardedCollectionsUpdate
+      TemplateParameters:
+        Name: "ShardedAndNonShardedCollectionsUpdate_4"
         Threads: 4
-        BatchSize: 1000
-        DocumentCount: *DocumentCount
-        CollectionCount: 2
-        Database: *Database1
-        Document: *Document
+        OnlyActiveInPhase: 5
 
-- Name: QuiesceDatabase0
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database0
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3, 8, 13, 18]
-      NopInPhasesUpTo: *MaxPhase
-      PhaseConfig:
-        Repeat: 1
+  - ActorFromTemplate:
+      TemplateName: DifferentDatabasesNonShardedCollectionsUpdate
+      TemplateParameters:
+        Name: "DifferentDatabasesNonShardedCollectionsUpdate_4"
+        Threads: 4
+        OnlyActiveInPhase: 6
 
-- Name: QuiesceDatabase1
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3, 8, 13, 18]
-      NopInPhasesUpTo: *MaxPhase
-      PhaseConfig:
-        Repeat: 1
+  - ActorFromTemplate:
+      TemplateName: DifferentDatabasesShardedCollectionsUpdate
+      TemplateParameters:
+        Name: "DifferentDatabasesShardedCollectionsUpdate_4"
+        Threads: 4
+        OnlyActiveInPhase: 7
 
-- ActorFromTemplate:
-    TemplateName: ShardedCollectionUpdate
-    TemplateParameters:
-      Name: "ShardedCollectionUpdate_4"
-      Threads: 4
-      OnlyActiveInPhase: 4
+  - ActorFromTemplate:
+      TemplateName: ShardedCollectionUpdate
+      TemplateParameters:
+        Name: "ShardedCollectionUpdate_8"
+        Threads: 8
+        OnlyActiveInPhase: 9
 
-- ActorFromTemplate:
-    TemplateName: ShardedAndNonShardedCollectionsUpdate
-    TemplateParameters:
-      Name: "ShardedAndNonShardedCollectionsUpdate_4"
-      Threads: 4
-      OnlyActiveInPhase: 5
+  - ActorFromTemplate:
+      TemplateName: ShardedAndNonShardedCollectionsUpdate
+      TemplateParameters:
+        Name: "ShardedAndNonShardedCollectionsUpdate_8"
+        Threads: 8
+        OnlyActiveInPhase: 10
 
-- ActorFromTemplate:
-    TemplateName: DifferentDatabasesNonShardedCollectionsUpdate
-    TemplateParameters:
-      Name: "DifferentDatabasesNonShardedCollectionsUpdate_4"
-      Threads: 4
-      OnlyActiveInPhase: 6
+  - ActorFromTemplate:
+      TemplateName: DifferentDatabasesNonShardedCollectionsUpdate
+      TemplateParameters:
+        Name: "DifferentDatabasesNonShardedCollectionsUpdate_8"
+        Threads: 8
+        OnlyActiveInPhase: 11
 
-- ActorFromTemplate:
-    TemplateName: DifferentDatabasesShardedCollectionsUpdate
-    TemplateParameters:
-      Name: "DifferentDatabasesShardedCollectionsUpdate_4"
-      Threads: 4
-      OnlyActiveInPhase: 7
+  - ActorFromTemplate:
+      TemplateName: DifferentDatabasesShardedCollectionsUpdate
+      TemplateParameters:
+        Name: "DifferentDatabasesShardedCollectionsUpdate_8"
+        Threads: 8
+        OnlyActiveInPhase: 12
 
-- ActorFromTemplate:
-    TemplateName: ShardedCollectionUpdate
-    TemplateParameters:
-      Name: "ShardedCollectionUpdate_8"
-      Threads: 8
-      OnlyActiveInPhase: 9
+  - ActorFromTemplate:
+      TemplateName: ShardedCollectionUpdate
+      TemplateParameters:
+        Name: "ShardedCollectionUpdate_16"
+        Threads: 16
+        OnlyActiveInPhase: 14
 
-- ActorFromTemplate:
-    TemplateName: ShardedAndNonShardedCollectionsUpdate
-    TemplateParameters:
-      Name: "ShardedAndNonShardedCollectionsUpdate_8"
-      Threads: 8
-      OnlyActiveInPhase: 10
+  - ActorFromTemplate:
+      TemplateName: ShardedAndNonShardedCollectionsUpdate
+      TemplateParameters:
+        Name: "ShardedAndNonShardedCollectionsUpdate_16"
+        Threads: 16
+        OnlyActiveInPhase: 15
 
-- ActorFromTemplate:
-    TemplateName: DifferentDatabasesNonShardedCollectionsUpdate
-    TemplateParameters:
-      Name: "DifferentDatabasesNonShardedCollectionsUpdate_8"
-      Threads: 8
-      OnlyActiveInPhase: 11
+  - ActorFromTemplate:
+      TemplateName: DifferentDatabasesNonShardedCollectionsUpdate
+      TemplateParameters:
+        Name: "DifferentDatabasesNonShardedCollectionsUpdate_16"
+        Threads: 16
+        OnlyActiveInPhase: 16
 
-- ActorFromTemplate:
-    TemplateName: DifferentDatabasesShardedCollectionsUpdate
-    TemplateParameters:
-      Name: "DifferentDatabasesShardedCollectionsUpdate_8"
-      Threads: 8
-      OnlyActiveInPhase: 12
+  - ActorFromTemplate:
+      TemplateName: DifferentDatabasesShardedCollectionsUpdate
+      TemplateParameters:
+        Name: "DifferentDatabasesShardedCollectionsUpdate_16"
+        Threads: 16
+        OnlyActiveInPhase: 17
 
-- ActorFromTemplate:
-    TemplateName: ShardedCollectionUpdate
-    TemplateParameters:
-      Name: "ShardedCollectionUpdate_16"
-      Threads: 16
-      OnlyActiveInPhase: 14
+  - ActorFromTemplate:
+      TemplateName: ShardedCollectionUpdate
+      TemplateParameters:
+        Name: "ShardedCollectionUpdate_32"
+        Threads: 32
+        OnlyActiveInPhase: 19
 
-- ActorFromTemplate:
-    TemplateName: ShardedAndNonShardedCollectionsUpdate
-    TemplateParameters:
-      Name: "ShardedAndNonShardedCollectionsUpdate_16"
-      Threads: 16
-      OnlyActiveInPhase: 15
+  - ActorFromTemplate:
+      TemplateName: ShardedAndNonShardedCollectionsUpdate
+      TemplateParameters:
+        Name: "ShardedAndNonShardedCollectionsUpdate_32"
+        Threads: 32
+        OnlyActiveInPhase: 20
 
-- ActorFromTemplate:
-    TemplateName: DifferentDatabasesNonShardedCollectionsUpdate
-    TemplateParameters:
-      Name: "DifferentDatabasesNonShardedCollectionsUpdate_16"
-      Threads: 16
-      OnlyActiveInPhase: 16
+  - ActorFromTemplate:
+      TemplateName: DifferentDatabasesNonShardedCollectionsUpdate
+      TemplateParameters:
+        Name: "DifferentDatabasesNonShardedCollectionsUpdate_32"
+        Threads: 32
+        OnlyActiveInPhase: 21
 
-- ActorFromTemplate:
-    TemplateName: DifferentDatabasesShardedCollectionsUpdate
-    TemplateParameters:
-      Name: "DifferentDatabasesShardedCollectionsUpdate_16"
-      Threads: 16
-      OnlyActiveInPhase: 17
-
-- ActorFromTemplate:
-    TemplateName: ShardedCollectionUpdate
-    TemplateParameters:
-      Name: "ShardedCollectionUpdate_32"
-      Threads: 32
-      OnlyActiveInPhase: 19
-
-- ActorFromTemplate:
-    TemplateName: ShardedAndNonShardedCollectionsUpdate
-    TemplateParameters:
-      Name: "ShardedAndNonShardedCollectionsUpdate_32"
-      Threads: 32
-      OnlyActiveInPhase: 20
-
-- ActorFromTemplate:
-    TemplateName: DifferentDatabasesNonShardedCollectionsUpdate
-    TemplateParameters:
-      Name: "DifferentDatabasesNonShardedCollectionsUpdate_32"
-      Threads: 32
-      OnlyActiveInPhase: 21
-
-- ActorFromTemplate:
-    TemplateName: DifferentDatabasesShardedCollectionsUpdate
-    TemplateParameters:
-      Name: "DifferentDatabasesShardedCollectionsUpdate_32"
-      Threads: 32
-      OnlyActiveInPhase: 22
+  - ActorFromTemplate:
+      TemplateName: DifferentDatabasesShardedCollectionsUpdate
+      TemplateParameters:
+        Name: "DifferentDatabasesShardedCollectionsUpdate_32"
+        Threads: 32
+        OnlyActiveInPhase: 22
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - shard
-      - shard-80-feature-flags
-      - shard-lite
-      - shard-lite-80-feature-flags
-      - shard-lite-all-feature-flags
-    branch_name:
-      $gte: v7.0
+  - When:
+      mongodb_setup:
+        $eq:
+          - shard
+          - shard-80-feature-flags
+          - shard-all-feature-flags
+          - shard-lite-80-feature-flags
+      branch_name:
+        $gte: v7.0

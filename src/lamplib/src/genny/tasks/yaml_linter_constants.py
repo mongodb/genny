@@ -3,6 +3,8 @@ import os
 # These fields are required in every workload file.
 REQUIRED_FIELDS = ["Description", "Owner", "Keywords"]
 
+GRANDFATHERED_WORKLOADS_OWNERS_NOT_IN_MOTHRA = ["@mongodb/product-query", "@mongodb/query"]
+
 # These workloads are grandfathered in and don't need to be linted for the keywords field. See DEVPROD-5930.
 GRANDFATHERED_WORKLOADS_WITHOUT_KEYWORDS = set(
     os.path.join(os.getenv("GENNY_REPO_ROOT", ""), path)

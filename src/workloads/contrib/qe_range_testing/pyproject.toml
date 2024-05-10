@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "qe-range-testing"
+version = "0.1.0"
+description = ""
+authors = ["Gabriel Marks <gabriel.marks@mongodb.com>"]
+readme = "README.md"
+packages = [{include = "qe_range_testing"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+Jinja2 = "^3.1.3"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

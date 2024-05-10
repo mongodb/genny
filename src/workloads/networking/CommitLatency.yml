@@ -1,277 +1,276 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   Test latencies for a classic transaction of moving money from one account to another, using
   different write concern, read concern, sessions and transactions.  Based on
   http://henrikingo.github.io/presentations/Highload%202018%20-%20The%20cost%20of%20MongoDB%20ACID%20transactions%20in%20theory%20and%20practice/index.html#/step-24
 
 Keywords:
-- transactions
-- sessions
-- write concern
-- read concern
+  - transactions
+  - sessions
+  - write concern
+  - read concern
 
 Actors:
-- Name: Load phase
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - &Load
-    Repeat: 1
-    Database: test
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        insert: &Collection CommitLatency
-        documents: [{_id: 1, n: 100}, {_id: 2, n: 100}]
-  - &Nop {Nop: true}
-  - &DropCollection
-    Repeat: 1
-    Database: test
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        drop: *Collection
-  - *Load
-  - *Nop
-  - *DropCollection
-  - *Load
-  - *Nop
-  - *DropCollection
-  - *Load
-  - *Nop
-  - *DropCollection
-  - *Load
-  - *Nop
-  - *DropCollection
-  - *Load
-  - *Nop
-  - *DropCollection
-  - *Load
-  - *Nop
-  - *DropCollection
-  - *Load
-  - *Nop
-  - *DropCollection
-  - *Load
-  - *Nop
-  - *DropCollection
-  - *Load
-  - *Nop
-  - *DropCollection
-  - *Load
-  - *Nop
-  - *DropCollection
-  - *Load
-  - *Nop
-  - *DropCollection
-  - *Load
-  - *Nop
-  - *DropCollection
-  - *Load
-  - *Nop
-  - *DropCollection
-  - *Load
-  - *Nop
+  - Name: Load phase
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      - &Load
+        Repeat: 1
+        Database: test
+        Operations:
+          - OperationName: RunCommand
+            OperationCommand:
+              insert: &Collection CommitLatency
+              documents: [{_id: 1, n: 100}, {_id: 2, n: 100}]
+      - &Nop {Nop: true}
+      - &DropCollection
+        Repeat: 1
+        Database: test
+        Operations:
+          - OperationName: RunCommand
+            OperationCommand:
+              drop: *Collection
+      - *Load
+      - *Nop
+      - *DropCollection
+      - *Load
+      - *Nop
+      - *DropCollection
+      - *Load
+      - *Nop
+      - *DropCollection
+      - *Load
+      - *Nop
+      - *DropCollection
+      - *Load
+      - *Nop
+      - *DropCollection
+      - *Load
+      - *Nop
+      - *DropCollection
+      - *Load
+      - *Nop
+      - *DropCollection
+      - *Load
+      - *Nop
+      - *DropCollection
+      - *Load
+      - *Nop
+      - *DropCollection
+      - *Load
+      - *Nop
+      - *DropCollection
+      - *Load
+      - *Nop
+      - *DropCollection
+      - *Load
+      - *Nop
+      - *DropCollection
+      - *Load
+      - *Nop
+      - *DropCollection
+      - *Load
+      - *Nop
 
-
-- Name: CommitLatency
-  Type: CommitLatency
-  Threads: 1
-  Database: test
-  Phases:
-  - *Nop  # Load phase is different actor
-  - MetricsName: CommitLatency_w0_local
-    Collection: *Collection
-    Repeat: 500
+  - Name: CommitLatency
+    Type: CommitLatency
     Threads: 1
-    WriteConcern:
-      Level: 0
-    ReadConcern:
-      Level: local
-    ReadPreference:
-      ReadMode: primary
-  - *Nop
-  - *Nop
-  - MetricsName: CommitLatency_w1_local
-    Collection: *Collection
-    Repeat: 500
-    Threads: 1
-    WriteConcern:
-      Level: 1
-    ReadConcern:
-      Level: local
-    ReadPreference:
-      ReadMode: primary
-  - *Nop
-  - *Nop
-  - MetricsName: CommitLatency_w1_local_sec
-    Collection: *Collection
-    Repeat: 500
-    Threads: 1
-    WriteConcern:
-      Level: 1
-    ReadConcern:
-      Level: local
-    ReadPreference:
-      ReadMode: secondary
-  - *Nop
-  - *Nop
-  - MetricsName: CommitLatency_w1_jtrue_local_sec
-    Collection: *Collection
-    Repeat: 500
-    Threads: 1
-    WriteConcern:
-      Level: 1
-      Journal: true
-    ReadConcern:
-      Level: local
-    ReadPreference:
-      ReadMode: primary
-  - *Nop
-  - *Nop
-  - MetricsName: CommitLatency_wmajority_majority
-    Collection: *Collection
-    Repeat: 500
-    Threads: 1
-    WriteConcern:
-      Level: majority
-    ReadConcern:
-      Level: majority
-    ReadPreference:
-      ReadMode: primary
-  - *Nop
-  - *Nop
-  - MetricsName: CommitLatency_wmajority_majority_sec
-    Collection: *Collection
-    Repeat: 500
-    Threads: 1
-    WriteConcern:
-      Level: majority
-    ReadConcern:
-      Level: majority
-    ReadPreference:
-      ReadMode: secondary
-  - *Nop
-  - *Nop
-  - MetricsName: CommitLatency_wmajority_jtrue_majority
-    Collection: *Collection
-    Repeat: 500
-    Threads: 1
-    WriteConcern:
-      Level: majority
-      Journal: true
-    ReadConcern:
-      Level: majority
-    ReadPreference:
-      ReadMode: primary
-  - *Nop
-  - *Nop
-  - MetricsName: CommitLatency_wmajority_linearizable
-    Collection: *Collection
-    Repeat: 500
-    Threads: 1
-    WriteConcern:
-      Level: majority
-    ReadConcern:
-      Level: linearizable
-    ReadPreference:
-      ReadMode: primary
-  - *Nop
-  - *Nop
-  - MetricsName: CommitLatency_wmajority_majority_session
-    Collection: *Collection
-    Repeat: 500
-    Threads: 1
-    WriteConcern:
-      Level: majority
-    ReadConcern:
-      Level: majority
-    ReadPreference:
-      ReadMode: primary
-    Session: true
-  - *Nop
-  - *Nop
-  - MetricsName: CommitLatency_wmajority_majority_sec_session
-    Collection: *Collection
-    Repeat: 500
-    Threads: 1
-    WriteConcern:
-      Level: majority
-    ReadConcern:
-      Level: majority
-    ReadPreference:
-      ReadMode: secondary
-    Session: true
-  - *Nop
-  - *Nop
-  - MetricsName: CommitLatency_wmajority_majority_trx
-    Collection: *Collection
-    Repeat: 500
-    Threads: 1
-    WriteConcern:
-      Level: majority
-    ReadConcern:
-      Level: snapshot
-    ReadPreference:
-      ReadMode: primary
-    Transaction: true  # Implies Session
-  - *Nop
-  - *Nop
-  - MetricsName: CommitLatency_w0_available
-    Collection: *Collection
-    Repeat: 500
-    Threads: 1
-    WriteConcern:
-      Level: 0
-    ReadConcern:
-      Level: available
-    ReadPreference:
-      ReadMode: primary
-  - *Nop
-  - *Nop
-  - MetricsName: CommitLatency_w1_available
-    Collection: *Collection
-    Repeat: 500
-    Threads: 1
-    WriteConcern:
-      Level: 1
-    ReadConcern:
-      Level: available
-    ReadPreference:
-      ReadMode: primary
-  - *Nop
-  - *Nop
-  - MetricsName: CommitLatency_w1_jtrue_available
-    Collection: *Collection
-    Repeat: 500
-    Threads: 1
-    WriteConcern:
-      Level: 1
-      Journal: true
-    ReadConcern:
-      Level: available
-    ReadPreference:
-      ReadMode: primary
-  - *Nop
-  - *Nop
-  - MetricsName: CommitLatency_w1_available_sec
-    Collection: *Collection
-    Repeat: 500
-    Threads: 1
-    WriteConcern:
-      Level: 1
-    ReadConcern:
-      Level: available
-    ReadPreference:
-      ReadMode: secondary
+    Database: test
+    Phases:
+      - *Nop # Load phase is different actor
+      - MetricsName: CommitLatency_w0_local
+        Collection: *Collection
+        Repeat: 500
+        Threads: 1
+        WriteConcern:
+          Level: 0
+        ReadConcern:
+          Level: local
+        ReadPreference:
+          ReadMode: primary
+      - *Nop
+      - *Nop
+      - MetricsName: CommitLatency_w1_local
+        Collection: *Collection
+        Repeat: 500
+        Threads: 1
+        WriteConcern:
+          Level: 1
+        ReadConcern:
+          Level: local
+        ReadPreference:
+          ReadMode: primary
+      - *Nop
+      - *Nop
+      - MetricsName: CommitLatency_w1_local_sec
+        Collection: *Collection
+        Repeat: 500
+        Threads: 1
+        WriteConcern:
+          Level: 1
+        ReadConcern:
+          Level: local
+        ReadPreference:
+          ReadMode: secondary
+      - *Nop
+      - *Nop
+      - MetricsName: CommitLatency_w1_jtrue_local_sec
+        Collection: *Collection
+        Repeat: 500
+        Threads: 1
+        WriteConcern:
+          Level: 1
+          Journal: true
+        ReadConcern:
+          Level: local
+        ReadPreference:
+          ReadMode: primary
+      - *Nop
+      - *Nop
+      - MetricsName: CommitLatency_wmajority_majority
+        Collection: *Collection
+        Repeat: 500
+        Threads: 1
+        WriteConcern:
+          Level: majority
+        ReadConcern:
+          Level: majority
+        ReadPreference:
+          ReadMode: primary
+      - *Nop
+      - *Nop
+      - MetricsName: CommitLatency_wmajority_majority_sec
+        Collection: *Collection
+        Repeat: 500
+        Threads: 1
+        WriteConcern:
+          Level: majority
+        ReadConcern:
+          Level: majority
+        ReadPreference:
+          ReadMode: secondary
+      - *Nop
+      - *Nop
+      - MetricsName: CommitLatency_wmajority_jtrue_majority
+        Collection: *Collection
+        Repeat: 500
+        Threads: 1
+        WriteConcern:
+          Level: majority
+          Journal: true
+        ReadConcern:
+          Level: majority
+        ReadPreference:
+          ReadMode: primary
+      - *Nop
+      - *Nop
+      - MetricsName: CommitLatency_wmajority_linearizable
+        Collection: *Collection
+        Repeat: 500
+        Threads: 1
+        WriteConcern:
+          Level: majority
+        ReadConcern:
+          Level: linearizable
+        ReadPreference:
+          ReadMode: primary
+      - *Nop
+      - *Nop
+      - MetricsName: CommitLatency_wmajority_majority_session
+        Collection: *Collection
+        Repeat: 500
+        Threads: 1
+        WriteConcern:
+          Level: majority
+        ReadConcern:
+          Level: majority
+        ReadPreference:
+          ReadMode: primary
+        Session: true
+      - *Nop
+      - *Nop
+      - MetricsName: CommitLatency_wmajority_majority_sec_session
+        Collection: *Collection
+        Repeat: 500
+        Threads: 1
+        WriteConcern:
+          Level: majority
+        ReadConcern:
+          Level: majority
+        ReadPreference:
+          ReadMode: secondary
+        Session: true
+      - *Nop
+      - *Nop
+      - MetricsName: CommitLatency_wmajority_majority_trx
+        Collection: *Collection
+        Repeat: 500
+        Threads: 1
+        WriteConcern:
+          Level: majority
+        ReadConcern:
+          Level: snapshot
+        ReadPreference:
+          ReadMode: primary
+        Transaction: true # Implies Session
+      - *Nop
+      - *Nop
+      - MetricsName: CommitLatency_w0_available
+        Collection: *Collection
+        Repeat: 500
+        Threads: 1
+        WriteConcern:
+          Level: 0
+        ReadConcern:
+          Level: available
+        ReadPreference:
+          ReadMode: primary
+      - *Nop
+      - *Nop
+      - MetricsName: CommitLatency_w1_available
+        Collection: *Collection
+        Repeat: 500
+        Threads: 1
+        WriteConcern:
+          Level: 1
+        ReadConcern:
+          Level: available
+        ReadPreference:
+          ReadMode: primary
+      - *Nop
+      - *Nop
+      - MetricsName: CommitLatency_w1_jtrue_available
+        Collection: *Collection
+        Repeat: 500
+        Threads: 1
+        WriteConcern:
+          Level: 1
+          Journal: true
+        ReadConcern:
+          Level: available
+        ReadPreference:
+          ReadMode: primary
+      - *Nop
+      - *Nop
+      - MetricsName: CommitLatency_w1_available_sec
+        Collection: *Collection
+        Repeat: 500
+        Threads: 1
+        WriteConcern:
+          Level: 1
+        ReadConcern:
+          Level: available
+        ReadPreference:
+          ReadMode: secondary
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica
-      - replica-noflowcontrol
-      - replica-80-feature-flags
-      - replica-all-feature-flags
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - replica-noflowcontrol
+          - replica-80-feature-flags
+          - replica-all-feature-flags
 

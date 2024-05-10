@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/server-security"
+Owner: Server Security
 Description: |
   Example workload demonstrating encryption support in Genny's client pools.
   The CrudActor in this workload performs encrypted operations using a Client
@@ -74,25 +74,25 @@ Encryption:
   # UseCryptSharedLib: true
   # CryptSharedLibPath: /data/workdir/mongocrypt/lib/mongo_crypt_v1.so
   EncryptedCollections:
-  - Database: *encrypted_db
-    Collection: "accounts"
-    EncryptionType: "fle"
-    FLEEncryptedFields:
-      name: { type: "string", algorithm: "random" }
-      credit: { type: "long", algorithm: "random" }
-      pii.ssn: { type: "string", algorithm: "deterministic" }
-      pii.ppn: {type: "string", algorithm: "random"}
-      bio.dob: { type: "date", algorithm: "random" }
-      bio.birthplace.street: { type: "string", algorithm: "random" }
-      bio.birthplace.country: { type: "string", algorithm: "deterministic" }
-  - Database: *encrypted_db
-    Collection: "medical"
-    EncryptionType: "queryable"
-    QueryableEncryptedFields:
-      patient_id: { type: "string", queries: [{queryType: "equality"}] }
-      insurance: { type: "string", queries: [{queryType: "equality", contention: 16}] }
-      a1c: { type: "long", queries: [{queryType: "equality", contention: 10}] }
-      spO2: { type: "double", queries: [{queryType: "rangePreview", min: 0, max: 1, precision: 1, sparsity: 1, contention: 8}] }
+    - Database: *encrypted_db
+      Collection: "accounts"
+      EncryptionType: "fle"
+      FLEEncryptedFields:
+        name: {type: "string", algorithm: "random"}
+        credit: {type: "long", algorithm: "random"}
+        pii.ssn: {type: "string", algorithm: "deterministic"}
+        pii.ppn: {type: "string", algorithm: "random"}
+        bio.dob: {type: "date", algorithm: "random"}
+        bio.birthplace.street: {type: "string", algorithm: "random"}
+        bio.birthplace.country: {type: "string", algorithm: "deterministic"}
+    - Database: *encrypted_db
+      Collection: "medical"
+      EncryptionType: "queryable"
+      QueryableEncryptedFields:
+        patient_id: {type: "string", queries: [{queryType: "equality"}]}
+        insurance: {type: "string", queries: [{queryType: "equality", contention: 16}]}
+        a1c: {type: "long", queries: [{queryType: "equality", contention: 10}]}
+        spO2: {type: "double", queries: [{queryType: "rangePreview", min: 0, max: 1, precision: 1, sparsity: 1, contention: 8}]}
 
 Clients:
   Default:
@@ -105,8 +105,8 @@ Clients:
       KeyVaultDatabase: "keyvault"
       KeyVaultCollection: "datakeys"
       EncryptedCollections:
-      - genny_fle.accounts
-      - genny_fle.medical
+        - genny_fle.accounts
+        - genny_fle.medical
   SecondEncryptedPool:
     QueryOptions:
       maxPoolSize: 100
@@ -114,7 +114,7 @@ Clients:
       KeyVaultDatabase: "keyvault"
       KeyVaultCollection: "datakeys"
       EncryptedCollections:
-      - genny_fle.accounts
+        - genny_fle.accounts
   ThirdEncryptedPool:
     QueryOptions:
       maxPoolSize: 100
@@ -122,114 +122,114 @@ Clients:
       KeyVaultDatabase: "keyvault"
       KeyVaultCollection: "datakeys"
       EncryptedCollections:
-      - genny_fle.medical
+        - genny_fle.medical
 
 Actors:
-- Name: Accounts
-  Type: CrudActor
-  Threads: 10
-  Database: *encrypted_db
-  ClientName: EncryptedPool  # Use encryption-enabled pool
-  Phases:
-  - Repeat: 10
-    Collection: accounts
-    Operations:
-    - OperationName: insertOne
-      OperationCommand:
-        Document:
-          name: "Bob"
-          surname: "Belcher"
-          credit: {^RandomInt: {min: 300, max: 850}}
-          pii:
-            ssn: {^RandomString: {length: 9, alphabet: "0123456789"}}
-            ppn: {^RandomString: {length: 9, alphabet: "0123456789"}}
-          bio:
-            dob: {^RandomDate: {}}
-            birthplace:
-              street: {^Join: {array: [{^RandomString: {length: 4, alphabet: "123456789"}}, " Ocean Ave"]}}
-              country: "USA"
-          # T1 inserts 0-9, T2 inserts 10-19, etc..
-          _id: {^Inc: {start: -10, multiplier: 10}}
-  - Repeat: 1
-    Collection: accounts
-    Operations:
-    - OperationName: updateOne
-      OperationCommand:
-        # Query on unencrypted field
-        Filter: {surname: "Belcher"}
-        Update: {$set: {name: "Betty", surname: "Burger", pii.ssn: '111-11-1111', bio.birthplace.country: "UK"}}
-    - OperationName: updateOne
-      OperationCommand:
-        # Query on deterministically-encrypted field
-        Filter: {bio.birthplace.country: "USA"}
-        Update: {$set: {name: "Barry", surname: "Barbie", bio.birthplace.country: "Australia"}}
-    - OperationName: updateOne
-      OperationCommand:
-        Filter: {surname: "Belcher"}
-        Update: {$set: {name: "Billy", surname: "Brown", pii.ssn: '111-11-1111', bio.birthplace.country: "Canada"}}
-    - OperationName: updateOne
-      OperationCommand:
-        Filter: {pii.ssn: "111-11-1111"}
-        Update: {$set: {surname: "Bacon", pii.ssn: "222-22-2222"}}
-  - &nop {Nop: true}
-
-- Name: Accounts_SecondPool
-  Type: CrudActor
-  Threads: 10
-  Database: *encrypted_db
-  ClientName: SecondEncryptedPool  # Use encryption-enabled pool
-  Phases:
-  - *nop
-  - Repeat: 1
-    Collection: accounts
-    Operations:
-    - OperationName: updateOne
-      OperationCommand:
-        # Query on deterministically-encrypted field
-        Filter: {bio.birthplace.country: "USA"}
-        Update: {$set: {bio.birthplace.country: "New Zealand", updated_by: "SecondEncryptedPool"}}
-  - *nop
-
-- Name: Medical
-  Type: CrudActor
-  Threads: 10
-  Database: *encrypted_db
-  ClientName: ThirdEncryptedPool
-  Phases:
-  - Repeat: 10
-    Collection: medical
-    Operations:
-    - OperationName: insertOne
-      OperationCommand:
-        Document:
-          patient_id: {^Join: {array: ["Patient-", {^ActorIdString: {}}]}}
-          patient_id_plain: {^Join: {array: ["Patient-", {^ActorIdString: {}}]}}
-          a1c: {^RandomInt: {min: 2, max: 12}}
-          spO2: {^RandomDouble: {min: 0, max: 1}}
-          _id: {^Inc: {start: -10, multiplier: 10}}
-  - Repeat: 10
-    Collection: medical
-    Operations:
-    - OperationName: updateOne
-      OperationCommand:
-        Filter: {patient_id: {^Join: {array: ["Patient-", {^ActorIdString: {}}]}}}
-        Update:
-          $set:
-            insurance: "none"
-            a1c: {^RandomInt: {min: 2, max: 12}}
-            spO2: {^RandomDouble: {min: 0, max: 1}}
-  - *nop
-
-- Name: Compactor
-  Type: RunCommand
-  Threads: 1
-  ClientName: EncryptedPool
-  Phases:
-  - *nop
-  - *nop
-  - Repeat: 1
+  - Name: Accounts
+    Type: CrudActor
+    Threads: 10
     Database: *encrypted_db
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        compactStructuredEncryptionData: medical
+    ClientName: EncryptedPool # Use encryption-enabled pool
+    Phases:
+      - Repeat: 10
+        Collection: accounts
+        Operations:
+          - OperationName: insertOne
+            OperationCommand:
+              Document:
+                name: "Bob"
+                surname: "Belcher"
+                credit: {^RandomInt: {min: 300, max: 850}}
+                pii:
+                  ssn: {^RandomString: {length: 9, alphabet: "0123456789"}}
+                  ppn: {^RandomString: {length: 9, alphabet: "0123456789"}}
+                bio:
+                  dob: {^RandomDate: {}}
+                  birthplace:
+                    street: {^Join: {array: [{^RandomString: {length: 4, alphabet: "123456789"}}, " Ocean Ave"]}}
+                    country: "USA"
+                # T1 inserts 0-9, T2 inserts 10-19, etc..
+                _id: {^Inc: {start: -10, multiplier: 10}}
+      - Repeat: 1
+        Collection: accounts
+        Operations:
+          - OperationName: updateOne
+            OperationCommand:
+              # Query on unencrypted field
+              Filter: {surname: "Belcher"}
+              Update: {$set: {name: "Betty", surname: "Burger", pii.ssn: '111-11-1111', bio.birthplace.country: "UK"}}
+          - OperationName: updateOne
+            OperationCommand:
+              # Query on deterministically-encrypted field
+              Filter: {bio.birthplace.country: "USA"}
+              Update: {$set: {name: "Barry", surname: "Barbie", bio.birthplace.country: "Australia"}}
+          - OperationName: updateOne
+            OperationCommand:
+              Filter: {surname: "Belcher"}
+              Update: {$set: {name: "Billy", surname: "Brown", pii.ssn: '111-11-1111', bio.birthplace.country: "Canada"}}
+          - OperationName: updateOne
+            OperationCommand:
+              Filter: {pii.ssn: "111-11-1111"}
+              Update: {$set: {surname: "Bacon", pii.ssn: "222-22-2222"}}
+      - &nop {Nop: true}
+
+  - Name: Accounts_SecondPool
+    Type: CrudActor
+    Threads: 10
+    Database: *encrypted_db
+    ClientName: SecondEncryptedPool # Use encryption-enabled pool
+    Phases:
+      - *nop
+      - Repeat: 1
+        Collection: accounts
+        Operations:
+          - OperationName: updateOne
+            OperationCommand:
+              # Query on deterministically-encrypted field
+              Filter: {bio.birthplace.country: "USA"}
+              Update: {$set: {bio.birthplace.country: "New Zealand", updated_by: "SecondEncryptedPool"}}
+      - *nop
+
+  - Name: Medical
+    Type: CrudActor
+    Threads: 10
+    Database: *encrypted_db
+    ClientName: ThirdEncryptedPool
+    Phases:
+      - Repeat: 10
+        Collection: medical
+        Operations:
+          - OperationName: insertOne
+            OperationCommand:
+              Document:
+                patient_id: {^Join: {array: ["Patient-", {^ActorIdString: {}}]}}
+                patient_id_plain: {^Join: {array: ["Patient-", {^ActorIdString: {}}]}}
+                a1c: {^RandomInt: {min: 2, max: 12}}
+                spO2: {^RandomDouble: {min: 0, max: 1}}
+                _id: {^Inc: {start: -10, multiplier: 10}}
+      - Repeat: 10
+        Collection: medical
+        Operations:
+          - OperationName: updateOne
+            OperationCommand:
+              Filter: {patient_id: {^Join: {array: ["Patient-", {^ActorIdString: {}}]}}}
+              Update:
+                $set:
+                  insurance: "none"
+                  a1c: {^RandomInt: {min: 2, max: 12}}
+                  spO2: {^RandomDouble: {min: 0, max: 1}}
+      - *nop
+
+  - Name: Compactor
+    Type: RunCommand
+    Threads: 1
+    ClientName: EncryptedPool
+    Phases:
+      - *nop
+      - *nop
+      - Repeat: 1
+        Database: *encrypted_db
+        Operations:
+          - OperationName: RunCommand
+            OperationCommand:
+              compactStructuredEncryptionData: medical

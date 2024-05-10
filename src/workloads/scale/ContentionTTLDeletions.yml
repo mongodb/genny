@@ -1,21 +1,21 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/server-execution"
+Owner: Storage Execution
 Description: |
   This workload tests the impact of background TTL deletions in a heavily modified collection with
   concurrent crud operations on a second collection to simulate extreme ticket contention.
 
 Keywords:
-- ttl
-- stress
-- indexes
-- insertMany
-- CrudActor
+  - ttl
+  - stress
+  - indexes
+  - insertMany
+  - CrudActor
 
 Clients:
   Default:
     QueryOptions:
       maxPoolSize: 2000
-      socketTimeoutMS: 1_200_000  # = 20 minutes
+      socketTimeoutMS: 1_200_000 # = 20 minutes
 
 SmallDoc: &SmallDoc
   a: {^FastRandomString: {length: 123}}
@@ -30,178 +30,178 @@ LargeDoc: &LargeDoc
   expireDate: {^Date: "1970-01-01"}
 
 Actors:
-# Perform the inital collection creation separate from changing the server parameters to reduce
-# noise in each phase.
-- Name: CreateTTLCollection
-  Type: Loader
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: &NumPhases 3
-      PhaseConfig:
-        Repeat: 1
-        Database: &db test
-        Threads: 1
-        CollectionCount: &NumColls 1
-        DocumentCount: 1
-        BatchSize: 1
-        Document: *SmallDoc
-        Indexes:
-        - keys: {expireDate: 1}
-          options: {expireAfterSeconds: 0}
-        - keys: {numField: 1}
+  # Perform the inital collection creation separate from changing the server parameters to reduce
+  # noise in each phase.
+  - Name: CreateTTLCollection
+    Type: Loader
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: &NumPhases 3
+        PhaseConfig:
+          Repeat: 1
+          Database: &db test
+          Threads: 1
+          CollectionCount: &NumColls 1
+          DocumentCount: 1
+          BatchSize: 1
+          Document: *SmallDoc
+          Indexes:
+            - keys: {expireDate: 1}
+              options: {expireAfterSeconds: 0}
+            - keys: {numField: 1}
 
-- Name: CreateIndexesOtherColl
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *db
-        Operations:
-        - OperationName: RunCommand
-          OperationCommand:
-            createIndexes: &otherColl otherColl
-            indexes:
-            - key: {numField: 1}
-              name: numField_1
-            - key: {a: 1}
-              name: a_1
+  - Name: CreateIndexesOtherColl
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *db
+          Operations:
+            - OperationName: RunCommand
+              OperationCommand:
+                createIndexes: &otherColl otherColl
+                indexes:
+                  - key: {numField: 1}
+                    name: numField_1
+                  - key: {a: 1}
+                    name: a_1
 
-- Name: ConfigureParameters
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: admin
-        Operations:
-        - OperationName: AdminCommand
-          OperationCommand:
-            setParameter: 1
-            ttlMonitorSleepSecs: 1
-        - OperationName: AdminCommand
-          OperationCommand:
-            setParameter: 1
-            # Reduce tickets to force contention.
-            throughputProbingMaxConcurrency: 32
-        SleepAfter: 60 seconds  # Wait 60 seconds for the new configurations to establish.
+  - Name: ConfigureParameters
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: admin
+          Operations:
+            - OperationName: AdminCommand
+              OperationCommand:
+                setParameter: 1
+                ttlMonitorSleepSecs: 1
+            - OperationName: AdminCommand
+              OperationCommand:
+                setParameter: 1
+                # Reduce tickets to force contention.
+                throughputProbingMaxConcurrency: 32
+          SleepAfter: 60 seconds # Wait 60 seconds for the new configurations to establish.
 
-- Name: UpdateOtherColl
-  Type: CrudActor
-  Database: *db
-  Threads: &numThreads 256
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Duration: &phaseDuration 10 minutes
-        Collection: *otherColl
-        Operations:
-        - OperationName: updateOne
-          OperationCommand:
-            Filter: &filter
-              numField: {^RandomInt: {min: 0, max: 1000}}
-            Update:
-              $inc: {counter: 1}
+  - Name: UpdateOtherColl
+    Type: CrudActor
+    Database: *db
+    Threads: &numThreads 256
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Duration: &phaseDuration 10 minutes
+          Collection: *otherColl
+          Operations:
+            - OperationName: updateOne
+              OperationCommand:
+                Filter: &filter
+                  numField: {^RandomInt: {min: 0, max: 1000}}
+                Update:
+                  $inc: {counter: 1}
 
-- Name: RemoveOtherColl
-  Type: CrudActor
-  Database: *db
-  Threads: *numThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Duration: *phaseDuration
-        Collection: *otherColl
-        Operations:
-        - OperationName: deleteOne
-          OperationCommand:
-            Filter: *filter
+  - Name: RemoveOtherColl
+    Type: CrudActor
+    Database: *db
+    Threads: *numThreads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Duration: *phaseDuration
+          Collection: *otherColl
+          Operations:
+            - OperationName: deleteOne
+              OperationCommand:
+                Filter: *filter
 
-- Name: InsertOtherCollSmall
-  Type: CrudActor
-  Database: *db
-  Threads: &halfThreads 128
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Duration: *phaseDuration
-        Collection: *otherColl
-        Operations:
-        - OperationName: insertOne
-          OperationCommand:
-            Document: *SmallDoc
+  - Name: InsertOtherCollSmall
+    Type: CrudActor
+    Database: *db
+    Threads: &halfThreads 128
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Duration: *phaseDuration
+          Collection: *otherColl
+          Operations:
+            - OperationName: insertOne
+              OperationCommand:
+                Document: *SmallDoc
 
-- Name: InsertOtherCollLarge
-  Type: CrudActor
-  Database: *db
-  Threads: *halfThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Duration: *phaseDuration
-        Collection: *otherColl
-        Operations:
-        - OperationName: insertOne
-          OperationCommand:
-            Document: *LargeDoc
+  - Name: InsertOtherCollLarge
+    Type: CrudActor
+    Database: *db
+    Threads: *halfThreads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Duration: *phaseDuration
+          Collection: *otherColl
+          Operations:
+            - OperationName: insertOne
+              OperationCommand:
+                Document: *LargeDoc
 
-- Name: InsertTTLColl-Small
-  Type: CrudActor
-  Database: *db
-  Threads: 512
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Duration: *phaseDuration
-        Collection: Collection0
-        Operations:
-        - OperationName: insertOne
-          OperationCommand:
-            Document: *SmallDoc
+  - Name: InsertTTLColl-Small
+    Type: CrudActor
+    Database: *db
+    Threads: 512
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Duration: *phaseDuration
+          Collection: Collection0
+          Operations:
+            - OperationName: insertOne
+              OperationCommand:
+                Document: *SmallDoc
 
-- Name: InsertTTLColl-Large
-  Type: CrudActor
-  Database: *db
-  Threads: 512
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Duration: *phaseDuration
-        Collection: Collection0
-        Operations:
-        - OperationName: insertOne
-          OperationCommand:
-            Document: *LargeDoc
+  - Name: InsertTTLColl-Large
+    Type: CrudActor
+    Database: *db
+    Threads: 512
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Duration: *phaseDuration
+          Collection: Collection0
+          Operations:
+            - OperationName: insertOne
+              OperationCommand:
+                Document: *LargeDoc
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - single-replica
-      - single-replica-80-feature-flags
-      - single-replica-all-feature-flags
-    branch_name:
-      $gte: v7.0
-    infrastructure_provisioning:
-      $neq:
-      - graviton-single-lite.2022-11  # Instance runs out of memory and crashes
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - single-replica-80-feature-flags
+          - replica-all-feature-flags
+      branch_name:
+        $gte: v7.0
+      infrastructure_provisioning:
+        $neq:
+          - graviton-single-lite.2022-11 # Instance runs out of memory and crashes

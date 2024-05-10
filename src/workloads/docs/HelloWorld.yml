@@ -1,45 +1,45 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/dev-prod-tips"
+Owner: Performance Analysis
 Description: |
   This is an introductory workload that shows how to write a workload in Genny.
   This workload writes a few messages to the screen.
 
 Actors:
-- Name: HelloWorld
-  Type: HelloWorld
-  Threads: &Threads 2
-  Phases:
-  - Message: Hello Phase 0 🐳
-    Duration: 50 milliseconds
-    # GlobalRate: 99 per 88 nanoseconds
-    # SleepBefore: 11 milliseconds
-    # SleepAfter: 17 microseconds
-    # MetricsName: 🐳Message
-  - Message: Hello Phase 1 👬
-    Repeat: 100
-    # To limit the throughput to a percentage of the max, specify global rate as a percent.
-    # This will run at max throughput for 1 minute or 3 iterations, whichever is longer,
-    # then limit to a fraction of that for the rest of the phase.
-    # GlobalRate: 80%
-  - LoadConfig:
-      Path: ../../phases/HelloWorld/ExamplePhase2.yml
-      Key: UseMe  # Only load the YAML structure from this top-level key.
-      Parameters:
-        Repeat: 2
-  # To perform arithmetic use the ^NumExpr preprocessor directive
-  - Message: Hello Phase 3
-    TotalMessageCount: &TotalMessageCount 100
-    Repeat:
-      ^NumExpr:
-        withExpression: "messages / threads"
-        andValues: {messages: *TotalMessageCount, threads: *Threads}
-  # To concatenate strings, use the ^PreprocessorFormatString preprocessor directive. It works
-  # similarly to the ^FormatString generator.
-  - Message:
-      ^PreprocessorFormatString:
-        format: "%s Phase %d"
-        withArgs: ["Hello", 4]
-    Repeat: 1
+  - Name: HelloWorld
+    Type: HelloWorld
+    Threads: &Threads 2
+    Phases:
+      - Message: Hello Phase 0 🐳
+        Duration: 50 milliseconds
+        # GlobalRate: 99 per 88 nanoseconds
+        # SleepBefore: 11 milliseconds
+        # SleepAfter: 17 microseconds
+        # MetricsName: 🐳Message
+      - Message: Hello Phase 1 👬
+        Repeat: 100
+        # To limit the throughput to a percentage of the max, specify global rate as a percent.
+        # This will run at max throughput for 1 minute or 3 iterations, whichever is longer,
+        # then limit to a fraction of that for the rest of the phase.
+        # GlobalRate: 80%
+      - LoadConfig:
+          Path: ../../phases/HelloWorld/ExamplePhase2.yml
+          Key: UseMe # Only load the YAML structure from this top-level key.
+          Parameters:
+            Repeat: 2
+      # To perform arithmetic use the ^NumExpr preprocessor directive
+      - Message: Hello Phase 3
+        TotalMessageCount: &TotalMessageCount 100
+        Repeat:
+          ^NumExpr:
+            withExpression: "messages / threads"
+            andValues: {messages: *TotalMessageCount, threads: *Threads}
+      # To concatenate strings, use the ^PreprocessorFormatString preprocessor directive. It works
+      # similarly to the ^FormatString generator.
+      - Message:
+          ^PreprocessorFormatString:
+            format: "%s Phase %d"
+            withArgs: ["Hello", 4]
+        Repeat: 1
 
 # As an alternate phase syntax, use the following for an actor that
 # runs a total of 3 phases, active in phases named 0 and 2 and Nop for the rest:

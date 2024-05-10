@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-execution"
+Owner: Query Execution
 Description: |
   This workload measures bulk insert performance against a collection named "coll" in a database
   named "heavy_io". The collection and database must be set up before running the workload. The
@@ -21,16 +21,16 @@ Description: |
      performance cost could help make that decision.
 
 Keywords:
-- columnstore
-- analytics
-- scale
-- insert
+  - columnstore
+  - analytics
+  - scale
+  - insert
 
 Clients:
   Default:
     QueryOptions:
       # Allow for longer duration since index builds may take a while.
-      socketTimeoutMS: 3_600_000  # = 1 hour
+      socketTimeoutMS: 3_600_000 # = 1 hour
       connectTimeoutMS: 3_600_000
 
 GlobalDefaults:
@@ -40,7 +40,7 @@ GlobalDefaults:
 
   LoadThreads: &loadThreads 8
   SampleSize: &sampleSize 1000
-  Batches: &batches 50  # Per Thread
+  Batches: &batches 50 # Per Thread
 
   ColumnStoreIndexSpec: &columnStoreIndexSpec
     key: {$**: "columnstore"}
@@ -49,93 +49,92 @@ GlobalDefaults:
   MaxPhases: &maxPhases 5
 
 ActorTemplates:
-# We want to be able to compare results from the same test between the runs in presence of different
-# indexes. For this we'll have to instantiate the same actor multiple times with a unique name.
-- TemplateName: InsertFromSample
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Insert"}}
-    Type: SamplingLoader
-    Database: *db
-    Collection: *coll
-    SampleSize: *sampleSize
-    Pipeline: [{$set: {genny_added: true}}]
-    Threads: *loadThreads
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]  # do not run by default
-        NopInPhasesUpTo: *maxPhases
-        PhaseConfig:
-          InsertBatchSize: *sampleSize
-          Repeat: 1
-          Batches: *batches
+  # We want to be able to compare results from the same test between the runs in presence of different
+  # indexes. For this we'll have to instantiate the same actor multiple times with a unique name.
+  - TemplateName: InsertFromSample
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Insert"}}
+      Type: SamplingLoader
+      Database: *db
+      Collection: *coll
+      SampleSize: *sampleSize
+      Pipeline: [{$set: {genny_added: true}}]
+      Threads: *loadThreads
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}] # do not run by default
+          NopInPhasesUpTo: *maxPhases
+          PhaseConfig:
+            InsertBatchSize: *sampleSize
+            Repeat: 1
+            Batches: *batches
 
 Actors:
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0, 4]
-      NopInPhasesUpTo: *maxPhases
-      PhaseConfig:
-        Repeat: 1
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *db
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0, 4]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
 
-- ActorFromTemplate:
-    TemplateName: InsertFromSample
-    TemplateParameters:
-      Name: DefaultIndexes
-      OnlyActiveInPhase: 1
+  - ActorFromTemplate:
+      TemplateName: InsertFromSample
+      TemplateParameters:
+        Name: DefaultIndexes
+        OnlyActiveInPhase: 1
 
-# The insert tests add 1000*50*8 = 400,000 records, which might be significant comparing to the
-# collection size, so let's remove the inserted records before running the next test.
-- Name: DeleteInserted
-  Type: CrudActor
-  Database: *db
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *maxPhases
-      PhaseConfig:
-        Repeat: 1
-        MetricsName: ignore
-        Database: *db
-        Collection: *coll
-        Operations:
-        - OperationName: bulkWrite
-          OperationCommand:
-            WriteOperations:
-            - WriteCommand: deleteMany
-              Filter:
-                {genny_added: true}
+  # The insert tests add 1000*50*8 = 400,000 records, which might be significant comparing to the
+  # collection size, so let's remove the inserted records before running the next test.
+  - Name: DeleteInserted
+    Type: CrudActor
+    Database: *db
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          MetricsName: ignore
+          Database: *db
+          Collection: *coll
+          Operations:
+            - OperationName: bulkWrite
+              OperationCommand:
+                WriteOperations:
+                  - WriteCommand: deleteMany
+                    Filter: {genny_added: true}
 
-- Name: SwitchToCSI
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3]
-      NopInPhasesUpTo: *maxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *db
-        Operations:
-        - OperationName: RunCommand
-          OperationCommand:
-            dropIndexes: *coll
-            # This will drop all non-essential indexes (_id and any shard key index remain)
-            index: '*'
-        - OperationName: RunCommand
-          OperationCommand:
-            createIndexes: *coll
-            indexes:
-            - *columnStoreIndexSpec
+  - Name: SwitchToCSI
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *db
+          Operations:
+            - OperationName: RunCommand
+              OperationCommand:
+                dropIndexes: *coll
+                # This will drop all non-essential indexes (_id and any shard key index remain)
+                index: '*'
+            - OperationName: RunCommand
+              OperationCommand:
+                createIndexes: *coll
+                indexes:
+                  - *columnStoreIndexSpec
 
-- ActorFromTemplate:
-    TemplateName: InsertFromSample
-    TemplateParameters:
-      Name: Csi
-      OnlyActiveInPhase: 5
+  - ActorFromTemplate:
+      TemplateName: InsertFromSample
+      TemplateParameters:
+        Name: Csi
+        OnlyActiveInPhase: 5
 
 # TODO PERF-3094: Revive 'AutoRun' configuration when the project is near to a closure.
 # AutoRun:

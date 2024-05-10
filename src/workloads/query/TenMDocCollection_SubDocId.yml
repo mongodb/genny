@@ -4,7 +4,7 @@ Description: |
   This workload tests performance of IDHACK on queries with sub-document _id.
 
 KeyWords:
-- IDHACK
+  - IDHACK
 
 Clients:
   Default:
@@ -17,107 +17,102 @@ GlobalDefaults:
   MaxPhases: &MaxPhases 5
 
 ActorTemplates:
-- TemplateName: IDHACK
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "IDHackQuery"}}
-    Type: CrudActor
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
-        NopInPhasesUpTo: *MaxPhases
-        PhaseConfig:
-          # Our testing suggested the first ~20 seconds of this actor shows a lot of noise before
-          # stabilizing - 100s should gather sufficient post-noise data.
-          Duration: 100 seconds
-          Database: *Database
-          Collection: *Collection
-          Operations:
-          - OperationName: find
-            OperationCommand:
-              Filter: {_id: {_id1: {^RandomInt: {min: 0, max: 9999999}}, _id2: {^RandomInt: {min: 0, max: 9999999}}}}
+  - TemplateName: IDHACK
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "IDHackQuery"}}
+      Type: CrudActor
+      Threads: {^Parameter: {Name: "Threads", Default: 1}}
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
+          NopInPhasesUpTo: *MaxPhases
+          PhaseConfig:
+            # Our testing suggested the first ~20 seconds of this actor shows a lot of noise before
+            # stabilizing - 100s should gather sufficient post-noise data.
+            Duration: 100 seconds
+            Database: *Database
+            Collection: *Collection
+            Operations:
+              - OperationName: find
+                OperationCommand:
+                  Filter: {_id: {_id1: {^RandomInt: {min: 0, max: 9999999}}, _id2: {^RandomInt: {min: 0, max: 9999999}}}}
 
 Actors:
-# Clear any pre-existing collection state.
-- Name: ClearCollection
-  Type: CrudActor
-  Database: *Database
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
-        Collection: *Collection
-        Operations:
-        - OperationName: drop
+  # Clear any pre-existing collection state.
+  - Name: ClearCollection
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+          Collection: *Collection
+          Operations:
+            - OperationName: drop
 
-- Name: LoadSubDocIDs
-  Type: Loader
-  Threads: 10
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        MultipleThreadsPerCollection: true
-        CollectionCount: 1
-        DocumentCount: 10000000
-        BatchSize: 1000
-        Document:
-          _id: {id1: {^Inc: {start: -2000000, multiplier: 1000000}}, id2: {^Inc: {start: -2000000, multiplier: 1000000}}}
+  - Name: LoadSubDocIDs
+    Type: Loader
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          MultipleThreadsPerCollection: true
+          CollectionCount: 1
+          DocumentCount: 10000000
+          BatchSize: 1000
+          Document:
+            _id: {id1: {^Inc: {start: -2000000, multiplier: 1000000}}, id2: {^Inc: {start: -2000000, multiplier: 1000000}}}
 
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
 
-- ActorFromTemplate:
-    TemplateName: IDHACK
-    TemplateParameters:
-      Name: IDHack32Threads
-      Threads: 32
-      OnlyActiveInPhase: 3
+  - ActorFromTemplate:
+      TemplateName: IDHACK
+      TemplateParameters:
+        Name: IDHack32Threads
+        Threads: 32
+        OnlyActiveInPhase: 3
 
-- ActorFromTemplate:
-    TemplateName: IDHACK
-    TemplateParameters:
-      Name: IDHack128Threads
-      Threads: 128
-      OnlyActiveInPhase: 4
+  - ActorFromTemplate:
+      TemplateName: IDHACK
+      TemplateParameters:
+        Name: IDHack128Threads
+        Threads: 128
+        OnlyActiveInPhase: 4
 
-- ActorFromTemplate:
-    TemplateName: IDHACK
-    TemplateParameters:
-      Name: IDHack256Threads
-      Threads: 256
-      OnlyActiveInPhase: 5
+  - ActorFromTemplate:
+      TemplateName: IDHACK
+      TemplateParameters:
+        Name: IDHack256Threads
+        Threads: 256
+        OnlyActiveInPhase: 5
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone-80-feature-flags
-      - standalone-all-feature-flags
-      - standalone
-      - standalone-query-stats
-      - shard
-      - shard-80-feature-flags
-      - shard-lite
-      - shard-query-stats
-      - single-replica
-      - replica
-      - replica-query-stats-rate-limit
-      - atlas-like-replica.2022-10
-      - atlas-like-replica.2023-09
-      - atlas-like-replica-query-stats.2023-09
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone-80-feature-flags
+          - standalone-all-feature-flags
+          - standalone
+          - standalone-query-stats
+          - replica
+          - replica-query-stats-rate-limit
+          - atlas-like-replica.2022-10
+          - atlas-like-replica.2023-09
+          - atlas-like-replica-query-stats.2023-09

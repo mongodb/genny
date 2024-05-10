@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   This workload is intended to be used to stress a system that may show negative scaling behaviour.
   The workload will insert 100k documents and then run 100k finds across 256 threads. This workload
@@ -11,27 +11,27 @@ Description: |
 # This workload does not support sharding yet.
 
 Keywords:
-- scale
-- insertOne
-- insert
-- findOne
-- find
+  - scale
+  - insertOne
+  - insert
+  - findOne
+  - find
 
 dbname: &dbname mix
 CollectionCount: &NumColls 512
 PhaseDuration: &PhaseDuration 1 minute
 Document: &doc
-  _id: {^Inc : {}}
-  sortKey: {^Inc : {}}
+  _id: {^Inc: {}}
+  sortKey: {^Inc: {}}
   accountId: {^FastRandomString: {length: 10}}
   accountOfficerId: 1
-  amountInAccountCurrency: {^RandomDouble: { min: 0.0, max: 1000.0 }}
-  amountInEventCurrency: {^RandomDouble: { min: 0.0, max: 1000.0 }}
+  amountInAccountCurrency: {^RandomDouble: {min: 0.0, max: 1000.0}}
+  amountInEventCurrency: {^RandomDouble: {min: 0.0, max: 1000.0}}
   bookingDate: {^RandomDate: {min: "2020-01-01", max: "2023-01-01"}}
   categorisactionId: 130
   chequeNumber: 123
   currency: "USD"
-  customerId: { ^RandomInt: { min: 10000, max: 100000 } }
+  customerId: {^RandomInt: {min: 10000, max: 100000}}
   customerReference: "FT21105YDXJT"
   extensionData: {}
   externalIndicator: false
@@ -40,11 +40,10 @@ Document: &doc
   objectID: {^FastRandomString: {length: 25}}
   processingDate: {^RandomDate: {min: "2020-01-01", max: "2023-01-01"}}
   recordId: 197453644225786.030004
-  runningBalance: {^RandomDouble: { min: 0.0, max: 1000.0 }}
-  transactionAmount: {^RandomDouble: { min: 0.0, max: 1000.0 }}
+  runningBalance: {^RandomDouble: {min: 0.0, max: 1000.0}}
+  transactionAmount: {^RandomDouble: {min: 0.0, max: 1000.0}}
   transactionReference: "FT21105YDXJT"
   valueDate: {^RandomDate: {min: "2020-01-01", max: "2023-01-01"}}
-
 
 Clients:
   Find:
@@ -56,68 +55,68 @@ Clients:
 
 ActorTemplates:
 
-- TemplateName: InsertTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Insert_128"}}
-    Type: CrudActor
-    Database: *dbname
-    ClientName: Insert
-    Threads: {^Parameter: {Name: "Threads", Default: 128}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        NopInPhasesUpTo: 2
-        PhaseConfig:
-          Repeat: 100000
-          RecordFailure: true
-          CollectionCount: *NumColls
-          Operations:
-          - OperationName: insertOne
-            OperationCommand:
-              Document: *doc
+  - TemplateName: InsertTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Insert_128"}}
+      Type: CrudActor
+      Database: *dbname
+      ClientName: Insert
+      Threads: {^Parameter: {Name: "Threads", Default: 128}}
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          NopInPhasesUpTo: 2
+          PhaseConfig:
+            Repeat: 100000
+            RecordFailure: true
+            CollectionCount: *NumColls
+            Operations:
+              - OperationName: insertOne
+                OperationCommand:
+                  Document: *doc
 
-- TemplateName: FindTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "FindTemplate"}}
-    Type: CrudActor
-    Database: *dbname
-    ClientName: Find
-    Threads: {^Parameter: {Name: "Threads", Default: 256}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 2}}]
-        NopInPhasesUpTo: 2
-        PhaseConfig:
-          Repeat: 100000
-          RecordFailure: true
-          CollectionCount: *NumColls
-          Operations:
-          - OperationName: findOne
-            OperationCommand:
-              Filter: {_id: {^RandomInt: {min: 0, max: 100000}}}
+  - TemplateName: FindTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "FindTemplate"}}
+      Type: CrudActor
+      Database: *dbname
+      ClientName: Find
+      Threads: {^Parameter: {Name: "Threads", Default: 256}}
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 2}}]
+          NopInPhasesUpTo: 2
+          PhaseConfig:
+            Repeat: 100000
+            RecordFailure: true
+            CollectionCount: *NumColls
+            Operations:
+              - OperationName: findOne
+                OperationCommand:
+                  Filter: {_id: {^RandomInt: {min: 0, max: 100000}}}
 
 Actors:
 
-# Insert Actors
-- ActorFromTemplate:
-    TemplateName: InsertTemplate
-    TemplateParameters:
-      OnlyActiveInPhase: 1
+  # Insert Actors
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        OnlyActiveInPhase: 1
 
-# Find Actors
-- ActorFromTemplate:
-    TemplateName: FindTemplate
-    TemplateParameters:
-      OnlyActiveInPhase: 2
+  # Find Actors
+  - ActorFromTemplate:
+      TemplateName: FindTemplate
+      TemplateParameters:
+        OnlyActiveInPhase: 2
 
-# Guard Against timeout for no output.
-- Name: LoggingActor
-  Type: LoggingActor
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0, 2]
-      NopInPhasesUpTo: 2
-      PhaseConfig:
-        LogEvery: 10 seconds
-        Blocking: None
+  # Guard Against timeout for no output.
+  - Name: LoggingActor
+    Type: LoggingActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0, 2]
+        NopInPhasesUpTo: 2
+        PhaseConfig:
+          LogEvery: 10 seconds
+          Blocking: None

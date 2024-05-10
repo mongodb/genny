@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/server-execution"
+Owner: Storage Execution
 Description: |
   Set up 1000 independent sensors which will each have 100 buckets, and each bucket has 100
   measurements.
@@ -23,11 +23,7 @@ GlobalDefaults:
   nTotalMeasurements: &nTotalMeasurements
     ^NumExpr:
       withExpression: "nSensors * nBucketsPerSensor * nMeasurementsPerBucket"
-      andValues: {
-        nSensors: *nSensors,
-        nBucketsPerSensor: *nBucketsPerSensor,
-        nMeasurementsPerBucket: *nMeasurementsPerBucket
-      }
+      andValues: {nSensors: *nSensors, nBucketsPerSensor: *nBucketsPerSensor, nMeasurementsPerBucket: *nMeasurementsPerBucket}
   MaxPhases: &MaxPhases 4
 
 CreateTimeSeriesCollectionPhase:
@@ -38,13 +34,10 @@ CreateTimeSeriesCollectionPhase:
       Repeat: 1
       Database: *db
       Operations:
-      - OperationName: RunCommand
-        OperationCommand:
-          # Each bucket holds data within one hour time span.
-          {
-            create: *coll,
-            timeseries: {timeField: "t", metaField: "sensorId", granularity: "seconds"}
-          }
+        - OperationName: RunCommand
+          OperationCommand: {
+            # Each bucket holds data within one hour time span.
+            create: *coll, timeseries: {timeField: "t", metaField: "sensorId", granularity: "seconds"}}
 
 InsertDataPhase:
   OnlyActiveInPhases:
@@ -61,11 +54,7 @@ InsertDataPhase:
         _id: {^Inc: {start: 0}}
         # This generates data that look like:
         # [2023-01-01T00:00:00 * 1000, 2023-01-01T00:00:36 * 1000, ...]
-        t:
-          {
-            ^Repeat:
-              {count: *nSensors, fromGenerator: {^IncDate: {start: "2023-01-01", step: 36000}}}
-          }
+        t: {^Repeat: {count: *nSensors, fromGenerator: {^IncDate: {start: "2023-01-01", step: 36000}}}}
         # This generates data that look like:
         # [0, 1, ... 999, 0, 1, ..., 999, ...]
         sensorId: {^Cycle: {ofLength: *nSensors, fromGenerator: {^Inc: {start: 0}}}}
@@ -92,16 +81,10 @@ RangeDeletePhase:
         OperationName: bulkWrite
         OperationCommand:
           WriteOperations:
-          # Removes all measurements between 2023-01-01T10:30:00 and 2023-01-01T12:30:00 for all
-          # series.
-          - WriteCommand: deleteMany
-            Filter:
-              {
-                $and: [
-                  {t: {$gte: {^Date: "2023-01-01T10:30:00"}}},
-                  {t: {$lt: {^Date: "2023-01-01T12:30:00"}}}
-                ]
-              }
+            # Removes all measurements between 2023-01-01T10:30:00 and 2023-01-01T12:30:00 for all
+            # series.
+            - WriteCommand: deleteMany
+              Filter: {$and: [{t: {$gte: {^Date: "2023-01-01T10:30:00"}}}, {t: {$lt: {^Date: "2023-01-01T12:30:00"}}}]}
 
 ArbitraryUpdatePhase:
   OnlyActiveInPhases:
@@ -115,9 +98,9 @@ ArbitraryUpdatePhase:
         OperationName: bulkWrite
         OperationCommand:
           WriteOperations:
-          - WriteCommand: updateMany
-            Filter: {_id: {^RandomInt: {min: 0, max: *nTotalMeasurements}}}
-            Update: {$set: {score: {^RandomDouble: {min: 0, max: 1}}}}
+            - WriteCommand: updateMany
+              Filter: {_id: {^RandomInt: {min: 0, max: *nTotalMeasurements}}}
+              Update: {$set: {score: {^RandomDouble: {min: 0, max: 1}}}}
 
 CleanUpPhase:
   OnlyActiveInPhases:

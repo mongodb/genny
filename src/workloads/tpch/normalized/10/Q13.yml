@@ -9,10 +9,10 @@ Clients:
       socketTimeoutMS: -1
 
 Actors:
-- Name: TPCHNormalizedQuery13Explain
-  Type: RunCommand
-  Database: tpch
-  Phases:
-  - LoadConfig:
-      Path: ../../../../phases/tpch/normalized/Q13.yml
-      Key: TPCHNormalizedQuery13Explain
+  - Name: TPCHNormalizedQuery13Explain
+    Type: RunCommand
+    Database: tpch
+    Phases:
+      - LoadConfig:
+          Path: ../../../../phases/tpch/normalized/Q13.yml
+          Key: TPCHNormalizedQuery13Explain

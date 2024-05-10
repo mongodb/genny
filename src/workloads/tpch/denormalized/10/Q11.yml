@@ -9,10 +9,10 @@ Clients:
       socketTimeoutMS: -1
 
 Actors:
-- Name: TPCHDenormalizedQuery11Explain
-  Type: RunCommand
-  Database: tpch
-  Phases:
-  - LoadConfig:
-      Path: ../../../../phases/tpch/denormalized/Q11.yml
-      Key: TPCHDenormalizedQuery11Explain
+  - Name: TPCHDenormalizedQuery11Explain
+    Type: RunCommand
+    Database: tpch
+    Phases:
+      - LoadConfig:
+          Path: ../../../../phases/tpch/denormalized/Q11.yml
+          Key: TPCHDenormalizedQuery11Explain

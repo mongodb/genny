@@ -1,8 +1,8 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-integration"
+Owner: Query Integration
 Description: |
-  This test exercises the behavior of the time series optimization when the collection has 
-  fixed buckets. This workload uses tsbs data that is imported in the dsi configuration. See 
+  This test exercises the behavior of the time series optimization when the collection has
+  fixed buckets. This workload uses tsbs data that is imported in the dsi configuration. See
   'configurations/test_control/test_control.fixed_bucketing.yml' for all the details.
   The data is set up with the fixed bucketing parameters set to 3600 and the timeField is "time"
   and the metaField is "tags". There are 20736000 documents in the collection.

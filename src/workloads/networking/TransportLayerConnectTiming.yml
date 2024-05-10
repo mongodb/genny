@@ -1,8 +1,8 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/security"
-Description: >-
-    Invoke replSetTestEgress command on replica set members.
-    Command synchronously establishes temporary connections between cluster nodes.
+Owner: Server Security
+Description: |-
+  Invoke replSetTestEgress command on replica set members.
+  Command synchronously establishes temporary connections between cluster nodes.
 
 Clients:
   Default:
@@ -11,21 +11,21 @@ Clients:
       socketTimeoutMS: 5000
       connectTimeoutMS: 5000
 Actors:
-- Name: TestEgress
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - Phase: 0
-    Duration: 5 minutes
-    Database: admin
-    ThrowOnFailure: false
-    Operation:
-      OperationMetricsName: Connection
-      OperationName: RunCommand
-      OperationCommand:
-        replSetTestEgress: 1
+  - Name: TestEgress
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      - Phase: 0
+        Duration: 5 minutes
+        Database: admin
+        ThrowOnFailure: false
+        Operation:
+          OperationMetricsName: Connection
+          OperationName: RunCommand
+          OperationCommand:
+            replSetTestEgress: 1
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq: replica-auth-cluster-delay
+  - When:
+      mongodb_setup:
+        $eq: replica-auth-cluster-delay

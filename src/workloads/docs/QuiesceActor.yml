@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/dev-prod-tips"
+Owner: Performance Analysis
 Description: |
   This workload demonstrates the quiesce actor, used to ensure stable
   database state and reduce noise.
@@ -8,13 +8,13 @@ Description: |
 # it hasn't been used extensively in production. Please let STM know of any
 # use so we can help monitor its effectiveness.
 Actors:
-- Name: QuiesceActor
-  Type: QuiesceActor
-  # Using multiple threads will result in an error.
-  Threads: 1
-  Database: test
-  Phases:
-  - Phase: 0
-    Repeat: 1
-  - Phase: 1
-    Repeat: 1
+  - Name: QuiesceActor
+    Type: QuiesceActor
+    # Using multiple threads will result in an error.
+    Threads: 1
+    Database: test
+    Phases:
+      - Phase: 0
+        Repeat: 1
+      - Phase: 1
+        Repeat: 1

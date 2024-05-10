@@ -1,75 +1,74 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/sharding"
+Owner: Cluster Scalability
 Description: |
   Run updateOnes, deleteOnes, and findAndModifys on a replica set.
 
 GlobalDefaults:
   Nop: &Nop {Nop: true}
   Database: &Database test
-  DocumentCount: &DocumentCount 10000  # Number of documents to insert and modify.
+  DocumentCount: &DocumentCount 10000 # Number of documents to insert and modify.
 
 Actors:
-- Name: LoadInitialData
-  Type: MonotonicSingleLoader
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    BatchSize: 1000
-    DocumentCount: *DocumentCount
-    Database: *Database
-    Document: {x: 1, y: 1, z: 1}
-  - *Nop
-  - *Nop
-  - *Nop
+  - Name: LoadInitialData
+    Type: MonotonicSingleLoader
+    Threads: 1
+    Phases:
+      - Repeat: 1
+        BatchSize: 1000
+        DocumentCount: *DocumentCount
+        Database: *Database
+        Document: {x: 1, y: 1, z: 1}
+      - *Nop
+      - *Nop
+      - *Nop
 
-- Name: CRUDOps
-  Type: CrudActor
-  Threads: 1  # Use 1 thread to avoid updates throwing WriteConflict errors.
-  Phases:
-  - *Nop
-  - Repeat: *DocumentCount
-    Database: *Database
-    Collection: Collection0
-    Operations:
-    - OperationMetricsName: UpdateOne
-      OperationName: updateOne
-      OperationCommand:
-        Filter: {y: 1}
-        Update: {$inc: {y: 1}}
-        Options:
-          WriteConcern:
-            Level: majority
-            TimeoutMillis: 5000
-  - Repeat: *DocumentCount
-    Database: *Database
-    Collection: Collection0
-    Operations:
-    - OperationMetricsName: FindAndModify
-      OperationName: findOneAndUpdate
-      OperationCommand:
-        Filter: {y: 2}
-        Update: {$inc: {y: 1}}
-        Options:
-          WriteConcern:
-            Level: majority
-            TimeoutMillis: 5000
-  - Repeat: *DocumentCount
-    Database: *Database
-    Collection: Collection0
-    Operations:
-    - OperationMetricsName: DeleteOne
-      OperationName: deleteOne
-      OperationCommand:
-        Filter: {z: 1}
-        Options:
-          WriteConcern:
-            Level: majority
-            TimeoutMillis: 5000
+  - Name: CRUDOps
+    Type: CrudActor
+    Threads: 1 # Use 1 thread to avoid updates throwing WriteConflict errors.
+    Phases:
+      - *Nop
+      - Repeat: *DocumentCount
+        Database: *Database
+        Collection: Collection0
+        Operations:
+          - OperationMetricsName: UpdateOne
+            OperationName: updateOne
+            OperationCommand:
+              Filter: {y: 1}
+              Update: {$inc: {y: 1}}
+              Options:
+                WriteConcern:
+                  Level: majority
+                  TimeoutMillis: 5000
+      - Repeat: *DocumentCount
+        Database: *Database
+        Collection: Collection0
+        Operations:
+          - OperationMetricsName: FindAndModify
+            OperationName: findOneAndUpdate
+            OperationCommand:
+              Filter: {y: 2}
+              Update: {$inc: {y: 1}}
+              Options:
+                WriteConcern:
+                  Level: majority
+                  TimeoutMillis: 5000
+      - Repeat: *DocumentCount
+        Database: *Database
+        Collection: Collection0
+        Operations:
+          - OperationMetricsName: DeleteOne
+            OperationName: deleteOne
+            OperationCommand:
+              Filter: {z: 1}
+              Options:
+                WriteConcern:
+                  Level: majority
+                  TimeoutMillis: 5000
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica
-      - single-replica
-      - standalone
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - standalone

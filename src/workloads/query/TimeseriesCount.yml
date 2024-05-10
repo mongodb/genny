@@ -1,8 +1,8 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  The queries in this workload exercise group stage that uses the $count accumulator and the $count 
-  aggregation stage. On FCV greater than or equal to 7.1 $group using $count is optimized to remove 
+  The queries in this workload exercise group stage that uses the $count accumulator and the $count
+  aggregation stage. On FCV greater than or equal to 7.1 $group using $count is optimized to remove
   the $unpack stage.
 
 Keywords:

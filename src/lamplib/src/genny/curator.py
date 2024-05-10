@@ -150,6 +150,7 @@ def poplar_grpc(cleanup_metrics: bool, workspace_root: str, genny_repo_root: str
             poplar = subprocess.Popen(
                 args, stdout=log_file_obj, stderr=subprocess.STDOUT, text=True
             )
+            poplar_port = int(os.environ.get("POPLAR_RPC_PORT", 2288))
             if poplar.poll() is not None:
                 raise OSError("Failed to start Poplar.")
             try:
@@ -159,7 +160,7 @@ def poplar_grpc(cleanup_metrics: bool, workspace_root: str, genny_repo_root: str
                     time.sleep(0.2)  # sleep to let curator get started. This is a heuristic.
                     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     try:
-                        sock.connect(("127.0.0.1", 2288))
+                        sock.connect(("127.0.0.1", poplar_port))
                         # If we didn't throw an exception, then we successfully connected
                         connected = True
                         break
@@ -171,7 +172,7 @@ def poplar_grpc(cleanup_metrics: bool, workspace_root: str, genny_repo_root: str
                     finally:
                         sock.close()
                 if not connected:
-                    raise OSError(f"Poplar not listening on port 2288")
+                    raise OSError(f"Poplar not listening on port {poplar_port}.")
                 yield poplar
             finally:
                 try:

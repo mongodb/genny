@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   This workload is a mixed workload to test the maximum throughput that
   can be achieved by change event application (CEA). The workload starts Mongosync
@@ -7,15 +7,15 @@ Description: |
   CEA and then starts inserting documents on the source cluster.
 
 Keywords:
-- c2c
-- replication
-- cluster to cluster sync
-- change event application
-- CEA
+  - c2c
+  - replication
+  - cluster to cluster sync
+  - change event application
+  - CEA
 
 EnvironmentDetails:
   MongosyncConnectionURIs:
-  - http://localhost:27182
+    - http://localhost:27182
 
 Clients:
   Default:
@@ -26,70 +26,70 @@ ScriptsPath: &scriptsPath ./MongosyncScripts.yml
 
 Actors:
 
-- Name: SetupSharding
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-  - LoadConfig:
-      Path: *scriptsPath
-      Key: SetupShardKey
-  - LoadConfig:
-      Path: *scriptsPath
-      Key: ShardCollection
-  - &nop {Nop: true}
-  - *nop
-  - *nop
-  - *nop
-  - *nop
-  - *nop
-  - *nop
-  - *nop
+  - Name: SetupSharding
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      - LoadConfig:
+          Path: *scriptsPath
+          Key: SetupShardKey
+      - LoadConfig:
+          Path: *scriptsPath
+          Key: ShardCollection
+      - &nop {Nop: true}
+      - *nop
+      - *nop
+      - *nop
+      - *nop
+      - *nop
+      - *nop
+      - *nop
 
-- Name: Mongosync
-  Type: Python
-  Threads: 1
-  Phases:
-  - *nop
-  - *nop
-  - LoadConfig:
-      Path: *scriptsPath
-      Key: StartMongosync
-  - LoadConfig:
-      Path: *scriptsPath
-      Key: PollForCEA
-  - LoadConfig:
-      Path: *scriptsPath
-      Key: PauseMongosync
-  - *nop
-  - LoadConfig:
-      Path: *scriptsPath
-      Key: ResumeMongosync
-  - LoadConfig:
-      Path: *scriptsPath
-      Key: DrainWrites
-  - LoadConfig:
-      Path: *scriptsPath
-      Key: Commit
-  - LoadConfig:
-      Path: *scriptsPath
-      Key: WaitForCommit
+  - Name: Mongosync
+    Type: Python
+    Threads: 1
+    Phases:
+      - *nop
+      - *nop
+      - LoadConfig:
+          Path: *scriptsPath
+          Key: StartMongosync
+      - LoadConfig:
+          Path: *scriptsPath
+          Key: PollForCEA
+      - LoadConfig:
+          Path: *scriptsPath
+          Key: PauseMongosync
+      - *nop
+      - LoadConfig:
+          Path: *scriptsPath
+          Key: ResumeMongosync
+      - LoadConfig:
+          Path: *scriptsPath
+          Key: DrainWrites
+      - LoadConfig:
+          Path: *scriptsPath
+          Key: Commit
+      - LoadConfig:
+          Path: *scriptsPath
+          Key: WaitForCommit
 
-- Name: InsertDocs
-  Type: Loader
-  Threads: 100
-  Phases:
-  - *nop
-  - *nop
-  - *nop
-  - *nop
-  - *nop
-  - LoadConfig:
-      Path: *scriptsPath
-      Key: InsertShortTestData
-  - *nop
-  - *nop
-  - *nop
-  - *nop
+  - Name: InsertDocs
+    Type: Loader
+    Threads: 100
+    Phases:
+      - *nop
+      - *nop
+      - *nop
+      - *nop
+      - *nop
+      - LoadConfig:
+          Path: *scriptsPath
+          Key: InsertShortTestData
+      - *nop
+      - *nop
+      - *nop
+      - *nop
 
-  # Note that currently there is no autorun section in this workload as it is
-  # being invoked manually
+      # Note that currently there is no autorun section in this workload as it is
+      # being invoked manually

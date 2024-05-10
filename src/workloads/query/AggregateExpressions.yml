@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-execution"
+Owner: Query Execution
 Description: |
   This workload measures aggregation expression performance.
 
@@ -12,8 +12,8 @@ Description: |
   for the classic aggregation expressions.
 
 Keywords:
-- aggregate
-- sbe
+  - aggregate
+  - sbe
 
 GlobalDefaults:
   Database: &Database test
@@ -29,968 +29,1451 @@ Clients:
       maxPoolSize: 400
 
 Actors:
-# Clear any pre-existing collection state.
-- Name: ClearCollection
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: *Threads
-        Collection: *Collection
-        Operations:
-        - OperationName: drop
-
-- Name: InsertData
-  Type: Loader
-  Threads: 4
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        MultipleThreadsPerCollection: true
-        CollectionCount: 1
-        DocumentCount: *DocumentCount
-        BatchSize: 1000
-        Document:
-          int: &integer {^RandomInt: {min: -100, max: 100}}
-          int2: *integer
-          zero: 0
-          negativeInt: {^RandomInt: {min: -1000, max: -1}}
-          year: {^RandomInt: {min: 1, max: 9999}}
-          month: {^RandomInt: {min: 1, max: 12}}
-          day: {^RandomInt: {min: 1, max: 31}}
-          hour: {^RandomInt: {min: 1, max: 24}}
-          posInt: {^RandomInt: {min: 1, max: 100}}
-          bool: {^Choose: {from: [true, false], weights: [1, 1]}}
-          nullVal: null
-          string: &string {^RandomString: {length: 16}}
-          string2: *string
-          hello: "hellohellohellohellobye"
-          upper: "THISISANALLUPPERCASESTRING"
-          preDeterminedString: {^Choose: {from: ["one", "two", "three"], weights: [1, 1, 1]}}
-          array: &array [{^Repeat: {count: 10, fromGenerator: {b: 0, c: 0}}}]
-          array2: *array
-          array3: [{^Cycle: {ofLength: 10, fromGenerator: {k : {^RandomString: {length: 16}}, v: {^RandomString: {length: 16}}}}}]
-          array4: [{^Cycle: {ofLength: 10, fromGenerator: [{^RandomString: {length: 16}}, {^RandomString: {length: 16}}]}}]
-          nestedObj: {int: *integer, array: *array}
-          double: &double {^RandomDouble: {distribution: normal, mean: 50, sigma: 13}}
-          doubleBounded: {^RandomDouble: {min: -1, max: 1}}
-          doubleBoundedNonZero: {^Choose: {from: [^RandomDouble: {min: -1, max: -0.000000001}, ^RandomDouble: {min: 0.000000001, max: 1}], weights: [1, 1]}}
-          date1: &date {^RandomDate: {min: "2021-01-01T00:00:02.000Z", max: "2054-01-01T00:00:10.000Z"}}
-          date2: *date
-          randomType: {^Choose: {from: [*integer, *double, *date, *string, *array, null], weights: [1, 1, 1, 1, 1, 1]}}
-          timezone1: "America/New_York"
-          obj: {int: *integer, double: *double, date: *date, string: *string, array: *array}
-
-# Phase 2: Ensure all data is synced to disk.
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
-
-# Phase 3-N: Run aggregate expression benchmarks
-- ExpressionAbs:
-  LoadConfig: &loadConfig
-    Path: "../../phases/query/AggregateExpressions.yml"
-    Key: ExpressionTemplate
-    Parameters:
-      name: ExpressionAbs
-      active: [3]
-      operationMetricsName: AggExpressionAbs
-      Pipeline: [{$project: {abs: { $abs: "$negativeInt"}}}]
-
-- ExpressionAdd:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionAdd
-      active: [4]
-      operationMetricsName: AggExpressionAdd
-      Pipeline: [{$project: {add: { $add: ["$int", "$int2"]}}}]
-
-- ExpressionArrayElemAt:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionArrayElemAt
-      active: [5]
-      operationMetricsName: AggExpressionArrayElemAt
-      Pipeline: [{$project: {arrayElemAt: { $arrayElemAt: ["$array", 5]}}}]
-
-- ExpressionFirst:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionFirst
-      active: [6]
-      operationMetricsName: AggExpressionFirst
-      Pipeline: [{$project: {first: { $first: "$array"}}}]
-
-- ExpressionBSONSize:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionBSONSize
-      active: [7]
-      operationMetricsName: AggExpressionBSONSize
-      Pipeline: [{$project: {bsonSize: { $bsonSize: "$nestedObj"}}}]
-
-- ExpressionCeil:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionCeil
-      active: [8]
-      operationMetricsName: AggExpressionCeil
-      Pipeline: [{$project: {ceil: { $ceil: "$double"}}}]
-
-- ExpressionCompare:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionCompare
-      active: [9]
-      operationMetricsName: AggExpressionCompare
-      Pipeline: [{$project: {cmp: { $cmp: ["$int", 0]}}}]
-
-- ExpressionConcat:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionConcat
-      active: [10]
-      operationMetricsName: AggExpressionConcat
-      Pipeline: [{$project: {concat: { $concat: ["$string", "_", "$string2"]}}}]
-
-- ExpressionConcatArrays:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionConcatArrays
-      active: [11]
-      operationMetricsName: AggExpressionConcatArrays
-      Pipeline: [{$project: {concatArrays: { $concatArrays: ["$array1", "$array2"]}}}]
-
-- ExpressionCond:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionCond
-      active: [12]
-      operationMetricsName: AggExpressionCond
-      Pipeline: [{$project: {cond: { $cond: { if: { $gte: ["$int", 0] }, then: 100, else: -100 } }}}]
-
-- ExpressionDateDiff:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionDateDiff
-      active: [13]
-      operationMetricsName: AggExpressionDateDiff
-      Pipeline: [{$project: {dateDiff: {$dateDiff: {startDate: "$date1", endDate: "$date2", unit: "millisecond"}}}}]
-
-- ExpressionDateTrunc:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionDateTrunc
-      active: [14]
-      operationMetricsName: AggExpressionDateTrunc
-      Pipeline: [{$project: {dateTrunc: {$dateTrunc: {date: "$date1", unit: "millisecond"}}}}]
-
-- ExpressionDivide:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionDivide
-      active: [15]
-      operationMetricsName: AggExpressionDivide
-      Pipeline: [{$project: {divide: {$divide: ["$int", "$posInt"]}}}]
-
-- ExpressionExp:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionExp
-      active: [16]
-      operationMetricsName: AggExpressionExp
-      Pipeline: [{$project: {exp: {$exp: "$int"}}}]
-
-- ExpressionFilter:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionFilter
-      active: [17]
-      operationMetricsName: AggExpressionFilter
-      Pipeline: [{$project: {filter: { $filter: {input: "$array", as: "a", cond: { $eq: ["$$a.b", 0] }}}}}]
-
-- ExpressionFloor:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionFloor
-      active: [18]
-      operationMetricsName: AggExpressionFloor
-      Pipeline: [{$project: {floor: { $floor: "$double"}}}]
-
-- ExpressionIfNull:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionIfNull
-      active: [19]
-      operationMetricsName: AggExpressionIfNull
-      Pipeline: [{$project: {ifNull: { $ifNull: ["$nullVal", 0]}}}]
-
-- ExpressionIndexOfBytes:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionIndexOfBytes
-      active: [20]
-      operationMetricsName: AggExpressionIndexOfBytes
-      Pipeline: [{$project: {indexOfBytes: { $indexOfBytes: ["$hello", "o"]}}}]
-
-- ExpressionIndexOfCP:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionIndexOfCP
-      active: [21]
-      operationMetricsName: AggExpressionIndexOfCP
-      Pipeline: [{$project: {indexOfCP: { $indexOfCP: ["$hello", "l"]}}}]
-
-- ExpressionIsNumber:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionIsNumber
-      active: [22]
-      operationMetricsName: AggExpressionIsNumber
-      Pipeline: [{$project: {isNumber: { $isNumber: "$randomType"}}}]
-
-- ExpressionLet:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionLet
-      active: [23]
-      operationMetricsName: AggExpressionLet
-      Pipeline: [{$project: {let: { $let: {vars: { a: "$int", b: "$int2"}, in: {$gte: ["$$a", "$$b"]}}}}}]
-
-- ExpressionLn:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionLn
-      active: [24]
-      operationMetricsName: AggExpressionLn
-      Pipeline: [{$project: {ln: { $ln: "$posInt"}}}]
-
-- ExpressionLog10:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionLog10
-      active: [25]
-      operationMetricsName: AggExpressionLog10
-      Pipeline: [{$project: {log10: { $log10: "$posInt"}}}]
-
-- ExpressionMod:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionMod
-      active: [26]
-      operationMetricsName: AggExpressionMod
-      Pipeline: [{$project: {mod: { $mod: ["$int", "$posInt"]}}}]
-
-- ExpressionMultiply:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionMultiply
-      active: [27]
-      operationMetricsName: AggExpressionMultiply
-      Pipeline: [{$project: {multiply: { $multiply: ["$int", "$int2"]}}}]
-
-- ExpressionNot:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionNot
-      active: [28]
-      operationMetricsName: AggExpressionNot
-      Pipeline: [{$project: {not: { $not: "$bool"}}}]
-
-- ExpressionReplaceOne:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionReplaceOne
-      active: [29]
-      operationMetricsName: AggExpressionReplaceOne
-      Pipeline: [{$project: {replaceOne: { $replaceOne: {input: "$hello", find: "bye", replacement: "hello"}}}}]
-
-- ExpressionReverseArray:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionReverseArray
-      active: [30]
-      operationMetricsName: AggExpressionReverseArray
-      Pipeline: [{$project: {reverseArray: { $reverseArray: "$array"}}}]
-
-- ExpressionIsArray:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionIsArray
-      active: [31]
-      operationMetricsName: AggExpressionIsArray
-      Pipeline: [{$project: {isArray: { $isArray: "$randomType"}}}]
-
-- ExpressionSqrt:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionSqrt
-      active: [32]
-      operationMetricsName: AggExpressionSqrt
-      Pipeline: [{$project: {sqrt: { $sqrt: "$posInt"}}}]
-
-- ExpressionSwitch:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionSwitch
-      active: [33]
-      operationMetricsName: AggExpressionSwitch
-      Pipeline: [{$project: {switch: { $switch: {branches: [{case: {$gte: ["$int", 0]}, then: "GTE 0"}, {case: {$lt: ["$int", 0]}, then: "LT 0"}], default: "Out of bounds"}}}}]
-
-- ExpressionToLower:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionToLower
-      active: [34]
-      operationMetricsName: AggExpressionToLower
-      Pipeline: [{$project: {toLower: { $toLower: "$upper"}}}]
-
-- ExpressionToUpper:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionTestToUpper
-      active: [35]
-      operationMetricsName: AggExpressionTestToUpper
-      Pipeline: [{$project: {toUpper: { $toUpper: "$hello"}}}]
-
-- ExpressionRegexFind:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionRegexFind
-      active: [36]
-      operationMetricsName: AggExpressionRegexFind
-      Pipeline: [{$project: {regexFind: { $regexFind: {input: "$hello", regex: /(h)*/}}}}]
-
-- ExpressionRegexFindAll:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionRegexFindAll
-      active: [37]
-      operationMetricsName: AggExpressionRegexFindAll
-      Pipeline: [{$project: {regexFindAll: { $regexFindAll: {input: "$hello", regex: /(h)*/}}}}]
-
-- ExpressionRegexMatch:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionRegexMatch
-      active: [38]
-      operationMetricsName: AggExpressionRegexMatch
-      Pipeline: [{$project: {regexMatch: { $regexMatch: {input: "$string", regex: /(s(be)*)/}}}}]
-
-- ExpressionCosine:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionCosine
-      active: [39]
-      operationMetricsName: AggExpressionCosine
-      Pipeline: [{$project: {cos: { $cos: "$double"}}}]
-
-- ExpressionSine:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionSine
-      active: [40]
-      operationMetricsName: AggExpressionSine
-      Pipeline: [{$project: {sin: { $sin: "$double"}}}]
-
-- ExpressionTangent:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionTangent
-      active: [41]
-      operationMetricsName: AggExpressionTangent
-      Pipeline: [{$project: {tan: { $tan: "$double"}}}]
-
-- ExpressionArcCosine:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionArcCosine
-      active: [42]
-      operationMetricsName: AggExpressionArcCosine
-      Pipeline: [{$project: {acos: { $acos: "$doubleBounded"}}}]
-
-- ExpressionArcSine:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionArcSine
-      active: [43]
-      operationMetricsName: AggExpressionArcSine
-      Pipeline: [{$project: {asin: { $asin: "$doubleBounded"}}}]
-
-- ExpressionArcTangent:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionArcTangent
-      active: [44]
-      operationMetricsName: AggExpressionArcTangent
-      Pipeline: [{$project: {atan: { $atan: "$double"}}}]
-
-- ExpressionArcTangent2:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionArcTangent2
-      active: [45]
-      operationMetricsName: AggExpressionArcTangent2
-      Pipeline: [{$project: {atan2: { $atan2: ["$double", "$doubleBoundedNonZero"]}}}]
-
-- ExpressionHyperbolicArcTangent:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionHyperbolicArcTangent
-      active: [46]
-      operationMetricsName: AggExpressionHyperbolicArcTangent
-      Pipeline: [{$project: {atanh: { $atanh: "$doubleBounded"}}}]
-
-- ExpressionHyperbolicArcCosine:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionHyperbolicArcCosine
-      active: [47]
-      operationMetricsName: AggExpressionHyperbolicArcCosine
-      Pipeline: [{$project: {acosh: { $acosh: "$posInt"}}}]
-
-- ExpressionHyperbolicArcSine:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionHyperbolicArcSine
-      active: [48]
-      operationMetricsName: AggExpressionHyperbolicArcSine
-      Pipeline: [{$project: {asinh: { $asinh: "$double"}}}]
-
-- ExpressionHyperbolicCosine:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionHyperbolicCosine
-      active: [49]
-      operationMetricsName: AggExpressionHyperbolicCosine
-      Pipeline: [{$project: {cosh: { $cosh: "$double"}}}]
-
-- ExpressionHyperbolicSine:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionHyperbolicSine
-      active: [50]
-      operationMetricsName: AggExpressionHyperbolicSine
-      Pipeline: [{$project: {sinh: { $sinh: "$double"}}}]
-
-- ExpressionHyperbolicTangent:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionHyperbolicTangent
-      active: [51]
-      operationMetricsName: AggExpressionHyperbolicTangent
-      Pipeline: [{$project: {tanh: { $tanh: "$double"}}}]
-
-- ExpressionDegreesToRadians:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionDegreesToRadians
-      active: [52]
-      operationMetricsName: AggExpressionDegreesToRadians
-      Pipeline: [{$project: {degreesToRadians: { $degreesToRadians: "$double"}}}]
-
-- ExpressionRadiansToDegrees:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionRadiansToDegrees
-      active: [53]
-      operationMetricsName: AggExpressionRadiansToDegrees
-      Pipeline: [{$project: {radiansToDegrees: { $radiansToDegrees: "$double"}}}]
-
-- ExpressionDayOfMonth:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionDayOfMonth
-      active: [54]
-      operationMetricsName: AggExpressionDayOfMonth
-      Pipeline: [{$project: {dayOfMonth: { $dayOfMonth: "$date1"}}}]
-
-- ExpressionDayOfWeek:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionDayOfWeek
-      active: [55]
-      operationMetricsName: AggExpressionDayOfWeek
-      Pipeline: [{$project: {dayOfWeek: { $dayOfWeek: "$date1"}}}]
-
-- ExpressionDayOfYear:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionDayOfYear
-      active: [56]
-      operationMetricsName: AggExpressionDayOfYear
-      Pipeline: [{$project: {dayOfYear: { $dayOfYear: "$date1"}}}]
-
-- ExpressionDateAdd:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionDateAdd
-      active: [57]
-      operationMetricsName: AggExpressionDateAdd
-      Pipeline: [{$project: {dateAdd: { $dateAdd: {startDate: "$date1", unit: month, amount: 32}}}}]
-
-- ExpressionDateSubtract:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionDateSubtract
-      active: [58]
-      operationMetricsName: AggExpressionDateSubtract
-      Pipeline: [{$project: {dateSubtract: { $dateSubtract: {startDate: "$date1", unit: month, amount: 32}}}}]
-
-- ExpressionLast:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionLast
-      active: [59]
-      operationMetricsName: AggExpressionLast
-      Pipeline: [{$project: {last: { $last: "$array"}}}]
-
-- ExpressionDateFromParts:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionDateFromParts
-      active: [60]
-      operationMetricsName: AggExpressionDateFromParts
-      Pipeline: [{$project: {dateFromParts: { $dateFromParts: {'year': "$year", 'month': "$month", 'day': "$day", 'hour': "$hour"}}}}]
-
-- ExpressionDateToParts:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionDateToParts
-      active: [61]
-      operationMetricsName: AggExpressionDateToParts
-      Pipeline: [{$project: {dateToParts: { $dateToParts: {date: "$date1", timezone: "America/New_York"}}}}]
-
-- ExpressionSubtract:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionSubtract
-      active: [62]
-      operationMetricsName: AggExpressionSubtract
-      Pipeline: [{$project: {subtract: { $subtract: ["$int", "$int2"]}}}]
-
-- ExpressionRange:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionRange
-      active: [63]
-      operationMetricsName: AggExpressionRange
-      Pipeline: [{$project: {range: { $range: ["$zero", "$posInt"]}}}]
-
-- ExpressionYear:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionYear
-      active: [64]
-      operationMetricsName: AggExpressionYear
-      Pipeline: [{$project: {year: { $year: {date: "$date1"}}}}]
-
-- ExpressionYearTimezone:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionYearTimezone
-      active: [65]
-      operationMetricsName: AggExpressionYearTimezone
-      Pipeline: [{$project: {year: { $year: {date: "$date1", timezone: "$timezone1"}}}}]
-
-- ExpressionYearConstTimezone:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionYearConstTimezone
-      active: [66]
-      operationMetricsName: AggExpressionYearConstTimezone
-      Pipeline: [{$project: {year: { $year: {date: "$date1", timezone: "$America/New_York"}}}}]
-
-- ExpressionMonth:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionMonth
-      active: [67]
-      operationMetricsName: AggExpressionMonth
-      Pipeline: [{$project: {month: { $month: {date: "$date1"}}}}]
-
-- ExpressionMonthTimezone:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionMonthTimezone
-      active: [68]
-      operationMetricsName: AggExpressionMonthTimezone
-      Pipeline: [{$project: {month: { $month: {date: "$date1", timezone: "$timezone1"}}}}]
-
-- ExpressionMonthConstTimezone:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionMonthConstTimezone
-      active: [69]
-      operationMetricsName: AggExpressionMonthConstTimezone
-      Pipeline: [{$project: {month: { $month: {date: "$date1", timezone: "$America/New_York"}}}}]
-
-- ExpressionHour:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionHour
-      active: [70]
-      operationMetricsName: AggExpressionHour
-      Pipeline: [{$project: {hour: { $hour: {date: "$date1"}}}}]
-
-- ExpressionHourTimezone:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionHourTimezone
-      active: [71]
-      operationMetricsName: AggExpressionHourTimezone
-      Pipeline: [{$project: {hour: { $hour: {date: "$date1", timezone: "$timezone1"}}}}]
-
-- ExpressionHourConstTimezone:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionHourConstTimezone
-      active: [72]
-      operationMetricsName: AggExpressionHourConstTimezone
-      Pipeline: [{$project: {hour: { $hour: {date: "$date1", timezone: "$America/New_York"}}}}]
-
-- ExpressionMinute:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionMinute
-      active: [73]
-      operationMetricsName: AggExpressionMinute
-      Pipeline: [{$project: {minute: { $minute: {date: "$date1"}}}}]
-
-- ExpressionMinuteTimezone:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionMinuteTimezone
-      active: [74]
-      operationMetricsName: AggExpressionMinuteTimezone
-      Pipeline: [{$project: {minute: { $minute: {date: "$date1", timezone: "$timezone1"}}}}]
-
-- ExpressionMinuteConstTimezone:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionMinuteConstTimezone
-      active: [75]
-      operationMetricsName: AggExpressionMinuteConstTimezone
-      Pipeline: [{$project: {minute: { $minute: {date: "$date1", timezone: "$America/New_York"}}}}]
-
-- ExpressionSecond:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionSecond
-      active: [76]
-      operationMetricsName: AggExpressionSecond
-      Pipeline: [{$project: {second: { $second: {date: "$date1"}}}}]
-
-- ExpressionSecondTimezone:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionSecondTimezone
-      active: [77]
-      operationMetricsName: AggExpressionSecondTimezone
-      Pipeline: [{$project: {second: { $second: {date: "$date1", timezone: "$timezone1"}}}}]
-
-- ExpressionSecondConstTimezone:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionSecondConstTimezone
-      active: [78]
-      operationMetricsName: AggExpressionSecondConstTimezone
-      Pipeline: [{$project: {second: { $second: {date: "$date1", timezone: "$America/New_York"}}}}]
-
-- ExpressionMillisecond:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionMillisecond
-      active: [79]
-      operationMetricsName: AggExpressionMillisecond
-      Pipeline: [{$project: {millisecond: { $millisecond: {date: "$date1"}}}}]
-
-- ExpressionMillisecondTimezone:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionMillisecondTimezone
-      active: [80]
-      operationMetricsName: AggExpressionMillisecondTimezone
-      Pipeline: [{$project: {millisecond: { $millisecond: {date: "$date1", timezone: "$timezone1"}}}}]
-
-- ExpressionMillisecondConstTimezone:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionMillisecondConstTimezone
-      active: [81]
-      operationMetricsName: AggExpressionMillisecondConstTimezone
-      Pipeline: [{$project: {millisecond: { $millisecond: {date: "$date1", timezone: "$America/New_York"}}}}]
-
-- ExpressionWeek:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionWeek
-      active: [82]
-      operationMetricsName: AggExpressionWeek
-      Pipeline: [{$project: {week: { $week: {date: "$date1"}}}}]
-
-- ExpressionWeekTimezone:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionWeekTimezone
-      active: [83]
-      operationMetricsName: AggExpressionWeekTimezone
-      Pipeline: [{$project: {week: { $week: {date: "$date1", timezone: "$timezone1"}}}}]
-
-- ExpressionWeekConstTimezone:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionWeekConstTimezone
-      active: [84]
-      operationMetricsName: AggExpressionWeekConstTimezone
-      Pipeline: [{$project: {week: { $week: {date: "$date1", timezone: "$America/New_York"}}}}]
-
-- ExpressionISOWeekYear:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionISOWeekYear
-      active: [85]
-      operationMetricsName: AggExpressionISOWeekYear
-      Pipeline: [{$project: {isoWeekYear: { $isoWeekYear: {date: "$date1"}}}}]
-
-- ExpressionISOWeekYearTimezone:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionISOWeekYearTimezone
-      active: [86]
-      operationMetricsName: AggExpressionISOWeekYearTimezone
-      Pipeline: [{$project: {isoWeekYear: { $isoWeekYear: {date: "$date1", timezone: "$timezone1"}}}}]
-
-- ExpressionISOWeekYearConstTimezone:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionISOWeekYearConstTimezone
-      active: [87]
-      operationMetricsName: AggExpressionISOWeekYearConstTimezone
-      Pipeline: [{$project: {isoWeekYear: { $isoWeekYear: {date: "$date1", timezone: "$America/New_York"}}}}]
-
-- ExpressionISODayOfWeek:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionISODayOfWeek
-      active: [88]
-      operationMetricsName: AggExpressionISODayOfWeek
-      Pipeline: [{$project: {isoDayOfWeek: { $isoDayOfWeek: {date: "$date1"}}}}]
-
-- ExpressionISODayOfWeekTimezone:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionISODayOfWeekTimezone
-      active: [89]
-      operationMetricsName: AggExpressionISODayOfWeekTimezone
-      Pipeline: [{$project: {isoDayOfWeek: { $isoDayOfWeek: {date: "$date1", timezone: "$timezone1"}}}}]
-
-- ExpressionISODayOfWeekConstTimezone:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionISODayOfWeekConstTimezone
-      active: [90]
-      operationMetricsName: AggExpressionISODayOfWeekConstTimezone
-      Pipeline: [{$project: {isoDayOfWeek: { $isoDayOfWeek: {date: "$date1", timezone: "$America/New_York"}}}}]
-
-- ExpressionISOWeek:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionISOWeek
-      active: [91]
-      operationMetricsName: AggExpressionISOWeek
-      Pipeline: [{$project: {isoWeek: { $isoWeek: {date: "$date1"}}}}]
-
-- ExpressionISOWeekTimezone:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionISOWeekTimezone
-      active: [92]
-      operationMetricsName: AggExpressionISOWeekTimezone
-      Pipeline: [{$project: {isoWeek: { $isoWeek: {date: "$date1", timezone: "$timezone1"}}}}]
-
-- ExpressionISOWeekConstTimezone:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionISOWeekConstTimezone
-      active: [93]
-      operationMetricsName: AggExpressionISOWeekConstTimezone
-      Pipeline: [{$project: {isoWeek: { $isoWeek: {date: "$date1", timezone: "$America/New_York"}}}}]
-
-- ExpressionObjectToArray:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionObjectToArray
-      active: [94]
-      operationMetricsName: AggExpressionObjectToArray
-      Pipeline: [{$project: {array: { $objectToArray: "$obj"}}}]
-
-- ExpressionArrayToObject1:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionArrayToObject1
-      active: [95]
-      operationMetricsName: AggExpressionArrayToObject1
-      Pipeline: [{$project: {object: { $arrayToObject: "$array3"}}}]
-
-- ExpressionArrayToObject2:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionArrayToObject2
-      active: [96]
-      operationMetricsName: AggExpressionArrayToObject2
-      Pipeline: [{$project: {object: { $arrayToObject: "$array4"}}}]
-
-- ExpressionRound:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionRound
-      active: [97]
-      operationMetricsName: AggExpressionRound
-      Pipeline: [{$project: {round: { $round: ["$double", 1]}}}]
-
-- ExpressionArray:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionArray
-      active: [98]
-      operationMetricsName: AggExpressionArray
-      Pipeline: [{$project: {array: ["$int", "$string", "$double", "$nestedObj", "$array", "$array2"]}}]
-
-- ExpressionTrunc:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: ExpressionTrunc
-      active: [99]
-      operationMetricsName: AggExpressionTrunc
-      Pipeline: [{$project: {trunc: { $trunc: ["$double", 1]}}}]
+  # Clear any pre-existing collection state.
+  - Name: ClearCollection
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: *Threads
+          Collection: *Collection
+          Operations:
+            - OperationName: drop
+
+  - Name: InsertData
+    Type: Loader
+    Threads: 4
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          MultipleThreadsPerCollection: true
+          CollectionCount: 1
+          DocumentCount: *DocumentCount
+          BatchSize: 1000
+          Document:
+            int: &integer { ^RandomInt: { min: -100, max: 100 } }
+            int2: *integer
+            zero: 0
+            negativeInt: { ^RandomInt: { min: -1000, max: -1 } }
+            year: { ^RandomInt: { min: 1, max: 9999 } }
+            month: { ^RandomInt: { min: 1, max: 12 } }
+            day: { ^RandomInt: { min: 1, max: 31 } }
+            hour: { ^RandomInt: { min: 1, max: 24 } }
+            posInt: { ^RandomInt: { min: 1, max: 100 } }
+            bool: { ^Choose: { from: [true, false], weights: [1, 1] } }
+            nullVal: null
+            string: &string { ^RandomString: { length: 16 } }
+            string2: *string
+            hello: "hellohellohellohellobye"
+            upper: "THISISANALLUPPERCASESTRING"
+            preDeterminedString:
+              { ^Choose: { from: ["one", "two", "three"], weights: [1, 1, 1] } }
+            array:
+              &array [{ ^Repeat: { count: 10, fromGenerator: { b: 0, c: 0 } } }]
+            array2: *array
+            array3:
+              [
+                {
+                  ^Cycle:
+                    {
+                      ofLength: 10,
+                      fromGenerator:
+                        {
+                          k: { ^RandomString: { length: 16 } },
+                          v: { ^RandomString: { length: 16 } },
+                        },
+                    },
+                },
+              ]
+            array4:
+              [
+                {
+                  ^Cycle:
+                    {
+                      ofLength: 10,
+                      fromGenerator:
+                        [
+                          { ^RandomString: { length: 16 } },
+                          { ^RandomString: { length: 16 } },
+                        ],
+                    },
+                },
+              ]
+            nestedObj: { int: *integer, array: *array }
+            double:
+              &double {
+                ^RandomDouble: { distribution: normal, mean: 50, sigma: 13 },
+              }
+            doubleBounded: { ^RandomDouble: { min: -1, max: 1 } }
+            doubleBoundedNonZero:
+              {
+                ^Choose:
+                  {
+                    from:
+                      [
+                        { ^RandomDouble: { min: -1, max: -0.000000001 } },
+                        { ^RandomDouble: { min: 0.000000001, max: 1 } },
+                      ],
+                    weights: [1, 1],
+                  },
+              }
+            date1:
+              &date {
+                ^RandomDate:
+                  {
+                    min: "2021-01-01T00:00:02.000Z",
+                    max: "2054-01-01T00:00:10.000Z",
+                  },
+              }
+            date2: *date
+            randomType:
+              {
+                ^Choose:
+                  {
+                    from: [*integer, *double, *date, *string, *array, null],
+                    weights: [1, 1, 1, 1, 1, 1],
+                  },
+              }
+            timezone1: "America/New_York"
+            obj:
+              {
+                int: *integer,
+                double: *double,
+                date: *date,
+                string: *string,
+                array: *array,
+              }
+
+  # Phase 2: Ensure all data is synced to disk.
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+
+  # Phase 3-N: Run aggregate expression benchmarks
+  - ExpressionAbs:
+    LoadConfig: &loadConfig
+      Path: "../../phases/query/AggregateExpressions.yml"
+      Key: ExpressionTemplate
+      Parameters:
+        name: ExpressionAbs
+        active: [3]
+        operationMetricsName: AggExpressionAbs
+        Pipeline: [{ $project: { abs: { $abs: "$negativeInt" } } }]
+
+  - ExpressionAdd:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionAdd
+        active: [4]
+        operationMetricsName: AggExpressionAdd
+        Pipeline: [{ $project: { add: { $add: ["$int", "$int2"] } } }]
+
+  - ExpressionArrayElemAt:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionArrayElemAt
+        active: [5]
+        operationMetricsName: AggExpressionArrayElemAt
+        Pipeline:
+          [{ $project: { arrayElemAt: { $arrayElemAt: ["$array", 5] } } }]
+
+  - ExpressionFirst:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionFirst
+        active: [6]
+        operationMetricsName: AggExpressionFirst
+        Pipeline: [{ $project: { first: { $first: "$array" } } }]
+
+  - ExpressionBSONSize:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionBSONSize
+        active: [7]
+        operationMetricsName: AggExpressionBSONSize
+        Pipeline: [{ $project: { bsonSize: { $bsonSize: "$nestedObj" } } }]
+
+  - ExpressionCeil:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionCeil
+        active: [8]
+        operationMetricsName: AggExpressionCeil
+        Pipeline: [{ $project: { ceil: { $ceil: "$double" } } }]
+
+  - ExpressionCompare:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionCompare
+        active: [9]
+        operationMetricsName: AggExpressionCompare
+        Pipeline: [{ $project: { cmp: { $cmp: ["$int", 0] } } }]
+
+  - ExpressionConcat:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionConcat
+        active: [10]
+        operationMetricsName: AggExpressionConcat
+        Pipeline:
+          [{ $project: { concat: { $concat: ["$string", "_", "$string2"] } } }]
+
+  - ExpressionConcatArrays:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionConcatArrays
+        active: [11]
+        operationMetricsName: AggExpressionConcatArrays
+        Pipeline:
+          [
+            {
+              $project:
+                { concatArrays: { $concatArrays: ["$array1", "$array2"] } },
+            },
+          ]
+
+  - ExpressionCond:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionCond
+        active: [12]
+        operationMetricsName: AggExpressionCond
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  cond:
+                    {
+                      $cond:
+                        { if: { $gte: ["$int", 0] }, then: 100, else: -100 },
+                    },
+                },
+            },
+          ]
+
+  - ExpressionDateDiff:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionDateDiff
+        active: [13]
+        operationMetricsName: AggExpressionDateDiff
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  dateDiff:
+                    {
+                      $dateDiff:
+                        {
+                          startDate: "$date1",
+                          endDate: "$date2",
+                          unit: "millisecond",
+                        },
+                    },
+                },
+            },
+          ]
+
+  - ExpressionDateTrunc:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionDateTrunc
+        active: [14]
+        operationMetricsName: AggExpressionDateTrunc
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  dateTrunc:
+                    { $dateTrunc: { date: "$date1", unit: "millisecond" } },
+                },
+            },
+          ]
+
+  - ExpressionDivide:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionDivide
+        active: [15]
+        operationMetricsName: AggExpressionDivide
+        Pipeline: [{ $project: { divide: { $divide: ["$int", "$posInt"] } } }]
+
+  - ExpressionExp:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionExp
+        active: [16]
+        operationMetricsName: AggExpressionExp
+        Pipeline: [{ $project: { exp: { $exp: "$int" } } }]
+
+  - ExpressionFilter:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionFilter
+        active: [17]
+        operationMetricsName: AggExpressionFilter
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  filter:
+                    {
+                      $filter:
+                        {
+                          input: "$array",
+                          as: "a",
+                          cond: { $eq: ["$$a.b", 0] },
+                        },
+                    },
+                },
+            },
+          ]
+
+  - ExpressionFloor:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionFloor
+        active: [18]
+        operationMetricsName: AggExpressionFloor
+        Pipeline: [{ $project: { floor: { $floor: "$double" } } }]
+
+  - ExpressionIfNull:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionIfNull
+        active: [19]
+        operationMetricsName: AggExpressionIfNull
+        Pipeline: [{ $project: { ifNull: { $ifNull: ["$nullVal", 0] } } }]
+
+  - ExpressionIndexOfBytes:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionIndexOfBytes
+        active: [20]
+        operationMetricsName: AggExpressionIndexOfBytes
+        Pipeline:
+          [{ $project: { indexOfBytes: { $indexOfBytes: ["$hello", "o"] } } }]
+
+  - ExpressionIndexOfCP:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionIndexOfCP
+        active: [21]
+        operationMetricsName: AggExpressionIndexOfCP
+        Pipeline: [{ $project: { indexOfCP: { $indexOfCP: ["$hello", "l"] } } }]
+
+  - ExpressionIsNumber:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionIsNumber
+        active: [22]
+        operationMetricsName: AggExpressionIsNumber
+        Pipeline: [{ $project: { isNumber: { $isNumber: "$randomType" } } }]
+
+  - ExpressionLet:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionLet
+        active: [23]
+        operationMetricsName: AggExpressionLet
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  let:
+                    {
+                      $let:
+                        {
+                          vars: { a: "$int", b: "$int2" },
+                          in: { $gte: ["$$a", "$$b"] },
+                        },
+                    },
+                },
+            },
+          ]
+
+  - ExpressionLn:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionLn
+        active: [24]
+        operationMetricsName: AggExpressionLn
+        Pipeline: [{ $project: { ln: { $ln: "$posInt" } } }]
+
+  - ExpressionLog10:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionLog10
+        active: [25]
+        operationMetricsName: AggExpressionLog10
+        Pipeline: [{ $project: { log10: { $log10: "$posInt" } } }]
+
+  - ExpressionMod:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionMod
+        active: [26]
+        operationMetricsName: AggExpressionMod
+        Pipeline: [{ $project: { mod: { $mod: ["$int", "$posInt"] } } }]
+
+  - ExpressionMultiply:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionMultiply
+        active: [27]
+        operationMetricsName: AggExpressionMultiply
+        Pipeline: [{ $project: { multiply: { $multiply: ["$int", "$int2"] } } }]
+
+  - ExpressionNot:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionNot
+        active: [28]
+        operationMetricsName: AggExpressionNot
+        Pipeline: [{ $project: { not: { $not: "$bool" } } }]
+
+  - ExpressionReplaceOne:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionReplaceOne
+        active: [29]
+        operationMetricsName: AggExpressionReplaceOne
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  replaceOne:
+                    {
+                      $replaceOne:
+                        { input: "$hello", find: "bye", replacement: "hello" },
+                    },
+                },
+            },
+          ]
+
+  - ExpressionReverseArray:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionReverseArray
+        active: [30]
+        operationMetricsName: AggExpressionReverseArray
+        Pipeline: [{ $project: { reverseArray: { $reverseArray: "$array" } } }]
+
+  - ExpressionIsArray:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionIsArray
+        active: [31]
+        operationMetricsName: AggExpressionIsArray
+        Pipeline: [{ $project: { isArray: { $isArray: "$randomType" } } }]
+
+  - ExpressionSqrt:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionSqrt
+        active: [32]
+        operationMetricsName: AggExpressionSqrt
+        Pipeline: [{ $project: { sqrt: { $sqrt: "$posInt" } } }]
+
+  - ExpressionSwitch:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionSwitch
+        active: [33]
+        operationMetricsName: AggExpressionSwitch
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  switch:
+                    {
+                      $switch:
+                        {
+                          branches:
+                            [
+                              { case: { $gte: ["$int", 0] }, then: "GTE 0" },
+                              { case: { $lt: ["$int", 0] }, then: "LT 0" },
+                            ],
+                          default: "Out of bounds",
+                        },
+                    },
+                },
+            },
+          ]
+
+  - ExpressionToLower:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionToLower
+        active: [34]
+        operationMetricsName: AggExpressionToLower
+        Pipeline: [{ $project: { toLower: { $toLower: "$upper" } } }]
+
+  - ExpressionToUpper:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionTestToUpper
+        active: [35]
+        operationMetricsName: AggExpressionTestToUpper
+        Pipeline: [{ $project: { toUpper: { $toUpper: "$hello" } } }]
+
+  - ExpressionRegexFind:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionRegexFind
+        active: [36]
+        operationMetricsName: AggExpressionRegexFind
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  regexFind: { $regexFind: { input: "$hello", regex: /(h)*/ } },
+                },
+            },
+          ]
+
+  - ExpressionRegexFindAll:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionRegexFindAll
+        active: [37]
+        operationMetricsName: AggExpressionRegexFindAll
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  regexFindAll:
+                    { $regexFindAll: { input: "$hello", regex: /(h)*/ } },
+                },
+            },
+          ]
+
+  - ExpressionRegexMatch:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionRegexMatch
+        active: [38]
+        operationMetricsName: AggExpressionRegexMatch
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  regexMatch:
+                    { $regexMatch: { input: "$string", regex: /(s(be)*)/ } },
+                },
+            },
+          ]
+
+  - ExpressionCosine:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionCosine
+        active: [39]
+        operationMetricsName: AggExpressionCosine
+        Pipeline: [{ $project: { cos: { $cos: "$double" } } }]
+
+  - ExpressionSine:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionSine
+        active: [40]
+        operationMetricsName: AggExpressionSine
+        Pipeline: [{ $project: { sin: { $sin: "$double" } } }]
+
+  - ExpressionTangent:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionTangent
+        active: [41]
+        operationMetricsName: AggExpressionTangent
+        Pipeline: [{ $project: { tan: { $tan: "$double" } } }]
+
+  - ExpressionArcCosine:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionArcCosine
+        active: [42]
+        operationMetricsName: AggExpressionArcCosine
+        Pipeline: [{ $project: { acos: { $acos: "$doubleBounded" } } }]
+
+  - ExpressionArcSine:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionArcSine
+        active: [43]
+        operationMetricsName: AggExpressionArcSine
+        Pipeline: [{ $project: { asin: { $asin: "$doubleBounded" } } }]
+
+  - ExpressionArcTangent:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionArcTangent
+        active: [44]
+        operationMetricsName: AggExpressionArcTangent
+        Pipeline: [{ $project: { atan: { $atan: "$double" } } }]
+
+  - ExpressionArcTangent2:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionArcTangent2
+        active: [45]
+        operationMetricsName: AggExpressionArcTangent2
+        Pipeline:
+          [
+            {
+              $project:
+                { atan2: { $atan2: ["$double", "$doubleBoundedNonZero"] } },
+            },
+          ]
+
+  - ExpressionHyperbolicArcTangent:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionHyperbolicArcTangent
+        active: [46]
+        operationMetricsName: AggExpressionHyperbolicArcTangent
+        Pipeline: [{ $project: { atanh: { $atanh: "$doubleBounded" } } }]
+
+  - ExpressionHyperbolicArcCosine:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionHyperbolicArcCosine
+        active: [47]
+        operationMetricsName: AggExpressionHyperbolicArcCosine
+        Pipeline: [{ $project: { acosh: { $acosh: "$posInt" } } }]
+
+  - ExpressionHyperbolicArcSine:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionHyperbolicArcSine
+        active: [48]
+        operationMetricsName: AggExpressionHyperbolicArcSine
+        Pipeline: [{ $project: { asinh: { $asinh: "$double" } } }]
+
+  - ExpressionHyperbolicCosine:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionHyperbolicCosine
+        active: [49]
+        operationMetricsName: AggExpressionHyperbolicCosine
+        Pipeline: [{ $project: { cosh: { $cosh: "$double" } } }]
+
+  - ExpressionHyperbolicSine:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionHyperbolicSine
+        active: [50]
+        operationMetricsName: AggExpressionHyperbolicSine
+        Pipeline: [{ $project: { sinh: { $sinh: "$double" } } }]
+
+  - ExpressionHyperbolicTangent:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionHyperbolicTangent
+        active: [51]
+        operationMetricsName: AggExpressionHyperbolicTangent
+        Pipeline: [{ $project: { tanh: { $tanh: "$double" } } }]
+
+  - ExpressionDegreesToRadians:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionDegreesToRadians
+        active: [52]
+        operationMetricsName: AggExpressionDegreesToRadians
+        Pipeline:
+          [{ $project: { degreesToRadians: { $degreesToRadians: "$double" } } }]
+
+  - ExpressionRadiansToDegrees:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionRadiansToDegrees
+        active: [53]
+        operationMetricsName: AggExpressionRadiansToDegrees
+        Pipeline:
+          [{ $project: { radiansToDegrees: { $radiansToDegrees: "$double" } } }]
+
+  - ExpressionDayOfMonth:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionDayOfMonth
+        active: [54]
+        operationMetricsName: AggExpressionDayOfMonth
+        Pipeline: [{ $project: { dayOfMonth: { $dayOfMonth: "$date1" } } }]
+
+  - ExpressionDayOfWeek:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionDayOfWeek
+        active: [55]
+        operationMetricsName: AggExpressionDayOfWeek
+        Pipeline: [{ $project: { dayOfWeek: { $dayOfWeek: "$date1" } } }]
+
+  - ExpressionDayOfYear:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionDayOfYear
+        active: [56]
+        operationMetricsName: AggExpressionDayOfYear
+        Pipeline: [{ $project: { dayOfYear: { $dayOfYear: "$date1" } } }]
+
+  - ExpressionDateAdd:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionDateAdd
+        active: [57]
+        operationMetricsName: AggExpressionDateAdd
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  dateAdd:
+                    {
+                      $dateAdd:
+                        { startDate: "$date1", unit: month, amount: 32 },
+                    },
+                },
+            },
+          ]
+
+  - ExpressionDateSubtract:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionDateSubtract
+        active: [58]
+        operationMetricsName: AggExpressionDateSubtract
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  dateSubtract:
+                    {
+                      $dateSubtract:
+                        { startDate: "$date1", unit: month, amount: 32 },
+                    },
+                },
+            },
+          ]
+
+  - ExpressionLast:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionLast
+        active: [59]
+        operationMetricsName: AggExpressionLast
+        Pipeline: [{ $project: { last: { $last: "$array" } } }]
+
+  - ExpressionDateFromParts:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionDateFromParts
+        active: [60]
+        operationMetricsName: AggExpressionDateFromParts
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  dateFromParts:
+                    {
+                      $dateFromParts:
+                        {
+                          "year": "$year",
+                          "month": "$month",
+                          "day": "$day",
+                          "hour": "$hour",
+                        },
+                    },
+                },
+            },
+          ]
+
+  - ExpressionDateToParts:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionDateToParts
+        active: [61]
+        operationMetricsName: AggExpressionDateToParts
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  dateToParts:
+                    {
+                      $dateToParts:
+                        { date: "$date1", timezone: "America/New_York" },
+                    },
+                },
+            },
+          ]
+
+  - ExpressionSubtract:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionSubtract
+        active: [62]
+        operationMetricsName: AggExpressionSubtract
+        Pipeline: [{ $project: { subtract: { $subtract: ["$int", "$int2"] } } }]
+
+  - ExpressionRange:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionRange
+        active: [63]
+        operationMetricsName: AggExpressionRange
+        Pipeline: [{ $project: { range: { $range: ["$zero", "$posInt"] } } }]
+
+  - ExpressionYear:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionYear
+        active: [64]
+        operationMetricsName: AggExpressionYear
+        Pipeline: [{ $project: { year: { $year: { date: "$date1" } } } }]
+
+  - ExpressionYearTimezone:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionYearTimezone
+        active: [65]
+        operationMetricsName: AggExpressionYearTimezone
+        Pipeline:
+          [
+            {
+              $project:
+                { year: { $year: { date: "$date1", timezone: "$timezone1" } } },
+            },
+          ]
+
+  - ExpressionYearConstTimezone:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionYearConstTimezone
+        active: [66]
+        operationMetricsName: AggExpressionYearConstTimezone
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  year:
+                    {
+                      $year: { date: "$date1", timezone: "$America/New_York" },
+                    },
+                },
+            },
+          ]
+
+  - ExpressionMonth:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionMonth
+        active: [67]
+        operationMetricsName: AggExpressionMonth
+        Pipeline: [{ $project: { month: { $month: { date: "$date1" } } } }]
+
+  - ExpressionMonthTimezone:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionMonthTimezone
+        active: [68]
+        operationMetricsName: AggExpressionMonthTimezone
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  month: { $month: { date: "$date1", timezone: "$timezone1" } },
+                },
+            },
+          ]
+
+  - ExpressionMonthConstTimezone:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionMonthConstTimezone
+        active: [69]
+        operationMetricsName: AggExpressionMonthConstTimezone
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  month:
+                    {
+                      $month: { date: "$date1", timezone: "$America/New_York" },
+                    },
+                },
+            },
+          ]
+
+  - ExpressionHour:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionHour
+        active: [70]
+        operationMetricsName: AggExpressionHour
+        Pipeline: [{ $project: { hour: { $hour: { date: "$date1" } } } }]
+
+  - ExpressionHourTimezone:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionHourTimezone
+        active: [71]
+        operationMetricsName: AggExpressionHourTimezone
+        Pipeline:
+          [
+            {
+              $project:
+                { hour: { $hour: { date: "$date1", timezone: "$timezone1" } } },
+            },
+          ]
+
+  - ExpressionHourConstTimezone:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionHourConstTimezone
+        active: [72]
+        operationMetricsName: AggExpressionHourConstTimezone
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  hour:
+                    {
+                      $hour: { date: "$date1", timezone: "$America/New_York" },
+                    },
+                },
+            },
+          ]
+
+  - ExpressionMinute:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionMinute
+        active: [73]
+        operationMetricsName: AggExpressionMinute
+        Pipeline: [{ $project: { minute: { $minute: { date: "$date1" } } } }]
+
+  - ExpressionMinuteTimezone:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionMinuteTimezone
+        active: [74]
+        operationMetricsName: AggExpressionMinuteTimezone
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  minute:
+                    { $minute: { date: "$date1", timezone: "$timezone1" } },
+                },
+            },
+          ]
+
+  - ExpressionMinuteConstTimezone:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionMinuteConstTimezone
+        active: [75]
+        operationMetricsName: AggExpressionMinuteConstTimezone
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  minute:
+                    {
+                      $minute:
+                        { date: "$date1", timezone: "$America/New_York" },
+                    },
+                },
+            },
+          ]
+
+  - ExpressionSecond:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionSecond
+        active: [76]
+        operationMetricsName: AggExpressionSecond
+        Pipeline: [{ $project: { second: { $second: { date: "$date1" } } } }]
+
+  - ExpressionSecondTimezone:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionSecondTimezone
+        active: [77]
+        operationMetricsName: AggExpressionSecondTimezone
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  second:
+                    { $second: { date: "$date1", timezone: "$timezone1" } },
+                },
+            },
+          ]
+
+  - ExpressionSecondConstTimezone:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionSecondConstTimezone
+        active: [78]
+        operationMetricsName: AggExpressionSecondConstTimezone
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  second:
+                    {
+                      $second:
+                        { date: "$date1", timezone: "$America/New_York" },
+                    },
+                },
+            },
+          ]
+
+  - ExpressionMillisecond:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionMillisecond
+        active: [79]
+        operationMetricsName: AggExpressionMillisecond
+        Pipeline:
+          [{ $project: { millisecond: { $millisecond: { date: "$date1" } } } }]
+
+  - ExpressionMillisecondTimezone:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionMillisecondTimezone
+        active: [80]
+        operationMetricsName: AggExpressionMillisecondTimezone
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  millisecond:
+                    {
+                      $millisecond: { date: "$date1", timezone: "$timezone1" },
+                    },
+                },
+            },
+          ]
+
+  - ExpressionMillisecondConstTimezone:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionMillisecondConstTimezone
+        active: [81]
+        operationMetricsName: AggExpressionMillisecondConstTimezone
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  millisecond:
+                    {
+                      $millisecond:
+                        { date: "$date1", timezone: "$America/New_York" },
+                    },
+                },
+            },
+          ]
+
+  - ExpressionWeek:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionWeek
+        active: [82]
+        operationMetricsName: AggExpressionWeek
+        Pipeline: [{ $project: { week: { $week: { date: "$date1" } } } }]
+
+  - ExpressionWeekTimezone:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionWeekTimezone
+        active: [83]
+        operationMetricsName: AggExpressionWeekTimezone
+        Pipeline:
+          [
+            {
+              $project:
+                { week: { $week: { date: "$date1", timezone: "$timezone1" } } },
+            },
+          ]
+
+  - ExpressionWeekConstTimezone:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionWeekConstTimezone
+        active: [84]
+        operationMetricsName: AggExpressionWeekConstTimezone
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  week:
+                    {
+                      $week: { date: "$date1", timezone: "$America/New_York" },
+                    },
+                },
+            },
+          ]
+
+  - ExpressionISOWeekYear:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionISOWeekYear
+        active: [85]
+        operationMetricsName: AggExpressionISOWeekYear
+        Pipeline:
+          [{ $project: { isoWeekYear: { $isoWeekYear: { date: "$date1" } } } }]
+
+  - ExpressionISOWeekYearTimezone:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionISOWeekYearTimezone
+        active: [86]
+        operationMetricsName: AggExpressionISOWeekYearTimezone
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  isoWeekYear:
+                    {
+                      $isoWeekYear: { date: "$date1", timezone: "$timezone1" },
+                    },
+                },
+            },
+          ]
+
+  - ExpressionISOWeekYearConstTimezone:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionISOWeekYearConstTimezone
+        active: [87]
+        operationMetricsName: AggExpressionISOWeekYearConstTimezone
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  isoWeekYear:
+                    {
+                      $isoWeekYear:
+                        { date: "$date1", timezone: "$America/New_York" },
+                    },
+                },
+            },
+          ]
+
+  - ExpressionISODayOfWeek:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionISODayOfWeek
+        active: [88]
+        operationMetricsName: AggExpressionISODayOfWeek
+        Pipeline:
+          [
+            {
+              $project: { isoDayOfWeek: { $isoDayOfWeek: { date: "$date1" } } },
+            },
+          ]
+
+  - ExpressionISODayOfWeekTimezone:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionISODayOfWeekTimezone
+        active: [89]
+        operationMetricsName: AggExpressionISODayOfWeekTimezone
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  isoDayOfWeek:
+                    {
+                      $isoDayOfWeek: { date: "$date1", timezone: "$timezone1" },
+                    },
+                },
+            },
+          ]
+
+  - ExpressionISODayOfWeekConstTimezone:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionISODayOfWeekConstTimezone
+        active: [90]
+        operationMetricsName: AggExpressionISODayOfWeekConstTimezone
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  isoDayOfWeek:
+                    {
+                      $isoDayOfWeek:
+                        { date: "$date1", timezone: "$America/New_York" },
+                    },
+                },
+            },
+          ]
+
+  - ExpressionISOWeek:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionISOWeek
+        active: [91]
+        operationMetricsName: AggExpressionISOWeek
+        Pipeline: [{ $project: { isoWeek: { $isoWeek: { date: "$date1" } } } }]
+
+  - ExpressionISOWeekTimezone:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionISOWeekTimezone
+        active: [92]
+        operationMetricsName: AggExpressionISOWeekTimezone
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  isoWeek:
+                    { $isoWeek: { date: "$date1", timezone: "$timezone1" } },
+                },
+            },
+          ]
+
+  - ExpressionISOWeekConstTimezone:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionISOWeekConstTimezone
+        active: [93]
+        operationMetricsName: AggExpressionISOWeekConstTimezone
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  isoWeek:
+                    {
+                      $isoWeek:
+                        { date: "$date1", timezone: "$America/New_York" },
+                    },
+                },
+            },
+          ]
+
+  - ExpressionObjectToArray:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionObjectToArray
+        active: [94]
+        operationMetricsName: AggExpressionObjectToArray
+        Pipeline: [{ $project: { array: { $objectToArray: "$obj" } } }]
+
+  - ExpressionArrayToObject1:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionArrayToObject1
+        active: [95]
+        operationMetricsName: AggExpressionArrayToObject1
+        Pipeline: [{ $project: { object: { $arrayToObject: "$array3" } } }]
+
+  - ExpressionArrayToObject2:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionArrayToObject2
+        active: [96]
+        operationMetricsName: AggExpressionArrayToObject2
+        Pipeline: [{ $project: { object: { $arrayToObject: "$array4" } } }]
+
+  - ExpressionRound:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionRound
+        active: [97]
+        operationMetricsName: AggExpressionRound
+        Pipeline: [{ $project: { round: { $round: ["$double", 1] } } }]
+
+  - ExpressionArray:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionArray
+        active: [98]
+        operationMetricsName: AggExpressionArray
+        Pipeline:
+          [
+            {
+              $project:
+                {
+                  array:
+                    [
+                      "$int",
+                      "$string",
+                      "$double",
+                      "$nestedObj",
+                      "$array",
+                      "$array2",
+                    ],
+                },
+            },
+          ]
+
+  - ExpressionTrunc:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionTrunc
+        active: [99]
+        operationMetricsName: AggExpressionTrunc
+        Pipeline: [{ $project: { trunc: { $trunc: ["$double", 1] } } }]
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-      - standalone-80-feature-flags
-      - standalone-all-feature-flags
-      - standalone-classic-query-engine
-      - standalone-query-stats
-      - standalone-sbe
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
-      - v5.0
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone
+          - standalone-80-feature-flags
+          - standalone-all-feature-flags
+          - standalone-classic-query-engine
+          - standalone-query-stats
+          - standalone-sbe
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4
+          - v5.0

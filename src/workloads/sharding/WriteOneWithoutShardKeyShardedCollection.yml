@@ -1,47 +1,47 @@
 # TODO PERF-3208: Enable Workload.
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/sharding"
+Owner: Cluster Scalability
 Description: |
   On a sharded collection on a single shard cluster, run workloads that updateOne, deleteOne, and findAndModify.
 
 GlobalDefaults:
   Nop: &Nop {Nop: true}
   Database: &Database test
-  Namespace: &Namespace test.Collection0  # Collection0 is the default collection populated by the MonotonicSingleLoader.
-  DocumentCount: &DocumentCount 10000  # Number of documents to insert and modify.
+  Namespace: &Namespace test.Collection0 # Collection0 is the default collection populated by the MonotonicSingleLoader.
+  DocumentCount: &DocumentCount 10000 # Number of documents to insert and modify.
 
 Actors:
-- Name: CreateShardedCluster
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    Database: admin
-    Operations:
-    - OperationMetricsName: EnableSharding
-      OperationName: AdminCommand
-      OperationCommand:
-        enableSharding: *Database
-    - OperationMetricsName: ShardCollection
-      OperationName: AdminCommand
-      OperationCommand:
-        shardCollection: *Namespace
-        key: {x: 1}
-  - *Nop
-#  - *Nop
-#  - *Nop
-#  - *Nop
+  - Name: CreateShardedCluster
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      - Repeat: 1
+        Database: admin
+        Operations:
+          - OperationMetricsName: EnableSharding
+            OperationName: AdminCommand
+            OperationCommand:
+              enableSharding: *Database
+          - OperationMetricsName: ShardCollection
+            OperationName: AdminCommand
+            OperationCommand:
+              shardCollection: *Namespace
+              key: {x: 1}
+      - *Nop
+  #  - *Nop
+  #  - *Nop
+  #  - *Nop
 
-- Name: LoadInitialData
-  Type: MonotonicSingleLoader
-  Threads: 1
-  Phases:
-  - *Nop
-  - Repeat: 1
-    BatchSize: 1000
-    DocumentCount: *DocumentCount
-    Database: *Database
-    Document: {x: 0, y: 0, z: 0}
+  - Name: LoadInitialData
+    Type: MonotonicSingleLoader
+    Threads: 1
+    Phases:
+      - *Nop
+      - Repeat: 1
+        BatchSize: 1000
+        DocumentCount: *DocumentCount
+        Database: *Database
+        Document: {x: 0, y: 0, z: 0}
 #  - *Nop
 #  - *Nop
 #  - *Nop
@@ -92,15 +92,15 @@ Actors:
 #             TimeoutMillis: 5000
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - shard-single
-      - shard-single-stress
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
-      - v5.0
-      - v6.0
+  - When:
+      mongodb_setup:
+        $eq:
+          - shard-single
+          - shard-single-stress
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4
+          - v5.0
+          - v6.0

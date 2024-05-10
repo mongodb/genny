@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
-Owner: mongodb/server-replication"
-Description: >
+Owner: Replication
+Description: |
   Loads the data for the light phase.
   To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.
 
@@ -10,6 +10,7 @@ Description: >
   during startup recovery:
 
   Sample logs:
+  ```
   +-------------------------------------------------------------------------------------------+
   | {                                                                                         |
   |     s: "I",                                                                               |
@@ -19,12 +20,13 @@ Description: >
   |     msg: "No oplog entries to apply for recovery. Start point is at the top of the oplog" |
   |   }                                                                                       |
   +-------------------------------------------------------------------------------------------+
+  ```
 
 Keywords:
-- startup
-- collections
-- indexes
-- defaultWC
+  - startup
+  - collections
+  - indexes
+  - defaultWC
 
 Clients:
   Default:
@@ -37,27 +39,27 @@ GlobalDefaults:
   - CollectionCount: &collectionCount 5
 
 Actors:
-- LoadInitialData:
-  LoadConfig:
-    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
-    Key: InsertDataTemplate
-    Parameters:
-      active: [0]
-      nopInPhasesUpTo: *max_phase
-      database: *database
-      collectionCount: 5
-      approxDocumentSize: 10000  # 10kB.
-      documentCount: 100000  # for an approximate total of ~1GB.
+  - LoadInitialData:
+    LoadConfig:
+      Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+      Key: InsertDataTemplate
+      Parameters:
+        active: [0]
+        nopInPhasesUpTo: *max_phase
+        database: *database
+        collectionCount: 5
+        approxDocumentSize: 10000 # 10kB.
+        documentCount: 100000 # for an approximate total of ~1GB.
 
-# By default, the write concern (WC) is set to 'majority,' and enabling 'disableSnapshotting'
-# failpoint, leading to the blocking of majority writes.
-# As many upcoming workloads in 'replication/startup,' activate the 'disableSnapshotting' failpoint,
-# it is prudent to modify the default WC to 'local.' This adjustment will ensure the success of
-# write operations in those scenarios.
-- SetDefaultWCToLocal:
-  LoadConfig:
-    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
-    Key: SetDefaultWCToLocalTemplate
-    Parameters:
-      active: [1]
-      nopInPhasesUpTo: *max_phase
+  # By default, the write concern (WC) is set to 'majority,' and enabling 'disableSnapshotting'
+  # failpoint, leading to the blocking of majority writes.
+  # As many upcoming workloads in 'replication/startup,' activate the 'disableSnapshotting' failpoint,
+  # it is prudent to modify the default WC to 'local.' This adjustment will ensure the success of
+  # write operations in those scenarios.
+  - SetDefaultWCToLocal:
+    LoadConfig:
+      Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+      Key: SetDefaultWCToLocalTemplate
+      Parameters:
+        active: [1]
+        nopInPhasesUpTo: *max_phase

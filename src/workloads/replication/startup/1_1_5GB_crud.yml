@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
-Owner: mongodb/server-replication"
-Description: >
+Owner: Replication
+Description: |
   Adds CRUD operations to be replayed during startup recovery for the light phase.
   To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.
 
@@ -10,6 +10,7 @@ Description: >
   applied during startup recovery:
 
   Sample logs:
+  ```
   +--------------------------------------------------------+
   |  {                                                     |
   |       s: "I",                                          |
@@ -32,11 +33,12 @@ Description: >
   |       }                                                |
   |   }                                                    |
   +--------------------------------------------------------+
+  ```
 
 Keywords:
-- startup
-- stopCheckpointing
-- updates
+  - startup
+  - stopCheckpointing
+  - updates
 
 Clients:
   Default:
@@ -50,22 +52,22 @@ GlobalDefaults:
   - CollectionCount: &collectionCount 5
 
 Actors:
-- StopCheckpointing:
-  LoadConfig:
-    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
-    Key: StopCheckpointTemplate
-    Parameters:
-      active: [0]
-      nopInPhasesUpTo: *max_phase
+  - StopCheckpointing:
+    LoadConfig:
+      Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+      Key: StopCheckpointTemplate
+      Parameters:
+        active: [0]
+        nopInPhasesUpTo: *max_phase
 
-- CrudOperations:
-  LoadConfig:
-    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
-    Key: CrudOperationsTemplate
-    Parameters:
-      active: [1]
-      nopInPhasesUpTo: *max_phase
-      database: *database
-      collectionCount: *collectionCount
-      numOfCollectionsTargeted: *collectionCount
-      numOfCrudOpsPerCollection: 10000   # ~50k operations in total.
+  - CrudOperations:
+    LoadConfig:
+      Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+      Key: CrudOperationsTemplate
+      Parameters:
+        active: [1]
+        nopInPhasesUpTo: *max_phase
+        database: *database
+        collectionCount: *collectionCount
+        numOfCollectionsTargeted: *collectionCount
+        numOfCrudOpsPerCollection: 10000 # ~50k operations in total.

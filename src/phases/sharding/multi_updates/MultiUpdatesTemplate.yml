@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/sharding"
+Owner: Cluster Scalability
 Description: |
   This workload template does the following (with
   PauseMigrationsDuringMultiUpdates disabled):
@@ -23,11 +23,11 @@ Description: |
   updating all documents per command and a single document per command
   respectively.
 Keywords:
-- AdminCommand
-- MonotonicSingleLoader
-- CrudActor
-- updateMany
-- sharding
+  - AdminCommand
+  - MonotonicSingleLoader
+  - CrudActor
+  - updateMany
+  - sharding
 
 GlobalDefaults:
   Nop: &Nop {Nop: true}
@@ -42,81 +42,81 @@ GlobalDefaults:
   MaxPhase: &MaxPhase 4
 
 Actors:
-- Name: Initialize
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    Database: admin
-    Operations:
-    - OperationMetricsName: EnableSharding
-      OperationName: AdminCommand
-      OperationCommand:
-        enableSharding: *Database
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - Name: Initialize
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      - Repeat: 1
+        Database: admin
+        Operations:
+          - OperationMetricsName: EnableSharding
+            OperationName: AdminCommand
+            OperationCommand:
+              enableSharding: *Database
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
 
-- ShardCollection:
-  LoadConfig:
-    Path: "../../../phases/sharding/ShardCollectionTemplate.yml"
-    Key: ShardCollection
-    Parameters:
-      Active: {^Parameter: {Name: "ShardCollectionPhases", Default: []}}
-      MaxPhases: *MaxPhase
-      Namespace: *Namespace
-      ShardKey: { _id: hashed }
+  - ShardCollection:
+    LoadConfig:
+      Path: "../../../phases/sharding/ShardCollectionTemplate.yml"
+      Key: ShardCollection
+      Parameters:
+        Active: {^Parameter: {Name: "ShardCollectionPhases", Default: []}}
+        MaxPhases: *MaxPhase
+        Namespace: *Namespace
+        ShardKey: {_id: hashed}
 
-- SetClusterParameter:
-  LoadConfig:
-    Path: "../../../phases/sharding/SetClusterParameterTemplate.yml"
-    Key: SetClusterParameter
-    Parameters:
-      Active: {^Parameter: {Name: "PauseMigrationsPhases", Default: []}}
-      MaxPhases: *MaxPhase
-      Namespace: *Namespace
-      ClusterParameter: { pauseMigrationsDuringMultiUpdates: { enabled: true } }
+  - SetClusterParameter:
+    LoadConfig:
+      Path: "../../../phases/sharding/SetClusterParameterTemplate.yml"
+      Key: SetClusterParameter
+      Parameters:
+        Active: {^Parameter: {Name: "PauseMigrationsPhases", Default: []}}
+        MaxPhases: *MaxPhase
+        Namespace: *Namespace
+        ClusterParameter: {pauseMigrationsDuringMultiUpdates: {enabled: true}}
 
-- Name: LoadInitialData
-  Type: MonotonicSingleLoader
-  Threads: 100
-  Phases:
-  - *Nop
-  - *Nop
-  - Repeat: 1
-    BatchSize: 1000
-    DocumentCount: *DocumentCount
+  - Name: LoadInitialData
+    Type: MonotonicSingleLoader
+    Threads: 100
+    Phases:
+      - *Nop
+      - *Nop
+      - Repeat: 1
+        BatchSize: 1000
+        DocumentCount: *DocumentCount
+        Database: *Database
+        Collection: *Collection
+        Document:
+          counter: 0
+          padding: {^FastRandomString: {length: *DocumentSize}}
+      - *Nop
+      - *Nop
+
+  - Name: DocumentUpdater
+    Type: CrudActor
+    Threads: 1
     Database: *Database
-    Collection: *Collection
-    Document:
-      counter: 0
-      padding: {^FastRandomString: {length: *DocumentSize}}
-  - *Nop
-  - *Nop
-
-- Name: DocumentUpdater
-  Type: CrudActor
-  Threads: 1
-  Database: *Database
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - Duration: 5 minutes
-    MetricsName: UpdateAll
-    Collection: *Collection
-    Operations:
-    - OperationName: updateMany
-      OperationCommand:
-        Filter: {}
-        Update: {$inc: {counter: 1}}
-  - Duration: 5 minutes
-    MetricsName: UpdateOne
-    Collection: *Collection
-    Operations:
-    - OperationName: updateMany
-      OperationCommand:
-        Filter: { _id: 0 }
-        Update: {$inc: {counter: 1}}
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - Duration: 5 minutes
+        MetricsName: UpdateAll
+        Collection: *Collection
+        Operations:
+          - OperationName: updateMany
+            OperationCommand:
+              Filter: {}
+              Update: {$inc: {counter: 1}}
+      - Duration: 5 minutes
+        MetricsName: UpdateOne
+        Collection: *Collection
+        Operations:
+          - OperationName: updateMany
+            OperationCommand:
+              Filter: {_id: 0}
+              Update: {$inc: {counter: 1}}
 

@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   This workload is a port of the mixed_workloads in the workloads
   repo. https://github.com/10gen/workloads/blob/master/workloads/mix.js. It runs 4 sets of
@@ -11,21 +11,20 @@ Description: |
 
 # This workload does not support sharding yet.
 Keywords:
-- scale
-- insertOne
-- insert
-- findOne
-- find
-- updateOne
-- update
-- deleteOne
-- delete
+  - scale
+  - insertOne
+  - insert
+  - findOne
+  - find
+  - updateOne
+  - update
+  - deleteOne
+  - delete
 
 # These two values should match those are the top of MixPhases.yml
 dbname: &dbname mix
 DocumentCount: &NumDocs 100000
 CollectionCount: &NumColls 1
-
 
 Clients:
   Default:
@@ -45,275 +44,274 @@ Clients:
       maxPoolSize: 500
 
 ActorTemplates:
-- TemplateName: UpdateTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Update"}}
-    Type: CrudActor
-    Database: *dbname
-    ClientName: Update
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        NopInPhasesUpTo: 10
-        PhaseConfig:
-          LoadConfig:
-            Path: ../../phases/scale/MixPhases.yml
-            Key: UpdatePhase
+  - TemplateName: UpdateTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Update"}}
+      Type: CrudActor
+      Database: *dbname
+      ClientName: Update
+      Threads: {^Parameter: {Name: "Threads", Default: 1}}
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          NopInPhasesUpTo: 10
+          PhaseConfig:
+            LoadConfig:
+              Path: ../../phases/scale/MixPhases.yml
+              Key: UpdatePhase
 
-- TemplateName: RemoveTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Remove"}}
-    Type: CrudActor
-    Database: *dbname
-    ClientName: Remove
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        NopInPhasesUpTo: 10
-        PhaseConfig:
-          LoadConfig:
-            Path: ../../phases/scale/MixPhases.yml
-            Key: RemovePhase
+  - TemplateName: RemoveTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Remove"}}
+      Type: CrudActor
+      Database: *dbname
+      ClientName: Remove
+      Threads: {^Parameter: {Name: "Threads", Default: 1}}
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          NopInPhasesUpTo: 10
+          PhaseConfig:
+            LoadConfig:
+              Path: ../../phases/scale/MixPhases.yml
+              Key: RemovePhase
 
-- TemplateName: InsertTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Insert"}}
-    Type: CrudActor
-    Database: *dbname
-    ClientName: Insert
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        NopInPhasesUpTo: 10
-        PhaseConfig:
-          LoadConfig:
-            Path: ../../phases/scale/MixPhases.yml
-            Key: InsertPhase
+  - TemplateName: InsertTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Insert"}}
+      Type: CrudActor
+      Database: *dbname
+      ClientName: Insert
+      Threads: {^Parameter: {Name: "Threads", Default: 1}}
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          NopInPhasesUpTo: 10
+          PhaseConfig:
+            LoadConfig:
+              Path: ../../phases/scale/MixPhases.yml
+              Key: InsertPhase
 
-- TemplateName: FindTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Find"}}
-    Type: CrudActor
-    Database: *dbname
-    ClientName: Query
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        NopInPhasesUpTo: 10
-        PhaseConfig:
-          LoadConfig:
-            Path: ../../phases/scale/MixPhases.yml
-            Key: FindPhase
+  - TemplateName: FindTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Find"}}
+      Type: CrudActor
+      Database: *dbname
+      ClientName: Query
+      Threads: {^Parameter: {Name: "Threads", Default: 1}}
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          NopInPhasesUpTo: 10
+          PhaseConfig:
+            LoadConfig:
+              Path: ../../phases/scale/MixPhases.yml
+              Key: FindPhase
 
 Actors:
-- Name: Setup
-  Type: Loader
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    BatchSize: 100
+  - Name: Setup
+    Type: Loader
     Threads: 1
-    DocumentCount: *NumDocs
-    Database: *dbname
-    CollectionCount: *NumColls
-    Document: &doc
-      id: {^RandomInt: {min: 0, max: *NumDocs}}
-      a: {^RandomInt: {min: 0, max: *NumDocs}}
-      # Note that in the original workload the string c was perfectly compressable. We can put a
-      # constant there if needed.
-      c: &string {^RandomString: {length: 50}}  # Adjust this so the doc comes out as 100 B.
-    Indexes:
-    - keys: {id: 1}
-    - keys: {a: 1}
-  - Phase: 1..10
-    Nop: true
+    Phases:
+      - Repeat: 1
+        BatchSize: 100
+        Threads: 1
+        DocumentCount: *NumDocs
+        Database: *dbname
+        CollectionCount: *NumColls
+        Document: &doc
+          id: {^RandomInt: {min: 0, max: *NumDocs}}
+          a: {^RandomInt: {min: 0, max: *NumDocs}}
+          # Note that in the original workload the string c was perfectly compressable. We can put a
+          # constant there if needed.
+          c: &string {^RandomString: {length: 50}} # Adjust this so the doc comes out as 100 B.
+        Indexes:
+          - keys: {id: 1}
+          - keys: {a: 1}
+      - Phase: 1..10
+        Nop: true
 
-- Name: QuiesceBetweenLevels
-  Type: QuiesceActor
-  Threads: 1
-  Database: admin
-  Phases:
-  - &nop {Nop: true}
-  - Repeat: 1
-  - *nop
-  - Repeat: 1
-  - *nop
-  - Repeat: 1
-  - *nop
-  - Repeat: 1
-  - *nop
-  - Repeat: 1
-  - *nop
+  - Name: QuiesceBetweenLevels
+    Type: QuiesceActor
+    Threads: 1
+    Database: admin
+    Phases:
+      - &nop {Nop: true}
+      - Repeat: 1
+      - *nop
+      - Repeat: 1
+      - *nop
+      - Repeat: 1
+      - *nop
+      - Repeat: 1
+      - *nop
+      - Repeat: 1
+      - *nop
 
-# Update Actors
-- ActorFromTemplate:
-    TemplateName: UpdateTemplate
-    TemplateParameters:
-      Name: Update_1
-      Threads: 1
-      OnlyActiveInPhase: 2
+  # Update Actors
+  - ActorFromTemplate:
+      TemplateName: UpdateTemplate
+      TemplateParameters:
+        Name: Update_1
+        Threads: 1
+        OnlyActiveInPhase: 2
 
-- ActorFromTemplate:
-    TemplateName: UpdateTemplate
-    TemplateParameters:
-      Name: Update_16
-      Threads: 16
-      OnlyActiveInPhase: 4
+  - ActorFromTemplate:
+      TemplateName: UpdateTemplate
+      TemplateParameters:
+        Name: Update_16
+        Threads: 16
+        OnlyActiveInPhase: 4
 
-- ActorFromTemplate:
-    TemplateName: UpdateTemplate
-    TemplateParameters:
-      Name: Update_32
-      Threads: 32
-      OnlyActiveInPhase: 6
+  - ActorFromTemplate:
+      TemplateName: UpdateTemplate
+      TemplateParameters:
+        Name: Update_32
+        Threads: 32
+        OnlyActiveInPhase: 6
 
-- ActorFromTemplate:
-    TemplateName: UpdateTemplate
-    TemplateParameters:
-      Name: Update_64
-      Threads: 64
-      OnlyActiveInPhase: 8
+  - ActorFromTemplate:
+      TemplateName: UpdateTemplate
+      TemplateParameters:
+        Name: Update_64
+        Threads: 64
+        OnlyActiveInPhase: 8
 
-- ActorFromTemplate:
-    TemplateName: UpdateTemplate
-    TemplateParameters:
-      Name: Update_128
-      Threads: 128
-      OnlyActiveInPhase: 10
+  - ActorFromTemplate:
+      TemplateName: UpdateTemplate
+      TemplateParameters:
+        Name: Update_128
+        Threads: 128
+        OnlyActiveInPhase: 10
 
-#
-## Remove Actors
-#
-- ActorFromTemplate:
-    TemplateName: RemoveTemplate
-    TemplateParameters:
-      Name: Remove_1
-      Threads: 1
-      OnlyActiveInPhase: 2
+  #
+  ## Remove Actors
+  #
+  - ActorFromTemplate:
+      TemplateName: RemoveTemplate
+      TemplateParameters:
+        Name: Remove_1
+        Threads: 1
+        OnlyActiveInPhase: 2
 
-- ActorFromTemplate:
-    TemplateName: RemoveTemplate
-    TemplateParameters:
-      Name: Remove_16
-      Threads: 16
-      OnlyActiveInPhase: 4
+  - ActorFromTemplate:
+      TemplateName: RemoveTemplate
+      TemplateParameters:
+        Name: Remove_16
+        Threads: 16
+        OnlyActiveInPhase: 4
 
-- ActorFromTemplate:
-    TemplateName: RemoveTemplate
-    TemplateParameters:
-      Name: Remove_32
-      Threads: 32
-      OnlyActiveInPhase: 6
+  - ActorFromTemplate:
+      TemplateName: RemoveTemplate
+      TemplateParameters:
+        Name: Remove_32
+        Threads: 32
+        OnlyActiveInPhase: 6
 
-- ActorFromTemplate:
-    TemplateName: RemoveTemplate
-    TemplateParameters:
-      Name: Remove_64
-      Threads: 64
-      OnlyActiveInPhase: 8
+  - ActorFromTemplate:
+      TemplateName: RemoveTemplate
+      TemplateParameters:
+        Name: Remove_64
+        Threads: 64
+        OnlyActiveInPhase: 8
 
-- ActorFromTemplate:
-    TemplateName: RemoveTemplate
-    TemplateParameters:
-      Name: Remove_128
-      Threads: 128
-      OnlyActiveInPhase: 10
+  - ActorFromTemplate:
+      TemplateName: RemoveTemplate
+      TemplateParameters:
+        Name: Remove_128
+        Threads: 128
+        OnlyActiveInPhase: 10
 
-## Insert Actors
-#
-- ActorFromTemplate:
-    TemplateName: InsertTemplate
-    TemplateParameters:
-      Name: Insert_1
-      Threads: 1
-      OnlyActiveInPhase: 2
+  ## Insert Actors
+  #
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: Insert_1
+        Threads: 1
+        OnlyActiveInPhase: 2
 
-- ActorFromTemplate:
-    TemplateName: InsertTemplate
-    TemplateParameters:
-      Name: Insert_16
-      Threads: 16
-      OnlyActiveInPhase: 4
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: Insert_16
+        Threads: 16
+        OnlyActiveInPhase: 4
 
-- ActorFromTemplate:
-    TemplateName: InsertTemplate
-    TemplateParameters:
-      Name: Insert_32
-      Threads: 32
-      OnlyActiveInPhase: 6
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: Insert_32
+        Threads: 32
+        OnlyActiveInPhase: 6
 
-- ActorFromTemplate:
-    TemplateName: InsertTemplate
-    TemplateParameters:
-      Name: Insert_64
-      Threads: 64
-      OnlyActiveInPhase: 8
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: Insert_64
+        Threads: 64
+        OnlyActiveInPhase: 8
 
-- ActorFromTemplate:
-    TemplateName: InsertTemplate
-    TemplateParameters:
-      Name: Insert_128
-      Threads: 128
-      OnlyActiveInPhase: 10
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: Insert_128
+        Threads: 128
+        OnlyActiveInPhase: 10
 
-## Find Actors
+  ## Find Actors
 
-- ActorFromTemplate:
-    TemplateName: FindTemplate
-    TemplateParameters:
-      Name: Find_1
-      Threads: 1
-      OnlyActiveInPhase: 2
+  - ActorFromTemplate:
+      TemplateName: FindTemplate
+      TemplateParameters:
+        Name: Find_1
+        Threads: 1
+        OnlyActiveInPhase: 2
 
-- ActorFromTemplate:
-    TemplateName: FindTemplate
-    TemplateParameters:
-      Name: Find_16
-      Threads: 16
-      OnlyActiveInPhase: 4
+  - ActorFromTemplate:
+      TemplateName: FindTemplate
+      TemplateParameters:
+        Name: Find_16
+        Threads: 16
+        OnlyActiveInPhase: 4
 
-- ActorFromTemplate:
-    TemplateName: FindTemplate
-    TemplateParameters:
-      Name: Find_32
-      Threads: 32
-      OnlyActiveInPhase: 6
+  - ActorFromTemplate:
+      TemplateName: FindTemplate
+      TemplateParameters:
+        Name: Find_32
+        Threads: 32
+        OnlyActiveInPhase: 6
 
-- ActorFromTemplate:
-    TemplateName: FindTemplate
-    TemplateParameters:
-      Name: Find_64
-      Threads: 64
-      OnlyActiveInPhase: 8
+  - ActorFromTemplate:
+      TemplateName: FindTemplate
+      TemplateParameters:
+        Name: Find_64
+        Threads: 64
+        OnlyActiveInPhase: 8
 
-- ActorFromTemplate:
-    TemplateName: FindTemplate
-    TemplateParameters:
-      Name: Find_128
-      Threads: 128
-      OnlyActiveInPhase: 10
+  - ActorFromTemplate:
+      TemplateName: FindTemplate
+      TemplateParameters:
+        Name: Find_128
+        Threads: 128
+        OnlyActiveInPhase: 10
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - atlas
-      - atlas-like-replica.2022-10
-      - replica
-      - replica-1dayhistory-15gbwtcache
-      - replica-80-feature-flags
-      - replica-all-feature-flags
-      - replica-maintenance-events
-      - replica-noflowcontrol
-      - replica-query-stats-rate-limit
-      - single-replica
-      - single-replica-classic-query-engine
-      - single-replica-sbe
-      - standalone
-    atlas_setup:
-      $neq:
-      - M30-repl
+  - When:
+      mongodb_setup:
+        $eq:
+          - atlas
+          - atlas-like-replica.2022-10
+          - replica
+          - replica-1dayhistory-15gbwtcache
+          - replica-80-feature-flags
+          - replica-all-feature-flags
+          - replica-maintenance-events
+          - replica-noflowcontrol
+          - replica-query-stats-rate-limit
+          - single-replica-classic-query-engine
+          - single-replica-sbe
+          - standalone
+      atlas_setup:
+        $neq:
+          - M30-repl

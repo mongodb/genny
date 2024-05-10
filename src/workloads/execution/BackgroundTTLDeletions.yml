@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/server-execution"
+Owner: Storage Execution
 Description: |
   This workload tests the impact of background TTL deletions in a heavily modified collection. This
   test does not quiesce between phases as we want the TTL deleter to be constantly running.
@@ -8,11 +8,11 @@ Description: |
   This is a port of the test in order to have better analytics with some minor changes to be
   more correct.
 Keywords:
-- ttl
-- stress
-- indexes
-- insertMany
-- CrudActor
+  - ttl
+  - stress
+  - indexes
+  - insertMany
+  - CrudActor
 
 Clients:
   Default:
@@ -22,150 +22,149 @@ Clients:
 NumPhases: &NumPhases 6
 
 Document: &generatedDoc
-  expireDate: {^Date: "1970-01-01"}  # Instantly expire the document
+  expireDate: {^Date: "1970-01-01"} # Instantly expire the document
   y: 999
   b: "Arbitrary string with 45 different characters"
 
 ActorTemplates:
-- TemplateName: WritesActorTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: WritesActor}}
-    Type: CrudActor
-    Database: &db test
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
-        NopInPhasesUpTo: *NumPhases
-        PhaseConfig:
-          Duration: {^Parameter: {Name: "Duration", Default: 3 minutes}}
-          CollectionCount: &NumColls 1
-          Operations:
-          - OperationName: insertMany
-            OperationCommand:
-              Documents:  # Insert 50 documents at a time
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-              - *generatedDoc
-
+  - TemplateName: WritesActorTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: WritesActor}}
+      Type: CrudActor
+      Database: &db test
+      Threads: {^Parameter: {Name: "Threads", Default: 1}}
+      Phases:
+        OnlyActiveInPhases:
+          Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
+          NopInPhasesUpTo: *NumPhases
+          PhaseConfig:
+            Duration: {^Parameter: {Name: "Duration", Default: 3 minutes}}
+            CollectionCount: &NumColls 1
+            Operations:
+              - OperationName: insertMany
+                OperationCommand:
+                  Documents: # Insert 50 documents at a time
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
+                    - *generatedDoc
 
 Actors:
-- Name: Setup
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: admin
-        Operations:
-        - OperationName: AdminCommand
-          OperationCommand:
-            setParameter: 1
-            ttlMonitorSleepSecs: 1
-        SleepAfter: 60 seconds  # Wait 60 seconds so that the new ttl sleep config is active.
+  - Name: Setup
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: admin
+          Operations:
+            - OperationName: AdminCommand
+              OperationCommand:
+                setParameter: 1
+                ttlMonitorSleepSecs: 1
+          SleepAfter: 60 seconds # Wait 60 seconds so that the new ttl sleep config is active.
 
-- Name: InsertData
-  Type: Loader
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *db
+  - Name: InsertData
+    Type: Loader
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *db
+          Threads: 1
+          CollectionCount: *NumColls
+          DocumentCount: 200_000 # Add an initial set of documents. This will reduce noise in the next phases
+          BatchSize: 10_000
+          Document: *generatedDoc
+          Indexes:
+            - keys: {expireDate: 1}
+              options: {expireAfterSeconds: 0}
+
+  # We do not perform a quiesce between phases as it would allow the TTL deleter to catch up. We want
+  # it to constantly be running for this workload.
+  - ActorFromTemplate:
+      TemplateName: WritesActorTemplate
+      TemplateParameters:
+        Name: Writes_1_Thread
         Threads: 1
-        CollectionCount: *NumColls
-        DocumentCount: 200_000  # Add an initial set of documents. This will reduce noise in the next phases
-        BatchSize: 10_000
-        Document: *generatedDoc
-        Indexes:
-        - keys: {expireDate: 1}
-          options: {expireAfterSeconds: 0}
-
-# We do not perform a quiesce between phases as it would allow the TTL deleter to catch up. We want
-# it to constantly be running for this workload.
-- ActorFromTemplate:
-    TemplateName: WritesActorTemplate
-    TemplateParameters:
-      Name: Writes_1_Thread
-      Threads: 1
-      ActivePhases: [3]
-- ActorFromTemplate:
-    TemplateName: WritesActorTemplate
-    TemplateParameters:
-      Name: Writes_8_Thread
-      Threads: 8
-      ActivePhases: [4]
-- ActorFromTemplate:
-    TemplateName: WritesActorTemplate
-    TemplateParameters:
-      Name: Writes_32_Thread
-      Threads: 32
-      ActivePhases: [5]
-- ActorFromTemplate:
-    TemplateName: WritesActorTemplate
-    TemplateParameters:
-      Name: Writes_128_Thread
-      Threads: 128
-      ActivePhases: [6]
+        ActivePhases: [3]
+  - ActorFromTemplate:
+      TemplateName: WritesActorTemplate
+      TemplateParameters:
+        Name: Writes_8_Thread
+        Threads: 8
+        ActivePhases: [4]
+  - ActorFromTemplate:
+      TemplateName: WritesActorTemplate
+      TemplateParameters:
+        Name: Writes_32_Thread
+        Threads: 32
+        ActivePhases: [5]
+  - ActorFromTemplate:
+      TemplateName: WritesActorTemplate
+      TemplateParameters:
+        Name: Writes_128_Thread
+        Threads: 128
+        ActivePhases: [6]
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-      - standalone-80-feature-flags
-      - standalone-all-feature-flags
-      - replica
-      - replica-80-feature-flags
-      - replica-all-feature-flags
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone
+          - standalone-80-feature-flags
+          - standalone-all-feature-flags
+          - replica
+          - replica-80-feature-flags
+          - replica-all-feature-flags

@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/server-security"
+Owner: Server Security
 Description: |
   Template for encryption-enabled workloads that emulate a YCSB workload.
   Performs queries on an encrypted field, instead of _id, during the read/update phase.
@@ -60,74 +60,74 @@ GlobalDefaults:
     field8: {^Parameter: {Name: "Field8Value", Default: *rand_string}}
 
 Actors:
-- LoadConfig:
-    Path: ../../phases/encrypted/YCSBLikeActorTemplate.yml
-    Key: YCSBLikeActor
-    Parameters:
-      Threads: *thread_count
-      Database: *encrypted_db
-      Collection: *encrypted_coll
-      ClientName: *encrypted_pool
-      # The load, 100read, & 100update phases do 1 op per thread,
-      # so the total opcount = thread_count * 1 op * iter_count
-      LoadRepeat: *insert_iterations
-      100ReadRepeat: *1op_per_thread_iterations
-      100UpdateRepeat: *1op_per_thread_iterations
-      # The 50/50 phase does 2 ops per thread,
-      # so the total opcount = thread_count * 2 ops * iter_count
-      50Read50UpdateRepeat: *2op_per_thread_iterations
-      # The 95/5 phase does 20 ops per thread,
-      # so the total opcount = thread_count * 20 ops * iter_count
-      95Read5UpdateRepeat: *20op_per_thread_iterations
-      InsertDocument: *insert_doc
-      Filter:
-        $and:
-        - {field0: {^FormatString: {"format": "%0100d", "withArgs": [*rand_primary_key]}}}
-        - {field9: {^FormatString: {"format": "%0100d", "withArgs": [*rand_secondary_key]}}}
-      UpdateDocument: *update_doc
+  - LoadConfig:
+      Path: ../../phases/encrypted/YCSBLikeActorTemplate.yml
+      Key: YCSBLikeActor
+      Parameters:
+        Threads: *thread_count
+        Database: *encrypted_db
+        Collection: *encrypted_coll
+        ClientName: *encrypted_pool
+        # The load, 100read, & 100update phases do 1 op per thread,
+        # so the total opcount = thread_count * 1 op * iter_count
+        LoadRepeat: *insert_iterations
+        100ReadRepeat: *1op_per_thread_iterations
+        100UpdateRepeat: *1op_per_thread_iterations
+        # The 50/50 phase does 2 ops per thread,
+        # so the total opcount = thread_count * 2 ops * iter_count
+        50Read50UpdateRepeat: *2op_per_thread_iterations
+        # The 95/5 phase does 20 ops per thread,
+        # so the total opcount = thread_count * 20 ops * iter_count
+        95Read5UpdateRepeat: *20op_per_thread_iterations
+        InsertDocument: *insert_doc
+        Filter:
+          $and:
+            - {field0: {^FormatString: {"format": "%0100d", "withArgs": [*rand_primary_key]}}}
+            - {field9: {^FormatString: {"format": "%0100d", "withArgs": [*rand_secondary_key]}}}
+        UpdateDocument: *update_doc
 
-- Name: IndexSecondaryKey
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    Database: *encrypted_db
-    MetricsName: "indexSecondary"
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        createIndexes: *encrypted_coll
-        indexes:
-        - key:
-            field9: 1
-          name: field9
-  - &Nop {Nop: true}
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - Name: IndexSecondaryKey
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      - Repeat: 1
+        Database: *encrypted_db
+        MetricsName: "indexSecondary"
+        Operations:
+          - OperationName: RunCommand
+            OperationCommand:
+              createIndexes: *encrypted_coll
+              indexes:
+                - key:
+                    field9: 1
+                  name: field9
+      - &Nop {Nop: true}
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
 
-- Name: ShardCollection
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-  - *Nop
-  - Repeat: 1
-    Database: admin
-    OnlyRunInInstance: sharded
-    Operations:
-    - OperationMetricsName: EnableSharding
-      OperationName: AdminCommand
-      OperationCommand:
-        enableSharding: *encrypted_db
-    - OperationMetricsName: ShardCollection
-      OperationName: AdminCommand
-      OperationCommand:
-        shardCollection: *encrypted_ns
-        key: {field9: hashed}
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - Name: ShardCollection
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      - *Nop
+      - Repeat: 1
+        Database: admin
+        OnlyRunInInstance: sharded
+        Operations:
+          - OperationMetricsName: EnableSharding
+            OperationName: AdminCommand
+            OperationCommand:
+              enableSharding: *encrypted_db
+          - OperationMetricsName: ShardCollection
+            OperationName: AdminCommand
+            OperationCommand:
+              shardCollection: *encrypted_ns
+              key: {field9: hashed}
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop

@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: STM
+Owner: Performance Infrastructure
 Description: |
   Common definitions to support the workloads in scale/LargeScale. See
   LargeScaleSerial.yml for a general overview of what the large-scale workloads are
@@ -9,12 +9,12 @@ Description: |
   out-of-band tracking system that automatically spots regressions across all recorded
   measurements.
 
-Document: &Doc  # Documents are approximately 1 KB in size
+Document: &Doc
   t: {^RandomInt: {min: 0, max: 10}}
   w: {^RandomInt: {distribution: geometric, p: 0.1}}
-  x: 0
+  x: 0 # Documents are approximately 1 KB in size
   y: {^RandomInt: {min: 0, max: 1000}}
-  z: {^RandomInt: {min: 0, max: 2147483647}}  # This is for max int for low probability of conflicts
+  z: {^RandomInt: {min: 0, max: 2147483647}} # This is for max int for low probability of conflicts
   int0: &int {^RandomInt: {distribution: binomial, t: 200, p: 0.5}}
   int1: *int
   int2: *int
@@ -26,15 +26,15 @@ Document: &Doc  # Documents are approximately 1 KB in size
   int8: *int
   int9: *int
   intArray:
-  - 1000
-  - 2000
-  - 3000
-  - 4000
-  - 5000
-  - 6000
-  - 7000
-  - 8000
-  - 9000
+    - 1000
+    - 2000
+    - 3000
+    - 4000
+    - 5000
+    - 6000
+    - 7000
+    - 8000
+    - 9000
   string0: &string {^RandomString: {length: {^RandomInt: {min: 5, max: 15}}}}
   string1: *string
   string2: *string
@@ -48,30 +48,30 @@ Document: &Doc  # Documents are approximately 1 KB in size
   stringShort: {^RandomString: {length: 1}}
   stringLong: {^RandomString: {length: 100}}
   compressibleStringArray:
-  - &cstring AAAAAAAAAAAAAAAAAAAA
-  - *cstring
-  - *cstring
-  - *cstring
-  - *cstring
-  - *cstring
-  - *cstring
-  - *cstring
-  - *cstring
-  - *cstring
+    - &cstring AAAAAAAAAAAAAAAAAAAA
+    - *cstring
+    - *cstring
+    - *cstring
+    - *cstring
+    - *cstring
+    - *cstring
+    - *cstring
+    - *cstring
+    - *cstring
   some: {embedded: {document: {with: {some: {depth: *string}}}}}
 
 Indexes: &Indexes
-- keys: {t: 1, w: 1}
-- keys: {y: 1}
-- keys: {t: 1, stringShort: 1}
-- keys: {string0: 1}
-- keys: {stringLong: 1}
-#    options: {unique: 1}
-- keys: {stringShort: 1, y: 1}
-- keys: {int0: 1, int1: 1, int2: 1}
-- keys: {int3: 1}
-- keys: {int4: 1}
-- keys: {int5: 1, int6: 1}
+  - keys: {t: 1, w: 1}
+  - keys: {y: 1}
+  - keys: {t: 1, stringShort: 1}
+  - keys: {string0: 1}
+  - keys: {stringLong: 1}
+  #    options: {unique: 1}
+  - keys: {stringShort: 1, y: 1}
+  - keys: {int0: 1, int1: 1, int2: 1}
+  - keys: {int3: 1}
+  - keys: {int4: 1}
+  - keys: {int5: 1, int6: 1}
 
 Loader:
   CollectionCount: {^Parameter: {Default: &DefaultCollectionCount 10000, Name: "CollectionCount"}}
@@ -83,13 +83,13 @@ Loader:
 
 Update:
   Database: *DB
-  CollectionCount: 100  # This is specifically 1% of collections
+  CollectionCount: 100 # This is specifically 1% of collections
   UpdateFilter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
   Update: {$inc: {x: 1}}
 
 Query:
   Database: *DB
-  CollectionCount: 1000  # This is specifically 10% of collections.
+  CollectionCount: 1000 # This is specifically 10% of collections.
   Filter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
   Limit: 20
 

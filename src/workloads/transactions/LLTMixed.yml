@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   Workload to Benchmark the effect of LongLivedTransactions on a Mixed workload.
   The intent here is to test multiple transactions contained within a singular transaction (long lived).
@@ -17,17 +17,17 @@ Description: |
   Baseline without scans, benchmark with scans
 
 Keywords:
-- transactions
-- longLived
-- snapshot
-- insert
-- find
-- update
-- delete
+  - transactions
+  - longLived
+  - snapshot
+  - insert
+  - find
+  - update
+  - delete
 
 Parameters:
-- &InitialNumDocs {^Parameter: {Name: InitialNumDocs, Default: 10000000}}
-- &SecondaryNumDocs {^Parameter: {Name: SecondaryNumDocs, Default: 10000000}}
+  - &InitialNumDocs {^Parameter: {Name: InitialNumDocs, Default: 10000000}}
+  - &SecondaryNumDocs {^Parameter: {Name: SecondaryNumDocs, Default: 10000000}}
 
 GlobalDefaults:
   # Start: The following block gets updated for the other configurations.
@@ -52,9 +52,9 @@ GlobalDefaults:
     data: {^Join: {array: ["aaaaaaaaaa", {^FastRandomString: {length: {^RandomInt: {min: 0, max: 10}}}}]}}
 
   LLTIndexes: &LLTIndexes
-  - keys: {price: 1, ts: 1, cuid: 1}     # Ptc
-  - keys: {price: 1, cuid: 1}            # Pc
-  - keys: {caid: 1, price: 1, cuid: 1}   # Cpc
+    - keys: {price: 1, ts: 1, cuid: 1} # Ptc
+    - keys: {price: 1, cuid: 1} # Pc
+    - keys: {caid: 1, price: 1, cuid: 1} # Cpc
 
   # Loader Config.
   LoadThreads: &LoadThreads 4
@@ -67,7 +67,6 @@ GlobalDefaults:
   #  * Ptc => price_1_ts_1_cuid_1
   #  * Pc  => price_1_cuid_1
   #  * Cpc => caid_1_price_1_cuid_1
-
 
   # Create
   InsertOperation: &InsertOperation
@@ -82,7 +81,7 @@ GlobalDefaults:
   PtcQueryOperation: &PtcQueryOperation
     OperationName: findOne
     OperationCommand:
-      Filter: {price: {$gte: {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Filter: {price: {$gte: {^RandomDouble: {min: 0.0, max: 500.0}}}}
       Options:
         Hint: price_1_ts_1_cuid_1
         Comment: PtcQueryOperation
@@ -90,7 +89,7 @@ GlobalDefaults:
   PcQueryOperation: &PcQueryOperation
     OperationName: findOne
     OperationCommand:
-      Filter: {price: {$gte: {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Filter: {price: {$gte: {^RandomDouble: {min: 0.0, max: 500.0}}}}
       Options:
         Hint: price_1_cuid_1
         Comment: PcQueryOperation
@@ -98,7 +97,7 @@ GlobalDefaults:
   CpcQueryOperation: &CpcQueryOperation
     OperationName: findOne
     OperationCommand:
-      Filter: {caid: {$gte: {^RandomInt: { min: 0, max: 1000 }}}}
+      Filter: {caid: {$gte: {^RandomInt: {min: 0, max: 1000}}}}
       Options:
         Hint: caid_1_price_1_cuid_1
         Comment: CpcQueryOperation
@@ -107,7 +106,7 @@ GlobalDefaults:
   PtcUpdateOperation: &PtcUpdateOperation
     OperationName: updateOne
     OperationCommand:
-      Filter: {price: {$gte: {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Filter: {price: {$gte: {^RandomDouble: {min: 0.0, max: 500.0}}}}
       Update:
         $set:
           ts: {^Now: {}}
@@ -121,7 +120,7 @@ GlobalDefaults:
   PcUpdateOperation: &PcUpdateOperation
     OperationName: updateOne
     OperationCommand:
-      Filter: {price: {$gte: {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Filter: {price: {$gte: {^RandomDouble: {min: 0.0, max: 500.0}}}}
       Update:
         $set:
           ts: {^Now: {}}
@@ -135,7 +134,7 @@ GlobalDefaults:
   CpcUpdateOperation: &CpcUpdateOperation
     OperationName: updateOne
     OperationCommand:
-      Filter: {caid: {$gte: {^RandomInt: { min: 0, max: 1000 }}}}
+      Filter: {caid: {$gte: {^RandomInt: {min: 0, max: 1000}}}}
       Update:
         $set:
           ts: {^Now: {}}
@@ -150,7 +149,7 @@ GlobalDefaults:
   PtcRemoveOperation: &PtcRemoveOperation
     OperationName: deleteOne
     OperationCommand:
-      Filter: {price: {$gte: {^RandomDouble: { min: 0.0, max: 1000.0 }}}}
+      Filter: {price: {$gte: {^RandomDouble: {min: 0.0, max: 1000.0}}}}
       OperationOptions:
         Comment: PtcRemoveOperation
         WriteConcern:
@@ -159,7 +158,7 @@ GlobalDefaults:
   PcRemoveOperation: &PcRemoveOperation
     OperationName: deleteOne
     OperationCommand:
-      Filter: {price: {$gte: {^RandomDouble: { min: 0.0, max: 1000.0 }}}}
+      Filter: {price: {$gte: {^RandomDouble: {min: 0.0, max: 1000.0}}}}
       OperationOptions:
         WriteConcern:
           Level: majority
@@ -167,7 +166,7 @@ GlobalDefaults:
   CpcRemoveOperation: &CpcRemoveOperation
     OperationName: deleteOne
     OperationCommand:
-      Filter: {caid: {$gte: {^RandomInt: { min: 0, max: 1000 }}}}
+      Filter: {caid: {$gte: {^RandomInt: {min: 0, max: 1000}}}}
       OperationOptions:
         WriteConcern:
           Level: majority
@@ -178,130 +177,129 @@ GlobalDefaults:
   SnapshotScannerLongDuration: &SnapshotScannerLongDuration 60 minutes
 
 ActorTemplates:
-- TemplateName: InsertTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Short.Insert.Baseline"}}
-    Type: CrudActor
-    Threads: *ThreadsValue
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "Active", Default: [6]}}
-        NopInPhasesUpTo: *MaxPhases
-        PhaseConfig:
-          GlobalRate: *GlobalRateValue
-          Threads: *ThreadsValue
-          CollectionCount: *CollectionCount
-          Database: *dbname
-          Duration: {^Parameter: {Name: "Duration", Default: *SnapshotScannerShortDuration}}  # *SnapshotScannerShortDuration
-          Blocking: {^Parameter: {Name: "Blocking", Default: true}}
-          Operations:
-          # Create
-          - *InsertOperation
-          - *InsertOperation
-          - *InsertOperation
-          - *InsertOperation
-          - *InsertOperation
-          - *InsertOperation
+  - TemplateName: InsertTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Short.Insert.Baseline"}}
+      Type: CrudActor
+      Threads: *ThreadsValue
+      Phases:
+        OnlyActiveInPhases:
+          Active: {^Parameter: {Name: "Active", Default: [6]}}
+          NopInPhasesUpTo: *MaxPhases
+          PhaseConfig:
+            GlobalRate: *GlobalRateValue
+            Threads: *ThreadsValue
+            CollectionCount: *CollectionCount
+            Database: *dbname
+            Duration: {^Parameter: {Name: "Duration", Default: *SnapshotScannerShortDuration}} # *SnapshotScannerShortDuration
+            Blocking: {^Parameter: {Name: "Blocking", Default: true}}
+            Operations:
+              # Create
+              - *InsertOperation
+              - *InsertOperation
+              - *InsertOperation
+              - *InsertOperation
+              - *InsertOperation
+              - *InsertOperation
 
-- TemplateName: QueryTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Short.Query.Baseline"}}
-    Type: CrudActor
-    Threads: *ThreadsValue
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "Active", Default: [6]}}
-        NopInPhasesUpTo: *MaxPhases
-        PhaseConfig:
-          GlobalRate: *GlobalRateValue
-          Threads: *ThreadsValue
-          CollectionCount: *CollectionCount
-          Database: *dbname
-          Duration: {^Parameter: {Name: "Duration", Default: *SnapshotScannerShortDuration}}  # *SnapshotScannerShortDuration
-          Blocking: {^Parameter: {Name: "Blocking", Default: true}}
-          Operations:
-          # Read
-          - *PtcQueryOperation
-          - *PcQueryOperation
-          - *CpcQueryOperation
-          - *PtcQueryOperation
-          - *PcQueryOperation
-          - *CpcQueryOperation
+  - TemplateName: QueryTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Short.Query.Baseline"}}
+      Type: CrudActor
+      Threads: *ThreadsValue
+      Phases:
+        OnlyActiveInPhases:
+          Active: {^Parameter: {Name: "Active", Default: [6]}}
+          NopInPhasesUpTo: *MaxPhases
+          PhaseConfig:
+            GlobalRate: *GlobalRateValue
+            Threads: *ThreadsValue
+            CollectionCount: *CollectionCount
+            Database: *dbname
+            Duration: {^Parameter: {Name: "Duration", Default: *SnapshotScannerShortDuration}} # *SnapshotScannerShortDuration
+            Blocking: {^Parameter: {Name: "Blocking", Default: true}}
+            Operations:
+              # Read
+              - *PtcQueryOperation
+              - *PcQueryOperation
+              - *CpcQueryOperation
+              - *PtcQueryOperation
+              - *PcQueryOperation
+              - *CpcQueryOperation
 
-- TemplateName: UpdateTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Short.Update.Baseline"}}
-    Type: CrudActor
-    Threads: *ThreadsValue
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "Active", Default: [6]}}
-        NopInPhasesUpTo: *MaxPhases
-        PhaseConfig:
-          GlobalRate: *GlobalRateValue
-          Threads: *ThreadsValue
-          CollectionCount: *CollectionCount
-          Database: *dbname
-          Duration: {^Parameter: {Name: "Duration", Default: *SnapshotScannerShortDuration}}  # *SnapshotScannerShortDuration
-          Blocking: {^Parameter: {Name: "Blocking", Default: true}}
-          Operations:
-          # Update
-          - *PtcUpdateOperation
-          - *PcUpdateOperation
-          - *CpcUpdateOperation
-          - *PtcUpdateOperation
-          - *PcUpdateOperation
-          - *CpcUpdateOperation
+  - TemplateName: UpdateTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Short.Update.Baseline"}}
+      Type: CrudActor
+      Threads: *ThreadsValue
+      Phases:
+        OnlyActiveInPhases:
+          Active: {^Parameter: {Name: "Active", Default: [6]}}
+          NopInPhasesUpTo: *MaxPhases
+          PhaseConfig:
+            GlobalRate: *GlobalRateValue
+            Threads: *ThreadsValue
+            CollectionCount: *CollectionCount
+            Database: *dbname
+            Duration: {^Parameter: {Name: "Duration", Default: *SnapshotScannerShortDuration}} # *SnapshotScannerShortDuration
+            Blocking: {^Parameter: {Name: "Blocking", Default: true}}
+            Operations:
+              # Update
+              - *PtcUpdateOperation
+              - *PcUpdateOperation
+              - *CpcUpdateOperation
+              - *PtcUpdateOperation
+              - *PcUpdateOperation
+              - *CpcUpdateOperation
 
-- TemplateName: RemoveTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Short.Remove.Baseline"}}
-    Type: CrudActor
-    Threads: *ThreadsValue
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "Active", Default: [6]}}
-        NopInPhasesUpTo: *MaxPhases
-        PhaseConfig:
-          GlobalRate: *GlobalRateValue
-          Threads: *ThreadsValue
-          CollectionCount: *CollectionCount
-          Database: *dbname
-          Duration: {^Parameter: {Name: "Duration", Default: *SnapshotScannerShortDuration}}
-          Blocking: {^Parameter: {Name: "Blocking", Default: true}}
-          Operations:
-          # Delete
-          - *PtcRemoveOperation
-          - *PcRemoveOperation
-          - *CpcRemoveOperation
-          - *PtcRemoveOperation
-          - *PcRemoveOperation
-          - *CpcRemoveOperation
+  - TemplateName: RemoveTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Short.Remove.Baseline"}}
+      Type: CrudActor
+      Threads: *ThreadsValue
+      Phases:
+        OnlyActiveInPhases:
+          Active: {^Parameter: {Name: "Active", Default: [6]}}
+          NopInPhasesUpTo: *MaxPhases
+          PhaseConfig:
+            GlobalRate: *GlobalRateValue
+            Threads: *ThreadsValue
+            CollectionCount: *CollectionCount
+            Database: *dbname
+            Duration: {^Parameter: {Name: "Duration", Default: *SnapshotScannerShortDuration}}
+            Blocking: {^Parameter: {Name: "Blocking", Default: true}}
+            Operations:
+              # Delete
+              - *PtcRemoveOperation
+              - *PcRemoveOperation
+              - *CpcRemoveOperation
+              - *PtcRemoveOperation
+              - *PcRemoveOperation
+              - *CpcRemoveOperation
 
-
-- TemplateName: ScanTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Short.Scan.Snapshot"}}
-    Type: CollectionScanner
-    Threads: *CollectionCount
-    CollectionCount: *CollectionCount
-    Database: *dbname
-    GenerateCollectionNames: true
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "Active", Default: [9]}}  # [7]
-        NopInPhasesUpTo: *MaxPhases
-        PhaseConfig:
-          Duration: {^Parameter: {Name: "Duration", Default: *SnapshotScannerShortDuration}}
-          ScanDuration: {^Parameter: {Name: "ScanDuration", Default: *SnapshotScannerShortDuration}}
-          ScanType: snapshot
-          ScanContinuous: true
-          GenerateCollectionNames: true
-          CollectionSortOrder: forward
-          FindOptions:
-            BatchSize: 1000
-            Hint: _id_
-            Comment: {^Parameter: {Name: "Comment", Default: "Scan.Snapshot"}}
+  - TemplateName: ScanTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Short.Scan.Snapshot"}}
+      Type: CollectionScanner
+      Threads: *CollectionCount
+      CollectionCount: *CollectionCount
+      Database: *dbname
+      GenerateCollectionNames: true
+      Phases:
+        OnlyActiveInPhases:
+          Active: {^Parameter: {Name: "Active", Default: [9]}} # [7]
+          NopInPhasesUpTo: *MaxPhases
+          PhaseConfig:
+            Duration: {^Parameter: {Name: "Duration", Default: *SnapshotScannerShortDuration}}
+            ScanDuration: {^Parameter: {Name: "ScanDuration", Default: *SnapshotScannerShortDuration}}
+            ScanType: snapshot
+            ScanContinuous: true
+            GenerateCollectionNames: true
+            CollectionSortOrder: forward
+            FindOptions:
+              BatchSize: 1000
+              Hint: _id_
+              Comment: {^Parameter: {Name: "Comment", Default: "Scan.Snapshot"}}
 
 Clients:
   Default:
@@ -311,309 +309,308 @@ Clients:
 
 # Odd phases do operations, even phases quiesce.
 Actors:
-# Ensure that transactionLifetimeLimitSeconds supports all the possible ScanDurations.
-# i.e. greater than SnapshotScannerLongDuration.
-- Name: SetTransactionLifetimeLimit
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Operation:
-          OperationName: RunCommand
-          OperationCommand:
-            setParameter: 1
-            transactionLifetimeLimitSeconds: 14400  # 4 Hours
+  # Ensure that transactionLifetimeLimitSeconds supports all the possible ScanDurations.
+  # i.e. greater than SnapshotScannerLongDuration.
+  - Name: SetTransactionLifetimeLimit
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Operation:
+            OperationName: RunCommand
+            OperationCommand:
+              setParameter: 1
+              transactionLifetimeLimitSeconds: 14400 # 4 Hours
 
-- Name: InitialLoad
-  Type: Loader
-  Threads: *LoadThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Threads: *LoadThreads
-        CollectionCount: *CollectionCount
-        Database: *dbname
-        Repeat: 1
-        Document: *Doc
-        DocumentCount: *InitialNumDocs
-        Indexes: *LLTIndexes
-        BatchSize: *LoadBatchSize
+  - Name: InitialLoad
+    Type: Loader
+    Threads: *LoadThreads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Threads: *LoadThreads
+          CollectionCount: *CollectionCount
+          Database: *dbname
+          Repeat: 1
+          Document: *Doc
+          DocumentCount: *InitialNumDocs
+          Indexes: *LLTIndexes
+          BatchSize: *LoadBatchSize
 
-- Name: SecondLoadAfterIndexes
-  Type: Loader
-  Threads: *LoadThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Threads: *LoadThreads
-        CollectionCount: *CollectionCount
-        Database: *dbname
-        Repeat: 1
-        Document: *Doc
-        DocumentCount: *SecondaryNumDocs
-        BatchSize: *LoadBatchSize
+  - Name: SecondLoadAfterIndexes
+    Type: Loader
+    Threads: *LoadThreads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Threads: *LoadThreads
+          CollectionCount: *CollectionCount
+          Database: *dbname
+          Repeat: 1
+          Document: *Doc
+          DocumentCount: *SecondaryNumDocs
+          BatchSize: *LoadBatchSize
 
-- Name: QuiescePhase
-  Type: QuiesceActor
-  Threads: 1
-  Database: *dbname
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0, 2, 4, 7, 10, 13, 16, 19, 22]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
+  - Name: QuiescePhase
+    Type: QuiesceActor
+    Threads: 1
+    Database: *dbname
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0, 2, 4, 7, 10, 13, 16, 19, 22]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
 
-- Name: WarmUp
-  Type: CollectionScanner
-  Threads: *CollectionCount
-  CollectionCount: *CollectionCount
-  Database: *dbname
-  GenerateCollectionNames: true
-  Phases:
-    OnlyActiveInPhases:
-      Active: [5, 8, 11, 14, 17, 20]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        ScanType: standard
-        GenerateCollectionNames: true
-        Repeat: 1
+  - Name: WarmUp
+    Type: CollectionScanner
+    Threads: *CollectionCount
+    CollectionCount: *CollectionCount
+    Database: *dbname
+    GenerateCollectionNames: true
+    Phases:
+      OnlyActiveInPhases:
+        Active: [5, 8, 11, 14, 17, 20]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          ScanType: standard
+          GenerateCollectionNames: true
+          Repeat: 1
 
-# Guard Against timeout for no output.
-- Name: LoggingActor
-  Type: LoggingActor
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1, 3, 6, 9, 12, 15, 18, 21]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        LogEvery: 15 minutes
-        Blocking: None
+  # Guard Against timeout for no output.
+  - Name: LoggingActor
+    Type: LoggingActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1, 3, 6, 9, 12, 15, 18, 21]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          LogEvery: 15 minutes
+          Blocking: None
 
-# Naming Conventions:
-# Operation.Duration.Load_level.Operation.Type_of_test
-# Operation:     Insert|Query|Update|Remove|Mixed
-# Duration:      Short|Medium|Long
-# Type of test:  Baseline|Benchmark
-#
-# Baseline without scans, benchmark with scans
-- ActorFromTemplate:
-    TemplateName: InsertTemplate
-    TemplateParameters:
-      Name: Short.Insert.Baseline
+  # Naming Conventions:
+  # Operation.Duration.Load_level.Operation.Type_of_test
+  # Operation:     Insert|Query|Update|Remove|Mixed
+  # Duration:      Short|Medium|Long
+  # Type of test:  Baseline|Benchmark
+  #
+  # Baseline without scans, benchmark with scans
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: Short.Insert.Baseline
 
-- ActorFromTemplate:
-    TemplateName: QueryTemplate
-    TemplateParameters:
-      Name: Short.Query.Baseline
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: Short.Query.Baseline
 
-- ActorFromTemplate:
-    TemplateName: UpdateTemplate
-    TemplateParameters:
-      Name: Short.Update.Baseline
+  - ActorFromTemplate:
+      TemplateName: UpdateTemplate
+      TemplateParameters:
+        Name: Short.Update.Baseline
 
-- ActorFromTemplate:
-    TemplateName: RemoveTemplate
-    TemplateParameters:
-      Name: Short.Remove.Baseline
+  - ActorFromTemplate:
+      TemplateName: RemoveTemplate
+      TemplateParameters:
+        Name: Short.Remove.Baseline
 
-- ActorFromTemplate:
-    TemplateName: InsertTemplate
-    TemplateParameters:
-      Name: Short.Insert.Benchmark
-      Active: [9]
-      Blocking: none
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: Short.Insert.Benchmark
+        Active: [9]
+        Blocking: none
 
-- ActorFromTemplate:
-    TemplateName: QueryTemplate
-    TemplateParameters:
-      Name: Short.Query.Benchmark
-      Active: [9]
-      Blocking: none
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: Short.Query.Benchmark
+        Active: [9]
+        Blocking: none
 
-- ActorFromTemplate:
-    TemplateName: UpdateTemplate
-    TemplateParameters:
-      Name: Short.Update.Benchmark
-      Active: [9]
-      Blocking: none
+  - ActorFromTemplate:
+      TemplateName: UpdateTemplate
+      TemplateParameters:
+        Name: Short.Update.Benchmark
+        Active: [9]
+        Blocking: none
 
-- ActorFromTemplate:
-    TemplateName: RemoveTemplate
-    TemplateParameters:
-      Name: Short.Remove.Benchmark
-      Active: [9]
-      Blocking: none
+  - ActorFromTemplate:
+      TemplateName: RemoveTemplate
+      TemplateParameters:
+        Name: Short.Remove.Benchmark
+        Active: [9]
+        Blocking: none
 
-## A thread per collection doing a scan.
-- ActorFromTemplate:
-    TemplateName: ScanTemplate
-    TemplateParameters:
-      Name: Short.Scan.Snapshot
-      Active: [9]
-      Comment: SnapshotScannerShort
+  ## A thread per collection doing a scan.
+  - ActorFromTemplate:
+      TemplateName: ScanTemplate
+      TemplateParameters:
+        Name: Short.Scan.Snapshot
+        Active: [9]
+        Comment: SnapshotScannerShort
 
-- ActorFromTemplate:
-    TemplateName: InsertTemplate
-    TemplateParameters:
-      Name: Medium.Insert.Baseline
-      Active: [12]
-      Duration: *SnapshotScannerMediumDuration
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: Medium.Insert.Baseline
+        Active: [12]
+        Duration: *SnapshotScannerMediumDuration
 
-- ActorFromTemplate:
-    TemplateName: QueryTemplate
-    TemplateParameters:
-      Name: Medium.Query.Baseline
-      Active: [12]
-      Duration: *SnapshotScannerMediumDuration
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: Medium.Query.Baseline
+        Active: [12]
+        Duration: *SnapshotScannerMediumDuration
 
-- ActorFromTemplate:
-    TemplateName: UpdateTemplate
-    TemplateParameters:
-      Name: Medium.Update.Baseline
-      Active: [12]
-      Duration: *SnapshotScannerMediumDuration
+  - ActorFromTemplate:
+      TemplateName: UpdateTemplate
+      TemplateParameters:
+        Name: Medium.Update.Baseline
+        Active: [12]
+        Duration: *SnapshotScannerMediumDuration
 
-- ActorFromTemplate:
-    TemplateName: RemoveTemplate
-    TemplateParameters:
-      Name: Medium.Remove.Baseline
-      Active: [12]
-      Duration: *SnapshotScannerMediumDuration
+  - ActorFromTemplate:
+      TemplateName: RemoveTemplate
+      TemplateParameters:
+        Name: Medium.Remove.Baseline
+        Active: [12]
+        Duration: *SnapshotScannerMediumDuration
 
-- ActorFromTemplate:
-    TemplateName: InsertTemplate
-    TemplateParameters:
-      Name: Medium.Insert.Benchmark
-      Active: [15]
-      Blocking: none
-      Duration: *SnapshotScannerMediumDuration
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: Medium.Insert.Benchmark
+        Active: [15]
+        Blocking: none
+        Duration: *SnapshotScannerMediumDuration
 
-- ActorFromTemplate:
-    TemplateName: QueryTemplate
-    TemplateParameters:
-      Name: Medium.Query.Benchmark
-      Active: [15]
-      Blocking: none
-      Duration: *SnapshotScannerMediumDuration
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: Medium.Query.Benchmark
+        Active: [15]
+        Blocking: none
+        Duration: *SnapshotScannerMediumDuration
 
-- ActorFromTemplate:
-    TemplateName: UpdateTemplate
-    TemplateParameters:
-      Name: Medium.Update.Benchmark
-      Active: [15]
-      Blocking: none
-      Duration: *SnapshotScannerMediumDuration
+  - ActorFromTemplate:
+      TemplateName: UpdateTemplate
+      TemplateParameters:
+        Name: Medium.Update.Benchmark
+        Active: [15]
+        Blocking: none
+        Duration: *SnapshotScannerMediumDuration
 
-- ActorFromTemplate:
-    TemplateName: RemoveTemplate
-    TemplateParameters:
-      Name: Medium.Remove.Benchmark
-      Active: [15]
-      Blocking: none
-      Duration: *SnapshotScannerMediumDuration
+  - ActorFromTemplate:
+      TemplateName: RemoveTemplate
+      TemplateParameters:
+        Name: Medium.Remove.Benchmark
+        Active: [15]
+        Blocking: none
+        Duration: *SnapshotScannerMediumDuration
 
-# A thread per collection doing a scan.
-- ActorFromTemplate:
-    TemplateName: ScanTemplate
-    TemplateParameters:
-      Name: Medium.Scan.Snapshot
-      Active: [15]
-      Comment: SnapshotScannerMedium
-      Duration: *SnapshotScannerMediumDuration
-      ScanDuration: *SnapshotScannerMediumDuration
+  # A thread per collection doing a scan.
+  - ActorFromTemplate:
+      TemplateName: ScanTemplate
+      TemplateParameters:
+        Name: Medium.Scan.Snapshot
+        Active: [15]
+        Comment: SnapshotScannerMedium
+        Duration: *SnapshotScannerMediumDuration
+        ScanDuration: *SnapshotScannerMediumDuration
 
-- ActorFromTemplate:
-    TemplateName: InsertTemplate
-    TemplateParameters:
-      Name: Long.Insert.Baseline
-      Active: [18]
-      Duration: *SnapshotScannerLongDuration
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: Long.Insert.Baseline
+        Active: [18]
+        Duration: *SnapshotScannerLongDuration
 
-- ActorFromTemplate:
-    TemplateName: QueryTemplate
-    TemplateParameters:
-      Name: Long.Query.Baseline
-      Active: [18]
-      Duration: *SnapshotScannerLongDuration
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: Long.Query.Baseline
+        Active: [18]
+        Duration: *SnapshotScannerLongDuration
 
-- ActorFromTemplate:
-    TemplateName: UpdateTemplate
-    TemplateParameters:
-      Name: Long.Update.Baseline
-      Active: [18]
-      Duration: *SnapshotScannerLongDuration
+  - ActorFromTemplate:
+      TemplateName: UpdateTemplate
+      TemplateParameters:
+        Name: Long.Update.Baseline
+        Active: [18]
+        Duration: *SnapshotScannerLongDuration
 
-- ActorFromTemplate:
-    TemplateName: RemoveTemplate
-    TemplateParameters:
-      Name: Long.Remove.Baseline
-      Active: [18]
-      Duration: *SnapshotScannerLongDuration
+  - ActorFromTemplate:
+      TemplateName: RemoveTemplate
+      TemplateParameters:
+        Name: Long.Remove.Baseline
+        Active: [18]
+        Duration: *SnapshotScannerLongDuration
 
-- ActorFromTemplate:
-    TemplateName: InsertTemplate
-    TemplateParameters:
-      Name: Long.Insert.Benchmark
-      Active: [21]
-      Blocking: none
-      Duration: *SnapshotScannerLongDuration
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: Long.Insert.Benchmark
+        Active: [21]
+        Blocking: none
+        Duration: *SnapshotScannerLongDuration
 
-- ActorFromTemplate:
-    TemplateName: QueryTemplate
-    TemplateParameters:
-      Name: Long.Query.Benchmark
-      Active: [21]
-      Blocking: none
-      Duration: *SnapshotScannerLongDuration
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: Long.Query.Benchmark
+        Active: [21]
+        Blocking: none
+        Duration: *SnapshotScannerLongDuration
 
-- ActorFromTemplate:
-    TemplateName: UpdateTemplate
-    TemplateParameters:
-      Name: Long.Update.Benchmark
-      Active: [21]
-      Blocking: none
-      Duration: *SnapshotScannerLongDuration
+  - ActorFromTemplate:
+      TemplateName: UpdateTemplate
+      TemplateParameters:
+        Name: Long.Update.Benchmark
+        Active: [21]
+        Blocking: none
+        Duration: *SnapshotScannerLongDuration
 
-- ActorFromTemplate:
-    TemplateName: RemoveTemplate
-    TemplateParameters:
-      Name: Long.Remove.Benchmark
-      Active: [21]
-      Blocking: none
-      Duration: *SnapshotScannerLongDuration
+  - ActorFromTemplate:
+      TemplateName: RemoveTemplate
+      TemplateParameters:
+        Name: Long.Remove.Benchmark
+        Active: [21]
+        Blocking: none
+        Duration: *SnapshotScannerLongDuration
 
-# A thread per collection doing a scan.
-- ActorFromTemplate:
-    TemplateName: ScanTemplate
-    TemplateParameters:
-      Name: Long.Scan.Snapshot
-      Active: [21]
-      Comment: SnapshotScannerLong
-      Duration: *SnapshotScannerLongDuration
-      ScanDuration: *SnapshotScannerLongDuration
+  # A thread per collection doing a scan.
+  - ActorFromTemplate:
+      TemplateName: ScanTemplate
+      TemplateParameters:
+        Name: Long.Scan.Snapshot
+        Active: [21]
+        Comment: SnapshotScannerLong
+        Duration: *SnapshotScannerLongDuration
+        ScanDuration: *SnapshotScannerLongDuration
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - atlas-like-replica.2022-10
-      - replica
-      - replica-80-feature-flags
-      - replica-all-feature-flags
-      - single-replica
-      - single-replica-classic-query-engine
-      - single-replica-sbe
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
+  - When:
+      mongodb_setup:
+        $eq:
+          - atlas-like-replica.2022-10
+          - replica
+          - replica-80-feature-flags
+          - replica-all-feature-flags
+          - single-replica-classic-query-engine
+          - single-replica-sbe
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2

@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/sys-perf"
+Owner: Product Performance
 Description: |
   This workload is designed to insert 10k documents into a single collection and then
   perform exactly 10k reads. This is designed to help us calculate CPU cycle metrics
@@ -12,61 +12,61 @@ CollectionCount: &NumColls 1
 NumPhases: &NumPhases 3
 
 Document: &doc
-  a: {^Inc : {}}
+  a: {^Inc: {}}
   b: {^RandomString: {length: 16}}
 
 Actors:
-- Name: Setup
-  Type: Loader
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        # Insert 10k documents to our singular collection
-        Repeat: 1
-        BatchSize: 100
-        Threads: 1
-        DocumentCount: *NumDocs
-        Database: *dbname
-        CollectionCount: *NumColls
-        Document: *doc
-        Indexes:
-        - keys: {a: 1}
+  - Name: Setup
+    Type: Loader
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          # Insert 10k documents to our singular collection
+          Repeat: 1
+          BatchSize: 100
+          Threads: 1
+          DocumentCount: *NumDocs
+          Database: *dbname
+          CollectionCount: *NumColls
+          Document: *doc
+          Indexes:
+            - keys: {a: 1}
 
-- Name: QuiescePhase
-  Type: QuiesceActor
-  Threads: 1
-  Database: *dbname
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Repeat: 1
+  - Name: QuiescePhase
+    Type: QuiesceActor
+    Threads: 1
+    Database: *dbname
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Repeat: 1
 
-- Name: ReadsActor
-  Type: CrudActor
-  Database: *dbname
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Repeat: 10000
-        RecordFailure: true
-        CollectionCount: *NumColls
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: { a: { ^RandomInt: { min: 0, max: *NumDocs } } }
-          OperationMetricsName: ReadDocs
-          ThrowOnFailure: true
+  - Name: ReadsActor
+    Type: CrudActor
+    Database: *dbname
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Repeat: 10000
+          RecordFailure: true
+          CollectionCount: *NumColls
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: {a: {^RandomInt: {min: 0, max: *NumDocs}}}
+              OperationMetricsName: ReadDocs
+              ThrowOnFailure: true
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica-ipc-counters.2023-06
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica-ipc-counters.2023-06

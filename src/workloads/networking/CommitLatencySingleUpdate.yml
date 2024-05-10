@@ -1,96 +1,96 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   Single threaded updates to measure commit latency for various write concern.
 
 Keywords:
-- latency
-- write concern
+  - latency
+  - write concern
 
 Actors:
-- Name: SingleThreadUpdate
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  # Load data
-  - Repeat: 1
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        insert: &Collection CommitLatencySingleUpdates
-        documents: [{_id: 1, n: 0}]
-  # Tests
-  - MetricsName: SingleThreadUpdate_w0
-    Repeat: 500
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        update: *Collection
-        updates: [{q: {_id: 1}, u: {$inc: {n: 1}}}]
-        writeConcern: {w: 0}
-  - MetricsName: SingleThreadUpdate_w1
-    Repeat: 500
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        update: *Collection
-        updates: [{q: {_id: 1}, u: {$inc: {n: 1}}}]
-        writeConcern: {w: 1}
-  - MetricsName: SingleThreadUpdate_w2
-    Repeat: 500
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        update: *Collection
-        updates: [{q: {_id: 1}, u: {$inc: {n: 1}}}]
-        writeConcern: {w: 2}
-  - MetricsName: SingleThreadUpdate_w3
-    Repeat: 500
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        update: *Collection
-        updates: [{q: {_id: 1}, u: {$inc: {n: 1}}}]
-        writeConcern: {w: 3}
-  - MetricsName: SingleThreadUpdate_jtrue
-    Repeat: 500
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        update: *Collection
-        updates: [{q: {_id: 1}, u: {$inc: {n: 1}}}]
-        writeConcern: {j: true}
-  - MetricsName: SingleThreadUpdate_w2_jtrue
-    Repeat: 500
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        update: *Collection
-        updates: [{q: {_id: 1}, u: {$inc: {n: 1}}}]
-        writeConcern: {w: 2, j: true}
-  - MetricsName: SingleThreadUpdate_wmajority
-    Repeat: 500
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        update: *Collection
-        updates: [{q: {_id: 1}, u: {$inc: {n: 1}}}]
-        writeConcern: {w: majority, j: false}
-  - MetricsName: SingleThreadUpdate_wmajority_jtrue
-    Repeat: 500
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        update: *Collection
-        updates: [{q: {_id: 1}, u: {$inc: {n: 1}}}]
-        writeConcern: {w: majority, j: true}
+  - Name: SingleThreadUpdate
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      # Load data
+      - Repeat: 1
+        Operations:
+          - OperationName: RunCommand
+            OperationCommand:
+              insert: &Collection CommitLatencySingleUpdates
+              documents: [{_id: 1, n: 0}]
+      # Tests
+      - MetricsName: SingleThreadUpdate_w0
+        Repeat: 500
+        Operations:
+          - OperationName: RunCommand
+            OperationCommand:
+              update: *Collection
+              updates: [{q: {_id: 1}, u: {$inc: {n: 1}}}]
+              writeConcern: {w: 0}
+      - MetricsName: SingleThreadUpdate_w1
+        Repeat: 500
+        Operations:
+          - OperationName: RunCommand
+            OperationCommand:
+              update: *Collection
+              updates: [{q: {_id: 1}, u: {$inc: {n: 1}}}]
+              writeConcern: {w: 1}
+      - MetricsName: SingleThreadUpdate_w2
+        Repeat: 500
+        Operations:
+          - OperationName: RunCommand
+            OperationCommand:
+              update: *Collection
+              updates: [{q: {_id: 1}, u: {$inc: {n: 1}}}]
+              writeConcern: {w: 2}
+      - MetricsName: SingleThreadUpdate_w3
+        Repeat: 500
+        Operations:
+          - OperationName: RunCommand
+            OperationCommand:
+              update: *Collection
+              updates: [{q: {_id: 1}, u: {$inc: {n: 1}}}]
+              writeConcern: {w: 3}
+      - MetricsName: SingleThreadUpdate_jtrue
+        Repeat: 500
+        Operations:
+          - OperationName: RunCommand
+            OperationCommand:
+              update: *Collection
+              updates: [{q: {_id: 1}, u: {$inc: {n: 1}}}]
+              writeConcern: {j: true}
+      - MetricsName: SingleThreadUpdate_w2_jtrue
+        Repeat: 500
+        Operations:
+          - OperationName: RunCommand
+            OperationCommand:
+              update: *Collection
+              updates: [{q: {_id: 1}, u: {$inc: {n: 1}}}]
+              writeConcern: {w: 2, j: true}
+      - MetricsName: SingleThreadUpdate_wmajority
+        Repeat: 500
+        Operations:
+          - OperationName: RunCommand
+            OperationCommand:
+              update: *Collection
+              updates: [{q: {_id: 1}, u: {$inc: {n: 1}}}]
+              writeConcern: {w: majority, j: false}
+      - MetricsName: SingleThreadUpdate_wmajority_jtrue
+        Repeat: 500
+        Operations:
+          - OperationName: RunCommand
+            OperationCommand:
+              update: *Collection
+              updates: [{q: {_id: 1}, u: {$inc: {n: 1}}}]
+              writeConcern: {w: majority, j: true}
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica
-      - replica-noflowcontrol
-      - replica-80-feature-flags
-      - replica-all-feature-flags
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - replica-noflowcontrol
+          - replica-80-feature-flags
+          - replica-all-feature-flags
 

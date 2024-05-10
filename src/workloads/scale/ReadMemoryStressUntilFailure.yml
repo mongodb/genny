@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: Service Architecture
+Owner: Service Arch
 Description: |
   Used to test performance of the server under heavy memory pressure caused by read
   operations. This workload is expected to fail due to host(s) being unreachable as a
@@ -14,14 +14,14 @@ Description: |
   process the operations to fail due to out-of-memory errors.
 
 Keywords:
-- scale
-- memory stress
-- aggregate
-- sort
-- insert
-- fail
-- oom
-- out of memory
+  - scale
+  - memory stress
+  - aggregate
+  - sort
+  - insert
+  - fail
+  - oom
+  - out of memory
 
 GlobalDefaults:
   dbname: &DBName memorystress
@@ -62,71 +62,70 @@ Clients:
     QueryOptions:
       socketTimeoutMS: -1
       maxPoolSize: 500
-    
+
 Actors:
-# Drop database to get rid of stale data. Useful when running locally multiple times.
-- Name: Setup
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *DBName
-        Operations:
-        - OperationName: RunCommand
-          OperationCommand: {dropDatabase: 1}
+  # Drop database to get rid of stale data. Useful when running locally multiple times.
+  - Name: Setup
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *DBName
+          Operations:
+            - OperationName: RunCommand
+              OperationCommand: {dropDatabase: 1}
 
-# Load 20,096 documents around 520KB as described by the structure in GlobalDefaults.
-- Name: LoadDocuments
-  Type: Loader
-  Threads: *LoadThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        CollectionCount: 1
-        Database: *DBName
-        Repeat: 1
-        Document: *Doc
-        MultipleThreadsPerCollection: true
-        DocumentCount: *NumDocs
-        BatchSize: *LoadBatchSize
+  # Load 20,096 documents around 520KB as described by the structure in GlobalDefaults.
+  - Name: LoadDocuments
+    Type: Loader
+    Threads: *LoadThreads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          CollectionCount: 1
+          Database: *DBName
+          Repeat: 1
+          Document: *Doc
+          MultipleThreadsPerCollection: true
+          DocumentCount: *NumDocs
+          BatchSize: *LoadBatchSize
 
-# Spawn many threads to sort enough documents to test server's capacity to handle memory pressure.
-- Name: SortMany
-  Type: RunCommand
-  Threads: *SortThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *SortRepeat
-        Database: *DBName
-        Operations:
-        - OperationMetricsName: SortMany
-          OperationName: RunCommand
-          OperationCommand:
-            # Loader default collection name.
-            aggregate: Collection0
-            # Sort *SortStep number of documents starting from a randomly chosen 'a'.
-            pipeline:
-              [{$match:
-                {$expr:
-                  {$let:
-                    {vars:
-                      {start: {^RandomInt: {min: 0, max: *NumDocs}}},
-                    in: {$and: [$gte: ["$a", "$$start"], $lt: ["$a", {$add: ["$$start", *SortStep]}]]}
+  # Spawn many threads to sort enough documents to test server's capacity to handle memory pressure.
+  - Name: SortMany
+    Type: RunCommand
+    Threads: *SortThreads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *SortRepeat
+          Database: *DBName
+          Operations:
+            - OperationMetricsName: SortMany
+              OperationName: RunCommand
+              OperationCommand:
+                # Loader default collection name.
+                aggregate: Collection0
+                # Sort *SortStep number of documents starting from a randomly chosen 'a'.
+                pipeline: [
+                  { $match: {
+                    $expr: {
+                      $let: {
+                        vars: {start: {^RandomInt: {min: 0, max: *NumDocs}}},
+                        in: {$and: [{$gte: ["$a", "$$start"]}, {$lt: ["$a", {$add: ["$$start", *SortStep]}]}]}
+                      }
                     }
-                  }
-                }
-              },
-              {$sort: {b: 1}}]
-            cursor: {batchSize: *SortBatchSize}
+                  }},
+                  {$sort: {b: 1}}
+                ]
+                cursor: {batchSize: *SortBatchSize}
 
 # Commented out because this should not be regularly scheduled, as the task is expected to fail.
 # Uncomment the lines below (and possibly change the build variant) to run the workload.
@@ -134,4 +133,4 @@ Actors:
 # - When:
 #     mongodb_setup:
 #       $eq:
-#       - shard-lite
+#       - shard

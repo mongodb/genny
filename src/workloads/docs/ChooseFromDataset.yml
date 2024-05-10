@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/product-perf"
+Owner: Product Performance
 Description: |
   Demonstrate the ChooseFromDataset generator. The ChooseFromDataset generator takes one single
   argument, a path to a file. It then returns random lines from that file. The file should exist
@@ -9,16 +9,26 @@ Description: |
   If running locally, the relative path needs to be: ./src/workloads/datasets/.
 
 Actors:
-- Name: Insert
-  Type: Insert
-  Threads: 8
-  Database: "test2"
-  Phases:
-  - Collection: "inserts"
-    Document:
-      fullname: {^Join: {array: [{^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/names.txt"}}, {^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/familynames.txt"}}], sep: " " }}  #  Kyle Ferguson
-      name: {^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/names.txt"}}  #  Susan
-      familyname: {^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/familynames.txt"}}  #  Calhoun
-      airport: {^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/airports_codes.txt"}}  #  MBI
-      airport_ordered_skipfirst: {^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/airports_codes.txt", "sequential": true, "startFromLine": 1}}
-    Repeat: 10
+  - Name: Insert
+    Type: Insert
+    Threads: 8
+    Database: "test2"
+    Phases:
+      - Collection: "inserts"
+        Document:
+          fullname: {
+            ^Join: {
+              array: [
+                {^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/names.txt"}},
+                {^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/familynames.txt"}}
+              ],
+              sep: " "
+            }
+          } #  Kyle Ferguson
+          name: {^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/names.txt"}} #  Susan
+          familyname: {^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/familynames.txt"}} #  Calhoun
+          airport: {^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/airports_codes.txt"}} #  MBI
+          airport_ordered_skipfirst: {
+            ^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/airports_codes.txt", "sequential": true, "startFromLine": 1}
+          }
+        Repeat: 10

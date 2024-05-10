@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   This workload runs different types of aggregations where the query results
   will be merged on a mongos node. This workload reproduces a SERVER-29446,
@@ -20,133 +20,133 @@ Clients:
       maxPoolSize: 20000
 
 Keywords:
-- Aggregations
-- Mongos
-- Sample
-- Unwind
-- Sort
+  - Aggregations
+  - Mongos
+  - Sample
+  - Unwind
+  - Sort
 
 ActorTemplates:
-- TemplateName: Aggregation
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Aggregation"}}
-    Type: RunCommand
-    Database: *Database
-    Threads: {^Parameter: {Name: "Threads", Default: 32}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        NopInPhasesUpTo: *MaxPhases
-        PhaseConfig:
-          Duration: {^Parameter: {Name: "Duration", Default: 5 minutes}}
-          Database: *Database
-          Operations:
-          - OperationMetricsName: AggregationPipeline
-            OperationName: RunCommand
-            OperationCommand:
-              aggregate: Collection0
-              pipeline: {^Parameter: {Name: "Pipeline", Default: []}}
-              cursor: {batchSize: *NumDocs}
+  - TemplateName: Aggregation
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Aggregation"}}
+      Type: RunCommand
+      Database: *Database
+      Threads: {^Parameter: {Name: "Threads", Default: 32}}
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          NopInPhasesUpTo: *MaxPhases
+          PhaseConfig:
+            Duration: {^Parameter: {Name: "Duration", Default: 5 minutes}}
+            Database: *Database
+            Operations:
+              - OperationMetricsName: AggregationPipeline
+                OperationName: RunCommand
+                OperationCommand:
+                  aggregate: Collection0
+                  pipeline: {^Parameter: {Name: "Pipeline", Default: []}}
+                  cursor: {batchSize: *NumDocs}
 
 Actors:
-- Name: EnableSharding
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: admin
-        Operations:
-        - OperationMetricsName: EnableSharding
-          OperationName: AdminCommand
-          OperationCommand:
-            enableSharding: test
+  - Name: EnableSharding
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: admin
+          Operations:
+            - OperationMetricsName: EnableSharding
+              OperationName: AdminCommand
+              OperationCommand:
+                enableSharding: test
 
-- Name: AddShardedCollection
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: admin
-        Operations:
-        - OperationMetricsName: ShardCollection
-          OperationName: AdminCommand
-          OperationCommand:
-            shardCollection: "test.Collection0"
-            key: {shardKey: 1}
+  - Name: AddShardedCollection
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: admin
+          Operations:
+            - OperationMetricsName: ShardCollection
+              OperationName: AdminCommand
+              OperationCommand:
+                shardCollection: "test.Collection0"
+                key: {shardKey: 1}
 
-- Name: Loader
-  Type: Loader
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: test
-        CollectionCount: 1
-        Threads: 1
-        DocumentCount: *NumDocs
-        BatchSize: 100000
-        Indexes:
-        - keys: {field: 1}
-        Document:
-          shardKey: &RandomString {^FastRandomString: {length: 4}}
-          field: *RandomString
-          arrayField: {^Array: {of: *RandomString, number: *ArraySize}}
+  - Name: Loader
+    Type: Loader
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: test
+          CollectionCount: 1
+          Threads: 1
+          DocumentCount: *NumDocs
+          BatchSize: 100000
+          Indexes:
+            - keys: {field: 1}
+          Document:
+            shardKey: &RandomString {^FastRandomString: {length: 4}}
+            field: *RandomString
+            arrayField: {^Array: {of: *RandomString, number: *ArraySize}}
 
-- ActorFromTemplate:
-    TemplateName: Aggregation
-    TemplateParameters:
-      Name: Match
-      OnlyActiveInPhase: 3
-      Pipeline:
-      - $match: &Match
-          field: {^Join: {array: ["AA", {^FastRandomString: {length: 2}}]}}
+  - ActorFromTemplate:
+      TemplateName: Aggregation
+      TemplateParameters:
+        Name: Match
+        OnlyActiveInPhase: 3
+        Pipeline:
+          - $match: &Match
+              field: {^Join: {array: ["AA", {^FastRandomString: {length: 2}}]}}
 
-- ActorFromTemplate:
-    TemplateName: Aggregation
-    TemplateParameters:
-      Name: Sample_PseudoRandomCursor
-      OnlyActiveInPhase: 3
-      Pipeline: [{$sample: {size: *SampleSizeForPseudoRandom}}]
+  - ActorFromTemplate:
+      TemplateName: Aggregation
+      TemplateParameters:
+        Name: Sample_PseudoRandomCursor
+        OnlyActiveInPhase: 3
+        Pipeline: [{$sample: {size: *SampleSizeForPseudoRandom}}]
 
-- ActorFromTemplate:
-    TemplateName: Aggregation
-    TemplateParameters:
-      Name: Sample_RandomSort
-      OnlyActiveInPhase: 3
-      Pipeline: [{$sample: {size: *SampleSizeForRandomSort}}]
+  - ActorFromTemplate:
+      TemplateName: Aggregation
+      TemplateParameters:
+        Name: Sample_RandomSort
+        OnlyActiveInPhase: 3
+        Pipeline: [{$sample: {size: *SampleSizeForRandomSort}}]
 
-- ActorFromTemplate:
-    TemplateName: Aggregation
-    TemplateParameters:
-      Name: Sort
-      OnlyActiveInPhase: 3
-      Pipeline: [{$match: *Match}, {$sort: {shardKey: 1} }]
+  - ActorFromTemplate:
+      TemplateName: Aggregation
+      TemplateParameters:
+        Name: Sort
+        OnlyActiveInPhase: 3
+        Pipeline: [{$match: *Match}, {$sort: {shardKey: 1}}]
 
-- ActorFromTemplate:
-    TemplateName: Aggregation
-    TemplateParameters:
-      Name: Unwind
-      OnlyActiveInPhase: 3
-      Pipeline: [{$match: *Match}, {$unwind: "$arrayField" }]
+  - ActorFromTemplate:
+      TemplateName: Aggregation
+      TemplateParameters:
+        Name: Unwind
+        OnlyActiveInPhase: 3
+        Pipeline: [{$match: *Match}, {$unwind: "$arrayField"}]
 
-- Name: LoggingActor
-  Type: LoggingActor
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0, 1, 2, 3]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        LogEvery: 10 seconds
-        Blocking: None
+  - Name: LoggingActor
+    Type: LoggingActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0, 1, 2, 3]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          LogEvery: 10 seconds
+          Blocking: None

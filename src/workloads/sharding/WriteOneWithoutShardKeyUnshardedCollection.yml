@@ -1,92 +1,92 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/sharding"
+Owner: Cluster Scalability
 Description: |
   On an unsharded collection on a single shard cluster, run workloads that updateOne, deleteOne, and findAndModify.
 
 GlobalDefaults:
   Nop: &Nop {Nop: true}
   Database: &Database test
-  DocumentCount: &DocumentCount 10000  # Number of documents to insert and modify.
+  DocumentCount: &DocumentCount 10000 # Number of documents to insert and modify.
 
 Actors:
-- Name: CreateShardedCluster
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    Database: admin
-    Operations:
-    - OperationMetricsName: EnableSharding
-      OperationName: AdminCommand
-      OperationCommand:
-        enableSharding: *Database
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - Name: CreateShardedCluster
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      - Repeat: 1
+        Database: admin
+        Operations:
+          - OperationMetricsName: EnableSharding
+            OperationName: AdminCommand
+            OperationCommand:
+              enableSharding: *Database
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
 
-- Name: LoadInitialData
-  Type: MonotonicSingleLoader
-  Threads: 1
-  Phases:
-  - *Nop
-  - Repeat: 1
-    BatchSize: 1000
-    DocumentCount: *DocumentCount
-    Database: *Database
-    Document: {x: 1, y: 1, z: 1}
-  - *Nop
-  - *Nop
-  - *Nop
+  - Name: LoadInitialData
+    Type: MonotonicSingleLoader
+    Threads: 1
+    Phases:
+      - *Nop
+      - Repeat: 1
+        BatchSize: 1000
+        DocumentCount: *DocumentCount
+        Database: *Database
+        Document: {x: 1, y: 1, z: 1}
+      - *Nop
+      - *Nop
+      - *Nop
 
-- Name: CRUDOpsWithoutShardKey
-  Type: CrudActor
-  Threads: 1  # Use 1 thread to avoid updates throwing WriteConflict errors.
-  Phases:
-  - *Nop
-  - *Nop
-  - Repeat: *DocumentCount
-    Database: *Database
-    Collection: Collection0
-    Operations:
-    - OperationMetricsName: UpdateOneWithoutShardKey
-      OperationName: updateOne
-      OperationCommand:
-        Filter: {y: 1}
-        Update: {$inc: {y: 1}}
-        Options:
-          WriteConcern:
-            Level: majority
-            TimeoutMillis: 5000
-  - Repeat: *DocumentCount
-    Database: *Database
-    Collection: Collection0
-    Operations:
-    - OperationMetricsName: FindAndModifyOneWithoutShardKey
-      OperationName: findOneAndUpdate
-      OperationCommand:
-        Filter: {y: 2}
-        Update: {$inc: {y: 1}}
-        Options:
-          WriteConcern:
-            Level: majority
-            TimeoutMillis: 5000
-  - Repeat: *DocumentCount
-    Database: *Database
-    Collection: Collection0
-    Operations:
-    - OperationMetricsName: DeleteOneWithoutShardKey
-      OperationName: deleteOne
-      OperationCommand:
-        Filter: {z: 1}
-        Options:
-          WriteConcern:
-            Level: majority
-            TimeoutMillis: 5000
+  - Name: CRUDOpsWithoutShardKey
+    Type: CrudActor
+    Threads: 1 # Use 1 thread to avoid updates throwing WriteConflict errors.
+    Phases:
+      - *Nop
+      - *Nop
+      - Repeat: *DocumentCount
+        Database: *Database
+        Collection: Collection0
+        Operations:
+          - OperationMetricsName: UpdateOneWithoutShardKey
+            OperationName: updateOne
+            OperationCommand:
+              Filter: {y: 1}
+              Update: {$inc: {y: 1}}
+              Options:
+                WriteConcern:
+                  Level: majority
+                  TimeoutMillis: 5000
+      - Repeat: *DocumentCount
+        Database: *Database
+        Collection: Collection0
+        Operations:
+          - OperationMetricsName: FindAndModifyOneWithoutShardKey
+            OperationName: findOneAndUpdate
+            OperationCommand:
+              Filter: {y: 2}
+              Update: {$inc: {y: 1}}
+              Options:
+                WriteConcern:
+                  Level: majority
+                  TimeoutMillis: 5000
+      - Repeat: *DocumentCount
+        Database: *Database
+        Collection: Collection0
+        Operations:
+          - OperationMetricsName: DeleteOneWithoutShardKey
+            OperationName: deleteOne
+            OperationCommand:
+              Filter: {z: 1}
+              Options:
+                WriteConcern:
+                  Level: majority
+                  TimeoutMillis: 5000
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - shard-single
-      - shard-single-stress
+  - When:
+      mongodb_setup:
+        $eq:
+          - shard-single
+          - shard-single-stress

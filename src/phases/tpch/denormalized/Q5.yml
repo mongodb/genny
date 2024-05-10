@@ -4,55 +4,113 @@ Description: |
   Run TPC-H query 5 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
-query5Region: &query5Region {^Parameter: {Name: "Query5Region", Default: "ASIA"}}
-query5Date: &query5Date {^Parameter: {Name: "Query5Date", Default: "1994-01-01"}}
+batchSize: &batchSize { ^Parameter: { Name: "BatchSize", Default: 101 } }
+query5Region:
+  &query5Region { ^Parameter: { Name: "Query5Region", Default: "ASIA" } }
+query5Date:
+  &query5Date { ^Parameter: { Name: "Query5Date", Default: "1994-01-01" } }
 
 TPCHDenormalizedQuery5Aggregation: &TPCHDenormalizedQuery5Aggregation
   aggregate: customer
   pipeline:
     [
-      {$match: {"nation.region.r_name": *query5Region}},
-      {$unwind: "$orders"},
-      {$match: {$and: [
-        {$expr: {$gte: ["$orders.o_orderdate", {^Date: *query5Date}]}},
-        {$expr: {$lt: ["$orders.o_orderdate", {$dateAdd: {startDate: {^Date: *query5Date}, unit: "year", amount: 1}}]}}]}},
-      {$unwind: "$orders.lineitem"},
-      {$lookup: {from: "supplier", as: "supplier", localField: "orders.lineitem.l_suppkey", foreignField: "s_suppkey", let: {c_nationkey: "$nation.n_nationkey"}, pipeline: [
-        {$match: {$expr: {$eq: ["$nation.n_nationkey", "$$c_nationkey"]}}}]}},
-      {$unwind: "$supplier"},
-      {$group: {
-        _id: "$supplier.nation.n_name",
-        revenue: {$sum: {$multiply: ["$orders.lineitem.l_extendedprice", {$subtract: [1, "$orders.lineitem.l_discount"]}]}}}},
-      {$project: {_id: 0, n_name: "$_id", revenue: 1}},
-      {$sort: {revenue: -1}}
+      { $match: { "nation.region.r_name": *query5Region } },
+      { $unwind: "$orders" },
+      {
+        $match:
+          {
+            $and:
+              [
+                {
+                  $expr:
+                    { $gte: ["$orders.o_orderdate", { ^Date: *query5Date }] },
+                },
+                {
+                  $expr:
+                    {
+                      $lt:
+                        [
+                          "$orders.o_orderdate",
+                          {
+                            $dateAdd:
+                              {
+                                startDate: { ^Date: *query5Date },
+                                unit: "year",
+                                amount: 1,
+                              },
+                          },
+                        ],
+                    },
+                },
+              ],
+          },
+      },
+      { $unwind: "$orders.lineitem" },
+      {
+        $lookup:
+          {
+            from: "supplier",
+            as: "supplier",
+            localField: "orders.lineitem.l_suppkey",
+            foreignField: "s_suppkey",
+            let: { c_nationkey: "$nation.n_nationkey" },
+            pipeline:
+              [
+                {
+                  $match:
+                    {
+                      $expr: { $eq: ["$nation.n_nationkey", "$$c_nationkey"] },
+                    },
+                },
+              ],
+          },
+      },
+      { $unwind: "$supplier" },
+      {
+        $group:
+          {
+            _id: "$supplier.nation.n_name",
+            revenue:
+              {
+                $sum:
+                  {
+                    $multiply:
+                      [
+                        "$orders.lineitem.l_extendedprice",
+                        { $subtract: [1, "$orders.lineitem.l_discount"] },
+                      ],
+                  },
+              },
+          },
+      },
+      { $project: { _id: 0, n_name: "$_id", revenue: 1 } },
+      { $sort: { revenue: -1 } },
     ]
-  cursor: {batchSize: *batchSize}
+  cursor: { batchSize: *batchSize }
   allowDiskUse: true
 
 TPCHDenormalizedQuery5Warmup:
-  Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
+  Repeat: &Repeat { ^Parameter: { Name: "Repeat", Default: 1 } }
   Database: &db tpch
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedQuery5Aggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedQuery5Aggregation
 
 TPCHDenormalizedQuery5:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query5
-    OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedQuery5Aggregation
+    - OperationMetricsName: Query5
+      OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedQuery5Aggregation
 
 TPCHDenormalizedQuery5Explain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query5
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHDenormalizedQuery5Aggregation
-      verbosity:
-        executionStats
+    - OperationMetricsName: Query5
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHDenormalizedQuery5Aggregation
+        verbosity: executionStats

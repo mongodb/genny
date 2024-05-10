@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/server-execution"
+Owner: Storage Execution
 Description: |
   This test establishes a baseline for time-based range deletes on time-series collections.
 
@@ -11,56 +11,53 @@ Description: |
   application deletes data within some time ranges.
 
 Actors:
-- Name: CreateTimeSeriesCollection
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    LoadConfig:
-      Path: ../../phases/execution/TimeSeriesUpdatesAndDeletes.yml
-      Key: CreateTimeSeriesCollectionPhase
+  - Name: CreateTimeSeriesCollection
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      LoadConfig:
+        Path: ../../phases/execution/TimeSeriesUpdatesAndDeletes.yml
+        Key: CreateTimeSeriesCollectionPhase
 
-- Name: InsertData
-  Type: Loader
-  Threads: 1
-  Phases:
-    LoadConfig:
-      Path: ../../phases/execution/TimeSeriesUpdatesAndDeletes.yml
-      Key: InsertDataPhase
+  - Name: InsertData
+    Type: Loader
+    Threads: 1
+    Phases:
+      LoadConfig:
+        Path: ../../phases/execution/TimeSeriesUpdatesAndDeletes.yml
+        Key: InsertDataPhase
 
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: test
-  Phases:
-    LoadConfig:
-      Path: ../../phases/execution/TimeSeriesUpdatesAndDeletes.yml
-      Key: QuiescePhase
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: test
+    Phases:
+      LoadConfig:
+        Path: ../../phases/execution/TimeSeriesUpdatesAndDeletes.yml
+        Key: QuiescePhase
 
-- Name: RangeDelete
-  Type: CrudActor
-  Threads: 1
-  Phases:
-    LoadConfig:
-      Path: ../../phases/execution/TimeSeriesUpdatesAndDeletes.yml
-      Key: RangeDeletePhase
+  - Name: RangeDelete
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      LoadConfig:
+        Path: ../../phases/execution/TimeSeriesUpdatesAndDeletes.yml
+        Key: RangeDeletePhase
 
-- Name: CleanUp
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    LoadConfig:
-      Path: ../../phases/execution/TimeSeriesUpdatesAndDeletes.yml
-      Key: CleanUpPhase
+  - Name: CleanUp
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      LoadConfig:
+        Path: ../../phases/execution/TimeSeriesUpdatesAndDeletes.yml
+        Key: CleanUpPhase
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - shard-lite
-      - replica
-      - shard-lite-80-feature-flags
-      - shard-lite-all-feature-flags
-      - replica-80-feature-flags
-      - replica-all-feature-flags
-    branch_name:
-      $gte:  v7.0
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - replica-80-feature-flags
+          - replica-all-feature-flags
+      branch_name:
+        $gte: v7.0

@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: Storage Engines
+Owner: Storage Execution
 Description: |
   This workload is designed to test the effectiveness of durable history as
   described in PM-1986.
@@ -7,14 +7,14 @@ Description: |
 GlobalDefaults:
   TrackProportion: &TrackProportion 0
 
-  LongLivedDB: &LongLivedDB longlived  # name of the long lived database
+  LongLivedDB: &LongLivedDB longlived # name of the long lived database
   LongLivedCollectionCount: &LongLivedCollectionCount 1000
   LongLivedDocumentCount: &LongLivedDocumentCount 1000
 
   ScannerHotDB: &ScannerHotDB rolling
 
-  LongLivedWrites: &LongLivedWrites 600 per 1 second  # x5 threads
-  LongLivedReads: &LongLivedReads 20 per 1 second     # x10 threads
+  LongLivedWrites: &LongLivedWrites 600 per 1 second # x5 threads
+  LongLivedReads: &LongLivedReads 20 per 1 second # x10 threads
 
   binomial_10k_int: &binomial_10k_int {^RandomInt: {distribution: binomial, t: 1000, p: 0.5}}
 
@@ -24,84 +24,84 @@ Clients:
       maxPoolSize: 5000
 
 Actors:
-# Guard Against timeout for no output.
-- Name: LoggingActor
-  Type: LoggingActor
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0, 1, 2]
-      NopInPhasesUpTo: 2
-      PhaseConfig:
-        LogEvery: 15 minutes
-        Blocking: None
+  # Guard Against timeout for no output.
+  - Name: LoggingActor
+    Type: LoggingActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0, 1, 2]
+        NopInPhasesUpTo: 2
+        PhaseConfig:
+          LogEvery: 15 minutes
+          Blocking: None
 
-- Name: LongLivedCreator
-  Type: MonotonicLoader
-  Threads: 10
-  TrackProportion: *TrackProportion
-  Phases:
-  - {Nop: true}
-  - LoadConfig:
-      Path: ../../phases/scale/LargeScalePhases.yml
-      Key: LongLivedCreatorCmd
-      Parameters:
-        Database: *LongLivedDB
-        CollectionCount: *LongLivedCollectionCount
-        DocumentCount: *LongLivedDocumentCount
-  - {Nop: true}
+  - Name: LongLivedCreator
+    Type: MonotonicLoader
+    Threads: 10
+    TrackProportion: *TrackProportion
+    Phases:
+      - {Nop: true}
+      - LoadConfig:
+          Path: ../../phases/scale/LargeScalePhases.yml
+          Key: LongLivedCreatorCmd
+          Parameters:
+            Database: *LongLivedDB
+            CollectionCount: *LongLivedCollectionCount
+            DocumentCount: *LongLivedDocumentCount
+      - {Nop: true}
 
-- Name: LongLivedReader
-  Type: MultiCollectionQuery
-  Threads: 10
-  GlobalRate: *LongLivedReads
-  TrackProportion: *TrackProportion
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - LoadConfig:
-      Path: ../../phases/scale/LargeScalePhases.yml
-      Key: LongLivedReaderCmd
-      Parameters:
-        Database: *LongLivedDB
-        CollectionCount: *LongLivedCollectionCount
-        DocumentCount: *LongLivedDocumentCount
-        IdFilter: *binomial_10k_int
+  - Name: LongLivedReader
+    Type: MultiCollectionQuery
+    Threads: 10
+    GlobalRate: *LongLivedReads
+    TrackProportion: *TrackProportion
+    Phases:
+      - {Nop: true}
+      - {Nop: true}
+      - LoadConfig:
+          Path: ../../phases/scale/LargeScalePhases.yml
+          Key: LongLivedReaderCmd
+          Parameters:
+            Database: *LongLivedDB
+            CollectionCount: *LongLivedCollectionCount
+            DocumentCount: *LongLivedDocumentCount
+            IdFilter: *binomial_10k_int
 
-- Name: LongLivedWriter
-  Type: MultiCollectionUpdate
-  Threads: 5
-  GlobalRate: *LongLivedWrites
-  TrackProportion: *TrackProportion
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - LoadConfig:
-      Path: ../../phases/scale/LargeScalePhases.yml
-      Key: LongLivedWriterCmd
-      Parameters:
-        Database: *LongLivedDB
-        CollectionCount: *LongLivedCollectionCount
-        DocumentCount: *LongLivedDocumentCount
-        IdFilter: *binomial_10k_int
+  - Name: LongLivedWriter
+    Type: MultiCollectionUpdate
+    Threads: 5
+    GlobalRate: *LongLivedWrites
+    TrackProportion: *TrackProportion
+    Phases:
+      - {Nop: true}
+      - {Nop: true}
+      - LoadConfig:
+          Path: ../../phases/scale/LargeScalePhases.yml
+          Key: LongLivedWriterCmd
+          Parameters:
+            Database: *LongLivedDB
+            CollectionCount: *LongLivedCollectionCount
+            DocumentCount: *LongLivedDocumentCount
+            IdFilter: *binomial_10k_int
 
-- Name: SnapshotScanner10Gigabytes
-  Type: CollectionScanner
-  Threads: 10
-  Database: *LongLivedDB
-  ScanRateMegabytes: 10 per 1 second
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - LoadConfig:
-      Path: ../../phases/scale/LargeScalePhases.yml
-      Key: SnapshotScanner10GigabytesFixedRateCmd
+  - Name: SnapshotScanner10Gigabytes
+    Type: CollectionScanner
+    Threads: 10
+    Database: *LongLivedDB
+    ScanRateMegabytes: 10 per 1 second
+    Phases:
+      - {Nop: true}
+      - {Nop: true}
+      - LoadConfig:
+          Path: ../../phases/scale/LargeScalePhases.yml
+          Key: SnapshotScanner10GigabytesFixedRateCmd
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica-noflowcontrol
-      - single-replica
-      - single-replica-classic-query-engine
-      - single-replica-sbe
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica-noflowcontrol
+          - replica
+          - single-replica-classic-query-engine
+          - single-replica-sbe

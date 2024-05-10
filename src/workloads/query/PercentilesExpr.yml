@@ -1,25 +1,24 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-integration"
+Owner: Query Integration
 Description: |
   Run tests for $percentile expression over variously sized input arrays. We create a new collection
   for each array size as putting the fields into the same document might be impacted by how much
   bson needs to be parsed to access the field but we want to make sure we compare apples to apples.
 
 Keywords:
-- group
-- percentile
+  - group
+  - percentile
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone-80-feature-flags
-      - standalone-all-feature-flags
-      - standalone-classic-query-engine
-      - standalone-sbe
-    branch_name:
-      $gte:
-        v7.0
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone-80-feature-flags
+          - standalone-all-feature-flags
+          - standalone-classic-query-engine
+          - standalone-sbe
+      branch_name:
+        $gte: v7.0
 
 GlobalDefaults:
   MaxPhases: &maxPhases 60
@@ -36,92 +35,241 @@ GlobalDefaults:
 
   # We did local experiments with various distributions and didn't see any significant variation so
   # sampling only from the normal distribution for this workload.
-  Dist: &dist {^RandomDouble: {distribution: normal, mean: 50.0, sigma: 10.0}}
+  Dist:
+    &dist { ^RandomDouble: { distribution: normal, mean: 50.0, sigma: 10.0 } }
 
   # 20 is the default largest number of percentiles before the DiscretePercentile switches to
   # sorting the dataset.
-  Percentiles20: &percentiles20
-    [0, 0.001, 0.005, 0.01, 0.05, 0.09, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.91, 0.95, 0.99, 0.995, 0.999]
+  Percentiles20:
+    &percentiles20 [
+      0,
+      0.001,
+      0.005,
+      0.01,
+      0.05,
+      0.09,
+      0.1,
+      0.2,
+      0.3,
+      0.4,
+      0.5,
+      0.6,
+      0.7,
+      0.8,
+      0.9,
+      0.91,
+      0.95,
+      0.99,
+      0.995,
+      0.999,
+    ]
 
   # After DiscretePercentile switches to sorting the number of requested percentiles should not
   # affect the runtime much (caveat: the result array still needs to be created, etc.)
-  Percentiles100: &percentiles100
-    [0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1, 0.11, 0.12,
-     0.13, 0.14, 0.15, 0.16, 0.17, 0.18, 0.19, 0.2, 0.21, 0.22, 0.23, 0.24, 0.25,
-     0.26, 0.27, 0.28, 0.29, 0.3, 0.31, 0.32, 0.33, 0.34, 0.35, 0.36, 0.37, 0.38,
-     0.39, 0.4, 0.41, 0.42, 0.43, 0.44, 0.45, 0.46, 0.47, 0.48, 0.49, 0.5, 0.51,
-     0.52, 0.53, 0.54, 0.55, 0.56, 0.57, 0.58, 0.59, 0.6, 0.61, 0.62, 0.63, 0.64,
-     0.65, 0.66, 0.67, 0.68, 0.69, 0.7, 0.71, 0.72, 0.73, 0.74, 0.75, 0.76, 0.77,
-     0.78, 0.79, 0.8, 0.81, 0.82, 0.83, 0.84, 0.85, 0.86, 0.87, 0.88, 0.89, 0.9,
-     0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99, 1]
+  Percentiles100:
+    &percentiles100 [
+      0.00,
+      0.01,
+      0.02,
+      0.03,
+      0.04,
+      0.05,
+      0.06,
+      0.07,
+      0.08,
+      0.09,
+      0.1,
+      0.11,
+      0.12,
+      0.13,
+      0.14,
+      0.15,
+      0.16,
+      0.17,
+      0.18,
+      0.19,
+      0.2,
+      0.21,
+      0.22,
+      0.23,
+      0.24,
+      0.25,
+      0.26,
+      0.27,
+      0.28,
+      0.29,
+      0.3,
+      0.31,
+      0.32,
+      0.33,
+      0.34,
+      0.35,
+      0.36,
+      0.37,
+      0.38,
+      0.39,
+      0.4,
+      0.41,
+      0.42,
+      0.43,
+      0.44,
+      0.45,
+      0.46,
+      0.47,
+      0.48,
+      0.49,
+      0.5,
+      0.51,
+      0.52,
+      0.53,
+      0.54,
+      0.55,
+      0.56,
+      0.57,
+      0.58,
+      0.59,
+      0.6,
+      0.61,
+      0.62,
+      0.63,
+      0.64,
+      0.65,
+      0.66,
+      0.67,
+      0.68,
+      0.69,
+      0.7,
+      0.71,
+      0.72,
+      0.73,
+      0.74,
+      0.75,
+      0.76,
+      0.77,
+      0.78,
+      0.79,
+      0.8,
+      0.81,
+      0.82,
+      0.83,
+      0.84,
+      0.85,
+      0.86,
+      0.87,
+      0.88,
+      0.89,
+      0.9,
+      0.91,
+      0.92,
+      0.93,
+      0.94,
+      0.95,
+      0.96,
+      0.97,
+      0.98,
+      0.99,
+      1,
+    ]
 
 ActorTemplates:
-- TemplateName: CreateDataset
-  Config:
-    Name: "CreateDataset"
-    Type: Loader
-    Threads: 1
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
-        NopInPhasesUpTo: *maxPhases
-        PhaseConfig:
-          Threads: 1
-          Repeat: 1
-          Database: *db
-          CollectionCount: 1
-          DocumentCount: {^Parameter: {Name: "DocCount", Default: *docCount}}
-          BatchSize: 1000
-          Document:
-            _id: {^Inc: {start: 0}}
-            data: {^Parameter: {Name: "Data", Default: 0}}
+  - TemplateName: CreateDataset
+    Config:
+      Name: "CreateDataset"
+      Type: Loader
+      Threads: 1
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{ ^Parameter: { Name: "OnlyActiveInPhase", Default: 1024 } }]
+          NopInPhasesUpTo: *maxPhases
+          PhaseConfig:
+            Threads: 1
+            Repeat: 1
+            Database: *db
+            CollectionCount: 1
+            DocumentCount:
+              { ^Parameter: { Name: "DocCount", Default: *docCount } }
+            BatchSize: 1000
+            Document:
+              _id: { ^Inc: { start: 0 } }
+              data: { ^Parameter: { Name: "Data", Default: 0 } }
 
-- TemplateName: ComputePercentile
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "ComputePercentile"}}
-    Type: CrudActor
-    Threads: 1
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
-        NopInPhasesUpTo: *maxPhases
-        PhaseConfig:
-          Repeat: 20
-          Database: *db
-          Collection: *coll
-          Operations:
-          - OperationName: aggregate
-            OperationCommand:
-              Pipeline: [
-                {$project: {
-                  p: {$percentile: {
-                    p: {^Parameter: {Name: "P", Default: [0.5]}},
-                    input: {^Parameter: {Name: "Input", Default: "$data"}},
-                    method: "approximate"
-                  }}
-                }}
-              ]
+  - TemplateName: ComputePercentile
+    Config:
+      Name: { ^Parameter: { Name: "Name", Default: "ComputePercentile" } }
+      Type: CrudActor
+      Threads: 1
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{ ^Parameter: { Name: "OnlyActiveInPhase", Default: 1024 } }]
+          NopInPhasesUpTo: *maxPhases
+          PhaseConfig:
+            Repeat: 20
+            Database: *db
+            Collection: *coll
+            Operations:
+              - OperationName: aggregate
+                OperationCommand:
+                  Pipeline:
+                    [
+                      {
+                        $project:
+                          {
+                            p:
+                              {
+                                $percentile:
+                                  {
+                                    p:
+                                      {
+                                        ^Parameter:
+                                          { Name: "P", Default: [0.5] },
+                                      },
+                                    input:
+                                      {
+                                        ^Parameter:
+                                          { Name: "Input", Default: "$data" },
+                                      },
+                                    method: "approximate",
+                                  },
+                              },
+                          },
+                      },
+                    ]
 
-# During development of $percentile we compared its performance to $min. We don't need to
-# keep running the tests for these but we'd like to keep the templates around for reference and ease
-# of rerunning the local experiments if needed in the future.
-- TemplateName: ComputeMin
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "ComputePercentile"}}
-    Type: CrudActor
-    Threads: 1
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
-        NopInPhasesUpTo: *maxPhases
-        PhaseConfig:
-          Repeat: 20
-          Database: *db
-          Collection: *coll
-          Operations:
-          - OperationName: aggregate
-            OperationCommand:
-              Pipeline: [{$project: {p: {$min: {^Parameter: {Name: "Input", Default: "$data"}}}}}]
+  # During development of $percentile we compared its performance to $min. We don't need to
+  # keep running the tests for these but we'd like to keep the templates around for reference and ease
+  # of rerunning the local experiments if needed in the future.
+  - TemplateName: ComputeMin
+    Config:
+      Name: { ^Parameter: { Name: "Name", Default: "ComputePercentile" } }
+      Type: CrudActor
+      Threads: 1
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{ ^Parameter: { Name: "OnlyActiveInPhase", Default: 1024 } }]
+          NopInPhasesUpTo: *maxPhases
+          PhaseConfig:
+            Repeat: 20
+            Database: *db
+            Collection: *coll
+            Operations:
+              - OperationName: aggregate
+                OperationCommand:
+                  Pipeline:
+                    [
+                      {
+                        $project:
+                          {
+                            p:
+                              {
+                                $min:
+                                  {
+                                    ^Parameter:
+                                      { Name: "Input", Default: "$data" },
+                                  },
+                              },
+                          },
+                      },
+                    ]
 
 # We did not warm up or run a quiese actor since they don't seem to affect the numbers.
 # *0 - create dataset
@@ -132,204 +280,204 @@ ActorTemplates:
 # *9 - drop the dataset (we need this as otherwise the loader would add to the existing collection)
 
 Actors:
-- Name: DropCollection
-  Type: CrudActor
-  Database: *db
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [9, 19, 29, 39, 49, 59]
-      NopInPhasesUpTo: *maxPhases
-      PhaseConfig:
-        Repeat: 1
-        Collection: *coll
-        Operations:
-        - OperationName: drop
+  - Name: DropCollection
+    Type: CrudActor
+    Database: *db
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [9, 19, 29, 39, 49, 59]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Collection: *coll
+          Operations:
+            - OperationName: drop
 
-- ActorFromTemplate:
-    TemplateName: CreateDataset
-    TemplateParameters:
-      OnlyActiveInPhase: 0
-      Data: *dist
+  - ActorFromTemplate:
+      TemplateName: CreateDataset
+      TemplateParameters:
+        OnlyActiveInPhase: 0
+        Data: *dist
 
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "scalar_percentile_single"
-      OnlyActiveInPhase: 1
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "scalar_percentile_single"
+        OnlyActiveInPhase: 1
 
-# computing multiple percentiles on a scalar is silly but we'd like to see the full perf matrix
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "scalar_percentile_many20"
-      P: *percentiles20
-      OnlyActiveInPhase: 2
+  # computing multiple percentiles on a scalar is silly but we'd like to see the full perf matrix
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "scalar_percentile_many20"
+        P: *percentiles20
+        OnlyActiveInPhase: 2
 
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "scalar_percentile_many100"
-      P: *percentiles100
-      OnlyActiveInPhase: 3
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "scalar_percentile_many100"
+        P: *percentiles100
+        OnlyActiveInPhase: 3
 
-- ActorFromTemplate:
-    TemplateName: CreateDataset
-    TemplateParameters:
-      OnlyActiveInPhase: 10
-      Data: {^Array: {of: *dist, number: 100}}
+  - ActorFromTemplate:
+      TemplateName: CreateDataset
+      TemplateParameters:
+        OnlyActiveInPhase: 10
+        Data: { ^Array: { of: *dist, number: 100 } }
 
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "array_100_percentile_single"
-      OnlyActiveInPhase: 11
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "array_100_percentile_single"
+        OnlyActiveInPhase: 11
 
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "array_100_percentile_many20"
-      P: *percentiles20
-      OnlyActiveInPhase: 12
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "array_100_percentile_many20"
+        P: *percentiles20
+        OnlyActiveInPhase: 12
 
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "array_100_percentile_many100"
-      P: *percentiles100
-      OnlyActiveInPhase: 13
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "array_100_percentile_many100"
+        P: *percentiles100
+        OnlyActiveInPhase: 13
 
-- ActorFromTemplate:
-    TemplateName: CreateDataset
-    TemplateParameters:
-      OnlyActiveInPhase: 20
-      Data: {^Array: {of: *dist, number: 1000}}
+  - ActorFromTemplate:
+      TemplateName: CreateDataset
+      TemplateParameters:
+        OnlyActiveInPhase: 20
+        Data: { ^Array: { of: *dist, number: 1000 } }
 
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "array_1000_percentile_single"
-      OnlyActiveInPhase: 21
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "array_1000_percentile_single"
+        OnlyActiveInPhase: 21
 
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "array_1000_percentile_many20"
-      P: *percentiles20
-      OnlyActiveInPhase: 22
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "array_1000_percentile_many20"
+        P: *percentiles20
+        OnlyActiveInPhase: 22
 
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "array_1000_percentile_many100"
-      P: *percentiles100
-      OnlyActiveInPhase: 23
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "array_1000_percentile_many100"
+        P: *percentiles100
+        OnlyActiveInPhase: 23
 
-- ActorFromTemplate:
-    TemplateName: CreateDataset
-    TemplateParameters:
-      OnlyActiveInPhase: 30
-      Data: {^Array: {of: *dist, number: 10000}}
+  - ActorFromTemplate:
+      TemplateName: CreateDataset
+      TemplateParameters:
+        OnlyActiveInPhase: 30
+        Data: { ^Array: { of: *dist, number: 10000 } }
 
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "array_10000_percentile_single"
-      OnlyActiveInPhase: 31
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "array_10000_percentile_single"
+        OnlyActiveInPhase: 31
 
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "array_10000_percentile_many20"
-      P: *percentiles20
-      OnlyActiveInPhase: 32
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "array_10000_percentile_many20"
+        P: *percentiles20
+        OnlyActiveInPhase: 32
 
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "array_10000_percentile_many100"
-      P: *percentiles100
-      OnlyActiveInPhase: 33
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "array_10000_percentile_many100"
+        P: *percentiles100
+        OnlyActiveInPhase: 33
 
-# The next phases will test computing percentiles over an array of different scalar fields.
-# We will create a dataset with a field with 10 elements and compare computing a percentile
-# for a single field that has an array of 10 elements versus across computing a percentile
-# across 10 scalar fields.
-- ActorFromTemplate:
-    TemplateName: CreateDataset
-    TemplateParameters:
-      OnlyActiveInPhase: 40
-      Data: {^Array: {of: *dist, number: 10}}
+  # The next phases will test computing percentiles over an array of different scalar fields.
+  # We will create a dataset with a field with 10 elements and compare computing a percentile
+  # for a single field that has an array of 10 elements versus across computing a percentile
+  # across 10 scalar fields.
+  - ActorFromTemplate:
+      TemplateName: CreateDataset
+      TemplateParameters:
+        OnlyActiveInPhase: 40
+        Data: { ^Array: { of: *dist, number: 10 } }
 
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "array_10_percentile_single"
-      OnlyActiveInPhase: 41
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "array_10_percentile_single"
+        OnlyActiveInPhase: 41
 
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "array_10_percentile_many20"
-      P: *percentiles20
-      OnlyActiveInPhase: 42
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "array_10_percentile_many20"
+        P: *percentiles20
+        OnlyActiveInPhase: 42
 
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "array_10_percentile_many100"
-      P: *percentiles100
-      OnlyActiveInPhase: 43
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "array_10_percentile_many100"
+        P: *percentiles100
+        OnlyActiveInPhase: 43
 
-# Create a dataset with 10 scalar fields.
-- Name: CreateScalarArrayDataset
-  Type: Loader
-  Threads: 1
-  Database: *db
-  Phases:
-    OnlyActiveInPhases:
-      Active: [50]
-      NopInPhasesUpTo: *maxPhases
-      PhaseConfig:
-        Threads: 1
-        Repeat: 1
-        Database: *db
-        CollectionCount: 1
-        DocumentCount: *docCount
-        BatchSize: 1000
-        Document:
-          _id: {^Inc: {start: 0}}
-          a0: *dist
-          a1: *dist
-          a2: *dist
-          a3: *dist
-          a4: *dist
-          a5: *dist
-          a6: *dist
-          a7: *dist
-          a8: *dist
-          a9: *dist
+  # Create a dataset with 10 scalar fields.
+  - Name: CreateScalarArrayDataset
+    Type: Loader
+    Threads: 1
+    Database: *db
+    Phases:
+      OnlyActiveInPhases:
+        Active: [50]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Threads: 1
+          Repeat: 1
+          Database: *db
+          CollectionCount: 1
+          DocumentCount: *docCount
+          BatchSize: 1000
+          Document:
+            _id: { ^Inc: { start: 0 } }
+            a0: *dist
+            a1: *dist
+            a2: *dist
+            a3: *dist
+            a4: *dist
+            a5: *dist
+            a6: *dist
+            a7: *dist
+            a8: *dist
+            a9: *dist
 
-# Compute the percentiles across the 10 scalar fields.
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "scalar_fields_percentile_single"
-      Input: ["$x", "$a", "$b", "$c", "$d", "$e", "$f", "$g", "$y", "$z"]
-      OnlyActiveInPhase: 51
+  # Compute the percentiles across the 10 scalar fields.
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "scalar_fields_percentile_single"
+        Input: ["$x", "$a", "$b", "$c", "$d", "$e", "$f", "$g", "$y", "$z"]
+        OnlyActiveInPhase: 51
 
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "scalar_fields_percentile_many20"
-      P: *percentiles20
-      Input: ["$x", "$a", "$b", "$c", "$d", "$e", "$f", "$g", "$y", "$z"]
-      OnlyActiveInPhase: 52
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "scalar_fields_percentile_many20"
+        P: *percentiles20
+        Input: ["$x", "$a", "$b", "$c", "$d", "$e", "$f", "$g", "$y", "$z"]
+        OnlyActiveInPhase: 52
 
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "scalar_fields_percentile_many100"
-      Input: ["$x", "$a", "$b", "$c", "$d", "$e", "$f", "$g", "$y", "$z"]
-      P: *percentiles100
-      OnlyActiveInPhase: 53
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "scalar_fields_percentile_many100"
+        Input: ["$x", "$a", "$b", "$c", "$d", "$e", "$f", "$g", "$y", "$z"]
+        P: *percentiles100
+        OnlyActiveInPhase: 53

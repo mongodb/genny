@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/sys-perf"
+Owner: Product Performance
 Description: |
   This workload is designed to insert 10k documents into a single collection and then
   perform exactly 10k updates. This is designed to help us calculate CPU cycle metrics
@@ -12,7 +12,7 @@ CollectionCount: &NumColls 1
 NumPhases: &NumPhases 2
 
 Document: &doc
-  a: {^Inc : {}}
+  a: {^Inc: {}}
   b: {^RandomString: {length: 16}}
 
 Actors:
@@ -33,7 +33,7 @@ Actors:
           CollectionCount: *NumColls
           Document: *doc
           Indexes:
-          - keys: {a: 1}
+            - keys: {a: 1}
 
   - Name: UpdateActor
     Type: CrudActor
@@ -50,14 +50,14 @@ Actors:
           CollectionCount: *NumColls
           MetricsName: "load"
           Operations:
-          - OperationName: updateOne
-            OperationMetricsName: updates
-            OperationCommand:
-                Filter: { a: {^Inc : {}} }
-                Update: { $set: { b: {^RandomString: {length: 16}} } }
+            - OperationName: updateOne
+              OperationMetricsName: updates
+              OperationCommand:
+                Filter: {a: {^Inc: {}}}
+                Update: {$set: {b: {^RandomString: {length: 16}}}}
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica-ipc-counters.2023-06
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica-ipc-counters.2023-06

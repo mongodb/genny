@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: Storage Engines
+Owner: Storage Execution
 Description: |
   Test workload to evaluate Storage Engine behavior when running in a
   degraded replica set with or without eMRCf enabled.  A "degraded" replica
@@ -23,7 +23,7 @@ GlobalDefaults:
   RandomMediumString: &rand_medium_string {^RandomString: {length: {^RandomInt: {min: 160, max: 960}}}}
   RandomLargeString: &rand_large_string {^RandomString: {length: {^RandomInt: {min: 960, max: 4960}}}}
 
-  TestDB: &TestDB test  # Name of test database
+  TestDB: &TestDB test # Name of test database
 
   SmallDocCount: &small_doc_count 10000000
   LargeDocCount: &large_doc_count 1000000
@@ -72,36 +72,36 @@ LargeDocument: &large_doc
 
 Actors:
 
-# Load small documents
-- Name: SmallDocumentCreator
-  Type: Loader
-  Threads: 10
-  Phases:
-  - Repeat: 1
-    Database: *TestDB
-    CollectionCount: 1
+  # Load small documents
+  - Name: SmallDocumentCreator
+    Type: Loader
     Threads: 10
-    DocumentCount: *small_doc_count
-    BatchSize: 1000
-    Document: *small_doc
-    Indexes:
-    - keys: {key1: 1, key2: 1}
-    - keys: {data1: 1}
-    - keys: {tag: 1}
+    Phases:
+      - Repeat: 1
+        Database: *TestDB
+        CollectionCount: 1
+        Threads: 10
+        DocumentCount: *small_doc_count
+        BatchSize: 1000
+        Document: *small_doc
+        Indexes:
+          - keys: {key1: 1, key2: 1}
+          - keys: {data1: 1}
+          - keys: {tag: 1}
 
-# Load large documents.  We use 1/10 as many threads in the hope that the rate
-# of insertion will be roughly 1/10 of the small document insertation rate.
-- Name: LargeDocumentCreator
-  Type: Loader
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    Database: *TestDB
-    CollectionCount: 1
+  # Load large documents.  We use 1/10 as many threads in the hope that the rate
+  # of insertion will be roughly 1/10 of the small document insertation rate.
+  - Name: LargeDocumentCreator
+    Type: Loader
     Threads: 1
-    DocumentCount: *large_doc_count
-    BatchSize: 100
-    Document: *large_doc
+    Phases:
+      - Repeat: 1
+        Database: *TestDB
+        CollectionCount: 1
+        Threads: 1
+        DocumentCount: *large_doc_count
+        BatchSize: 100
+        Document: *large_doc
 
 # WARNING: Future versions of Genny won't support the cvs-ftdc metrics format.
 Metrics:

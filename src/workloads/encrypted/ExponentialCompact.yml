@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/server-security"
+Owner: Server Security
 Description: |
   With queryable encryption enabled, this workload runs alternating CRUD and compact phases,
   where the total number of inserts & updates is increased on every CRUD+Compact cycle in order
@@ -10,11 +10,11 @@ Encryption:
   UseCryptSharedLib: true
   CryptSharedLibPath: /data/workdir/mongocrypt/lib/mongo_crypt_v1.so
   EncryptedCollections:
-  - Database: genny_qebench
-    Collection: testcoll
-    EncryptionType: queryable
-    QueryableEncryptedFields:
-      field0: { type: "string", queries: [{queryType: "equality"}] }
+    - Database: genny_qebench
+      Collection: testcoll
+      EncryptionType: queryable
+      QueryableEncryptedFields:
+        field0: {type: "string", queries: [{queryType: "equality"}]}
 
 Clients:
   EncryptedPool:
@@ -26,7 +26,7 @@ Clients:
       KeyVaultDatabase: "keyvault"
       KeyVaultCollection: "datakeys"
       EncryptedCollections:
-      - genny_qebench.testcoll
+        - genny_qebench.testcoll
 
 LoadConfig:
   Path: ../../phases/encrypted/ContinuousWritesWithExponentialCompactTemplate.yml
@@ -37,9 +37,9 @@ LoadConfig:
     ClientName: EncryptedPool
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - single-replica-fle
-    branch_name:
-      $gte: v7.0
+  - When:
+      mongodb_setup:
+        $eq:
+          - single-replica-fle
+      branch_name:
+        $gte: v7.0

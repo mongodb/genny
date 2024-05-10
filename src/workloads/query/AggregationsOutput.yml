@@ -30,182 +30,161 @@ OutputCollections:
   - &ShardedCollOutputNss {^PreprocessorFormatString: {format: "%s.%s", withArgs: [*Database, *ShardedCollOutput]}}
 
 ActorTemplates:
-- TemplateName: AggOut
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "AggOut"}}
-    Type: CrudActor
-    Database: *Database
-    Threads: 1
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "ActivePhase", Default: 0}}]
-        NopInPhasesUpTo: *NumPhases
-        PhaseConfig:
-          Repeat: 20
-          Database: *Database
-          Collection: {^Parameter: {Name: "SrcCollection", Default: "Collection0"}}
-          Operations:
-            - OperationMetricsName: outLimit1
-              OperationName: aggregate
-              OperationCommand:
-                Pipeline: [{$limit: 1}, {$out: {^Parameter: {Name: "DstCollection", Default: "Collection0"}}}]
-            - OperationMetricsName: outLimit1k
-              OperationName: aggregate
-              OperationCommand:
-                Pipeline: [{$limit: 1000}, {$out: {^Parameter: {Name: "DstCollection", Default: "Collection0"}}}]
-            - OperationMetricsName: out10k
-              OperationName: aggregate
-              OperationCommand:
-                Pipeline: [{$out: {^Parameter: {Name: "DstCollection", Default: "Collection0"}}}]
+  - TemplateName: AggOut
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "AggOut"}}
+      Type: CrudActor
+      Database: *Database
+      Threads: 1
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "ActivePhase", Default: 0}}]
+          NopInPhasesUpTo: *NumPhases
+          PhaseConfig:
+            Repeat: 20
+            Database: *Database
+            Collection: {^Parameter: {Name: "SrcCollection", Default: "Collection0"}}
+            Operations:
+              - OperationMetricsName: outLimit1
+                OperationName: aggregate
+                OperationCommand:
+                  Pipeline: [{$limit: 1}, {$out: {^Parameter: {Name: "DstCollection", Default: "Collection0"}}}]
+              - OperationMetricsName: outLimit1k
+                OperationName: aggregate
+                OperationCommand:
+                  Pipeline: [{$limit: 1000}, {$out: {^Parameter: {Name: "DstCollection", Default: "Collection0"}}}]
+              - OperationMetricsName: out10k
+                OperationName: aggregate
+                OperationCommand:
+                  Pipeline: [{$out: {^Parameter: {Name: "DstCollection", Default: "Collection0"}}}]
 
-- TemplateName: AggMerge
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "AggMerge"}}
-    Type: CrudActor
-    Database: *Database
-    Threads: 1
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "ActivePhase", Default: 0}}]
-        NopInPhasesUpTo: *NumPhases
-        PhaseConfig:
-          Repeat: 20
-          Database: *Database
-          Collection: {^Parameter: {Name: "SrcCollection", Default: "Collection0"}}
-          Operations:
-            - OperationMetricsName: mergeLimit1
-              OperationName: aggregate
-              OperationCommand:
-                Pipeline: [
-                  {$limit: 1},
-                  {$merge: {
-                    into: {^Parameter: {Name: "DstCollection", Default: "Collection0"}},
-                    whenMatched: "replace"
-                    }
-                  }
-                ]
-            - OperationMetricsName: mergeLimit1k
-              OperationName: aggregate
-              OperationCommand:
-                Pipeline: [
-                  {$limit: 1000},
-                  {$merge: {
-                    into: {^Parameter: {Name: "DstCollection", Default: "Collection0"}},
-                    whenMatched: "replace"
-                    }
-                  }
-                ]
-            - OperationMetricsName: merge10k
-              OperationName: aggregate
-              OperationCommand:
-                Pipeline: [
-                  {$merge: {
-                    into: {^Parameter: {Name: "DstCollection", Default: "Collection0"}},
-                    whenMatched: "replace"
-                    }
-                  }
-                ]
+  - TemplateName: AggMerge
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "AggMerge"}}
+      Type: CrudActor
+      Database: *Database
+      Threads: 1
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "ActivePhase", Default: 0}}]
+          NopInPhasesUpTo: *NumPhases
+          PhaseConfig:
+            Repeat: 20
+            Database: *Database
+            Collection: {^Parameter: {Name: "SrcCollection", Default: "Collection0"}}
+            Operations:
+              - OperationMetricsName: mergeLimit1
+                OperationName: aggregate
+                OperationCommand:
+                  Pipeline: [{$limit: 1}, {$merge: {into: {^Parameter: {Name: "DstCollection", Default: "Collection0"}}, whenMatched: "replace"}}]
+              - OperationMetricsName: mergeLimit1k
+                OperationName: aggregate
+                OperationCommand:
+                  Pipeline: [{$limit: 1000}, {$merge: {into: {^Parameter: {Name: "DstCollection", Default: "Collection0"}}, whenMatched: "replace"}}]
+              - OperationMetricsName: merge10k
+                OperationName: aggregate
+                OperationCommand:
+                  Pipeline: [{$merge: {into: {^Parameter: {Name: "DstCollection", Default: "Collection0"}}, whenMatched: "replace"}}]
 
 Actors:
-- Name: ShardCollections
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: admin
-        OnlyRunInInstance: sharded
-        Operations:
-        - OperationMetricsName: EnableSharding
-          OperationName: AdminCommand
-          OperationCommand:
-            enableSharding: *Database
-        - OperationMetricsName: ShardCollection
-          OperationName: AdminCommand
-          OperationCommand:
-            shardCollection: *ShardedInputNss
-            key: {shardKey: "hashed"}
-        - OperationMetricsName: ShardCollection
-          OperationName: AdminCommand
-          OperationCommand:
-            shardCollection: *ShardedCollOutputNss
-            key: {shardKey: "hashed"}
+  - Name: ShardCollections
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: admin
+          OnlyRunInInstance: sharded
+          Operations:
+            - OperationMetricsName: EnableSharding
+              OperationName: AdminCommand
+              OperationCommand:
+                enableSharding: *Database
+            - OperationMetricsName: ShardCollection
+              OperationName: AdminCommand
+              OperationCommand:
+                shardCollection: *ShardedInputNss
+                key: {shardKey: "hashed"}
+            - OperationMetricsName: ShardCollection
+              OperationName: AdminCommand
+              OperationCommand:
+                shardCollection: *ShardedCollOutputNss
+                key: {shardKey: "hashed"}
 
-# Insert documents to Collection0 and Collection1
-- Name: LoaderInitialData
-  Type: Loader
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Threads: 1
-        Repeat: 1
-        BatchSize: 1000
-        Database: *Database
-        CollectionCount: 2
-        DocumentCount: *NumDocs
-        Document: *1KDoc
+  # Insert documents to Collection0 and Collection1
+  - Name: LoaderInitialData
+    Type: Loader
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Threads: 1
+          Repeat: 1
+          BatchSize: 1000
+          Database: *Database
+          CollectionCount: 2
+          DocumentCount: *NumDocs
+          Document: *1KDoc
 
-# The actual workload
-- ActorFromTemplate:
-    TemplateName: AggOut
-    TemplateParameters:
-      Name: outFromUnsharded
-      ActivePhase: 3
-      SrcCollection: *UnshardedInputColl
-      DstCollection: *UnshardedCollOutput
+  # The actual workload
+  - ActorFromTemplate:
+      TemplateName: AggOut
+      TemplateParameters:
+        Name: outFromUnsharded
+        ActivePhase: 3
+        SrcCollection: *UnshardedInputColl
+        DstCollection: *UnshardedCollOutput
 
-- ActorFromTemplate:
-    TemplateName: AggOut
-    TemplateParameters:
-      Name: outFromSharded
-      ActivePhase: 4
-      SrcCollection: *ShardedInputColl
-      DstCollection: *UnshardedCollOutput
+  - ActorFromTemplate:
+      TemplateName: AggOut
+      TemplateParameters:
+        Name: outFromSharded
+        ActivePhase: 4
+        SrcCollection: *ShardedInputColl
+        DstCollection: *UnshardedCollOutput
 
-- ActorFromTemplate:
-    TemplateName: AggMerge
-    TemplateParameters:
-      Name: mergeFromUnshardedToUnsharded
-      ActivePhase: 5
-      SrcCollection: *UnshardedInputColl
-      DstCollection: *UnshardedCollOutput
+  - ActorFromTemplate:
+      TemplateName: AggMerge
+      TemplateParameters:
+        Name: mergeFromUnshardedToUnsharded
+        ActivePhase: 5
+        SrcCollection: *UnshardedInputColl
+        DstCollection: *UnshardedCollOutput
 
-- ActorFromTemplate:
-    TemplateName: AggMerge
-    TemplateParameters:
-      Name: mergeFromUnshardedToSharded
-      ActivePhase: 6
-      SrcCollection: *UnshardedInputColl
-      DstCollection: *ShardedCollOutput
+  - ActorFromTemplate:
+      TemplateName: AggMerge
+      TemplateParameters:
+        Name: mergeFromUnshardedToSharded
+        ActivePhase: 6
+        SrcCollection: *UnshardedInputColl
+        DstCollection: *ShardedCollOutput
 
-- ActorFromTemplate:
-    TemplateName: AggMerge
-    TemplateParameters:
-      Name: mergeFromShardedToUnsharded
-      ActivePhase: 7
-      SrcCollection: *ShardedInputColl
-      DstCollection: *UnshardedCollOutput
+  - ActorFromTemplate:
+      TemplateName: AggMerge
+      TemplateParameters:
+        Name: mergeFromShardedToUnsharded
+        ActivePhase: 7
+        SrcCollection: *ShardedInputColl
+        DstCollection: *UnshardedCollOutput
 
-- ActorFromTemplate:
-    TemplateName: AggMerge
-    TemplateParameters:
-      Name: mergeFromShardedToSharded
-      ActivePhase: 8
-      SrcCollection: *ShardedInputColl
-      DstCollection: *ShardedCollOutput
+  - ActorFromTemplate:
+      TemplateName: AggMerge
+      TemplateParameters:
+        Name: mergeFromShardedToSharded
+        ActivePhase: 8
+        SrcCollection: *ShardedInputColl
+        DstCollection: *ShardedCollOutput
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - shard
-      - shard-80-feature-flags
-      - shard-lite
-      - shard-lite-80-feature-flags
-      - shard-lite-all-feature-flags
+  - When:
+      mongodb_setup:
+        $eq:
+          - shard
+          - shard-80-feature-flags
+          - shard-all-feature-flags
+          - shard-lite-80-feature-flags

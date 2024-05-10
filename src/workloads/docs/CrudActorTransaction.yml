@@ -1,51 +1,51 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/dev-prod-tips"
+Owner: Performance Analysis
 Description: |
   This workload provides an example of using the CrudActor with a transaction. The
   behavior is largely the same, nesting operations inside the transaction block.
 
 Actors:
-- Name: BulkWriteInTransaction
-  Type: CrudActor
-  Database: testdb
-  Phases:
-  - Repeat: 1
-    Collection: test
-    Operations:
-    - OperationName: withTransaction
-      OperationCommand:
-        # The OnSession: true flag tells the driver to use a logical session. The actor will use the
-        # same session for the duration of a phase.
-        # If placed here, the session is used for every op listed in OperationsInTransaction
-        OnSession: true
-        ThrowOnFailure: false  # Transactions are allowed to fail.
-        RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
-        Options:
-          # Use a non-default TransactionOption MaxCommitTimeMs.
-          MaxCommitTime: 500 milliseconds
-          WriteConcern:
-            Level: majority
-            Journal: true
-          ReadConcern:
-            Level: snapshot
-          ReadPreference:
-            ReadMode: primaryPreferred
-            MaxStaleness: 1000 seconds
-        OperationsInTransaction:
-        - OperationName: bulkWrite
-          OperationCommand:
-            WriteOperations:
-            - WriteCommand: insertOne
-              Document: {a: 1}
-            - WriteCommand: updateOne
-              Filter: {a: 1}
-              Update: {$set: {a: 5}}
-            Options:
-              Ordered: true
-            # OnSession can also be overridden here, but it's unnecessary
-            # because OnSession is also present on withTransaction
-            OnSession: true
-  - Repeat: 1
-    Collection: test
-    Operation:
-      OperationName: drop
+  - Name: BulkWriteInTransaction
+    Type: CrudActor
+    Database: testdb
+    Phases:
+      - Repeat: 1
+        Collection: test
+        Operations:
+          - OperationName: withTransaction
+            OperationCommand:
+              # The OnSession: true flag tells the driver to use a logical session. The actor will use the
+              # same session for the duration of a phase.
+              # If placed here, the session is used for every op listed in OperationsInTransaction
+              OnSession: true
+              ThrowOnFailure: false # Transactions are allowed to fail.
+              RecordFailure: true # We still want to record the metrics even if the transaction is rolled back.
+              Options:
+                # Use a non-default TransactionOption MaxCommitTimeMs.
+                MaxCommitTime: 500 milliseconds
+                WriteConcern:
+                  Level: majority
+                  Journal: true
+                ReadConcern:
+                  Level: snapshot
+                ReadPreference:
+                  ReadMode: primaryPreferred
+                  MaxStaleness: 1000 seconds
+              OperationsInTransaction:
+                - OperationName: bulkWrite
+                  OperationCommand:
+                    WriteOperations:
+                      - WriteCommand: insertOne
+                        Document: {a: 1}
+                      - WriteCommand: updateOne
+                        Filter: {a: 1}
+                        Update: {$set: {a: 5}}
+                    Options:
+                      Ordered: true
+                    # OnSession can also be overridden here, but it's unnecessary
+                    # because OnSession is also present on withTransaction
+                    OnSession: true
+      - Repeat: 1
+        Collection: test
+        Operation:
+          OperationName: drop

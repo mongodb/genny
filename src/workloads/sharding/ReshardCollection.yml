@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/sharding"
+Owner: Cluster Scalability
 Description: |
   Runs the reshardCollection command while read and write operations are active on the collection
   being resharded.
@@ -27,23 +27,23 @@ GlobalDefaults:
 
   # Note that the exact document size may exceed ApproxDocumentSize because of field names and other
   # fields in the document.
-  ApproxDocumentSize: &ApproxDocumentSize 10000  # = 10kB
-  ApproxDocumentSize80Pct: &ApproxDocumentSize80Pct 8000  # = 8kB
+  ApproxDocumentSize: &ApproxDocumentSize 10000 # = 10kB
+  ApproxDocumentSize80Pct: &ApproxDocumentSize80Pct 8000 # = 8kB
   # TODO: Increase DocumentCount to 4000000 so there will be ~20GB of data inserted on each shard
   # and increase NumReshardedChunks to 400 so there continue to be ~50MB of data per chunk.
-  DocumentCount: &DocumentCount 100000  # for an approximate total of 1GB
+  DocumentCount: &DocumentCount 100000 # for an approximate total of 1GB
 
   ShardKeyValueMin: &ShardKeyValueMin 1
   ShardKeyValueMax: &ShardKeyValueMax 100
 
   ReadWriteOperations: &ReadWriteOperations
-  - OperationName: findOne
-    OperationCommand:
-      Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
-  - OperationName: updateOne
-    OperationCommand:
-      Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
-      Update: {$inc: {counter: 1}}
+    - OperationName: findOne
+      OperationCommand:
+        Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
+        Update: {$inc: {counter: 1}}
 
 Clients:
   Default:
@@ -54,91 +54,91 @@ Clients:
   ReshardCollection:
     QueryOptions:
       maxPoolSize: 1
-      socketTimeoutMS: 3600000  # = 1 hour
+      socketTimeoutMS: 3600000 # = 1 hour
 
 Actors:
-- Name: CreateShardedCollection
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    Database: admin
-    Operations:
-    - OperationMetricsName: EnableSharding
-      OperationName: AdminCommand
-      OperationCommand:
-        enableSharding: *Database
-    - OperationMetricsName: ShardCollection
-      OperationName: AdminCommand
-      OperationCommand:
-        shardCollection: *Namespace
-        # Hashed sharding will pre-split the chunk ranges and evenly distribute them across all of
-        # the shards.
-        key: {oldKey: hashed}
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - Name: CreateShardedCollection
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      - Repeat: 1
+        Database: admin
+        Operations:
+          - OperationMetricsName: EnableSharding
+            OperationName: AdminCommand
+            OperationCommand:
+              enableSharding: *Database
+          - OperationMetricsName: ShardCollection
+            OperationName: AdminCommand
+            OperationCommand:
+              shardCollection: *Namespace
+              # Hashed sharding will pre-split the chunk ranges and evenly distribute them across all of
+              # the shards.
+              key: {oldKey: hashed}
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
 
-- Name: LoadInitialData
-  Type: MonotonicSingleLoader
-  Threads: 100
-  Phases:
-  - *Nop
-  - Repeat: 1
-    BatchSize: 1000
-    DocumentCount: *DocumentCount
+  - Name: LoadInitialData
+    Type: MonotonicSingleLoader
+    Threads: 100
+    Phases:
+      - *Nop
+      - Repeat: 1
+        BatchSize: 1000
+        DocumentCount: *DocumentCount
+        Database: *Database
+        Document:
+          oldKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
+          newKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
+          counter: 0
+          padding: {^FastRandomString: {length: {^RandomInt: {min: *ApproxDocumentSize80Pct, max: *ApproxDocumentSize}}}}
+      - *Nop
+      - *Nop
+      - *Nop
+
+  - Name: ReshardCollection
+    Type: AdminCommand
+    Threads: 1
+    ClientName: ReshardCollection
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - Repeat: 1
+        Database: admin
+        Operations:
+          - OperationMetricsName: ReshardCollection
+            OperationName: AdminCommand
+            OperationCommand:
+              reshardCollection: *Namespace
+              key: {newKey: 1}
+      - *Nop
+
+  - Name: ReadWriteCollectionBeingResharded
+    Type: CrudActor
+    Threads: 100
     Database: *Database
-    Document:
-      oldKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
-      newKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
-      counter: 0
-      padding: {^FastRandomString: {length: {^RandomInt: {min: *ApproxDocumentSize80Pct, max: *ApproxDocumentSize}}}}
-  - *Nop
-  - *Nop
-  - *Nop
-
-- Name: ReshardCollection
-  Type: AdminCommand
-  Threads: 1
-  ClientName: ReshardCollection
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: 1
-    Database: admin
-    Operations:
-    - OperationMetricsName: ReshardCollection
-      OperationName: AdminCommand
-      OperationCommand:
-        reshardCollection: *Namespace
-        key: {newKey: 1}
-  - *Nop
-
-- Name: ReadWriteCollectionBeingResharded
-  Type: CrudActor
-  Threads: 100
-  Database: *Database
-  Phases:
-  - *Nop
-  - *Nop
-  - MetricsName: BeforeResharding
-    Duration: 10 seconds
-    Collection: *Collection
-    Operations: *ReadWriteOperations
-  - MetricsName: DuringResharding
-    Blocking: None
-    Collection: *Collection
-    Operations: *ReadWriteOperations
-  - MetricsName: AfterResharding
-    Duration: 10 seconds
-    Collection: *Collection
-    Operations: *ReadWriteOperations
+    Phases:
+      - *Nop
+      - *Nop
+      - MetricsName: BeforeResharding
+        Duration: 10 seconds
+        Collection: *Collection
+        Operations: *ReadWriteOperations
+      - MetricsName: DuringResharding
+        Blocking: None
+        Collection: *Collection
+        Operations: *ReadWriteOperations
+      - MetricsName: AfterResharding
+        Duration: 10 seconds
+        Collection: *Collection
+        Operations: *ReadWriteOperations
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq: 
-      - shard-lite-80-feature-flags
-      - shard-lite-all-feature-flags
+  - When:
+      mongodb_setup:
+        $eq:
+          - shard-all-feature-flags
+          - shard-lite-80-feature-flags

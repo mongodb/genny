@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   These are the phases used to reproduce SERVER-53853: Large buildup of mongos to mongod connections and
   low performance with secondaryPreferred reads
@@ -8,21 +8,21 @@ EnableSharding:
   Repeat: 1
   Database: admin
   Operations:
-  - OperationMetricsName: EnableSharding
-    OperationName: AdminCommand
-    OperationCommand:
-      enableSharding: &db test
+    - OperationMetricsName: EnableSharding
+      OperationName: AdminCommand
+      OperationCommand:
+        enableSharding: &db test
 
 ShardCollection:
   Repeat: 1
   Database: admin
   Operations:
-  - OperationMetricsName: ShardCollection
-    OperationName: AdminCommand
-    OperationCommand:
-      shardCollection: test.Collection0  # Collection0 is the default collection populated by the Loader.
-      key:
-        _id: 1
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0 # Collection0 is the default collection populated by the Loader.
+        key:
+          _id: 1
 
 InsertData:
   Repeat: 1
@@ -43,9 +43,9 @@ ConnectionsBuildup:
   Repeat: 30000
   Collection: Collection0
   Operations:
-  - OperationName: find
-    OperationCommand:
-      Filter: {_id: {^RandomInt: {min: 1000, max: 50000}}}
-      Options:
-        ReadPreference:
-          ReadMode: secondaryPreferred
+    - OperationName: find
+      OperationCommand:
+        Filter: {_id: {^RandomInt: {min: 1000, max: 50000}}}
+        Options:
+          ReadPreference:
+            ReadMode: secondaryPreferred

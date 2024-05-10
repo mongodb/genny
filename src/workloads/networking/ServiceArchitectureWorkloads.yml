@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/service-architecture"
+Owner: Service Arch
 Description: |
   This workload runs find operations with 'primary' readPreference and 'local' readConcern. There
   are 100 threads allocated to run the find operations, with a rate limit of 1 thread acting per
@@ -13,76 +13,76 @@ Clients:
       socketTimeoutMS: 5000
       connectTimeoutMS: 5000
 Actors:
-- Name: StepdownCommand
-  # See https://jira.mongodb.org/browse/TIG-1322 for what Type this should be eventually
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-  - Phase: 0  # Load
-    Nop: true
-  - Phase: 1  # Run
-    Repeat: 1
-    SleepBefore: 60 seconds
-    # An exception is expected because the replSetStepDown command either returns failure
-    # or disconnects its client session. That said, any other failure we did not expect would still
-    # be caught.
-    ThrowOnFailure: false
-    Operation:
-      OperationMetricsName: Stepdown
-      OperationName: AdminCommand
-      OperationCommand:
-        replSetStepDown: 60
-
-- Name: PrimaryRequiredRead
-  Type: RunCommand
-  Threads: 100
-  Phases:
-  - Phase: 0  # Load
-    Nop: true
-  - Phase: 1  # Run
-    Duration: 180 seconds
-    GlobalRate: 1 per 1 microsecond
-    Database: test
-    # We want to continue to send our find commands in any situation.
-    # However, failures before replSetStepDown indicate that something was wrong with the test.
-    # Ideally, post-workload analysis will show if any find failure happens before replSetStepdown.
-    ThrowOnFailure: false
-    Operation: &find_one
-      OperationMetricsName: "Find"
-      OperationName: RunCommand
-      OperationCommand:
-        find: Collection0
-        readConcern: {level: local}
-        $readPreference: {mode: primary}
-
-- Name: Loader
-  Type: Loader
-  Threads: 1
-  Phases:
-  - Phase: 0  # Load
-    Database: test
-    CollectionCount: 1
-    DocumentCount: 100
-    BatchSize: 100
+  - Name: StepdownCommand
+    # See https://jira.mongodb.org/browse/TIG-1322 for what Type this should be eventually
+    Type: AdminCommand
     Threads: 1
-    Document:
-      t: {^RandomInt: {min: 0, max: 10}}
-    Indexes:
-    - keys: {t: 1}
-    Repeat: 1
-  - Phase: 1  # Run
-    Nop: true
+    Phases:
+      - Phase: 0 # Load
+        Nop: true
+      - Phase: 1 # Run
+        Repeat: 1
+        SleepBefore: 60 seconds
+        # An exception is expected because the replSetStepDown command either returns failure
+        # or disconnects its client session. That said, any other failure we did not expect would still
+        # be caught.
+        ThrowOnFailure: false
+        Operation:
+          OperationMetricsName: Stepdown
+          OperationName: AdminCommand
+          OperationCommand:
+            replSetStepDown: 60
+
+  - Name: PrimaryRequiredRead
+    Type: RunCommand
+    Threads: 100
+    Phases:
+      - Phase: 0 # Load
+        Nop: true
+      - Phase: 1 # Run
+        Duration: 180 seconds
+        GlobalRate: 1 per 1 microsecond
+        Database: test
+        # We want to continue to send our find commands in any situation.
+        # However, failures before replSetStepDown indicate that something was wrong with the test.
+        # Ideally, post-workload analysis will show if any find failure happens before replSetStepdown.
+        ThrowOnFailure: false
+        Operation: &find_one
+          OperationMetricsName: "Find"
+          OperationName: RunCommand
+          OperationCommand:
+            find: Collection0
+            readConcern: {level: local}
+            $readPreference: {mode: primary}
+
+  - Name: Loader
+    Type: Loader
+    Threads: 1
+    Phases:
+      - Phase: 0 # Load
+        Database: test
+        CollectionCount: 1
+        DocumentCount: 100
+        BatchSize: 100
+        Threads: 1
+        Document:
+          t: {^RandomInt: {min: 0, max: 10}}
+        Indexes:
+          - keys: {t: 1}
+        Repeat: 1
+      - Phase: 1 # Run
+        Nop: true
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - atlas
-      - atlas-like-replica.2022-10
-      - replica
-      - replica-noflowcontrol
-      - replica-80-feature-flags
-      - replica-all-feature-flags
-    atlas_setup:
-      $neq:
-      - M30-repl
+  - When:
+      mongodb_setup:
+        $eq:
+          - atlas
+          - atlas-like-replica.2022-10
+          - replica
+          - replica-noflowcontrol
+          - replica-80-feature-flags
+          - replica-all-feature-flags
+      atlas_setup:
+        $neq:
+          - M30-repl

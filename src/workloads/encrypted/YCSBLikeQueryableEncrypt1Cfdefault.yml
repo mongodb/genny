@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/server-security"
+Owner: Server Security
 Description: |
   Mimics a YCSB workload, with queryable encryption enabled. Performs queries on an encrypted
   field, instead of _id, during the read/update phase. This workload was originally two separate
@@ -10,11 +10,11 @@ Encryption:
   UseCryptSharedLib: true
   CryptSharedLibPath: /data/workdir/mongocrypt/lib/mongo_crypt_v1.so
   EncryptedCollections:
-  - Database: genny_qebench
-    Collection: testcoll
-    EncryptionType: queryable
-    QueryableEncryptedFields:
-      field0: { type: "string", queries: [{queryType: "equality"}] }
+    - Database: genny_qebench
+      Collection: testcoll
+      EncryptionType: queryable
+      QueryableEncryptedFields:
+        field0: {type: "string", queries: [{queryType: "equality"}]}
 
 Clients:
   EncryptedPool:
@@ -25,7 +25,7 @@ Clients:
       KeyVaultDatabase: "keyvault"
       KeyVaultCollection: "datakeys"
       EncryptedCollections:
-      - genny_qebench.testcoll
+        - genny_qebench.testcoll
 
 LoadConfig:
   Path: ../../phases/encrypted/YCSBLikeEncryptedTemplate.yml
@@ -36,10 +36,10 @@ LoadConfig:
     ClientName: EncryptedPool
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - single-replica-fle
-      - shard-lite-fle
-    branch_name:
-      $gte: v7.0
+  - When:
+      mongodb_setup:
+        $eq:
+          - single-replica-fle
+          - shard-lite-fle
+      branch_name:
+        $gte: v7.0

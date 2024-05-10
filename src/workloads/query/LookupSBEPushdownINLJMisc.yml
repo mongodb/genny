@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-execution"
+Owner: Query Execution
 Description: |
   This workload conducts testing for the following test matrix:
   - LocalCollectionCardinality: 100k / 300k / 500k / 700k
@@ -34,9 +34,9 @@ Description: |
        - 'INLJLookupMisc' actor
 
 Keywords:
-- lookup
-- aggregate
-- sbe
+  - lookup
+  - aggregate
+  - sbe
 
 # Defines the database name.
 Database: &db lookup_sbe_pushdown_inlj_misc
@@ -182,215 +182,215 @@ INLJTripleLookupCmd: &INLJTripleLookupCmd
 
 # Defines test operations for both 'SBE_Misc' and 'Classic_Misc' actors.
 TestOperations: &TestOperations
-- OperationMetricsName: LocalSmallDoc100k_StrTopField
-  OperationName: RunCommand
-  OperationCommand: *INLJLookupOnStrKeyCmd
-- OperationMetricsName: LocalSmallDoc100k_ArrTopField
-  OperationName: RunCommand
-  OperationCommand: *INLJLookupOnArrKeyCmd
-- OperationMetricsName: LocalSmallDoc100k_SubField
-  OperationName: RunCommand
-  OperationCommand: *INLJLookupOnSubFieldKeyCmd
-- OperationMetricsName: LocalSmallDoc100k_SubArrField
-  OperationName: RunCommand
-  OperationCommand: *INLJLookupOnSubArrFieldKeyCmd
-- OperationMetricsName: LocalLargeDoc100k_IntTopField
-  OperationName: RunCommand
-  OperationCommand: *INLJLookupLargeDocCmd
-- OperationMetricsName: LocalSmallDoc100k_IntTopField
-  OperationName: RunCommand
-  OperationCommand: *INLJLookupLocal100kCmd
-- OperationMetricsName: LocalSmallDoc300k_IntTopField
-  OperationName: RunCommand
-  OperationCommand: *INLJLookupLocal300kCmd
-- OperationMetricsName: LocalSmallDoc500k_IntTopField
-  OperationName: RunCommand
-  OperationCommand: *INLJLookupLocal500kCmd
-- OperationMetricsName: LocalSmallDoc700k_IntTopField
-  OperationName: RunCommand
-  OperationCommand: *INLJLookupLocal700kCmd
-- OperationMetricsName: LocalSmallDoc100k_DoubleLookups
-  OperationName: RunCommand
-  OperationCommand: *INLJDoubleLookupCmd
-- OperationMetricsName: LocalSmallDoc100k_TripleLookups
-  OperationName: RunCommand
-  OperationCommand: *INLJTripleLookupCmd
+  - OperationMetricsName: LocalSmallDoc100k_StrTopField
+    OperationName: RunCommand
+    OperationCommand: *INLJLookupOnStrKeyCmd
+  - OperationMetricsName: LocalSmallDoc100k_ArrTopField
+    OperationName: RunCommand
+    OperationCommand: *INLJLookupOnArrKeyCmd
+  - OperationMetricsName: LocalSmallDoc100k_SubField
+    OperationName: RunCommand
+    OperationCommand: *INLJLookupOnSubFieldKeyCmd
+  - OperationMetricsName: LocalSmallDoc100k_SubArrField
+    OperationName: RunCommand
+    OperationCommand: *INLJLookupOnSubArrFieldKeyCmd
+  - OperationMetricsName: LocalLargeDoc100k_IntTopField
+    OperationName: RunCommand
+    OperationCommand: *INLJLookupLargeDocCmd
+  - OperationMetricsName: LocalSmallDoc100k_IntTopField
+    OperationName: RunCommand
+    OperationCommand: *INLJLookupLocal100kCmd
+  - OperationMetricsName: LocalSmallDoc300k_IntTopField
+    OperationName: RunCommand
+    OperationCommand: *INLJLookupLocal300kCmd
+  - OperationMetricsName: LocalSmallDoc500k_IntTopField
+    OperationName: RunCommand
+    OperationCommand: *INLJLookupLocal500kCmd
+  - OperationMetricsName: LocalSmallDoc700k_IntTopField
+    OperationName: RunCommand
+    OperationCommand: *INLJLookupLocal700kCmd
+  - OperationMetricsName: LocalSmallDoc100k_DoubleLookups
+    OperationName: RunCommand
+    OperationCommand: *INLJDoubleLookupCmd
+  - OperationMetricsName: LocalSmallDoc100k_TripleLookups
+    OperationName: RunCommand
+    OperationCommand: *INLJTripleLookupCmd
 
 # Defines how many times each test operation is executed.
 TestRepeatCount: &TestRepeatCount 10
 
 Actors:
-# The 'Setup' actor drops the database and runs in the 0th phase.
-- Name: Setup
-  Type: RunCommand
-  Database: *db
-  Thread: 1
-  Phases:
-  - Repeat: 1
+  # The 'Setup' actor drops the database and runs in the 0th phase.
+  - Name: Setup
+    Type: RunCommand
+    Database: *db
+    Thread: 1
+    Phases:
+      - Repeat: 1
+        Threads: 1
+        Database: *db
+        Operations:
+          - OperationName: RunCommand
+            OperationCommand: {dropDatabase: 1}
+      - Phase: 1..4
+        Nop: true
+
+  # The 'LoadForeign' / 'LoadLocalSmallDoc100k' / 'LocalSmallDoc300k' / 'LocalSmallDoc500k' /
+  # 'LocalSmallDoc700k' / 'LoadLocalLargeDoc100k' actors runs in the 1st phase.
+  - Name: LoadForeign
+    Type: CrudActor
+    Database: *db
+    Threads: 1
+    Phases:
+      - &Nop {Nop: true}
+      - Repeat: 1500
+        Threads: 1
+        Collection: *Foreign
+        Operations:
+          - OperationName: insertOne
+            OperationCommand:
+              Document: *ForeignSmallDoc
+      - Phase: 2..4
+        Nop: true
+
+  - Name: LoadLocalSmallDoc100k
+    Type: CrudActor
+    Database: *db
+    Threads: 10
+    Phases:
+      - *Nop
+      - Repeat: 10000
+        Threads: 1
+        Collection: *LocalSmallDoc100k
+        Operations:
+          - OperationName: insertOne
+            OperationCommand:
+              Document: *LocalSmallDoc
+      - Phase: 2..4
+        Nop: true
+
+  - Name: LoadLocalSmallDoc300k
+    Type: CrudActor
+    Database: *db
+    Threads: 10
+    Phases:
+      - *Nop
+      - Repeat: 30000
+        Threads: 1
+        Collection: *LocalSmallDoc300k
+        Operations:
+          - OperationName: insertOne
+            OperationCommand:
+              Document: *LocalSmallDoc
+      - Phase: 2..4
+        Nop: true
+
+  - Name: LoadLocalSmallDoc500k
+    Type: CrudActor
+    Database: *db
+    Threads: 10
+    Phases:
+      - *Nop
+      - Repeat: 50000
+        Threads: 1
+        Collection: *LocalSmallDoc500k
+        Operations:
+          - OperationName: insertOne
+            OperationCommand:
+              Document: *LocalSmallDoc
+      - Phase: 2..4
+        Nop: true
+
+  - Name: LoadLocalSmallDoc700k
+    Type: CrudActor
+    Database: *db
+    Threads: 10
+    Phases:
+      - *Nop
+      - Repeat: 70000
+        Threads: 1
+        Collection: *LocalSmallDoc700k
+        Operations:
+          - OperationName: insertOne
+            OperationCommand:
+              Document: *LocalSmallDoc
+      - Phase: 2..4
+        Nop: true
+
+  - Name: LoadLocalLargeDoc100k
+    Type: CrudActor
+    Database: *db
+    Threads: 10
+    Phases:
+      - *Nop
+      - Repeat: 10000
+        Threads: 1
+        Collection: *LocalLargeDoc100k
+        Operations:
+          - OperationName: insertOne
+            OperationCommand:
+              Document: *LocalLargeDoc
+      - Phase: 2..4
+        Nop: true
+
+  # The 'BuildIndexes' actor builds indexes on all foreign join fields so that INLJ lookup
+  # performances can be measured and runs in the 2nd phase.
+  - Name: BuildIndexes
+    Type: RunCommand
+    Phases:
+      - *Nop
+      - *Nop
+      - Repeat: 1
+        Database: *db
+        Operations:
+          - OperationName: RunCommand
+            OperationCommand:
+              createIndexes: *Foreign
+              indexes:
+                - {key: {"int_key": 1}, name: "idx1"}
+                - {key: {"str_key": 1}, name: "idx2"}
+                - {key: {"doc_key.int": 1}, name: "idx3"}
+                - {key: {"doc_key.arr": 1}, name: "idx4"}
+                - {key: {"arr_key": 1}, name: "idx5"}
+      - *Nop
+      - *Nop
+
+  # The 'Quiesce' actor calms down to avoid any trailing impacts from the previous phase and runs
+  # in the 4th phase.
+  - Name: Quiesce
+    Type: QuiesceActor
     Threads: 1
     Database: *db
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand: {dropDatabase: 1}
-  - Phase: 1..4
-    Nop: true
+    Phases:
+      - Phase: 0..2
+        Nop: true
+      - Repeat: 1
+      - *Nop
 
-# The 'LoadForeign' / 'LoadLocalSmallDoc100k' / 'LocalSmallDoc300k' / 'LocalSmallDoc500k' /
-# 'LocalSmallDoc700k' / 'LoadLocalLargeDoc100k' actors runs in the 1st phase.
-- Name: LoadForeign
-  Type: CrudActor
-  Database: *db
-  Threads: 1
-  Phases:
-  - &Nop {Nop: true}
-  - Repeat: 1500
-    Threads: 1
-    Collection: *Foreign
-    Operations:
-    - OperationName: insertOne
-      OperationCommand:
-        Document: *ForeignSmallDoc
-  - Phase: 2..4
-    Nop: true
-
-- Name: LoadLocalSmallDoc100k
-  Type: CrudActor
-  Database: *db
-  Threads: 10
-  Phases:
-  - *Nop
-  - Repeat: 10000
-    Threads: 1
-    Collection: *LocalSmallDoc100k
-    Operations:
-    - OperationName: insertOne
-      OperationCommand:
-        Document: *LocalSmallDoc
-  - Phase: 2..4
-    Nop: true
-
-- Name: LoadLocalSmallDoc300k
-  Type: CrudActor
-  Database: *db
-  Threads: 10
-  Phases:
-  - *Nop
-  - Repeat: 30000
-    Threads: 1
-    Collection: *LocalSmallDoc300k
-    Operations:
-    - OperationName: insertOne
-      OperationCommand:
-        Document: *LocalSmallDoc
-  - Phase: 2..4
-    Nop: true
-
-- Name: LoadLocalSmallDoc500k
-  Type: CrudActor
-  Database: *db
-  Threads: 10
-  Phases:
-  - *Nop
-  - Repeat: 50000
-    Threads: 1
-    Collection: *LocalSmallDoc500k
-    Operations:
-    - OperationName: insertOne
-      OperationCommand:
-        Document: *LocalSmallDoc
-  - Phase: 2..4
-    Nop: true
-
-- Name: LoadLocalSmallDoc700k
-  Type: CrudActor
-  Database: *db
-  Threads: 10
-  Phases:
-  - *Nop
-  - Repeat: 70000
-    Threads: 1
-    Collection: *LocalSmallDoc700k
-    Operations:
-    - OperationName: insertOne
-      OperationCommand:
-        Document: *LocalSmallDoc
-  - Phase: 2..4
-    Nop: true
-
-- Name: LoadLocalLargeDoc100k
-  Type: CrudActor
-  Database: *db
-  Threads: 10
-  Phases:
-  - *Nop
-  - Repeat: 10000
-    Threads: 1
-    Collection: *LocalLargeDoc100k
-    Operations:
-    - OperationName: insertOne
-      OperationCommand:
-        Document: *LocalLargeDoc
-  - Phase: 2..4
-    Nop: true
-
-# The 'BuildIndexes' actor builds indexes on all foreign join fields so that INLJ lookup
-# performances can be measured and runs in the 2nd phase.
-- Name: BuildIndexes
-  Type: RunCommand
-  Phases:
-  - *Nop
-  - *Nop
-  - Repeat: 1
+  # The 'INLJLookupMisc' actor measures the SBE INLJ lookup performances on an all-feature-flags build
+  # and the classic INLJ lookup performances on a normal build and runs in the 4th phase.
+  - Name: INLJLookupMisc
+    Type: RunCommand
     Database: *db
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        createIndexes: *Foreign
-        indexes:
-        - {key: {"int_key": 1}, name: "idx1"}
-        - {key: {"str_key": 1}, name: "idx2"}
-        - {key: {"doc_key.int": 1}, name: "idx3"}
-        - {key: {"doc_key.arr": 1}, name: "idx4"}
-        - {key: {"arr_key": 1}, name: "idx5"}
-  - *Nop
-  - *Nop
-
-# The 'Quiesce' actor calms down to avoid any trailing impacts from the previous phase and runs
-# in the 4th phase.
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-  - Phase: 0..2
-    Nop: true
-  - Repeat: 1
-  - *Nop
-
-# The 'INLJLookupMisc' actor measures the SBE INLJ lookup performances on an all-feature-flags build
-# and the classic INLJ lookup performances on a normal build and runs in the 4th phase.
-- Name: INLJLookupMisc
-  Type: RunCommand
-  Database: *db
-  Phases:
-  - Phase: 0..3
-    Nop: true
-  - Repeat: *TestRepeatCount
-    Database: *db
-    Operations: *TestOperations
+    Phases:
+      - Phase: 0..3
+        Nop: true
+      - Repeat: *TestRepeatCount
+        Database: *db
+        Operations: *TestOperations
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-      - standalone-80-feature-flags
-      - standalone-all-feature-flags
-      - standalone-classic-query-engine
-      - standalone-query-stats
-      - standalone-sbe
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone
+          - standalone-80-feature-flags
+          - standalone-all-feature-flags
+          - standalone-classic-query-engine
+          - standalone-query-stats
+          - standalone-sbe
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4

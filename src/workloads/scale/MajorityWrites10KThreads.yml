@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/server-execution"
+Owner: Storage Execution
 Description: |
   This workload simulates a case of extreme overload with a majority of writes happening.
 
@@ -17,9 +17,9 @@ LoadConfig:
     ReadingThreads: 1000
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica
-      - replica-80-feature-flags
-      - replica-all-feature-flags
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - replica-80-feature-flags
+          - replica-all-feature-flags

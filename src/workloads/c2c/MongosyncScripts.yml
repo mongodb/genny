@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   This is a collection of helper scripts used to communicate with mongosync. To use them,
   use LoadConfig and load the script you would like to use in your actor's phase.
@@ -74,12 +74,12 @@ InsertShortTestData:
   # insert workload
   CollectionCount: 1
   Document:
-    a: { ^RandomInt: { min: 0, max: 1000000 } }
-    b: { ^RandomString: { length: 8 } }
-    c: { ^RandomString: { length: 20 } }
+    a: {^RandomInt: {min: 0, max: 1000000}}
+    b: {^RandomString: {length: 8}}
+    c: {^RandomString: {length: 20}}
   Indexes:
-  - keys: { id: 1 }
-  - keys: { a: 1 }
+    - keys: {id: 1}
+    - keys: {a: 1}
 
 SetupShardKey:
   Repeat: 1
@@ -88,19 +88,19 @@ SetupShardKey:
   # ignore if this command fails
   ThrowOnFailure: false
   Operations:
-  - OperationMetricsName: EnableShardingMetrics
-    OperationName: AdminCommand
-    OperationCommand:
-      enableSharding: db
+    - OperationMetricsName: EnableShardingMetrics
+      OperationName: AdminCommand
+      OperationCommand:
+        enableSharding: db
 
 ShardCollection:
   Repeat: 1
   Database: admin
   ThrowOnFailure: false
   Operations:
-  - OperationMetricsName: ShardCollectionMetrics
-    OperationName: AdminCommand
-    OperationCommand:
-      shardCollection: db.Collection0
-      key:
-        _id: hashed
+    - OperationMetricsName: ShardCollectionMetrics
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: db.Collection0
+        key:
+          _id: hashed

@@ -1,0 +1,123 @@
+SchemaVersion: 2018-07-01
+Owner: Product Performance
+Description: |
+  This is an indexed $in workload that matches documents in a collection.
+  This workload is intended to test a more representative workload
+
+  An extremely common usecase for users is to fetch objects and hydrate with follow up $in query
+
+  For example:
+  The first query fetches an Author object
+  {
+    type: "author",
+    name: "Tyler",
+    posts: [ObjectId(1), ObjectId(2), ObjectId(3)],
+  }
+
+  The second query fetches the related, but not embedded/denormalized objects
+
+  { $in: [ObjectId(1), ObjectId(2), ObjectId(3)] }
+
+  This workload focuses on the second query of this use case matching documents
+  using arrays of integers that are generated to be used for the $in queries.
+
+  The important metrics for this workload are:
+    * FindBlogPostsById.find and FindBlogPostsByAuthor.find
+      * DocumentThroughput # Documents matched for the entire duration of the phase.
+      * OperationThroughput # how many queries per second were achieved.
+    Since this workload finds all the documents in the query the DocumentThroughput should be equal to `OperationThroughput * filterArraySize`
+
+Keywords:
+  - Loader
+  - CrudActor
+  - find
+  - $in
+  - matching documents using $in
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 200
+
+GlobalDefaults:
+  database: &database indexedins
+  documentCount: &documentCount 2048000 # multiple of BatchSize * Threads (100*64)
+  filterArraySize: &filterArraySize 20000
+
+Actors:
+  - Name: BlogPostsLoader
+    Type: Loader
+    Threads: 1
+    Phases:
+      - Repeat: 1
+        Database: *database
+        CollectionCount: 1
+        Threads: 1
+        DocumentCount: *documentCount
+        BatchSize: 100
+        Indexes:
+          - keys: {authorId: 1}
+        Document:
+          _id: {^Inc: {start: 0}}
+          title: &randomString {^RandomString: {length: 8}}
+          text: *randomString
+          # authorIds are sequential ObjectIds in the format "000000000000000000000000", "000000000000000000000001", "000000000000000000000002"...
+          authorId: {^ObjectId: {^FormatString: {"format": "%024d%s", "withArgs": [{^Inc: {start: 0}}, ""]}}}
+      - {Nop: true}
+      - {Nop: true}
+
+  - Name: FindBlogPostsById
+    Type: CrudActor
+    Threads: 64
+    Database: *database
+    Phases:
+      - {Nop: true}
+      - Name: MatchDocumentsUsingInById
+        Duration: 2 minutes
+        Collection: Collection0
+        Operations:
+          - OperationName: find
+            OperationCommand:
+              Filter: {_id: {$in: {^FixedGeneratedValue: {fromGenerator: {
+                # An array of distinct and sequential integers up to documentCount. It will make sure all documents in this filter are found.
+                # The max ^Inc.start is documentCount - filterArraySize
+                ^Array: {of: {^Inc: {start: {^RandomInt: {min: 0, max: 2028000}}}}, number: *filterArraySize}}}}}}
+      - {Nop: true}
+
+  - Name: FindBlogPostsByAuthor
+    Type: CrudActor
+    Threads: 64
+    Database: *database
+    Phases:
+      - {Nop: true}
+      - {Nop: true}
+      - Name: MatchDocumentsUsingInByObjectId
+        Duration: 2 minutes
+        Collection: Collection0
+        Operations:
+          - OperationName: find
+            OperationCommand:
+              Filter: {
+                authorId: {
+                  $in: {
+                    ^FixedGeneratedValue: {
+                      fromGenerator: {
+                        # An array of distinct and sequential ObjectIds up to documentCount. It will make sure all documents in this filter are found.
+                        # The max ^Inc.start is documentCount - filterArraySize
+                        ^Array: {
+                          of: {^ObjectId: {^FormatString: {"format": "%024d%s", "withArgs": [{^Inc: {start: {^RandomInt: {min: 0, max: 2028000}}}}, ""]}}},
+                          number: *filterArraySize
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - replica-all-feature-flags
+          - single-replica-classic-query-engine
+          - single-replica-sbe

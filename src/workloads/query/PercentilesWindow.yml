@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-integration"
+Owner: Query Integration
 Description: |
   This tests $percentile window functions over various bounded window sizes. Bounded window
   functions use a different implementation (an accurate algorithm) than the $percentile accumulator,
@@ -17,20 +17,19 @@ Description: |
   do not show significant differences.
 
 Keywords:
-- setWindowFields
-- percentile
+  - setWindowFields
+  - percentile
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone-80-feature-flags
-      - standalone-all-feature-flags
-      - standalone-classic-query-engine
-      - standalone-sbe
-    branch_name:
-      $gte:
-        v7.0
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone-80-feature-flags
+          - standalone-all-feature-flags
+          - standalone-classic-query-engine
+          - standalone-sbe
+      branch_name:
+        $gte: v7.0
 
 GlobalDefaults:
   MaxPhases: &maxPhases 10
@@ -38,148 +37,176 @@ GlobalDefaults:
   Collection: &coll Collection0
 
 ActorTemplates:
-- TemplateName: ComputePercentile
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "ComputePercentile"}}
-    Type: CrudActor
-    Threads: 1
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
-        NopInPhasesUpTo: *maxPhases
-        PhaseConfig:
-          Repeat: 10
-          Database: *db
-          Collection: *coll
-          Operations:
-          - OperationName: aggregate
-            OperationCommand:
-              Pipeline: [
-                {$setWindowFields: {
-                  # We have the same 'sortBy' field for all tests, since this field is required for
-                  # bounded documents and range windows. Even though, sorting increases runtime, since
-                  # all phases must sort by the same field, we can isolate the differences in runtime
-                  # to the differences in the window sizes.
-                  sortBy: { date: 1 },
-                  output: {
-                    p: {
-                      $percentile: { p: [0.75], input: "$data", method: "approximate"},
-                      window: {^Parameter: {Name: "Documents", Default: {documents: [-500, 500]}} }
-                    }}
-                }}
-              ]
-# During development of $percentile we compared its performance to $minN. We don't need to keep
-# running the tests for these but we'd like to keep the templates around for reference and ease
-# of rerunning the local experiments if needed in the future.
-- TemplateName: ComputeMinN
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "ComputePercentile"}}
-    Type: CrudActor
-    Threads: 1
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
-        NopInPhasesUpTo: *maxPhases
-        PhaseConfig:
-          Repeat: 10
-          Database: *db
-          Collection: *coll
-          Operations:
-          - OperationName: aggregate
-            OperationCommand:
-              Pipeline: [{
-                $setWindowFields: {
-                  sortBy: {date: 1},
-                  output: {
-                    p: {
-                      $minN: {n: 1000, input: "$data" },
-                      window: { ^Parameter: {Name: "Documents", Default: null}
-                      }}
-                  }}
-              }]
+  - TemplateName: ComputePercentile
+    Config:
+      Name: { ^Parameter: { Name: "Name", Default: "ComputePercentile" } }
+      Type: CrudActor
+      Threads: 1
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{ ^Parameter: { Name: "OnlyActiveInPhase", Default: 1024 } }]
+          NopInPhasesUpTo: *maxPhases
+          PhaseConfig:
+            Repeat: 10
+            Database: *db
+            Collection: *coll
+            Operations:
+              - OperationName: aggregate
+                OperationCommand:
+                  Pipeline: [{ $setWindowFields: {
+                    # We have the same 'sortBy' field for all tests, since this field is required for
+                    # bounded documents and range windows. Even though, sorting increases runtime, since
+                    # all phases must sort by the same field, we can isolate the differences in runtime
+                    # to the differences in the window sizes.
+                    sortBy: { date: 1 },
+                    output:
+                      {
+                        p:
+                          {
+                            $percentile:
+                              {
+                                p: [0.75],
+                                input: "$data",
+                                method: "approximate",
+                              },
+                            window:
+                              {
+                                ^Parameter:
+                                  {
+                                    Name: "Documents",
+                                    Default: { documents: [-500, 500] },
+                                  },
+                              },
+                          },
+                      },
+                  } }]
+  # During development of $percentile we compared its performance to $minN. We don't need to keep
+  # running the tests for these but we'd like to keep the templates around for reference and ease
+  # of rerunning the local experiments if needed in the future.
+  - TemplateName: ComputeMinN
+    Config:
+      Name: { ^Parameter: { Name: "Name", Default: "ComputePercentile" } }
+      Type: CrudActor
+      Threads: 1
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{ ^Parameter: { Name: "OnlyActiveInPhase", Default: 1024 } }]
+          NopInPhasesUpTo: *maxPhases
+          PhaseConfig:
+            Repeat: 10
+            Database: *db
+            Collection: *coll
+            Operations:
+              - OperationName: aggregate
+                OperationCommand:
+                  Pipeline:
+                    [
+                      {
+                        $setWindowFields:
+                          {
+                            sortBy: { date: 1 },
+                            output:
+                              {
+                                p:
+                                  {
+                                    $minN: { n: 1000, input: "$data" },
+                                    window:
+                                      {
+                                        ^Parameter:
+                                          { Name: "Documents", Default: null },
+                                      },
+                                  },
+                              },
+                          },
+                      },
+                    ]
 
 Actors:
-- Name: CreateDataset
-  Type: Loader
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *maxPhases
-      PhaseConfig:
-        Threads: 1
-        Repeat: 1
-        Database: *db
-        CollectionCount: 1
-        DocumentCount: 100000
-        BatchSize: 1000
-        Document:
-          _id: {^Inc: {start: 0}}
-          # This is the field we will be computing percentiles on.
-          data: {^RandomDouble: {distribution: normal, mean: 50.0, sigma: 10.0}}
-          # We will use this field to sort our documents and create range windows.
-          date: {^RandomDate: {min: "2013-01-01", max: "2023-01-01"}}
+  - Name: CreateDataset
+    Type: Loader
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Threads: 1
+          Repeat: 1
+          Database: *db
+          CollectionCount: 1
+          DocumentCount: 100000
+          BatchSize: 1000
+          Document:
+            _id: { ^Inc: { start: 0 } }
+            # This is the field we will be computing percentiles on.
+            data:
+              {
+                ^RandomDouble:
+                  { distribution: normal, mean: 50.0, sigma: 10.0 },
+              }
+            # We will use this field to sort our documents and create range windows.
+            date: { ^RandomDate: { min: "2013-01-01", max: "2023-01-01" } }
 
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "percentile_small_window"
-      Documents: {documents: [-500, 500]}
-      OnlyActiveInPhase: 1
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "percentile_small_window"
+        Documents: { documents: [-500, 500] }
+        OnlyActiveInPhase: 1
 
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "percentile_large_window"
-      Documents: { documents: [0, "unbounded"]}
-      OnlyActiveInPhase: 2
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "percentile_large_window"
+        Documents: { documents: [0, "unbounded"] }
+        OnlyActiveInPhase: 2
 
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "percentile_tdigest"
-      Documents: { documents: ["unbounded", 0]}
-      OnlyActiveInPhase: 3
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "percentile_tdigest"
+        Documents: { documents: ["unbounded", 0] }
+        OnlyActiveInPhase: 3
 
-# The next phases compute percentiles over range windows. We do not expect to compare the
-# runtime of range and document based windows, since the sizes of these windows can vary
-# greatly. However, we still want to cover all use cases of window functions, and did compare
-# $percentile runtime to $minN for all types of windows during development.
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "percentile_small_range_window"
-      # If the unit was larger than 'hour' we would have nearly all the documents in every window,
-      # which would not test having a smaller bounded window.
-      Documents: { range: [-500, 500], unit: "hour"}
-      OnlyActiveInPhase: 4
+  # The next phases compute percentiles over range windows. We do not expect to compare the
+  # runtime of range and document based windows, since the sizes of these windows can vary
+  # greatly. However, we still want to cover all use cases of window functions, and did compare
+  # $percentile runtime to $minN for all types of windows during development.
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "percentile_small_range_window"
+        # If the unit was larger than 'hour' we would have nearly all the documents in every window,
+        # which would not test having a smaller bounded window.
+        Documents: { range: [-500, 500], unit: "hour" }
+        OnlyActiveInPhase: 4
 
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "percentile_large_range_window"
-      Documents: { range: [0, "unbounded"], unit: "year"}
-      OnlyActiveInPhase: 5
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "percentile_large_range_window"
+        Documents: { range: [0, "unbounded"], unit: "year" }
+        OnlyActiveInPhase: 5
 
-# Run the same test as above with a tighter 'unit', changing the frequency of adding/removing values.
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "percentile_large_range_window_day"
-      Documents: { range: [0, "unbounded"], unit: "day"}
-      OnlyActiveInPhase: 6
+  # Run the same test as above with a tighter 'unit', changing the frequency of adding/removing values.
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "percentile_large_range_window_day"
+        Documents: { range: [0, "unbounded"], unit: "day" }
+        OnlyActiveInPhase: 6
 
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "percentile_range_tdigest"
-      Documents: { range: ["unbounded", 0], unit: "year"}
-      OnlyActiveInPhase: 7
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "percentile_range_tdigest"
+        Documents: { range: ["unbounded", 0], unit: "year" }
+        OnlyActiveInPhase: 7
 
-# Run the same test as above with a tighter 'unit', changing the frequency of adding/removing values.
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "percentile_range_tdigest_day"
-      Documents: { range: ["unbounded", 0], unit: "day"}
-      OnlyActiveInPhase: 8
+  # Run the same test as above with a tighter 'unit', changing the frequency of adding/removing values.
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "percentile_range_tdigest_day"
+        Documents: { range: ["unbounded", 0], unit: "day" }
+        OnlyActiveInPhase: 8

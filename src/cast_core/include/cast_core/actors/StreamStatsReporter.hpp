@@ -48,6 +48,7 @@ namespace genny::actor {
  *   Phases:
  *   - Repeat: 1
  *     StreamProcessorName: sp
+ *     StreamProcessorId: spid
  *     ExpectedDocumentCount: 1000000
  * ```
  *

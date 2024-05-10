@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/server-execution"
+Owner: Storage Execution
 Description: |
   This workload tests the write performance impact of creating indexes on a very large collection.
   For this workload we perform an index build in parallel with a write workload.
@@ -12,15 +12,15 @@ Description: |
   saturated server.
 
 Keywords:
-- stress
-- indexes
-- InsertRemove
+  - stress
+  - indexes
+  - InsertRemove
 
 Clients:
   Default:
     QueryOptions:
       maxPoolSize: 10000
-      socketTimeoutMS: 7_200_000  # = 2 hours
+      socketTimeoutMS: 7_200_000 # = 2 hours
 
 SmallDoc: &SmallDoc
   randomString: {^FastRandomString: {length: 123}}
@@ -31,206 +31,206 @@ SmallDoc: &SmallDoc
 NumPhases: &NumPhases 4
 
 Actors:
-# Phase 0: Insert enough data to ensure than an index build on each field spills to disk with a
-# memory limit of 100MB.
-- Name: LoadSmallData
-  Type: Loader
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: &db test
-        Threads: 1
-        CollectionCount: 1
-        DocumentCount: 10_000_000
-        BatchSize: 1000
-        Document: *SmallDoc
+  # Phase 0: Insert enough data to ensure than an index build on each field spills to disk with a
+  # memory limit of 100MB.
+  - Name: LoadSmallData
+    Type: Loader
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: &db test
+          Threads: 1
+          CollectionCount: 1
+          DocumentCount: 10_000_000
+          BatchSize: 1000
+          Document: *SmallDoc
 
-- Name: InsertIntoOtherColl
-  Type: MonotonicSingleLoader
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Repeat: 1
-        DocumentCount: 5_000_000
-        BatchSize: 1_000
-        Collection: &otherColl otherColl
-        Database: *db
-        Document: *SmallDoc
+  - Name: InsertIntoOtherColl
+    Type: MonotonicSingleLoader
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Repeat: 1
+          DocumentCount: 5_000_000
+          BatchSize: 1_000
+          Collection: &otherColl otherColl
+          Database: *db
+          Document: *SmallDoc
 
-- Name: CreateIndexesOtherColl
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *db
-        Operations:
-        - OperationName: RunCommand
-          OperationCommand:
-            createIndexes: *otherColl
-            indexes:
-            - key: {numField: 1}
-              name: numField_1
+  - Name: CreateIndexesOtherColl
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *db
+          Operations:
+            - OperationName: RunCommand
+              OperationCommand:
+                createIndexes: *otherColl
+                indexes:
+                  - key: {numField: 1}
+                    name: numField_1
 
-# Phase 1: Lower the memory limit for spilling to disk so that it occurs more often. Also lower tickets to emulate an overloaded server.
-- Name: Setup
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: admin
-        Operations:
-        - OperationName: AdminCommand
-          OperationCommand:
-            setParameter: 1
-            throughputProbingMaxConcurrency: 32
-        - OperationMetricsName: LimitIndexBuildMemoryUsageCommand
-          OperationName: RunCommand
-          OperationCommand:
-            setParameter: 1
-            maxIndexBuildMemoryUsageMegabytes: 100
+  # Phase 1: Lower the memory limit for spilling to disk so that it occurs more often. Also lower tickets to emulate an overloaded server.
+  - Name: Setup
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: admin
+          Operations:
+            - OperationName: AdminCommand
+              OperationCommand:
+                setParameter: 1
+                throughputProbingMaxConcurrency: 32
+            - OperationMetricsName: LimitIndexBuildMemoryUsageCommand
+              OperationName: RunCommand
+              OperationCommand:
+                setParameter: 1
+                maxIndexBuildMemoryUsageMegabytes: 100
 
-# Phase 2: Quiesce the system
-- Name: QuiesceActor
-  Type: QuiesceActor
-  # Using multiple threads will result in an error.
-  Threads: 1
-  Database: *db
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Repeat: 1
-
-# Phases 3, 4: Build indexes on a collection that has no concurrent writes and a collection with concurrent writes.
-- Name: IndexCollection
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - &Nop {Nop: true}
-  - *Nop
-  - *Nop
-  # Build an index on a collection with a noisy neighbor.
-  - Repeat: &numRepetitions 5  # Repeat 5 times to get more stable latencies
+  # Phase 2: Quiesce the system
+  - Name: QuiesceActor
+    Type: QuiesceActor
+    # Using multiple threads will result in an error.
+    Threads: 1
     Database: *db
-    Operations:
-    - OperationMetricsName: CreateIndex
-      OperationName: RunCommand
-      OperationCommand:
-        createIndexes: &coll Collection0
-        indexes:
-        - key:
-            randomInt: 1
-          name: random_int
-    - OperationMetricsName: DropIndex
-      OperationName: RunCommand
-      OperationCommand:
-        dropIndexes: *coll
-        index: random_int
-  # Build an index on a heavily modified collection.
-  - Repeat: *numRepetitions
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Repeat: 1
+
+  # Phases 3, 4: Build indexes on a collection that has no concurrent writes and a collection with concurrent writes.
+  - Name: IndexCollection
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      - &Nop {Nop: true}
+      - *Nop
+      - *Nop
+      # Build an index on a collection with a noisy neighbor.
+      - Repeat: &numRepetitions 5 # Repeat 5 times to get more stable latencies
+        Database: *db
+        Operations:
+          - OperationMetricsName: CreateIndex
+            OperationName: RunCommand
+            OperationCommand:
+              createIndexes: &coll Collection0
+              indexes:
+                - key:
+                    randomInt: 1
+                  name: random_int
+          - OperationMetricsName: DropIndex
+            OperationName: RunCommand
+            OperationCommand:
+              dropIndexes: *coll
+              index: random_int
+      # Build an index on a heavily modified collection.
+      - Repeat: *numRepetitions
+        Database: *db
+        Operations:
+          - OperationMetricsName: CreateIndexSameCollWrites
+            OperationName: RunCommand
+            OperationCommand:
+              createIndexes: *otherColl
+              indexes:
+                - key:
+                    randomInt: 1
+                  name: random_int
+          - OperationMetricsName: DropIndexSameCollWrites
+            OperationName: RunCommand
+            OperationCommand:
+              dropIndexes: *otherColl
+              index: random_int
+
+  - Name: UpdateOtherColl
+    Type: CrudActor
     Database: *db
-    Operations:
-    - OperationMetricsName: CreateIndexSameCollWrites
-      OperationName: RunCommand
-      OperationCommand:
-        createIndexes: *otherColl
-        indexes:
-        - key:
-            randomInt: 1
-          name: random_int
-    - OperationMetricsName: DropIndexSameCollWrites
-      OperationName: RunCommand
-      OperationCommand:
-        dropIndexes: *otherColl
-        index: random_int
+    Threads: &numThreads 256
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3, 4]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Blocking: None
+          Collection: *otherColl
+          Operations:
+            - OperationName: updateOne
+              OperationCommand:
+                Filter: &filter
+                  numField: *numField
+                Update:
+                  $inc: {counter: 1}
 
-- Name: UpdateOtherColl
-  Type: CrudActor
-  Database: *db
-  Threads: &numThreads 256
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3, 4]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Blocking: None
-        Collection: *otherColl
-        Operations:
-        - OperationName: updateOne
-          OperationCommand:
-            Filter: &filter
-              numField: *numField
-            Update:
-              $inc: {counter: 1}
+  - Name: RemoveOtherColl
+    Type: CrudActor
+    Database: *db
+    Threads: &halfThreads 128
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3, 4]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Blocking: None
+          Collection: *otherColl
+          Operations:
+            - OperationName: deleteOne
+              OperationCommand:
+                Filter: *filter
 
-- Name: RemoveOtherColl
-  Type: CrudActor
-  Database: *db
-  Threads: &halfThreads 128
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3, 4]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Blocking: None
-        Collection: *otherColl
-        Operations:
-        - OperationName: deleteOne
-          OperationCommand:
-            Filter: *filter
+  - Name: InsertOtherCollSmall
+    Type: CrudActor
+    Database: *db
+    Threads: *halfThreads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3, 4]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Blocking: None
+          Collection: *otherColl
+          Operations:
+            - OperationName: insertOne
+              OperationCommand:
+                Document: *SmallDoc
 
-- Name: InsertOtherCollSmall
-  Type: CrudActor
-  Database: *db
-  Threads: *halfThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3, 4]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Blocking: None
-        Collection: *otherColl
-        Operations:
-        - OperationName: insertOne
-          OperationCommand:
-            Document: *SmallDoc
-
-- Name: LoggingActor
-  Type: LoggingActor
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3, 4]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        LogEvery: 10 minutes
-        Blocking: None
+  - Name: LoggingActor
+    Type: LoggingActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3, 4]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          LogEvery: 10 minutes
+          Blocking: None
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - single-replica
-      - single-replica-80-feature-flags
-      - single-replica-all-feature-flags
-    branch_name:
-      $gte: v7.0
-    infrastructure_provisioning:
-      $neq:
-      - graviton-single-lite.2022-11  # Instance type is slow and times out
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - single-replica-80-feature-flags
+          - replica-all-feature-flags
+      branch_name:
+        $gte: v7.0
+      infrastructure_provisioning:
+        $neq:
+          - graviton-single-lite.2022-11 # Instance type is slow and times out

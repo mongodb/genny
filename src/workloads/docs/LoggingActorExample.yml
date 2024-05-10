@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/dev-prod-tips"
+Owner: Performance Analysis
 Description: |
   The LoggingActor exists so DSI and Evergreen don't quit
   your workload for not outputting anything to stdout.
@@ -23,10 +23,10 @@ Description: |
   every Phase that may last longer than a few minutes.
 
 Actors:
-- Name: LoggingActor
-  Type: LoggingActor
-  Threads: 1  # must be 1
-  Phases:
-  - Phase: 0
-    LogEvery: 15 minutes  # TimeSpec
-    Blocking: None  # must be Blocking:None
+  - Name: LoggingActor
+    Type: LoggingActor
+    Threads: 1 # must be 1
+    Phases:
+      - Phase: 0
+        LogEvery: 15 minutes # TimeSpec
+        Blocking: None # must be Blocking:None

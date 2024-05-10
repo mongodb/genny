@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/dev-prod-tips"
+Owner: Performance Analysis
 Description: |
   This workload exhibits various generators, performing insertions to show them off.
   Follow the inline commentary to learn more about them.
@@ -7,43 +7,41 @@ Description: |
 # This workload demonstrates all the current Document and Value Generators. It creates documents
 # that look like this (simple)
 # {
-# 	"_id" : ObjectId("5fd7c984e0f8d74bdb04d3b4"),
-# 	"type" : "simple",
-# 	"int1" : NumberLong(15),
-# 	"int2" : NumberLong(19),
-# 	"int3" : NumberLong(7),
-# 	"int4" : NumberLong(1835),
-# 	"int5" : NumberLong(3),
-# 	"int6" : NumberLong(112),
-# 	"int7" : NumberLong(3),
-# 	"double" : 12.830223930995928,
-# 	"string1" : "T336d",
-# 	"string2" : "B2A54",
-# 	"string3" : "LChkGtHKBI",
-# 	"counter" : 1008,
-# 	"choose" : 12,
-# 	"join" : "This is a joined string",
-# 	"ip" : "77.220.130.163",
-# 	"location" : [17.31871956875809, -3.062558894823418],
-# 	"actorNum" : NumberLong(1),
-# 	"actorString" : "1",
-# 	"airportDataSet" : "KSC"
+#   "_id" : ObjectId("5fd7c984e0f8d74bdb04d3b4"),
+#   "type" : "simple",
+#   "int1" : NumberLong(15),
+#   "int2" : NumberLong(19),
+#   "int3" : NumberLong(7),
+#   "int4" : NumberLong(1835),
+#   "int5" : NumberLong(3),
+#   "int6" : NumberLong(112),
+#   "int7" : NumberLong(3),
+#   "double" : 12.830223930995928,
+#   "string1" : "T336d",
+#   "string2" : "B2A54",
+#   "string3" : "LChkGtHKBI",
+#   "counter" : 1008,
+#   "choose" : 12,
+#   "join" : "This is a joined string",
+#   "ip" : "77.220.130.163",
+#   "location" : [17.31871956875809, -3.062558894823418],
+#   "actorNum" : NumberLong(1),
+#   "actorString" : "1",
+#   "airportDataSet" : "KSC"
 # }
-
 
 # # And this (nested)
 # {
-# 	# "_id" : ObjectId("5fd7c984e0f8d74bdb04d3b8"),
-# 	# "type" : "nested",
-# 	# "a" : "cjyuclu2jVjxpo5nSG",
-# 	# "b" : "aaaaaaaaaa5phojR5oVp",
-# 	# "c" : "LcSd8voZ-Q7F3jXcT-clWnwH/N-XP7caBjG",
-# 	# "task_id" : "test-duH4N0/500",
-# 	# "id_with_actor" : "ActorId-7"
-
+#   # "_id" : ObjectId("5fd7c984e0f8d74bdb04d3b8"),
+#   # "type" : "nested",
+#   # "a" : "cjyuclu2jVjxpo5nSG",
+#   # "b" : "aaaaaaaaaa5phojR5oVp",
+#   # "c" : "LcSd8voZ-Q7F3jXcT-clWnwH/N-XP7caBjG",
+#   # "task_id" : "test-duH4N0/500",
+#   # "id_with_actor" : "ActorId-7"
 
 Parameters:
-- &DatabaseName {^Parameter: {Name: "DatabaseName", Default: mydb }}
+  - &DatabaseName {^Parameter: {Name: "DatabaseName", Default: mydb}}
 
 Clients:
   Default:
@@ -54,332 +52,332 @@ Clients:
       maxPoolSize: 400
 
 Actors:
-- Name: Generator Examples
-  Type: CrudActor
-  Database: *DatabaseName
-  Threads: 10
-  ClientName: SomeOtherPool  # Which connection pool to use. Must be defined in Clients section.
-  Phases:
-  - Repeat: 10
-    Collection: test
-    Operations:
-    - OperationName: bulkWrite
-      OperationCommand:
-        WriteOperations:
-        - WriteCommand: insertOne  # Simple Generators
-          Document:
-            type: simple
-            # Generate a random integer between 10 and 20. This uses the uniform distribution, which
-            # is the default distribution. You must specify a min and max with the uniform
-            # distribution.
-            int1: {^RandomInt: {min: 10, max: 20}}
-            int2: {^RandomInt: {min: 10, max: 20, distribution: uniform}}
+  - Name: Generator Examples
+    Type: CrudActor
+    Database: *DatabaseName
+    Threads: 10
+    ClientName: SomeOtherPool # Which connection pool to use. Must be defined in Clients section.
+    Phases:
+      - Repeat: 10
+        Collection: test
+        Operations:
+          - OperationName: bulkWrite
+            OperationCommand:
+              WriteOperations:
+                - WriteCommand: insertOne # Simple Generators
+                  Document:
+                    type: simple
+                    # Generate a random integer between 10 and 20. This uses the uniform distribution, which
+                    # is the default distribution. You must specify a min and max with the uniform
+                    # distribution.
+                    int1: {^RandomInt: {min: 10, max: 20}}
+                    int2: {^RandomInt: {min: 10, max: 20, distribution: uniform}}
 
-            # Other supported distributions include:
-            # Binomial with parameters t and p
-            int3: {^RandomInt: {distribution: binomial, t: 100, p: 0.05}}
-            # Negative Binomial with parameters k and p
-            int4: {^RandomInt: {distribution: negative_binomial, k: 100, p: 0.05}}
-            # Geometric distribution with parameter p
-            int5: {^RandomInt: {distribution: geometric, p: 0.05}}
-            # Poisson distribution with parameter mean
-            int6: {^RandomInt: {distribution: poisson, mean: 100}}
-            # Zipfian distribution with parameters alpha and n
-            int7: {^RandomInt: {distribution: zipfian, alpha: 1.0, n: 10000}}
+                    # Other supported distributions include:
+                    # Binomial with parameters t and p
+                    int3: {^RandomInt: {distribution: binomial, t: 100, p: 0.05}}
+                    # Negative Binomial with parameters k and p
+                    int4: {^RandomInt: {distribution: negative_binomial, k: 100, p: 0.05}}
+                    # Geometric distribution with parameter p
+                    int5: {^RandomInt: {distribution: geometric, p: 0.05}}
+                    # Poisson distribution with parameter mean
+                    int6: {^RandomInt: {distribution: poisson, mean: 100}}
+                    # Zipfian distribution with parameters alpha and n
+                    int7: {^RandomInt: {distribution: zipfian, alpha: 1.0, n: 10000}}
 
-            # Can generate random doubles as well. They are 64 bit numbers. Supported distributions
-            # include: uniform, exponential, gamma, weibull, extreme_value, beta, laplace, normal,
-            # lognormal, chi_squared, non_central_chi_squared, cauchy, fisher_f, and student_t. See
-            # https://www.boost.org/doc/libs/1_66_0/doc/html/boost_random/reference.html#boost_random.reference.generators
-            # for parameters. Uniform is used by default if no distribution is specified.
-            double: {^RandomDouble: {min: 10, max: 20}}
+                    # Can generate random doubles as well. They are 64 bit numbers. Supported distributions
+                    # include: uniform, exponential, gamma, weibull, extreme_value, beta, laplace, normal,
+                    # lognormal, chi_squared, non_central_chi_squared, cauchy, fisher_f, and student_t. See
+                    # https://www.boost.org/doc/libs/1_66_0/doc/html/boost_random/reference.html#boost_random.reference.generators
+                    # for parameters. Uniform is used by default if no distribution is specified.
+                    double: {^RandomDouble: {min: 10, max: 20}}
 
-            # Random String of length 5
-            string1: {^RandomString: {length: 5}}
-            # You can also specify a custom alhpabet for random strings
-            string2: {^RandomString: {length: 5, alphabet: "0123456789ABCDEF"}}
-            # FastRandomString is computationally faster, but the letters are not all equally
-            # likely. It matches the string generational algorithm in YCSB.
-            string3: {^FastRandomString: {length: 10}}
+                    # Random String of length 5
+                    string1: {^RandomString: {length: 5}}
+                    # You can also specify a custom alhpabet for random strings
+                    string2: {^RandomString: {length: 5, alphabet: "0123456789ABCDEF"}}
+                    # FastRandomString is computationally faster, but the letters are not all equally
+                    # likely. It matches the string generational algorithm in YCSB.
+                    string3: {^FastRandomString: {length: 10}}
 
-            # increment generator ^Inc with parameters start (default 1), multiplier (default 0}, and step (default 1)
-            # only non-default parameters should be specified
-            # if you have multiple threads, you need to specify multiplier:
-            # it would be calculated as start + ActorId * multiplier + i * step
-            counter: {^Inc: {start: 1000}}
+                    # increment generator ^Inc with parameters start (default 1), multiplier (default 0}, and step (default 1)
+                    # only non-default parameters should be specified
+                    # if you have multiple threads, you need to specify multiplier:
+                    # it would be calculated as start + ActorId * multiplier + i * step
+                    counter: {^Inc: {start: 1000}}
 
-            # You can randomly choose objects. from is an array of values to pick from. Weigths is
-            # optional and weights the probability of each option in the from array. If Weights is
-            # ommitted, each entry has the same probability. The choices can be any valid generator
-            # or json value.
-            choose: {^Choose: {from: ["A", 12, {b: {c: d}}]}}
+                    # increment generator ^Inc with random parameter `start`
+                    randomStartCounter: {^Inc: {start: {^RandomInt: {min: 10, max: 555}}}}
 
-            # You can combine strings. Each string in array is combined, with sep in between. sep is
-            # optional, and defaults to the empty string. See nested generators below for more
-            # interesting examples.
-            join: {^Join: {array: ["This", "is", "a", "joined", "string"], sep: " "}}
+                    # You can randomly choose objects. from is an array of values to pick from. Weigths is
+                    # optional and weights the probability of each option in the from array. If Weights is
+                    # ommitted, each entry has the same probability. The choices can be any valid generator
+                    # or json value.
+                    choose: {^Choose: {from: ["A", 12, {b: {c: d}}]}}
 
+                    # You can combine strings. Each string in array is combined, with sep in between. sep is
+                    # optional, and defaults to the empty string. See nested generators below for more
+                    # interesting examples.
+                    join: {^Join: {array: ["This", "is", "a", "joined", "string"], sep: " "}}
 
-            # Generate a random IP Address. In the future this will support a netmask and prefix
-            # options to narrow the range of IP addresses. Every IP address is equally likely.
-            ip: {^IP: {}}
+                    # Generate a random IP Address. In the future this will support a netmask and prefix
+                    # options to narrow the range of IP addresses. Every IP address is equally likely.
+                    ip: {^IP: {}}
 
-            # Generate a random 2D coordinate pair [x, y] intended to resemble a moving object.
-            #
-            # The object moves 0.1 units between events, and after 100 events the series resets
-            # to a new random location, to represent a different moving object. The random starting
-            # locations are within the rectangle x=[-50, +50], y=[-30, +30], but once the object starts
-            # moving it's not constrained to be within that region.
-            location: {^TwoDWalk: {
-              docsPerSeries: 100,
-              minX: -50,
-              maxX: +50,
-              minY: -30,
-              maxY: +30,
-              distPerDoc: 0.1,
-            }}
+                    # Generate a random 2D coordinate pair [x, y] intended to resemble a moving object.
+                    #
+                    # The object moves 0.1 units between events, and after 100 events the series resets
+                    # to a new random location, to represent a different moving object. The random starting
+                    # locations are within the rectangle x=[-50, +50], y=[-30, +30], but once the object starts
+                    # moving it's not constrained to be within that region.
+                    location: {^TwoDWalk: {docsPerSeries: 100, minX: -50, maxX: +50, minY: -30, maxY: +30, distPerDoc: 0.1}}
 
-            # Generate the actor ID as a numbers. This will be constant for a given actor, but
-            # unique across actors
-            actorNum: {^ActorId: {}}
-            # Generate the actor ID as a string
-            actorString: {^ActorIdString: {}}
+                    # Generate the actor ID as a numbers. This will be constant for a given actor, but
+                    # unique across actors
+                    actorNum: {^ActorId: {}}
+                    # Generate the actor ID as a string
+                    actorString: {^ActorIdString: {}}
 
-            # Generate a random airport code from a dataset
-            # See ChooseFromDataset.yml for full documentation on this generator
-            airportDataSet: {^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/airports_codes.txt"}}
+                    # Generate a random airport code from a dataset
+                    # See ChooseFromDataset.yml for full documentation on this generator
+                    airportDataSet: {^ChooseFromDataset: {"path": "./src/genny/src/workloads/datasets/airports_codes.txt"}}
 
-            # Generate the current Date
-            now: {^Now: {}}
+                    # Generate the current Date
+                    now: {^Now: {}}
 
-            # Generate the current timestamp
-            nowTimestamp: {^NowTimestamp: {}}
+                    # Generate the current timestamp
+                    nowTimestamp: {^NowTimestamp: {}}
 
-            # Generate field with a null value
-            nullField: {^Null: {}}
+                    # Generate field with a null value
+                    nullField: {^Null: {}}
 
-            # ^RandomDate max precision is to the millisecond as bson dates are to the millisecond
-            # (see https://docs.mongodb.com/manual/reference/bson-types/#date). However, nanos can be
-            # specified, but will be ignored.
-            # The min / max range is a half open interval, that is from min (inclusive) to max (exclusive).
-            #
-            # Default min is 1970-01-01.
-            # Default max is 2150-01-01. But you can specify a date greater than this value.
-            #
-            # min and max are evaluated once and max must be greater than min (so by extension max cannot be 1970-01-01).
-            # The generated date uses the extended json $date notation
-            # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
-            #
-            # RandomDate supports other generators as input (generators that produce string or numeric types):
-            # * ^RandomInt
-            # * ^RandomDouble
-            # * ^FastRandomString
-            # * ^RandomString
-            # * ^Join
-            # * ^Choose
-            # * ^Now
-            # * ^RandomDate
+                    # ^RandomDate max precision is to the millisecond as bson dates are to the millisecond
+                    # (see https://docs.mongodb.com/manual/reference/bson-types/#date). However, nanos can be
+                    # specified, but will be ignored.
+                    # The min / max range is a half open interval, that is from min (inclusive) to max (exclusive).
+                    #
+                    # Default min is 1970-01-01.
+                    # Default max is 2150-01-01. But you can specify a date greater than this value.
+                    #
+                    # min and max are evaluated once and max must be greater than min (so by extension max cannot be 1970-01-01).
+                    # The generated date uses the extended json $date notation
+                    # (see https://docs.mongodb.com/manual/reference/mongodb-extended-json/#bson.Date).
+                    #
+                    # RandomDate supports other generators as input (generators that produce string or numeric types):
+                    # * ^RandomInt
+                    # * ^RandomDouble
+                    # * ^FastRandomString
+                    # * ^RandomString
+                    # * ^Join
+                    # * ^Choose
+                    # * ^Now
+                    # * ^RandomDate
 
-            # Generate a random date in 2015. That is the Half Open interval : ["2015-01-01 00:00:00.000", "2016-01-01 00:00:00.000")
-            year2015: {^RandomDate: {min: "2015-01-01", max: "2016-01-01"}}
+                    # Generate a random date in 2015. That is the Half Open interval : ["2015-01-01 00:00:00.000", "2016-01-01 00:00:00.000")
+                    year2015: {^RandomDate: {min: "2015-01-01", max: "2016-01-01"}}
 
-            # Generate a random date from 2015 to the default max date of 2030-01-01
-            greaterThan2105: {^RandomDate: {min: "2015-01-01"}}
+                    # Generate a random date from 2015 to the default max date of 2030-01-01
+                    greaterThan2105: {^RandomDate: {min: "2015-01-01"}}
 
-            # Generate a random date less than 2015 (but greater than 1970-01-01)
-            lessThan2105: {^RandomDate: {max: "2015-01-01"}}
+                    # Generate a random date less than 2015 (but greater than 1970-01-01)
+                    lessThan2105: {^RandomDate: {max: "2015-01-01"}}
 
-            # Generate the exact Date 2015-01-01T00:00:00Z.
-            exact: {^Date: "2015-01-01"}
+                    # Generate the exact Date 2015-01-01T00:00:00Z.
+                    exact: {^Date: "2015-01-01"}
 
-            # Generate a random date.
-            zulu: {^RandomDate: {min: "2015-01-01T00:00:00Z", max: "2016-01-01T00:00:00Z"}}
+                    # Generate a random date.
+                    zulu: {^RandomDate: {min: "2015-01-01T00:00:00Z", max: "2016-01-01T00:00:00Z"}}
 
-            # Generate a random date.
-            utc: {^RandomDate: {min: "2015-01-01T00:00:00+00:00", max: "2016-01-01T00:00:00+00:00"}}
+                    # Generate a random date.
+                    utc: {^RandomDate: {min: "2015-01-01T00:00:00+00:00", max: "2016-01-01T00:00:00+00:00"}}
 
-            # Generate a random date with a TZ offset.
-            kolkata: {^RandomDate: {min: "2015-01-01T00:00:00+05:30", max: "2016-01-01T00:00:00+05:30"}}
+                    # Generate a random date with a TZ offset.
+                    kolkata: {^RandomDate: {min: "2015-01-01T00:00:00+05:30", max: "2016-01-01T00:00:00+05:30"}}
 
-            # # Generator inputs can be mixed and matched as desired.
-            # fixedToNow: {^RandomDate: {min: "2021-01-01", max: {^Now: {}}}}
-            # joinedDateToMax: {^RandomDate: {min: {^Join: {array: ["2013","05","30T07:27:04.299+06:30"], sep: "-"}}}}
-            # minDateToChoices{^RandomDate: { max: {^Choose: {from: ["2013-05-30 06:27:04.300+05:30", "2013-05-30T07:27:04.299+06:30"]}}}}
+                    # # Generator inputs can be mixed and matched as desired.
+                    # fixedToNow: {^RandomDate: {min: "2021-01-01", max: {^Now: {}}}}
+                    # joinedDateToMax: {^RandomDate: {min: {^Join: {array: ["2013","05","30T07:27:04.299+06:30"], sep: "-"}}}}
+                    # minDateToChoices{^RandomDate: { max: {^Choose: {from: ["2013-05-30 06:27:04.300+05:30", "2013-05-30T07:27:04.299+06:30"]}}}}
 
-            # # As min must be less than max, care must be taken to ensure that the min value range is always less than the max value range.
-            # # Other wise you might get unexpected results. For example the following should fail 25% of the time
-            # # (whenever 2100-05-31 is selected).
-            # probablyNotWhatYouWant: {^RandomDate: {min: {^Choose: {from: ["2014-05-31", "2012-05-31", "2013-05-31", "2100-05-31"]}}, max: {^Now: {}} }}
+                    # # As min must be less than max, care must be taken to ensure that the min value range is always less than the max value range.
+                    # # Other wise you might get unexpected results. For example the following should fail 25% of the time
+                    # # (whenever 2100-05-31 is selected).
+                    # probablyNotWhatYouWant:
+                    #   {^RandomDate: {min: {^Choose: {from: ["2014-05-31", "2012-05-31", "2013-05-31", "2100-05-31"]}}, max: {^Now: {}} }}
 
-        - WriteCommand: insertOne  # Nested Generators
-          # You can nest generators to make complex values.
-          Document:
-            type: nested
-            # Random strings of a random length between 10 and 20.
-            a: {^RandomString: {length: {^RandomInt: {min: 10, max: 20}}}}
+                - WriteCommand: insertOne # Nested Generators
+                  # You can nest generators to make complex values.
+                  Document:
+                    type: nested
+                    # Random strings of a random length between 10 and 20.
+                    a: {^RandomString: {length: {^RandomInt: {min: 10, max: 20}}}}
 
-            # Create a random string that is 50% compressible by using join. The first 10 characters
-            # are all the same and compressible, while the remaining 10 are random.
-            b: {^Join: {array: ["aaaaaaaaaa", {^RandomString: {length: 10}}]}}
+                    # Create a random string that is 50% compressible by using join. The first 10 characters
+                    # are all the same and compressible, while the remaining 10 are random.
+                    b: {^Join: {array: ["aaaaaaaaaa", {^RandomString: {length: 10}}]}}
 
-            # Can Match common string formats
-            c: {^Join: {array: [{^RandomString: {length: 8}},
-                                {^RandomString: {length: 8}},
-                                {^RandomString: {length: 8}},
-                                {^RandomString: {length: 8}}],
-                        sep: "-"}}
+                    # Can Match common string formats
+                    c: {
+                      ^Join: {
+                        array: [{^RandomString: {length: 8}}, {^RandomString: {length: 8}}, {^RandomString: {length: 8}}, {^RandomString: {length: 8}}],
+                        sep: "-"
+                      }
+                    }
 
-            # Or match different formats. Note that for ^Choose within a ^Join, all the entries in
-            # the from sequence must generate strings. You cannot embed a number or a document.
-            task_id: {^Join: {array: [{^Choose: {from: ["build", "test", "lint"]}},
-                                      {^RandomString: {length: 10}}], sep: "-"}}
+                    # Or match different formats. Note that for ^Choose within a ^Join, all the entries in
+                    # the from sequence must generate strings. You cannot embed a number or a document.
+                    task_id: {^Join: {array: [{^Choose: {from: ["build", "test", "lint"]}}, {^RandomString: {length: 10}}], sep: "-"}}
 
-            # You can use Choose deterministically with Join.
-            task_id_deterministic: {^Join: {array: [{^Choose: {from: ["build", "test", "lint"], deterministic: true}},
-                                                    {^RandomString: {length: 10}}], sep: "-"}}
+                    # You can use Choose deterministically with Join.
+                    task_id_deterministic: {
+                      ^Join: {array: [{^Choose: {from: ["build", "test", "lint"], deterministic: true}}, {^RandomString: {length: 10}}], sep: "-"}
+                    }
 
-            id_with_actor: {^Join: {array: ["ActorId-", {^ActorIdString: {}}]}}
+                    id_with_actor: {^Join: {array: ["ActorId-", {^ActorIdString: {}}]}}
 
+                    # Generate some sequences.
+                    seq10Ints: {^Array: {of: 1, number: 10}}
+                    seq10Docs: {^Array: {of: {"a": 1}, number: 10}}
+                    seq10RandomDocs: {
+                      ^Array: {
+                        of: {
+                          ts: {^Now: {}},
+                          caid: {^RandomInt: {min: 0, max: 1000}},
+                          cuid: {^RandomInt: {min: 0, max: 100000}},
+                          prod: {^RandomInt: {min: 0, max: 10000}},
+                          prid: {^RandomDouble: {min: 0.0, max: 1000.0}},
+                          data: {^Join: {array: ["aaaaaaaaaa", {^FastRandomString: {length: {^RandomInt: {min: 0, max: 10}}}}]}}
+                        },
+                        number: 10
+                      }
+                    }
 
-            # Generate some sequences.
-            seq10Ints: {^Array: {of: 1, number: 10}}
-            seq10Docs: {^Array: {of: {"a": 1}, number: 10}}
-            seq10RandomDocs: {^Array: {of: { ts: { ^Now: { } },
-                                             caid: { ^RandomInt: { min: 0, max: 1000 } },
-                                             cuid: { ^RandomInt: { min: 0, max: 100000 } },
-                                             prod: { ^RandomInt: { min: 0, max: 10000 } },
-                                             prid: { ^RandomDouble: { min: 0.0, max: 1000.0 } },
-                                             data: { ^Join: { array: ["aaaaaaaaaa", {^FastRandomString: {length: {^RandomInt: {min: 0, max: 10}}}}]}}},
-                                       number: 10}}
+                    # You can choose elements deterministically. 'from' is an array of values to pick from.
+                    # If 'deterministic' = true, then we select values from the from array deterministically.
+                    # The following example returns - repeatingSeq: [1, 2, 3, 1, 2]
+                    repeatingSeq: {^Array: {of: {^Choose: {from: [1, 2, 3], deterministic: true}}, number: 5}}
 
-            # You can choose elements deterministically. 'from' is an array of values to pick from.
-            # If 'deterministic' = true, then we select values from the from array deterministically.
-            # The following example returns - repeatingSeq: [1, 2, 3, 1, 2]
-            repeatingSeq: {^Array: {of: {^Choose: {from: [1, 2, 3], deterministic: true}}, number: 5}}
+                    # You can also filter items out, similar to a set, by setting `distinct` = true.
+                    # For example, you can generate 10 distinct random integers. Without `distinct` = true,
+                    # the generated array might have duplicate values.
+                    arrayOfDistinct10Ints: {^Array: {of: {^RandomInt: {min: 0, max: 1000}}, number: 10, distinct: true}}
 
-            # You can also filter items out, similar to a set, by setting `distinct` = true.
-            # For example, you can generate 10 distinct random integers. Without `distinct` = true,
-            # the generated array might have duplicate values.
-            distinctSeq10Ints: {^Array: {
-                of: {^Inc: {start: 0, end: 1000}}, number: 10, distinct: true}}
+                    # Just be careful, the generator will give up if the failure rate gets too high, such as
+                    # with this next generator.
+                    distinctFailure: {^Array: {of: {^RandomInt: {min: 0, max: 3}}, number: 100, distinct: true}}
 
-            # Just be careful, the generator will give up if the failure rate gets too high, such as
-            # with this next generator.
-            distinctSeqFailure: {^Array: {of: {^Repeat: {count: 10000, fromGenerator: {
-              ^Inc: {start: 0, end: 1000}}}}, number: 10, distinct: true}}
+                    # A good rule of thumb is that you should be selecting less than 50% of your range.
+                    # You're not limited to integers, though! You can also filter doubles, strings, even
+                    # documents and arrays.
+                    distinctSeq10Strings: {^Array: {of: {^FastRandomString: {length: 10}}, number: 10, distinct: true}}
 
-            # A good rule of thumb is that you should be selecting less than 50% of your range.
-            # You're not limited to integers, though! You can also filter doubles, strings, even
-            # documents and arrays.
-            distinctSeq10Strings: {^Array: {
-                of: {^FastRandomString: {length: 10}}, number: 10, distinct: true}}
+                    # Concatenate constant arrays and generated arrays together.
+                    combinedArrays: {^Concat: {arrays: [[1, 1], [2, 3, 5]]}}
+                    combinedArraysWithGenerator: {^Concat: {arrays: [{^Array: {of: 1, number: 2}}, [2, 3, 5]]}}
 
-            # Concatenate constant arrays and generated arrays together.
-            combinedArrays: {^Concat: {arrays: [[1, 1], [2, 3, 5]]}}
-            combinedArraysWithGenerator: {^Concat: {arrays: [{^Array: {of: 1, number: 2}}, [2, 3, 5]]}}
+                    # Generate an object with 10 key-value pairs using the specified generator for each key
+                    # and value. In the unlikely case when the key generator produces the same key multiple
+                    # times, the object will have repeated field names, which is supported by BSON.
+                    # Allowing duplicated keys is faster; set this parameter to "true" if the generator does
+                    # not produce duplicates or if duplicated fields in an object is OK for your workload.
+                    # Note: the default alphabet used by RandomString is fine for key names. But see
+                    # https://docs.mongodb.com/manual/core/dot-dollar-considerations/#std-label-crud-concepts-dot-dollar-considerations
+                    # if other generators are used for the names.
+                    randomObject: {^Object: {
+                      withNEntries: 10,
+                      havingKeys: {^RandomString: {length: 10}},
+                      andValues: {^RandomString: {length: 10}},
+                      duplicatedKeys: insert
+                    }}
 
-            # Generate an object with 10 key-value pairs using the specified generator for each key
-            # and value. In the unlikely case when the key generator produces the same key multiple
-            # times, the object will have repeated field names, which is supported by BSON.
-            # Allowing duplicated keys is faster; set this parameter to "true" if the generator does
-            # not produce duplicates or if duplicated fields in an object is OK for your workload.
-            # Note: the default alphabet used by RandomString is fine for key names. But see
-            # https://docs.mongodb.com/manual/core/dot-dollar-considerations/#std-label-crud-concepts-dot-dollar-considerations
-            # if other generators are used for the names.
-            randomObject: {^Object: {
-              withNEntries: 10,
-              havingKeys: {^RandomString: {length: 10}},
-              andValues: {^RandomString: {length: 10}},
-              duplicatedKeys: insert
-            }}
+                    # Generate an object with up to 3 key-value pairs. If the generator produces a repeated
+                    # key name, it will be skipped. Thus, the generated object will contain 1, 2, or 3 keys.
+                    # Note: setting `withNEntries` here to a number larger than 3 won't be flagged as an
+                    # error and will generate the same universe of objects, but it's wasteful because the
+                    # generator can produce at most 3 unique keys.
+                    randomObjectNoKeyDuplication: {^Object: {
+                      withNEntries: 3,
+                      havingKeys: {^RandomString: {length: 1, alphabet: abc}},
+                      andValues: 42, duplicatedKeys: skip
+                    }}
 
-            # Generate an object with up to 3 key-value pairs. If the generator produces a repeated
-            # key name, it will be skipped. Thus, the generated object will contain 1, 2, or 3 keys.
-            # Note: setting `withNEntries` here to a number larger than 3 won't be flagged as an
-            # error and will generate the same universe of objects, but it's wasteful because the
-            # generator can produce at most 3 unique keys.
-            randomObjectNoKeyDuplication: {^Object: {
-              withNEntries: 3,
-              havingKeys: {^RandomString: {length: 1, alphabet: abc}},
-              andValues: 42,
-              duplicatedKeys: skip
-            }}
+                    # Large sequences of random strings can be expensive to generate.  FixedGeneratedValue
+                    # can be used to generate an array once during initialization for re-use
+                    fixedLargeArray: {^FixedGeneratedValue: {fromGenerator: {^Array: {of: {^RandomString: {length: 22}}, number: 20000}}}}
 
-            # Large sequences of random strings can be expensive to generate.  FixedGeneratedValue
-            # can be used to generate an array once during initialization for re-use
-            fixedLargeArray: {^FixedGeneratedValue: {fromGenerator: {^Array: {of: {^RandomString: {length: 22}}, number: 20000}}}}
+                    # To pre-generate multiple values and cycle through them, a Cycle Generator can be used.  This example
+                    # generates 10 random strings and will cycle between them in order
+                    cycleOfRandomStrings: {^Cycle: {ofLength: 10, fromGenerator: {^RandomString: {length: 22}}}}
 
-            # To pre-generate multiple values and cycle through them, a Cycle Generator can be used.  This example
-            # generates 10 random strings and will cycle between them in order
-            cycleOfRandomStrings: {^Cycle: {ofLength: 10, fromGenerator: {^RandomString: {length: 22}}}}
+                    # Repeat each value from a generator `count` times. A generator that normally returns
+                    # [a b c b] will return [a a b b c c b b] when wrapped with ^Repeat, count=2
+                    repeatedStrings: {^Repeat: {count: 5, fromGenerator: {^RandomString: {length: 22}}}}
 
-            # Repeat each value from a generator `count` times. A generator that normally returns
-            # [a b c b] will return [a a b b c c b b] when wrapped with ^Repeat, count=2
-            repeatedStrings: {^Repeat: {count: 5, fromGenerator: {^RandomString: {length: 22}}}}
+                    # Random OID
+                    roid: {^ObjectId: {^RandomString: {length: 24, alphabet: "0123456789ABCDEF"}}}
 
-            # Random OID
-            roid: {^ObjectId: {^RandomString: {length: 24, alphabet: "0123456789ABCDEF"}}}
+                    # Ranged OID: "0000bbbbbbbbbbbbbbbbbbbb" ... "9999bbbbbbbbbbbbbbbbbbbb"
+                    rangedOid: {^ObjectId: {
+                      ^FormatString: {"format": "%04d%s", "withArgs": [{^RandomInt: {min: 0, max: 9999}}, {^RandomString: {length: 20, alphabet: b}}]}
+                    }}
 
-            # Ranged OID: "0000bbbbbbbbbbbbbbbbbbbb" ... "9999bbbbbbbbbbbbbbbbbbbb"
-            rangedOid: {^ObjectId: {^FormatString: {"format": "%04d%s", "withArgs": [{^RandomInt: {min: 0, max: 9999}}, {^RandomString: {length: 20, alphabet: b}}]}} }
+                    # Array of sequential ObjectIds in the format "000000000000000000000000", "000000000000000000000001", "000000000000000000000002"...
+                    sequentialObjectIds: {^Array: {of: {^ObjectId: {^FormatString: {"format": "%024d%s", "withArgs": [{^Inc: {start: 0}}, ""]}}}, number: 10}}
 
-            # Next OID
-            noid: {^ObjectId: ""}
+                    # Next OID
+                    noid: {^ObjectId: ""}
 
-            # FrequencyMaps
-            # A list of {string, count} pairs.
-            # An item will be pulled from a random bucket and its count will be decremented. If all buckets are empty, the generator throws an error.
-            #
-            freqmap: { ^TakeRandomStringFromFrequencyMap: { from: { "string1":100, "string2":200 } } }
+                    # FrequencyMaps
+                    # A list of {string, count} pairs.
+                    # An item will be pulled from a random bucket and its count will be decremented. If all buckets are empty, the generator throws an error.
+                    #
+                    freqmap: {^TakeRandomStringFromFrequencyMap: {from: {"string1": 100, "string2": 200}}}
 
-            # TakeRandomStringFromFrequencyMapSingleton keep singletons shared frequency maps shared across threads.
-            # This can be used to ensure the distribution across threads matches exactly. This is important if you want a single value for given thread,
-            # but use multiple threads to load the data.
-            # Maps are identified by their "id" are shared.
-            freqmap_singleton: { ^TakeRandomStringFromFrequencyMapSingleton: { id: "some_string", from: { "string3":100, "string4":200 } } }
+                    # TakeRandomStringFromFrequencyMapSingleton keep singletons shared frequency maps shared across threads.
+                    # This can be used to ensure the distribution across threads matches exactly. This is important if you want a single value for given thread,
+                    # but use multiple threads to load the data.
+                    # Maps are identified by their "id" are shared.
+                    freqmap_singleton: {^TakeRandomStringFromFrequencyMapSingleton: {id: "some_string", from: {"string3": 100, "string4": 200}}}
 
-            # The ConvertTo[Int, Int32, Double, Decimal] convert a numerical or string scalar or generator into the given type.
-            # This is important when strict typing is required.
-            convert: {^ConvertToInt32: {from: {^RandomString: {length: 6, alphabet: "13579"}}}}
+                    # The ConvertTo[Int, Int32, Double, Decimal] convert a numerical or string scalar or generator into the given type.
+                    # This is important when strict typing is required.
+                    convert: {^ConvertToInt32: {from: {^RandomString: {length: 6, alphabet: "13579"}}}}
 
-            # UUID
-            uuids: [
-              # Long uuid
-              {^UUID: {hex: "00000000-1111-2222-3333-444444444444"}},
-              # Long uuid joined with last 2 digits
-              {^UUID: {hex: { ^Join: { array: [ "00000000-4000-8000-0000-0000000000",
-                                                { ^RandomString: { length: 2, alphabet: "0123456789abcdef" } } ],
-                                       sep: "" } }}},
-              # Long uuid formatted with last 2 digits
-              {^UUID: {hex: {^FormatString: {format: "3b241101-e2bb-4255-8caf-4136c566a9%02x",
-                                             withArgs: [{^RandomInt: {min: 0, max: 255}}]}}}},
-              # Long uuid random format
-              {^UUID: {hex: {^FormatString: {format: "%08x-%04x-%04x-%04x-%012x",
-                                             withArgs: [
-                                               {^RandomInt: {min: 0, max: 0xFFFFFFFF}},         #      4294967295
-                                               {^RandomInt: {min: 0, max: 0xFFFF}},             #           65535
-                                               {^RandomInt: {min: 0, max: 0xFFFF}},             #           65535
-                                               {^RandomInt: {min: 0, max: 0xFFFF}},             #           65535
-                                               {^RandomInt: {min: 0, max: 0xFFFFFFFFFFFF}}]}}}} # 281474976710655
-            ]
+                    # UUID
+                    uuids: [
+                      # Long uuid
+                      {^UUID: {hex: "00000000-1111-2222-3333-444444444444"}},
+                      # Long uuid joined with last 2 digits
+                      {^UUID: {hex: {^Join: {array: ["00000000-4000-8000-0000-0000000000",
+                                                     {^RandomString: {length: 2, alphabet: "0123456789abcdef"}}], sep: ""}}}},
+                      # Long uuid formatted with last 2 digits
+                      {^UUID: {hex: {^FormatString: {format: "3b241101-e2bb-4255-8caf-4136c566a9%02x", withArgs: [{^RandomInt: {min: 0, max: 255}}]}}}},
+                      # Long uuid random format
+                      {^UUID: {hex: {^FormatString: {format: "%08x-%04x-%04x-%04x-%012x", withArgs: [
+                        {^RandomInt: {min: 0, max: 0xFFFFFFFF}},    #      4294967295
+                        {^RandomInt: {min: 0, max: 0xFFFF}},        #           65535
+                        {^RandomInt: {min: 0, max: 0xFFFF}},        #           65535
+                        {^RandomInt: {min: 0, max: 0xFFFF}},        #           65535
+                        {^RandomInt: {min: 0, max: 0xFFFFFFFFFFFF}  # 281474976710655
+                        }]}}}}
+                    ]
 
-  # 10% of the findOnes will introduce a 60-second sleep.
-  - Duration: 1 minutes
-    GlobalRate: 1 per 278 microseconds
-    Collection: test
-    Operations:
-    - OperationName: findOne
-      OperationCommand:
-        Filter:
-          roid: {^ObjectId: {^RandomString: {length: 24, alphabet: "0123456789ABCDEF"}}}
-          $where: {^FormatString: {format: "function() { sleep(%2.d); return true; }", withArgs: [{^Choose: {from: [0, 60], weights: [9, 1]}}]}}
+      # 10% of the findOnes will introduce a 60-second sleep.
+      - Duration: 1 minutes
+        GlobalRate: 1 per 278 microseconds
+        Collection: test
+        Operations:
+          - OperationName: findOne
+            OperationCommand:
+              Filter:
+                roid: {^ObjectId: {^RandomString: {length: 24, alphabet: "0123456789ABCDEF"}}}
+                $where: {^FormatString: {format: "function() { sleep(%2.d); return true; }", withArgs: [{^Choose: {from: [0, 60], weights: [9, 1]}}]}}
 
-
-  - Repeat: 1
-    Collection: test
-    Operation:
-      OperationName: drop
-      OperationCommand:
-        Options:
-          WriteConcern:
-            Level: majority
+      - Repeat: 1
+        Collection: test
+        Operation:
+          OperationName: drop
+          OperationCommand:
+            Options:
+              WriteConcern:
+                Level: majority

@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: Storage Engines
+Owner: Storage Execution
 Description: |
   A workload to test/document the random sampler actor which reads random records in a database.
   It chooses collections and then documents from that collection using id based lookup. It has a
@@ -11,26 +11,26 @@ Clients:
       maxPoolSize: 400
 
 Actors:
-- Name: Loader
-  Type: Loader
-  Threads: 50
-  Phases:
-  - Repeat: 1
-    Database: test
-    CollectionCount: 1
-    Threads: 1
-    DocumentCount: 100
-    BatchSize: 100
-    Document:
-      a: {^RandomString: { length: 100 }}
-  - {Nop: true}
+  - Name: Loader
+    Type: Loader
+    Threads: 50
+    Phases:
+      - Repeat: 1
+        Database: test
+        CollectionCount: 1
+        Threads: 1
+        DocumentCount: 100
+        BatchSize: 100
+        Document:
+          a: {^RandomString: {length: 100}}
+      - {Nop: true}
 
-- Name: DbHotSampler
-  Type: RandomSampler
-  Threads: 50
-  CollectionCount: 50
-  DocumentCount: 100
-  Database: hot
-  Phases:
-  - {Nop: true}
-  - Duration: 30 minutes
+  - Name: DbHotSampler
+    Type: RandomSampler
+    Threads: 50
+    CollectionCount: 50
+    DocumentCount: 100
+    Database: hot
+    Phases:
+      - {Nop: true}
+      - Duration: 30 minutes

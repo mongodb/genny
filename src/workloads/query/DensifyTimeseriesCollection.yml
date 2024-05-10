@@ -20,394 +20,319 @@ GlobalDefaults:
   nop: &Nop {Nop: true}
 
 Actors:
-- Name: CreateTimeSeriesCollection
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    Database: *db
-    Operation:
-      OperationMetricsName: CreateTimeSeriesCollection
-      OperationName: RunCommand
-      OperationCommand:
-        {create: &coll Collection0, timeseries: {timeField: "timestamp", metaField: "numeric"}}
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - Repeat: 1
-  - *Nop
-
-
-- Name: InsertData
-  Type: Loader
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - Repeat: 1
-    Database: *db
-    Collection: *coll
+  - Name: CreateTimeSeriesCollection
+    Type: RunCommand
     Threads: 1
-    CollectionCount: 1
-    DocumentCount: 100000
-    BatchSize: *limit
-    Document:
-      partitionKey: {^RandomInt: {min: 1, max: 100}}
-      timestamp: {^IncDate: {start: "2021-01-01T00:00:00.000", step: 400}}
-      # Test a subset of units that have different characteristics.
-      numeric: {^RandomInt: {min: 0, max: 100}}  # Separate codepath for numeric DensifyValues.
-    # $densify stages always add a $sort on the field that is being densified, so this phase adds
-    # indexes on the date/number fields so that we aren't performing an in-memory sort.
-    Indexes:
-    - *index
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+    Phases:
+      - Repeat: 1
+        Database: *db
+        Operation:
+          OperationMetricsName: CreateTimeSeriesCollection
+          OperationName: RunCommand
+          OperationCommand: {create: &coll Collection0, timeseries: {timeField: "timestamp", metaField: "numeric"}}
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
 
-- Name: DensifyFullSmallStep
-  Type: CrudActor
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - Duration: 30 seconds
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
     Database: *db
-    Collection: Collection0
-    Operations:
-    - OperationMetricsName: FullSmallStep
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [{
-          $densify: {
-            field: *field,
-            range: {
-              bounds: "full",
-              step: *smallStep,
-            }
-          }
-        }, {
-          $limit: *limit
-        }]
-        Options: 
-          BatchSize:  *limit
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+    Phases:
+      - *Nop
+      - Repeat: 1
+      - *Nop
+      - Repeat: 1
+      - *Nop
+      - Repeat: 1
+      - *Nop
+      - Repeat: 1
+      - *Nop
+      - Repeat: 1
+      - *Nop
+      - Repeat: 1
+      - *Nop
+      - Repeat: 1
+      - *Nop
+      - Repeat: 1
+      - *Nop
 
-- Name: DensifyFullLargeStep
-  Type: CrudActor
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - Duration: 30 seconds
-    Database: *db
-    Collection: Collection0
-    Operations:
-    - OperationMetricsName: FullLargeStep
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [{
-          $densify: {
-            field: *field,
-            range: {
-              bounds: "full",
-              step: *smallStep,
-            }
-          }
-        }, {
-          $limit: *limit
-        }]
-        Options: 
-          BatchSize:  *limit
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - Name: InsertData
+    Type: Loader
+    Threads: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - Repeat: 1
+        Database: *db
+        Collection: *coll
+        Threads: 1
+        CollectionCount: 1
+        DocumentCount: 100000
+        BatchSize: *limit
+        Document:
+          partitionKey: {^RandomInt: {min: 1, max: 100}}
+          timestamp: {^IncDate: {start: "2021-01-01T00:00:00.000", step: 400}}
+          # Test a subset of units that have different characteristics.
+          numeric: {^RandomInt: {min: 0, max: 100}} # Separate codepath for numeric DensifyValues.
+        # $densify stages always add a $sort on the field that is being densified, so this phase adds
+        # indexes on the date/number fields so that we aren't performing an in-memory sort.
+        Indexes:
+          - *index
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
 
-- Name: DensifyExplicitRangeSmallStep
-  Type: CrudActor
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - Duration: 30 seconds
-    Database: *db
-    Collection: Collection0
-    Operations:
-    - OperationMetricsName: ExplicitRangeSmallStep
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [{
-          $densify: {
-            field: *field,
-            range: {
-              step: *smallStep,
-              bounds: *bounds,
-            }
-          }
-        }, {
-          $limit: *limit
-        }]
-        Options: 
-          BatchSize:  *limit
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - Name: DensifyFullSmallStep
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - Duration: 30 seconds
+        Database: *db
+        Collection: Collection0
+        Operations:
+          - OperationMetricsName: FullSmallStep
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline: [{$densify: {field: *field, range: {bounds: "full", step: *smallStep}}}, {$limit: *limit}]
+              Options:
+                BatchSize: *limit
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
 
-- Name: DensifyExplicitRangeLargeStep
-  Type: CrudActor
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - Duration: 30 seconds
-    Database: *db
-    Collection: Collection0
-    Operations:
-    - OperationMetricsName: ExplicitRangeLargeStep
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [{
-          $densify: {
-            field: *field,
-            range: {
-              step: *smallStep,
-              bounds: *bounds
-            }
-          }
-        }, {
-          $limit: *limit
-        }]
-        Options: 
-          BatchSize:  *limit
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - Name: DensifyFullLargeStep
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - Duration: 30 seconds
+        Database: *db
+        Collection: Collection0
+        Operations:
+          - OperationMetricsName: FullLargeStep
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline: [{$densify: {field: *field, range: {bounds: "full", step: *smallStep}}}, {$limit: *limit}]
+              Options:
+                BatchSize: *limit
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
 
-- Name: DensifyExplicitRangeByPartitionSmallStep
-  Type: CrudActor
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - Duration: 30 seconds
-    Database: *db
-    Collection: Collection0
-    Operations:
-    - OperationMetricsName: ExplicitRangeByPartitionSmallStep
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [{
-          $densify: {
-            field: *field,
-            partitionByFields: ["partitionKey"],
-            range: {
-              step: *smallStep,
-              bounds: *bounds
-            }
-          }
-        }, {
-          $limit: *limit
-        }]
-        Options: 
-          BatchSize:  *limit
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - Name: DensifyExplicitRangeSmallStep
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - Duration: 30 seconds
+        Database: *db
+        Collection: Collection0
+        Operations:
+          - OperationMetricsName: ExplicitRangeSmallStep
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline: [{$densify: {field: *field, range: {step: *smallStep, bounds: *bounds}}}, {$limit: *limit}]
+              Options:
+                BatchSize: *limit
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
 
-- Name: DensifyExplicitRangeByPartitionLargeStep
-  Type: CrudActor
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - Duration: 30 seconds
-    Database: *db
-    Collection: Collection0
-    Operations:
-    - OperationMetricsName: DensifyTimestamp
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [{
-          $densify: {
-            field: *field,
-            range: {
-              step: *smallStep,
-              bounds: "full"
-            }
-          }
-        }, {
-          $limit: *limit
-        }]
-        Options: 
-          BatchSize:  *limit
-  - *Nop
-  - *Nop
+  - Name: DensifyExplicitRangeLargeStep
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - Duration: 30 seconds
+        Database: *db
+        Collection: Collection0
+        Operations:
+          - OperationMetricsName: ExplicitRangeLargeStep
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline: [{$densify: {field: *field, range: {step: *smallStep, bounds: *bounds}}}, {$limit: *limit}]
+              Options:
+                BatchSize: *limit
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
 
-- Name: DensifyTimestamp
-  Type: CrudActor
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - Duration: 30 seconds
-    Database: *db
-    Collection: Collection0
-    Operations:
-    - OperationMetricsName: DensifyTimestamp
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [{
-          $densify: {
-            field: "timestamp",
-            range: {
-              step: *smallStep,
-              unit: "hour",
-              bounds: "full"
-            }
-          }
-        }, {
-          $limit: *limit
-        }]
-        Options: 
-          BatchSize:  *limit
+  - Name: DensifyExplicitRangeByPartitionSmallStep
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - Duration: 30 seconds
+        Database: *db
+        Collection: Collection0
+        Operations:
+          - OperationMetricsName: ExplicitRangeByPartitionSmallStep
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline: [{$densify: {field: *field, partitionByFields: ["partitionKey"], range: {step: *smallStep, bounds: *bounds}}}, {$limit: *limit}]
+              Options:
+                BatchSize: *limit
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+
+  - Name: DensifyExplicitRangeByPartitionLargeStep
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - Duration: 30 seconds
+        Database: *db
+        Collection: Collection0
+        Operations:
+          - OperationMetricsName: DensifyTimestamp
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline: [{$densify: {field: *field, range: {step: *smallStep, bounds: "full"}}}, {$limit: *limit}]
+              Options:
+                BatchSize: *limit
+      - *Nop
+      - *Nop
+
+  - Name: DensifyTimestamp
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - Duration: 30 seconds
+        Database: *db
+        Collection: Collection0
+        Operations:
+          - OperationMetricsName: DensifyTimestamp
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline: [{$densify: {field: "timestamp", range: {step: *smallStep, unit: "hour", bounds: "full"}}}, {$limit: *limit}]
+              Options:
+                BatchSize: *limit
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-      - replica
-      - single-replica
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
-      - v5.0
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone
+          - replica
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4
+          - v5.0

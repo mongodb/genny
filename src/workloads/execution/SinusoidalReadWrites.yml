@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/server-execution"
+Owner: Storage Execution
 Description: |
   This workload attempts to create a sinusoidal distribution of reads/writes to test
   the behavior of execution control when the load on the system changes over time.
@@ -11,11 +11,11 @@ Description: |
 
   In this workload, we try to ensure that reads and writes do not overlap much.
 Keywords:
-- sinusoidal
-- execution control
-- insertMany
-- find
-- CrudActor
+  - sinusoidal
+  - execution control
+  - insertMany
+  - find
+  - CrudActor
 
 dbname: &dbname mixed_sinusoidal
 DocumentCount: &NumDocs 500
@@ -31,89 +31,89 @@ Clients:
       maxPoolSize: 1001
 
 ActorTemplates:
-- TemplateName: WritesActorWithSleepTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: WritesActorWithSleep}}
-    Type: CrudActor
-    Database: *dbname
-    Threads: {^Parameter: {Name: "Threads", Default: 100}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
-        NopInPhasesUpTo: *NumPhases
-        PhaseConfig:
-          Duration: 1 minute
-          SleepAfter: 30 seconds
-          Repeat: 6
-          CollectionCount: *NumColls
-          Operations:
-          - OperationName: insertOne
-            OperationMetricsName: WriteDocs
-            OperationCommand:
-              Document: *doc
-            ThrowOnFailure: false
-- TemplateName: ReadsActorWithSleepTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: ReadsActorWithSleep}}
-    Type: CrudActor
-    Database: *dbname
-    Threads: {^Parameter: {Name: "Threads", Default: 100}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
-        NopInPhasesUpTo: *NumPhases
-        PhaseConfig:
-          SleepBefore: 30 seconds
-          Duration: 1 minute
-          Repeat: 6
-          CollectionCount: *NumColls
-          Operations:
-          - OperationName: find
-            OperationCommand:
-              Filter: { a: { ^RandomInt: { min: 0, max: *NumDocs } } }
-            OperationMetricsName: ReadDocs
-            ThrowOnFailure: false
+  - TemplateName: WritesActorWithSleepTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: WritesActorWithSleep}}
+      Type: CrudActor
+      Database: *dbname
+      Threads: {^Parameter: {Name: "Threads", Default: 100}}
+      Phases:
+        OnlyActiveInPhases:
+          Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
+          NopInPhasesUpTo: *NumPhases
+          PhaseConfig:
+            Duration: 1 minute
+            SleepAfter: 30 seconds
+            Repeat: 6
+            CollectionCount: *NumColls
+            Operations:
+              - OperationName: insertOne
+                OperationMetricsName: WriteDocs
+                OperationCommand:
+                  Document: *doc
+                ThrowOnFailure: false
+  - TemplateName: ReadsActorWithSleepTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: ReadsActorWithSleep}}
+      Type: CrudActor
+      Database: *dbname
+      Threads: {^Parameter: {Name: "Threads", Default: 100}}
+      Phases:
+        OnlyActiveInPhases:
+          Active: {^Parameter: {Name: "ActivePhases", Default: [1]}}
+          NopInPhasesUpTo: *NumPhases
+          PhaseConfig:
+            SleepBefore: 30 seconds
+            Duration: 1 minute
+            Repeat: 6
+            CollectionCount: *NumColls
+            Operations:
+              - OperationName: find
+                OperationCommand:
+                  Filter: {a: {^RandomInt: {min: 0, max: *NumDocs}}}
+                OperationMetricsName: ReadDocs
+                ThrowOnFailure: false
 Actors:
-- Name: Setup
-  Type: Loader
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        # Have 500 documents ready at start
-        Repeat: 1
-        BatchSize: 100
-        Threads: 1
-        DocumentCount: *NumDocs
-        Database: *dbname
-        CollectionCount: *NumColls
-        Document: *doc
-        Indexes:
-        - keys: {a: 1}
+  - Name: Setup
+    Type: Loader
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          # Have 500 documents ready at start
+          Repeat: 1
+          BatchSize: 100
+          Threads: 1
+          DocumentCount: *NumDocs
+          Database: *dbname
+          CollectionCount: *NumColls
+          Document: *doc
+          Indexes:
+            - keys: {a: 1}
 
-- ActorFromTemplate:
-    TemplateName: WritesActorWithSleepTemplate
-    TemplateParameters:
-      Name: {^Parameter: {Name: "WritingName", Default: WritingActor_50_50}}
-      Threads: {^Parameter: {Name: "WritingThreads", Default: 500}}
-      ActivePhases: [1]
+  - ActorFromTemplate:
+      TemplateName: WritesActorWithSleepTemplate
+      TemplateParameters:
+        Name: {^Parameter: {Name: "WritingName", Default: WritingActor_50_50}}
+        Threads: {^Parameter: {Name: "WritingThreads", Default: 500}}
+        ActivePhases: [1]
 
-- ActorFromTemplate:
-    TemplateName: ReadsActorWithSleepTemplate
-    TemplateParameters:
-      Name: {^Parameter: {Name: "ReadingName", Default: ReadsActor_50_50}}
-      Threads: {^Parameter: {Name: "ReadingThreads", Default: 500}}
-      ActivePhases: [1]
+  - ActorFromTemplate:
+      TemplateName: ReadsActorWithSleepTemplate
+      TemplateParameters:
+        Name: {^Parameter: {Name: "ReadingName", Default: ReadsActor_50_50}}
+        Threads: {^Parameter: {Name: "ReadingThreads", Default: 500}}
+        ActivePhases: [1]
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-      - standalone-80-feature-flags
-      - standalone-all-feature-flags
-      - replica
-      - replica-80-feature-flags
-      - replica-all-feature-flags
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone
+          - standalone-80-feature-flags
+          - standalone-all-feature-flags
+          - replica
+          - replica-80-feature-flags
+          - replica-all-feature-flags

@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/server-security"
+Owner: Server Security
 Description: |
   With queryable encryption enabled, this workload runs alternating CRUD and compact phases,
   where the total number of inserts & updates is increased on every CRUD+Compact cycle in order
@@ -42,94 +42,94 @@ GlobalDefaults:
           field0: *rand_primary_key
 
 Actors:
-- Name: IndexSecondaryKey
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *max_phases
-      PhaseConfig:
-        Repeat: 1
-        Database: *encrypted_db
-        Operations:
-        - OperationName: RunCommand
-          OperationCommand:
-            createIndexes: *encrypted_coll
-            indexes:
-            - key:
-                field1: 1
-              name: field1
+  - Name: IndexSecondaryKey
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *max_phases
+        PhaseConfig:
+          Repeat: 1
+          Database: *encrypted_db
+          Operations:
+            - OperationName: RunCommand
+              OperationCommand:
+                createIndexes: *encrypted_coll
+                indexes:
+                  - key:
+                      field1: 1
+                    name: field1
 
-- Name: ShardCollection
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *max_phases
-      PhaseConfig:
-        Repeat: 1
-        Database: admin
-        OnlyRunInInstance: sharded
-        Operations:
-        - OperationMetricsName: EnableSharding
-          OperationName: AdminCommand
-          OperationCommand:
-            enableSharding: *encrypted_db
-        - OperationMetricsName: ShardCollection
-          OperationName: AdminCommand
-          OperationCommand:
-            shardCollection: *encrypted_ns
-            key: {field1: hashed}
+  - Name: ShardCollection
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *max_phases
+        PhaseConfig:
+          Repeat: 1
+          Database: admin
+          OnlyRunInInstance: sharded
+          Operations:
+            - OperationMetricsName: EnableSharding
+              OperationName: AdminCommand
+              OperationCommand:
+                enableSharding: *encrypted_db
+            - OperationMetricsName: ShardCollection
+              OperationName: AdminCommand
+              OperationCommand:
+                shardCollection: *encrypted_ns
+                key: {field1: hashed}
 
-# This actor runs the inserts and updates to increase the size of the ECOC collection before
-# running compaction. On every phase, the number of iterations is roughly twice that of the
-# previous phase, so that the ECOC size is also doubled.
-- Name: ContinuousWrites
-  Type: CrudActor
-  Threads: 32
-  Database: *encrypted_db
-  ClientName: EncryptedPool
-  Phases:
-  # Phases 0 and 1 are reserved for indexes setup & sharding
-  - &Nop {Nop: true}
-  - *Nop
-  # Phase 2: Pre-load the collection. The insertions will add 32*2571*136 bytes = ~10.67 MB to the ECOC
-  - Repeat: 2571
-    Collection: *encrypted_coll
-    Operations:
-    - *insert_one
-  # Phase 3: Run updates to also populate the ECC. These will add approx 32*2571*136*2 = 21.34 MB
-  # to the ECOC. Bringing the total ECOC size to 32 MB before compaction.
-  - Repeat: 2571
-    Collection: *encrypted_coll
-    Operations:
-    - *fast_update_one
-  - *Nop
-  # Phase 5: ECOC ~64 MB after this phase
-  - Repeat: 3085
-    Collection: *encrypted_coll
-    Operations:
-    - *insert_one
-    - *fast_update_one
-    - *fast_update_one
-  - *Nop
-
-- Name: Compactor
-  Type: RunCommand
-  Threads: 1
-  ClientName: EncryptedPool
-  Phases:
-    OnlyActiveInPhases:
-      Active: [4, 6]
-      NopInPhasesUpTo: *max_phases
-      PhaseConfig:
-        Repeat: 1
-        Database: *encrypted_db
-        MetricsName: "Compactor"
+  # This actor runs the inserts and updates to increase the size of the ECOC collection before
+  # running compaction. On every phase, the number of iterations is roughly twice that of the
+  # previous phase, so that the ECOC size is also doubled.
+  - Name: ContinuousWrites
+    Type: CrudActor
+    Threads: 32
+    Database: *encrypted_db
+    ClientName: EncryptedPool
+    Phases:
+      # Phases 0 and 1 are reserved for indexes setup & sharding
+      - &Nop {Nop: true}
+      - *Nop
+      # Phase 2: Pre-load the collection. The insertions will add 32*2571*136 bytes = ~10.67 MB to the ECOC
+      - Repeat: 2571
+        Collection: *encrypted_coll
         Operations:
-        - OperationName: RunCommand
-          OperationMetricsName: compact
-          OperationCommand:
-            compactStructuredEncryptionData: *encrypted_coll
+          - *insert_one
+      # Phase 3: Run updates to also populate the ECC. These will add approx 32*2571*136*2 = 21.34 MB
+      # to the ECOC. Bringing the total ECOC size to 32 MB before compaction.
+      - Repeat: 2571
+        Collection: *encrypted_coll
+        Operations:
+          - *fast_update_one
+      - *Nop
+      # Phase 5: ECOC ~64 MB after this phase
+      - Repeat: 3085
+        Collection: *encrypted_coll
+        Operations:
+          - *insert_one
+          - *fast_update_one
+          - *fast_update_one
+      - *Nop
+
+  - Name: Compactor
+    Type: RunCommand
+    Threads: 1
+    ClientName: EncryptedPool
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4, 6]
+        NopInPhasesUpTo: *max_phases
+        PhaseConfig:
+          Repeat: 1
+          Database: *encrypted_db
+          MetricsName: "Compactor"
+          Operations:
+            - OperationName: RunCommand
+              OperationMetricsName: compact
+              OperationCommand:
+                compactStructuredEncryptionData: *encrypted_coll

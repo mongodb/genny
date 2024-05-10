@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/sharding"
+Owner: Cluster Scalability
 Description: See phases/sharding/multi_updates/MultiUpdatesTemplate.yml.
 
 Clients:
@@ -14,11 +14,10 @@ LoadConfig:
     PauseMigrationsPhases: []
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - shard
-      - shard-80-feature-flags
-      - shard-lite
-      - shard-lite-80-feature-flags
-      - shard-lite-all-feature-flags
+  - When:
+      mongodb_setup:
+        $eq:
+          - shard
+          - shard-80-feature-flags
+          - shard-all-feature-flags
+          - shard-lite-80-feature-flags

@@ -1,16 +1,16 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/sharding"
+Owner: Cluster Scalability
 Description: |
-  This test measures the time for a sharded cluster to reshard a collection from one shard to two 
-  shards then to three shards. It was added August 2023 as part of PM-2322, to demonstrate planned 
-  resharding performance improvements. Note that the goal of this test is to show the performance 
+  This test measures the time for a sharded cluster to reshard a collection from one shard to two
+  shards then to three shards. It was added August 2023 as part of PM-2322, to demonstrate planned
+  resharding performance improvements. Note that the goal of this test is to show the performance
   gain on this setup rather than the performance difference on different kinds of data type.
-  
-  The test expects the target cluster is created using ebs snapshot with 1 billion 1KB records and 
-  has 3 shards, named shard-00, shard-01, shard-02. The collection has 10 indexes including 
+
+  The test expects the target cluster is created using ebs snapshot with 1 billion 1KB records and
+  has 3 shards, named shard-00, shard-01, shard-02. The collection has 10 indexes including
   _id index, single-key index and compound index. The whole dataset is on 1 shard at the beginning.
-  ReshardCollection should use same-key resharding and use shardDistribution parameter to reshard 
-  into 2 shards then 3 shards. There will be random CRUD operations during resharding but should 
+  ReshardCollection should use same-key resharding and use shardDistribution parameter to reshard
+  into 2 shards then 3 shards. There will be random CRUD operations during resharding but should
   run at a very low rate.
 
   The workload consists of 3 phases:
@@ -18,11 +18,11 @@ Description: |
     2. Running read and write operations on the collection while it is being resharded to 2 shards.
     3. Running read and write operations on the collection while it is being resharded to 3 shards.
 
-  All documents are generated through genny' data loader where the integer and length of short 
-  string fields are randomly generated. The fields are designed like to form different combinations 
-  of indexes. The goal of having 10 indexes is to test resharding performance with indexes and the 
+  All documents are generated through genny' data loader where the integer and length of short
+  string fields are randomly generated. The fields are designed like to form different combinations
+  of indexes. The goal of having 10 indexes is to test resharding performance with indexes and the
   number 10 comes from design, which is arbitrary from testing perspective.
-    
+
   The inserted documents have the following form:
 
       {
@@ -50,11 +50,12 @@ Description: |
         {num2:1, str2: 1}
       ]
 
+
 Keywords:
-- resharding
-- indexes
-- replication
-- collection copy
+  - resharding
+  - indexes
+  - replication
+  - collection copy
 
 GlobalDefaults:
   Nop: &Nop {Nop: true}
@@ -64,8 +65,8 @@ GlobalDefaults:
   Collection: &Collection Collection0
   Namespace: &Namespace test.Collection0
 
-  DocumentCount: &DocumentCount 1_000_000_000  # for an approximate total of 1TB
-  NumChunks: &NumChunks 1                # start with only 1 shard
+  DocumentCount: &DocumentCount 1_000_000_000 # for an approximate total of 1TB
+  NumChunks: &NumChunks 1 # start with only 1 shard
   NumChunksAfterResharding: &NumChunksAfterResharding 20000
   # Each reshardCollection takes around 15h in past runs so 20h is a reasonable threshold to treat
   # the reshardCollection as timed out.
@@ -75,22 +76,22 @@ GlobalDefaults:
   ShardName1: &Shard1 shard-01
   ShardName2: &Shard2 shard-02
 
-  # The CRUD operations here are to test that resharding won't fail with CRUD operations. We keep 
+  # The CRUD operations here are to test that resharding won't fail with CRUD operations. We keep
   # the rate small so it won't significantly affect the resharding performance. That says, these
   # CRUD operations should keep minimal and should not slow down resharding.
   ReadRate: &ReadRate 100 per 1 second
-  WriteRate: &WriteRate 10 per 10 seconds  # Keep the writes slow to pass critical section.
+  WriteRate: &WriteRate 10 per 10 seconds # Keep the writes slow to pass critical section.
 
   ReadOperations: &ReadOperations
-  - OperationName: findOne
-    OperationCommand:
-      Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
+    - OperationName: findOne
+      OperationCommand:
+        Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
 
   WriteOperations: &WriteOperations
-  - OperationName: updateOne
-    OperationCommand:
-      Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
-      Update: {$inc: {counter: 1}}
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
+        Update: {$inc: {counter: 1}}
 
 Clients:
   Default:
@@ -101,102 +102,102 @@ Clients:
   ReshardCollection:
     QueryOptions:
       maxPoolSize: 1
-      socketTimeoutMS: *Timeout  # = 20 hours
+      socketTimeoutMS: *Timeout # = 20 hours
 
 Actors:
-- Name: CreateShardedCollection
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    Database: admin
-    Operations:
-    - OperationMetricsName: DisableBalancer
-      OperationName: AdminCommand
-      OperationCommand:
-        balancerStop: 1
-    - OperationMetricsName: EnableSharding
-      OperationName: AdminCommand
-      OperationCommand:
-        enableSharding: *Database
-    - OperationMetricsName: ShardCollection
-      OperationName: AdminCommand
-      OperationCommand:
-        shardCollection: *Namespace
-        key: {shardKey: hashed}
-  - *Nop
-  - *Nop
+  - Name: CreateShardedCollection
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      - Repeat: 1
+        Database: admin
+        Operations:
+          - OperationMetricsName: DisableBalancer
+            OperationName: AdminCommand
+            OperationCommand:
+              balancerStop: 1
+          - OperationMetricsName: EnableSharding
+            OperationName: AdminCommand
+            OperationCommand:
+              enableSharding: *Database
+          - OperationMetricsName: ShardCollection
+            OperationName: AdminCommand
+            OperationCommand:
+              shardCollection: *Namespace
+              key: {shardKey: hashed}
+      - *Nop
+      - *Nop
 
-- Name: ReshardCollection
-  Type: AdminCommand
-  Threads: 1
-  ClientName: ReshardCollection
-  Phases:
-  - *Nop
-  - Repeat: 1
-    Database: admin
-    Operations:
-    - OperationMetricsName: ReshardCollectionToTwoShards
-      OperationName: AdminCommand
-      OperationCommand:
-        reshardCollection: *Namespace
-        key: {shardKey: 1}
-        shardDistribution: [{shard: *Shard0}, {shard: *Shard1}]
-        forceRedistribution: true
-        numInitialChunks: *NumChunksAfterResharding
-  - Repeat: 1
-    Database: admin
-    Operations:
-    - OperationMetricsName: ReshardCollectionToThreeShards
-      OperationName: AdminCommand
-      OperationCommand:
-        reshardCollection: *Namespace
-        key: {shardKey: 1}
-        shardDistribution: [{shard: *Shard0}, {shard: *Shard1}, {shard: *Shard2}]
-        forceRedistribution: true
-        numInitialChunks: *NumChunksAfterResharding
+  - Name: ReshardCollection
+    Type: AdminCommand
+    Threads: 1
+    ClientName: ReshardCollection
+    Phases:
+      - *Nop
+      - Repeat: 1
+        Database: admin
+        Operations:
+          - OperationMetricsName: ReshardCollectionToTwoShards
+            OperationName: AdminCommand
+            OperationCommand:
+              reshardCollection: *Namespace
+              key: {shardKey: 1}
+              shardDistribution: [{shard: *Shard0}, {shard: *Shard1}]
+              forceRedistribution: true
+              numInitialChunks: *NumChunksAfterResharding
+      - Repeat: 1
+        Database: admin
+        Operations:
+          - OperationMetricsName: ReshardCollectionToThreeShards
+            OperationName: AdminCommand
+            OperationCommand:
+              reshardCollection: *Namespace
+              key: {shardKey: 1}
+              shardDistribution: [{shard: *Shard0}, {shard: *Shard1}, {shard: *Shard2}]
+              forceRedistribution: true
+              numInitialChunks: *NumChunksAfterResharding
 
-- Name: ReadCollectionBeingResharded
-  Type: CrudActor
-  Threads: 95
-  Database: *Database
-  Phases:
-  - *Nop
-  - MetricsName: ReadDuringReshardingToTwoShards
-    Blocking: None
-    Collection: *Collection
-    Operations: *ReadOperations
-    GlobalRate: *ReadRate
-  - MetricsName: ReadDuringReshardingToThreeShards
-    Blocking: None
-    Collection: *Collection
-    Operations: *ReadOperations
-    GlobalRate: *ReadRate
-
-- Name: WriteCollectionBeingResharded
-  Type: CrudActor
-  Threads: 5
-  Database: *Database
-  Phases:
-  - *Nop
-  - MetricsName: WriteDuringReshardingToTwoShards
-    Blocking: None
-    Collection: *Collection
-    Operations: *WriteOperations
-    GlobalRate: *WriteRate
-  - MetricsName: WriteDuringReshardingToThreeShards
-    Blocking: None
-    Collection: *Collection
-    Operations: *WriteOperations
-    GlobalRate: *WriteRate
-
-- Name: LoggingActor
-  Type: LoggingActor
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1, 2]
-      NopInPhasesUpTo: 2
-      PhaseConfig:
-        LogEvery: 15 minutes
+  - Name: ReadCollectionBeingResharded
+    Type: CrudActor
+    Threads: 95
+    Database: *Database
+    Phases:
+      - *Nop
+      - MetricsName: ReadDuringReshardingToTwoShards
         Blocking: None
+        Collection: *Collection
+        Operations: *ReadOperations
+        GlobalRate: *ReadRate
+      - MetricsName: ReadDuringReshardingToThreeShards
+        Blocking: None
+        Collection: *Collection
+        Operations: *ReadOperations
+        GlobalRate: *ReadRate
+
+  - Name: WriteCollectionBeingResharded
+    Type: CrudActor
+    Threads: 5
+    Database: *Database
+    Phases:
+      - *Nop
+      - MetricsName: WriteDuringReshardingToTwoShards
+        Blocking: None
+        Collection: *Collection
+        Operations: *WriteOperations
+        GlobalRate: *WriteRate
+      - MetricsName: WriteDuringReshardingToThreeShards
+        Blocking: None
+        Collection: *Collection
+        Operations: *WriteOperations
+        GlobalRate: *WriteRate
+
+  - Name: LoggingActor
+    Type: LoggingActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1, 2]
+        NopInPhasesUpTo: 2
+        PhaseConfig:
+          LogEvery: 15 minutes
+          Blocking: None

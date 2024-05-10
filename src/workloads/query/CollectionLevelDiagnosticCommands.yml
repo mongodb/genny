@@ -1,13 +1,13 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-execution"
+Owner: Query Execution
 Description: |
   This workload measures performance for diagnostic top command.
 
 Keywords:
-- top
-- command
-- admin
-- stats
+  - top
+  - command
+  - admin
+  - stats
 
 GlobalDefaults:
   Database: &Database test
@@ -21,174 +21,174 @@ Clients:
       maxPoolSize: 2000
 
 Actors:
-# Clear any pre-existing collection state.
-- Name: ClearCollection
-  Type: CrudActor
-  CollectionCount: *CollectionCount
-  Database: *Database
-  Threads: *CollectionCount
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: *CollectionCount
-        CollectionCount: *CollectionCount
-        Operations:
-        - OperationName: drop
+  # Clear any pre-existing collection state.
+  - Name: ClearCollection
+    Type: CrudActor
+    CollectionCount: *CollectionCount
+    Database: *Database
+    Threads: *CollectionCount
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: *CollectionCount
+          CollectionCount: *CollectionCount
+          Operations:
+            - OperationName: drop
 
-- Name: InsertData
-  Type: Loader
-  Threads: *CollectionCount
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        MultipleThreadsPerCollection: true
-        CollectionCount: *CollectionCount
-        DocumentCount: *DocumentCount
-        BatchSize: 1000
-        Document:
-          int: &integer {^Choose: {from: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], deterministic: true}}
-          string: &string {^Choose: {from: ["swimswimswimswimswim", "sinksinksinksink"], deterministic: true}}
-          obj: {int: *integer, string: *string}
+  - Name: InsertData
+    Type: Loader
+    Threads: *CollectionCount
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          MultipleThreadsPerCollection: true
+          CollectionCount: *CollectionCount
+          DocumentCount: *DocumentCount
+          BatchSize: 1000
+          Document:
+            int: &integer {^Choose: {from: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], deterministic: true}}
+            string: &string {^Choose: {from: ["swimswimswimswimswim", "sinksinksinksink"], deterministic: true}}
+            obj: {int: *integer, string: *string}
 
-# Phase 2: Ensure all data is synced to disk.
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
+  # Phase 2: Ensure all data is synced to disk.
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
 
-- Name: DiagnosticTopCommand
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3, 5, 7, 9]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 100
-        Thread: 1
-        Database: admin
-        Operations:
-        - OperationMetricsName: DiagnosticTopCommand
-          OperationName: AdminCommand
-          OperationCommand:
-            top: 1
+  - Name: DiagnosticTopCommand
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3, 5, 7, 9]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 100
+          Thread: 1
+          Database: admin
+          Operations:
+            - OperationMetricsName: DiagnosticTopCommand
+              OperationName: AdminCommand
+              OperationCommand:
+                top: 1
 
-- Name: DiagnosticConcurrentTopCommand
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [4, 6, 8, 10]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 100
-        Thread: 1
-        Database: admin
-        Operations:
-        - OperationMetricsName: DiagnosticConcurrentTopCommand
-          OperationName: AdminCommand
-          OperationCommand:
-            top: 1
+  - Name: DiagnosticConcurrentTopCommand
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4, 6, 8, 10]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 100
+          Thread: 1
+          Database: admin
+          Operations:
+            - OperationMetricsName: DiagnosticConcurrentTopCommand
+              OperationName: AdminCommand
+              OperationCommand:
+                top: 1
 
-- Name: AggForDiagnosticSetup
-  Type: CrudActor
-  Database: *Database
-  CollectionCount: *CollectionCount
-  Threads: *CollectionCount
-  Phases:
-    OnlyActiveInPhases:
-      Active: [4]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        CollectionCount: *CollectionCount
-        Operations:
-        - OperationMetricsName: AggForDiagnosticSetup
-          OperationName: aggregate
-          OperationCommand:
-            Pipeline: [{$group: {_id: "$int", sumOfDoubles: {$sum: "$double"}}}, {$project: {string: 1}}, {$match: { string : "swimswimswimswimswim" }}]
+  - Name: AggForDiagnosticSetup
+    Type: CrudActor
+    Database: *Database
+    CollectionCount: *CollectionCount
+    Threads: *CollectionCount
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          CollectionCount: *CollectionCount
+          Operations:
+            - OperationMetricsName: AggForDiagnosticSetup
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline: [{$group: {_id: "$int", sumOfDoubles: {$sum: "$double"}}}, {$project: {string: 1}}, {$match: {string: "swimswimswimswimswim"}}]
 
-- Name: QueryForDiagnosticSetup
-  Type: CrudActor
-  Database: *Database
-  CollectionCount: *CollectionCount
-  Threads: *CollectionCount
-  Phases:
-    OnlyActiveInPhases:
-      Active: [6]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 10
-        Database: *Database
-        CollectionCount: *CollectionCount
-        Operation:
-          OperationName: find
-          OperationCommand:
-            Filter: {string: "sinksinksinksink"}
-            Options:
-              Limit: 100
+  - Name: QueryForDiagnosticSetup
+    Type: CrudActor
+    Database: *Database
+    CollectionCount: *CollectionCount
+    Threads: *CollectionCount
+    Phases:
+      OnlyActiveInPhases:
+        Active: [6]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 10
+          Database: *Database
+          CollectionCount: *CollectionCount
+          Operation:
+            OperationName: find
+            OperationCommand:
+              Filter: {string: "sinksinksinksink"}
+              Options:
+                Limit: 100
 
-- Name: UpdateManyForDiagnosticSetup
-  Type: CrudActor
-  Database: *Database
-  CollectionCount: *CollectionCount
-  Threads: *CollectionCount
-  Phases:
-    OnlyActiveInPhases:
-      Active: [8]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 5
-        Database: *Database
-        CollectionCount: *CollectionCount
-        Operation:
-          OperationName: updateMany
-          OperationCommand:
-            Filter: { obj.int: {$lt: 5} }
-            Update: {$inc: {x: 1}}
+  - Name: UpdateManyForDiagnosticSetup
+    Type: CrudActor
+    Database: *Database
+    CollectionCount: *CollectionCount
+    Threads: *CollectionCount
+    Phases:
+      OnlyActiveInPhases:
+        Active: [8]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 5
+          Database: *Database
+          CollectionCount: *CollectionCount
+          Operation:
+            OperationName: updateMany
+            OperationCommand:
+              Filter: {obj.int: {$lt: 5}}
+              Update: {$inc: {x: 1}}
 
-- Name: DeleteManyForDiagnosticSetup
-  Type: CrudActor
-  Database: *Database
-  CollectionCount: *CollectionCount
-  Threads: *CollectionCount
-  Phases:
-    OnlyActiveInPhases:
-      Active: [10]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 5
-        Database: *Database
-        CollectionCount: *CollectionCount
-        Operation:
-          OperationName: deleteMany
-          OperationCommand:
-            Filter: { int: {$eq: 5} }
+  - Name: DeleteManyForDiagnosticSetup
+    Type: CrudActor
+    Database: *Database
+    CollectionCount: *CollectionCount
+    Threads: *CollectionCount
+    Phases:
+      OnlyActiveInPhases:
+        Active: [10]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 5
+          Database: *Database
+          CollectionCount: *CollectionCount
+          Operation:
+            OperationName: deleteMany
+            OperationCommand:
+              Filter: {int: {$eq: 5}}
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-      - replica
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
-      - v5.0
-      - v6.0
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone
+          - replica
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4
+          - v5.0
+          - v6.0

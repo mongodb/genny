@@ -1,12 +1,12 @@
 SchemaVersion: 2018-07-01
-Owner: mongodb/server-replication"
-Description: >
- Issues dummy reads against both databases used in the light and the heavy phases.
-  To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.
+Owner: Replication
+Description: |
+  Issues dummy reads against both databases used in the light and the heavy phases.
+   To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.
 
 Keywords:
-- startup
-- reads
+  - startup
+  - reads
 
 Clients:
   Default:
@@ -23,26 +23,26 @@ GlobalDefaults:
   - CollectionCount2: &collectionCount2 10000
 
 Actors:
-- ReadOperationsDB1:
-  LoadConfig:
-    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
-    Key: ReadOperationsTemplate
-    Parameters:
-      active: [0]
-      nopInPhasesUpTo: *max_phase
-      database: *database1
-      collectionCount: *collectionCount1
-      numOfCollectionsTargeted: *collectionCount1
-      numOfReadOpsPerCollection: 1000
+  - ReadOperationsDB1:
+    LoadConfig:
+      Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+      Key: ReadOperationsTemplate
+      Parameters:
+        active: [0]
+        nopInPhasesUpTo: *max_phase
+        database: *database1
+        collectionCount: *collectionCount1
+        numOfCollectionsTargeted: *collectionCount1
+        numOfReadOpsPerCollection: 1000
 
-- ReadOperationsDB2:
-  LoadConfig:
-    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
-    Key: ReadOperationsTemplate
-    Parameters:
-      active: [1]
-      nopInPhasesUpTo: *max_phase
-      database: *database2
-      collectionCount: *collectionCount2
-      numOfCollectionsTargeted: 50
-      numOfReadOpsPerCollection: 1000
+  - ReadOperationsDB2:
+    LoadConfig:
+      Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+      Key: ReadOperationsTemplate
+      Parameters:
+        active: [1]
+        nopInPhasesUpTo: *max_phase
+        database: *database2
+        collectionCount: *collectionCount2
+        numOfCollectionsTargeted: 50
+        numOfReadOpsPerCollection: 1000

@@ -1,66 +1,143 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Run TPC-H query 20 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  Run TPC-H query 20 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema.
+  Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
+batchSize: &batchSize { ^Parameter: { Name: "BatchSize", Default: 101 } }
 
-query20Nation: &query20Nation {^Parameter: {Name: "Query20Nation", Default: "CANADA"}}
-query20Color: &query20Color {^Parameter: {Name: "Query20Color", Default: "^forest.*$"}}  # "^${color}.*$"
-query20Date: &query20Date {^Parameter: {Name: "Query20Date", Default: "1994-01-01"}}
+query20Nation:
+  &query20Nation { ^Parameter: { Name: "Query20Nation", Default: "CANADA" } }
+query20Color: &query20Color {
+  ^Parameter: { Name: "Query20Color", Default: "^forest.*$" },
+} # "^${color}.*$"
+query20Date:
+  &query20Date { ^Parameter: { Name: "Query20Date", Default: "1994-01-01" } }
 
 TPCHNormalizedQuery20Aggregation: &TPCHNormalizedQuery20Aggregation
   aggregate: supplier
   pipeline:
     [
-      {$lookup: {from: "nation", localField: "s_nationkey", foreignField: "n_nationkey", as: "nation"}},
-      {$unwind: "$nation"},
-      {$match: {"nation.n_name": *query20Nation}},
-      {$lookup: {from: "partsupp", localField: "s_suppkey", foreignField: "ps_suppkey", as: "partsupp"}},
-      {$unwind: "$partsupp"},
-      {$lookup: {from: "part", localField: "partsupp.ps_partkey", foreignField: "p_partkey", as: "part"}},
-      {$unwind: "$part"},
-      {$match: {"part.p_name": {$regex: *query20Color, $options: "si"}}},
-      {$lookup: {from: "lineitem", localField: "partsupp.ps_partkey", foreignField: "l_partkey", let: {s_suppkey: "$s_suppkey"}, as: "lineitem", pipeline: [
-        {$match: {$and: [
-          {$expr: {$eq: ["$$s_suppkey", "$l_suppkey"]}},
-          {$expr: {$gte: ["$l_shipdate", {^Date: *query20Date}]}},
-          {$expr: {$lt: ["$l_shipdate", {$dateAdd: {startDate: {^Date: *query20Date}, unit: "year", amount: 1}}]}}]}},
-        {$group: {_id: {}, quantity: {$sum: "$l_quantity"}}},
-        {$project: {_id: 0, quantity: {$multiply: ["$quantity", 0.5]}}}]}},
-      {$unwind: "$lineitem"},
-      {$match: {$expr: {$gt: ["$partsupp.ps_availqty", "$lineitem.quantity"]}}},
-      {$group: {_id: {s_name: "$s_name", s_address: "$s_address"}}},
-      {$project: {_id: 0, s_name: "$_id.s_name", s_address: "$_id.s_address"}},
-      {$sort: {s_name: 1}}
+      {
+        $lookup:
+          {
+            from: "nation",
+            localField: "s_nationkey",
+            foreignField: "n_nationkey",
+            as: "nation",
+          },
+      },
+      { $unwind: "$nation" },
+      { $match: { "nation.n_name": *query20Nation } },
+      {
+        $lookup:
+          {
+            from: "partsupp",
+            localField: "s_suppkey",
+            foreignField: "ps_suppkey",
+            as: "partsupp",
+          },
+      },
+      { $unwind: "$partsupp" },
+      {
+        $lookup:
+          {
+            from: "part",
+            localField: "partsupp.ps_partkey",
+            foreignField: "p_partkey",
+            as: "part",
+          },
+      },
+      { $unwind: "$part" },
+      { $match: { "part.p_name": { $regex: *query20Color, $options: "si" } } },
+      {
+        $lookup:
+          {
+            from: "lineitem",
+            localField: "partsupp.ps_partkey",
+            foreignField: "l_partkey",
+            let: { s_suppkey: "$s_suppkey" },
+            as: "lineitem",
+            pipeline:
+              [
+                {
+                  $match:
+                    {
+                      $and:
+                        [
+                          { $expr: { $eq: ["$$s_suppkey", "$l_suppkey"] } },
+                          {
+                            $expr:
+                              {
+                                $gte: ["$l_shipdate", { ^Date: *query20Date }],
+                              },
+                          },
+                          {
+                            $expr:
+                              {
+                                $lt:
+                                  [
+                                    "$l_shipdate",
+                                    {
+                                      $dateAdd:
+                                        {
+                                          startDate: { ^Date: *query20Date },
+                                          unit: "year",
+                                          amount: 1,
+                                        },
+                                    },
+                                  ],
+                              },
+                          },
+                        ],
+                    },
+                },
+                { $group: { _id: {}, quantity: { $sum: "$l_quantity" } } },
+                {
+                  $project:
+                    { _id: 0, quantity: { $multiply: ["$quantity", 0.5] } },
+                },
+              ],
+          },
+      },
+      { $unwind: "$lineitem" },
+      {
+        $match:
+          { $expr: { $gt: ["$partsupp.ps_availqty", "$lineitem.quantity"] } },
+      },
+      { $group: { _id: { s_name: "$s_name", s_address: "$s_address" } } },
+      {
+        $project:
+          { _id: 0, s_name: "$_id.s_name", s_address: "$_id.s_address" },
+      },
+      { $sort: { s_name: 1 } },
     ]
-  cursor: {batchSize: *batchSize}
+  cursor: { batchSize: *batchSize }
   allowDiskUse: true
 
 TPCHNormalizedQuery20Warmup:
-  Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
+  Repeat: &Repeat { ^Parameter: { Name: "Repeat", Default: 1 } }
   Database: &db tpch
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHNormalizedQuery20Aggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHNormalizedQuery20Aggregation
 
 TPCHNormalizedQuery20:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query20
-    OperationName: RunCommand
-    OperationCommand: *TPCHNormalizedQuery20Aggregation
+    - OperationMetricsName: Query20
+      OperationName: RunCommand
+      OperationCommand: *TPCHNormalizedQuery20Aggregation
 
 TPCHNormalizedQuery20Explain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query20
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHNormalizedQuery20Aggregation
-      verbosity:
-        executionStats
+    - OperationMetricsName: Query20
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHNormalizedQuery20Aggregation
+        verbosity: executionStats

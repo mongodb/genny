@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/server-security"
+Owner: Server Security
 Description: |
   Models the Queryable Encryption acceptance criteria workloads
 
@@ -7,16 +7,16 @@ Encryption:
   UseCryptSharedLib: true
   CryptSharedLibPath: /data/workdir/mongocrypt/lib/mongo_crypt_v1.so
   EncryptedCollections:
-  - Database: genny_qebench2
-    Collection: medical
-    EncryptionType: queryable
+    - Database: genny_qebench2
+      Collection: medical
+      EncryptionType: queryable
 
-    QueryableEncryptedFields:
-      states: { type: "string", queries: [{queryType: "equality", contention: 16 }] }
-      diagnosis: { type: "string", queries: [{queryType: "equality", contention: 8 }] }
-      status: { type: "string", queries: [{queryType: "equality", contention: 16 }] }
-      credit_cards: { type: "string", queries: [{queryType: "equality", contention: 4 }] }
-      guid: { type: "string", queries: [{queryType: "equality", contention: 1 }] }
+      QueryableEncryptedFields:
+        states: {type: "string", queries: [{queryType: "equality", contention: 16}]}
+        diagnosis: {type: "string", queries: [{queryType: "equality", contention: 8}]}
+        status: {type: "string", queries: [{queryType: "equality", contention: 16}]}
+        credit_cards: {type: "string", queries: [{queryType: "equality", contention: 4}]}
+        guid: {type: "string", queries: [{queryType: "equality", contention: 1}]}
 
 Clients:
   EncryptedPool:
@@ -26,8 +26,7 @@ Clients:
       KeyVaultDatabase: "keyvault"
       KeyVaultCollection: "datakeys"
       EncryptedCollections:
-      - genny_qebench2.medical
-
+        - genny_qebench2.medical
 
 Actors:
   - Name: InsertActor
@@ -36,52 +35,52 @@ Actors:
     Database: genny_qebench2
     ClientName: EncryptedPool
     Phases:
-    - Repeat: 62500
-      Collection: {^Parameter: {Name: "Collection", Default: "medical"}}
-      MetricsName: "load"
-      Operations:
-      - OperationName: insertOne
-        OperationMetricsName: inserts
-        OperationCommand:
-          Document:
-            LoadConfig:
-              Path: ../contrib/qe_test_gen/maps_medical.yml
-              Key: document_insert_medical
-              Parameters:
-                Database: ignored
-                multiplier: 62500
-    - Repeat: 6250
-      Collection: {^Parameter: {Name: "Collection", Default: "medical"}}
-      MetricsName: "FSM"
-      InitialStates:
-        - State: Query
-          Weight: 0.5
-        - State: Update
-          Weight: 0.5
-      StateTransitions: &transitions
-        - To: Query
-          Weight: 0.5
-          SleepBefore: {^TimeSpec: {value: 0, unit: seconds}}
-        - To: Update
-          Weight: 0.5
-          SleepBefore: {^TimeSpec: {value: 0, unit: seconds}}
-      States:
-        - Name: Query
-          Operations:
-            - OperationName: find
-              OperationMetricsName: query
-              OperationCommand:
-                Filter: {diagnosis: {^ChooseFromDataset: {"path": "./src/genny/src/workloads/contrib/qe_test_gen/diagnosis.txt"}}}
-          Transitions: *transitions
-        - Name: Update
-          Operations:
-            - OperationName: updateOne
-              OperationMetricsName: update
-              OperationCommand:
-                Filter: {diagnosis: {^ChooseFromDataset: {"path": "./src/genny/src/workloads/contrib/qe_test_gen/diagnosis.txt"}}}
-                Update: {$set: {diagnosis: {^ChooseFromDataset: {"path": "./src/genny/src/workloads/contrib/qe_test_gen/diagnosis.txt"}}}}
-          Transitions: *transitions
-  
+      - Repeat: 62500
+        Collection: {^Parameter: {Name: "Collection", Default: "medical"}}
+        MetricsName: "load"
+        Operations:
+          - OperationName: insertOne
+            OperationMetricsName: inserts
+            OperationCommand:
+              Document:
+                LoadConfig:
+                  Path: ../contrib/qe_test_gen/maps_medical.yml
+                  Key: document_insert_medical
+                  Parameters:
+                    Database: ignored
+                    multiplier: 62500
+      - Repeat: 6250
+        Collection: {^Parameter: {Name: "Collection", Default: "medical"}}
+        MetricsName: "FSM"
+        InitialStates:
+          - State: Query
+            Weight: 0.5
+          - State: Update
+            Weight: 0.5
+        StateTransitions: &transitions
+          - To: Query
+            Weight: 0.5
+            SleepBefore: {^TimeSpec: {value: 0, unit: seconds}}
+          - To: Update
+            Weight: 0.5
+            SleepBefore: {^TimeSpec: {value: 0, unit: seconds}}
+        States:
+          - Name: Query
+            Operations:
+              - OperationName: find
+                OperationMetricsName: query
+                OperationCommand:
+                  Filter: {diagnosis: {^ChooseFromDataset: {"path": "./src/genny/src/workloads/contrib/qe_test_gen/diagnosis.txt"}}}
+            Transitions: *transitions
+          - Name: Update
+            Operations:
+              - OperationName: updateOne
+                OperationMetricsName: update
+                OperationCommand:
+                  Filter: {diagnosis: {^ChooseFromDataset: {"path": "./src/genny/src/workloads/contrib/qe_test_gen/diagnosis.txt"}}}
+                  Update: {$set: {diagnosis: {^ChooseFromDataset: {"path": "./src/genny/src/workloads/contrib/qe_test_gen/diagnosis.txt"}}}}
+            Transitions: *transitions
+
   - Name: LoggingActor0
     Type: LoggingActor
     Threads: 1
@@ -91,9 +90,9 @@ Actors:
         Blocking: None
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - shard-lite-fle
-    branch_name:
-      $gte: v7.0
+  - When:
+      mongodb_setup:
+        $eq:
+          - shard-lite-fle
+      branch_name:
+        $gte: v7.0

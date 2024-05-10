@@ -9,103 +9,137 @@ Description: |
 GlobalDefaults:
   dbname: &db test
   coll: &coll Collection0
-  nop: &Nop {Nop: true}
+  nop: &Nop { Nop: true }
 
 Keywords:
-- Project
-- Parsing
-- Aggregation
+  - Project
+  - Parsing
+  - Aggregation
 
 Actors:
-- Name: InsertData
-  Type: Loader
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    Database: *db
-    Collection: *coll
+  - Name: InsertData
+    Type: Loader
     Threads: 1
-    CollectionCount: 1
-    DocumentCount: 10
-    BatchSize: 10
-    Document:
-      m: {^Inc: {start: 0}}
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+    Phases:
+      - Repeat: 1
+        Database: *db
+        Collection: *coll
+        Threads: 1
+        CollectionCount: 1
+        DocumentCount: 10
+        BatchSize: 10
+        Document:
+          m: { ^Inc: { start: 0 } }
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
 
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - *Nop
-  - *Nop
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *db
+    Phases:
+      - *Nop
+      - Repeat: 1
+      - *Nop
+      - *Nop
+      - *Nop
 
-- Name: ProjectQueries
-  Type: CrudActor
-  Database: *db
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - Duration: 5 minutes
-    Collection: *coll
-    Operations:
-    - OperationMetricsName: ProjectParseSmall
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [
-          {$project : {^Object: {
-              withNEntries: 10,
-              havingKeys: {^FastRandomString: {length: 10}},
-              andValues: 1,
-              duplicatedKeys: skip
-            }}}
-        ]
-  - Duration: 5 minutes
-    Collection: *coll
-    Operations:
-    - OperationMetricsName: ProjectParseMedium
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [
-          {$project : {^FixedGeneratedValue: {fromGenerator: {^Object: {
-              withNEntries: 101,
-              havingKeys: {^FastRandomString: {length: 10}},
-              andValues: 1,
-              duplicatedKeys: skip
-            }}}}}
-        ]
-  - Duration: 5 minutes
-    Collection: *coll
-    Operations:
-    - OperationMetricsName: ProjectParseLarge
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [
-          {$project : {^FixedGeneratedValue: {fromGenerator: {^Object: {
-              withNEntries: 20000,
-              havingKeys: {^RandomString: {length: 10}},
-              andValues: 1,
-              duplicatedKeys: skip
-            }}}}}
-        ]
+  - Name: ProjectQueries
+    Type: CrudActor
+    Database: *db
+    Threads: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - Duration: 5 minutes
+        Collection: *coll
+        Operations:
+          - OperationMetricsName: ProjectParseSmall
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                [
+                  {
+                    $project:
+                      {
+                        ^Object:
+                          {
+                            withNEntries: 10,
+                            havingKeys: { ^FastRandomString: { length: 10 } },
+                            andValues: 1,
+                            duplicatedKeys: skip,
+                          },
+                      },
+                  },
+                ]
+      - Duration: 5 minutes
+        Collection: *coll
+        Operations:
+          - OperationMetricsName: ProjectParseMedium
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                [
+                  {
+                    $project:
+                      {
+                        ^FixedGeneratedValue:
+                          {
+                            fromGenerator:
+                              {
+                                ^Object:
+                                  {
+                                    withNEntries: 101,
+                                    havingKeys:
+                                      { ^FastRandomString: { length: 10 } },
+                                    andValues: 1,
+                                    duplicatedKeys: skip,
+                                  },
+                              },
+                          },
+                      },
+                  },
+                ]
+      - Duration: 5 minutes
+        Collection: *coll
+        Operations:
+          - OperationMetricsName: ProjectParseLarge
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                [
+                  {
+                    $project:
+                      {
+                        ^FixedGeneratedValue:
+                          {
+                            fromGenerator:
+                              {
+                                ^Object:
+                                  {
+                                    withNEntries: 20000,
+                                    havingKeys:
+                                      { ^RandomString: { length: 10 } },
+                                    andValues: 1,
+                                    duplicatedKeys: skip,
+                                  },
+                              },
+                          },
+                      },
+                  },
+                ]
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-      - standalone-80-feature-flags
-      - standalone-all-feature-flags
-      - standalone-classic-query-engine
-      - standalone-query-stats
-      - standalone-sbe
-    branch_name:
-      $gte:
-        v7.0
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone
+          - standalone-80-feature-flags
+          - standalone-all-feature-flags
+          - standalone-classic-query-engine
+          - standalone-query-stats
+          - standalone-sbe
+      branch_name:
+        $gte: v6.0

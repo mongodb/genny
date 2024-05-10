@@ -18,99 +18,88 @@ GlobalDefaults:
   nop: &Nop {Nop: true}
 
 Actors:
-- Name: CreateTimeSeriesCollection
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    Database: *db
-    Operation:
-      OperationMetricsName: CreateTimeSeriesCollection
-      OperationName: RunCommand
-      OperationCommand:
-        {create: &coll Collection0, timeseries: {timeField: "timestamp"}}
-  - *Nop
-  - *Nop
-  - *Nop
-
-- Name: InsertData
-  Type: Loader
-  Threads: 1
-  Phases:
-  - *Nop
-  - Repeat: 1
-    Database: *db
-    Collection: *coll
+  - Name: CreateTimeSeriesCollection
+    Type: RunCommand
     Threads: 1
-    CollectionCount: 1
-    # To get a good signal we need this to be at least bucket size squared.
-    # The bucket size is 360. This is 360 * 360 *8. The 8 is just for safety.
-    DocumentCount: 1036800
-    BatchSize: *limit
-    Document:
-      # start "2022-01-01" = "2022-01-01T00:00:00Z", step 10000 = size of step 10 seconds or 10,000 millis
-      timestamp: {^IncDate: {start: "2022-01-01", step: 40000}}
-      # Uniform, unique distribution of values so we can point query.
-      numeric: {^Inc: {start: 0, step: 1}}
-      # Large padding string to simulate many other fields being present.
-      string: {^RandomString: {length: 4000}}
-    Indexes:
-    - *index
-  - *Nop
-  - *Nop
+    Phases:
+      - Repeat: 1
+        Database: *db
+        Operation:
+          OperationMetricsName: CreateTimeSeriesCollection
+          OperationName: RunCommand
+          OperationCommand: {create: &coll Collection0, timeseries: {timeField: "timestamp"}}
+      - *Nop
+      - *Nop
+      - *Nop
 
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-  - *Nop
-  - *Nop
-  - Repeat: 1
-  - *Nop
+  - Name: InsertData
+    Type: Loader
+    Threads: 1
+    Phases:
+      - *Nop
+      - Repeat: 1
+        Database: *db
+        Collection: *coll
+        Threads: 1
+        CollectionCount: 1
+        # To get a good signal we need this to be at least bucket size squared.
+        # The bucket size is 360. This is 360 * 360 *8. The 8 is just for safety.
+        DocumentCount: 1036800
+        BatchSize: *limit
+        Document:
+          # start "2022-01-01" = "2022-01-01T00:00:00Z", step 10000 = size of step 10 seconds or 10,000 millis
+          timestamp: {^IncDate: {start: "2022-01-01", step: 40000}}
+          # Uniform, unique distribution of values so we can point query.
+          numeric: {^Inc: {start: 0, step: 1}}
+          # Large padding string to simulate many other fields being present.
+          string: {^RandomString: {length: 4000}}
+        Indexes:
+          - *index
+      - *Nop
+      - *Nop
 
-- Name: PointQueries
-  Type: CrudActor
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - Duration: 30 seconds
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
     Database: *db
-    Collection: Collection0
-    Operations:
-    - OperationMetricsName: PointQuery
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [{
-          $match: {
-            numeric: {^RandomInt: {min: 0, max: 259200}}
-          }
-        }, {
-          $project: {
-            _id: 0,
-            numeric: 1
-          }
-        }, {
-          $limit: *limit
-        }]
-        Options:
-          BatchSize:  *limit
+    Phases:
+      - *Nop
+      - *Nop
+      - Repeat: 1
+      - *Nop
+
+  - Name: PointQueries
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - Duration: 30 seconds
+        Database: *db
+        Collection: Collection0
+        Operations:
+          - OperationMetricsName: PointQuery
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline: [{$match: {numeric: {^RandomInt: {min: 0, max: 259200}}}}, {$project: {_id: 0, numeric: 1}}, {$limit: *limit}]
+              Options:
+                BatchSize: *limit
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica
-      - replica-80-feature-flags
-      - replica-all-feature-flags
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
-      - v5.0
-      - v5.1
-      - v5.2
-      - v5.3
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - replica-80-feature-flags
+          - replica-all-feature-flags
+          - replica-query-stats-rate-limit
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4
+          - v5.0
+          - v5.1
+          - v5.2
+          - v5.3

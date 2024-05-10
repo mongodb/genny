@@ -4,8 +4,8 @@ Description: |
   This workload tests performance of IDHACK on queries with OID _id on a sharded collection.
 
 KeyWords:
-- IDHACK
-- OID
+  - IDHACK
+  - OID
 
 Clients:
   Default:
@@ -19,87 +19,86 @@ GlobalDefaults:
   MaxPhases: &MaxPhases 5
 
 Actors:
-- Name: CreateShardedCollection
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Operations:
-        - OperationName: AdminCommand
-          OperationMetricsName: EnableSharding
-          OperationCommand:
-            enableSharding: *Database
-        - OperationName: AdminCommand
-          OperationMetricsName: ShardCollection
-          OperationCommand:
-            shardCollection: *Namespace
-            key: {_id: "hashed"}
+  - Name: CreateShardedCollection
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Operations:
+            - OperationName: AdminCommand
+              OperationMetricsName: EnableSharding
+              OperationCommand:
+                enableSharding: *Database
+            - OperationName: AdminCommand
+              OperationMetricsName: ShardCollection
+              OperationCommand:
+                shardCollection: *Namespace
+                key: {_id: "hashed"}
 
-- LoadObjectIDs:
-  LoadConfig:
-    Path: "../../phases/query/IDHack.yml"
-    Key: LoadObjectIdTemplate
-    Parameters:
-      Name: LoadObjectIDs
-      OnlyActiveInPhase: 1
-      NopInPhasesUpTo: *MaxPhases
-      Database: *Database
-      DocumentCount: 10000000
+  - LoadObjectIDs:
+    LoadConfig:
+      Path: "../../phases/query/IDHack.yml"
+      Key: LoadObjectIdTemplate
+      Parameters:
+        Name: LoadObjectIDs
+        OnlyActiveInPhase: 1
+        NopInPhasesUpTo: *MaxPhases
+        Database: *Database
+        DocumentCount: 10000000
 
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
 
-- IDHack32Threads:
-  LoadConfig: &loadIdHackConfig
-    Path: "../../phases/query/IDHack.yml"
-    Key: IDHackObjectIdTemplate
-    Parameters:
-      Name: IDHack32Threads
-      Threads: 32
-      OnlyActiveInPhase: 3
-      NopInPhasesUpTo: *MaxPhases
-      Database: *Database
-      Collection: *Collection
+  - IDHack32Threads:
+    LoadConfig: &loadIdHackConfig
+      Path: "../../phases/query/IDHack.yml"
+      Key: IDHackObjectIdTemplate
+      Parameters:
+        Name: IDHack32Threads
+        Threads: 32
+        OnlyActiveInPhase: 3
+        NopInPhasesUpTo: *MaxPhases
+        Database: *Database
+        Collection: *Collection
 
-- IDHack128Threads:
-  LoadConfig:
-    <<: *loadIdHackConfig
-    Parameters:
-      Name: IDHack128Threads
-      Threads: 128
-      OnlyActiveInPhase: 4
-      NopInPhasesUpTo: *MaxPhases
-      Database: *Database
-      Collection: *Collection
+  - IDHack128Threads:
+    LoadConfig:
+      !!merge <<: *loadIdHackConfig
+      Parameters:
+        Name: IDHack128Threads
+        Threads: 128
+        OnlyActiveInPhase: 4
+        NopInPhasesUpTo: *MaxPhases
+        Database: *Database
+        Collection: *Collection
 
-- IDHack256Threads:
-  LoadConfig:
-    <<: *loadIdHackConfig
-    Parameters:
-      Name: IDHack256Threads
-      Threads: 256
-      OnlyActiveInPhase: 5
-      NopInPhasesUpTo: *MaxPhases
-      Database: *Database
-      Collection: *Collection
+  - IDHack256Threads:
+    LoadConfig:
+      !!merge <<: *loadIdHackConfig
+      Parameters:
+        Name: IDHack256Threads
+        Threads: 256
+        OnlyActiveInPhase: 5
+        NopInPhasesUpTo: *MaxPhases
+        Database: *Database
+        Collection: *Collection
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - shard
-      - shard-80-feature-flags
-      - shard-lite
-      - shard-query-stats
+  - When:
+      mongodb_setup:
+        $eq:
+          - shard
+          - shard-80-feature-flags
+          - shard-query-stats

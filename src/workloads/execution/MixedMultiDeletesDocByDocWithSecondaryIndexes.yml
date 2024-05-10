@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/server-execution"
-Description: >
+Owner: Storage Execution
+Description: |
   Deletes a range of documents using the DELETE query exec stage both in isolation and while
   performing writes on another collection. Introduces secondary indexes on the collection where the
   mass deletion is issued to measure the impact of additional work per document deletion on
@@ -8,21 +8,21 @@ Description: >
   ~10MB.
 
 Keywords:
-- RunCommand
-- Loader
-- LoggingActor
-- CrudActor
-- insert
-- delete
-- batch
-- deleteMany
-- latency
+  - RunCommand
+  - Loader
+  - LoggingActor
+  - CrudActor
+  - insert
+  - delete
+  - batch
+  - deleteMany
+  - latency
 
 Clients:
   Default:
     QueryOptions:
       # Allow for longer duration since the loading of the data may take a while.
-      socketTimeoutMS: 3_600_000  # = 1 hour
+      socketTimeoutMS: 3_600_000 # = 1 hour
 
 LoadConfig:
   Path: "../../phases/execution/MixedMultiDeletes.yml"
@@ -31,14 +31,14 @@ LoadConfig:
     ConfigurationFile: "../../phases/execution/config/MultiDeletes/WithSecondaryIndexes.yml"
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica
-    branch_name:
-      $neq:
-      - v4.2
-      - v4.4
-      - v5.0
-      # 6.0 Does not have the 'batchUserMultiDeletes' server parameter.
-      - v6.0
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+      branch_name:
+        $neq:
+          - v4.2
+          - v4.4
+          - v5.0
+          # 6.0 Does not have the 'batchUserMultiDeletes' server parameter.
+          - v6.0

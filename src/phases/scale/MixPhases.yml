@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   Phase defintions for the MixedWorkloadsGenny, which is a port of the mixed_workloads in the
   workloads repo. https://github.com/10gen/workloads/blob/master/workloads/mix.js. It runs 4 sets of
@@ -10,15 +10,15 @@ Description: |
   starved out by writes.
 
 Keywords:
-- scale
-- insertOne
-- insert
-- findOne
-- find
-- updateOne
-- update
-- deleteOne
-- delete
+  - scale
+  - insertOne
+  - insert
+  - findOne
+  - find
+  - updateOne
+  - update
+  - deleteOne
+  - delete
 
 dbname: &dbname mix
 runtime: &runtime 7 minutes
@@ -39,37 +39,37 @@ UpdatePhase:
   RecordFailure: true
   CollectionCount: *NumColls
   Operations:
-  - OperationName: updateOne
-    OperationCommand:
-      Filter: *filter
-      Update:
-        $inc: {a: 1}
-        $set: {c: *string}
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: *filter
+        Update:
+          $inc: {a: 1}
+          $set: {c: *string}
 
 RemovePhase:
   Duration: *runtime
   RecordFailure: true
   CollectionCount: *NumColls
   Operations:
-  - OperationName: deleteOne
-    OperationCommand:
-      Filter: *filter
+    - OperationName: deleteOne
+      OperationCommand:
+        Filter: *filter
 
 InsertPhase:
   Duration: *runtime
   RecordFailure: true
   CollectionCount: *NumColls
   Operations:
-  - OperationName: insertOne
-    OperationCommand:
-      Document: *doc
+    - OperationName: insertOne
+      OperationCommand:
+        Document: *doc
 
 FindPhase:
   Duration: *runtime
   RecordFailure: true
   CollectionCount: *NumColls
   Operations:
-  - OperationName: findOne
-    OperationCommand:
-      Filter: *filter
+    - OperationName: findOne
+      OperationCommand:
+        Filter: *filter
 

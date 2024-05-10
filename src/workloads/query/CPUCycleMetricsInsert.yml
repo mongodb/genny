@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/sys-perf"
+Owner: Product Performance
 Description: |
   This workload is designed to insert a document, update it and then immediately delete it
   (this is repeated 10k times). This is designed to help us calculate CPU cycle metrics when
@@ -9,7 +9,7 @@ dbname: &dbname 10kDocs
 CollectionCount: &NumColls 1
 
 Document: &doc
-  a: {^Inc : {}}
+  a: {^Inc: {}}
   b: {^RandomString: {length: 16}}
 
 Actors:
@@ -18,19 +18,19 @@ Actors:
     Threads: 1
     Database: *dbname
     Phases:
-    - Repeat: 10000
-      RecordFailure: true
-      ThrowOnFailure: true
-      CollectionCount: *NumColls
-      MetricsName: "load"
-      Operations:
-      - OperationName: insertOne
-        OperationMetricsName: inserts
-        OperationCommand:
-          Document: *doc
+      - Repeat: 10000
+        RecordFailure: true
+        ThrowOnFailure: true
+        CollectionCount: *NumColls
+        MetricsName: "load"
+        Operations:
+          - OperationName: insertOne
+            OperationMetricsName: inserts
+            OperationCommand:
+              Document: *doc
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica-ipc-counters.2023-06
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica-ipc-counters.2023-06

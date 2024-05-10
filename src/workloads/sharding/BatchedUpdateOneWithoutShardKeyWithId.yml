@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/sharding"
+Owner: Cluster Scalability
 Description: |
   Runs the batched updateOne writes of type WithoutShardKeyWithId with a batch size of 1000.
 
@@ -15,14 +15,14 @@ Description: |
   The collection is sharded on {oldKey: 'hashed'}. The metrics to watchout for here are P50, P99 operation latencies and overall throughput.
 
 Keywords:
-- RunCommand
-- sharded
-- Loader
-- insert
-- update
-- updateOne
-- batch
-- latency
+  - RunCommand
+  - sharded
+  - Loader
+  - insert
+  - update
+  - updateOne
+  - batch
+  - latency
 
 GlobalDefaults:
   - &Nop {Nop: true}
@@ -34,37 +34,30 @@ GlobalDefaults:
 
   # Note that the exact document size may exceed ApproxDocumentSize because of field names and other
   # fields in the document.
-  - &ApproxDocumentSize 10000  # = 10kB
-  - &ApproxDocumentSize80Pct 8000  # = 8kB
-  - &DocumentCount 100000  # for an approximate total of 1GB
+  - &ApproxDocumentSize 10000 # = 10kB
+  - &ApproxDocumentSize80Pct 8000 # = 8kB
+  - &DocumentCount 100000 # for an approximate total of 1GB
 
   - &ShardKeyValueMin 1
   - &ShardKeyValueMax 1000
 
-  - &UpdateOp {
-    q: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}, u: {$inc: {counter: 1}}
-  }
+  - &UpdateOp {q: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}, u: {$inc: {counter: 1}}}
 
-  - &UpdateOps10x [
-      *UpdateOp, *UpdateOp, *UpdateOp, *UpdateOp, *UpdateOp,
-      *UpdateOp, *UpdateOp, *UpdateOp, *UpdateOp, *UpdateOp,
-    ]
+  - &UpdateOps10x [*UpdateOp, *UpdateOp, *UpdateOp, *UpdateOp, *UpdateOp, *UpdateOp, *UpdateOp, *UpdateOp, *UpdateOp, *UpdateOp]
 
   - &UpdateOps100x {
-      ^FlattenOnce:
-        [
-          *UpdateOps10x, *UpdateOps10x, *UpdateOps10x, *UpdateOps10x, *UpdateOps10x,
-          *UpdateOps10x, *UpdateOps10x, *UpdateOps10x, *UpdateOps10x, *UpdateOps10x,
-        ]
-    }
+    ^FlattenOnce: [
+      *UpdateOps10x, *UpdateOps10x, *UpdateOps10x, *UpdateOps10x, *UpdateOps10x,
+      *UpdateOps10x, *UpdateOps10x, *UpdateOps10x, *UpdateOps10x, *UpdateOps10x
+    ]
+  }
 
   - &UpdateOps1000x {
-      ^FlattenOnce:
-        [
-          *UpdateOps100x, *UpdateOps100x, *UpdateOps100x, *UpdateOps100x, *UpdateOps100x,
-          *UpdateOps100x, *UpdateOps100x, *UpdateOps100x, *UpdateOps100x, *UpdateOps100x,
-        ]
-    }
+    ^FlattenOnce: [
+      *UpdateOps100x, *UpdateOps100x, *UpdateOps100x, *UpdateOps100x, *UpdateOps100x,
+      *UpdateOps100x, *UpdateOps100x, *UpdateOps100x, *UpdateOps100x, *UpdateOps100x
+    ]
+  }
 
 Clients:
   Default:
@@ -72,69 +65,67 @@ Clients:
       maxPoolSize: 600
 
 Actors:
-- Name: CreateShardedCollection
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    Database: admin
-    Operations:
-    - OperationMetricsName: EnableSharding
-      OperationName: AdminCommand
-      OperationCommand:
-        enableSharding: *Database
-    - OperationMetricsName: ShardCollection
-      OperationName: AdminCommand
-      OperationCommand:
-        shardCollection: *Namespace
-        # Hashed sharding will pre-split the chunk ranges and evenly distribute them across all of
-        # the shards.
-        key: {oldKey: hashed}
-  - *Nop
-  - *Nop
+  - Name: CreateShardedCollection
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      - Repeat: 1
+        Database: admin
+        Operations:
+          - OperationMetricsName: EnableSharding
+            OperationName: AdminCommand
+            OperationCommand:
+              enableSharding: *Database
+          - OperationMetricsName: ShardCollection
+            OperationName: AdminCommand
+            OperationCommand:
+              shardCollection: *Namespace
+              # Hashed sharding will pre-split the chunk ranges and evenly distribute them across all of
+              # the shards.
+              key: {oldKey: hashed}
+      - *Nop
+      - *Nop
 
-- Name: LoadInitialData
-  Type: MonotonicSingleLoader
-  Threads: 100
-  Phases:
-  - *Nop
-  - Repeat: 1
-    BatchSize: 1000
-    DocumentCount: *DocumentCount
+  - Name: LoadInitialData
+    Type: MonotonicSingleLoader
+    Threads: 100
+    Phases:
+      - *Nop
+      - Repeat: 1
+        BatchSize: 1000
+        DocumentCount: *DocumentCount
+        Database: *Database
+        Document:
+          oldKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
+          newKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
+          counter: 0
+          padding: {^FastRandomString: {length: {^RandomInt: {min: *ApproxDocumentSize80Pct, max: *ApproxDocumentSize}}}}
+      - *Nop
+
+  - Name: WriteCollection
+    Type: RunCommand
+    Threads: 450
     Database: *Database
-    Document:
-      oldKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
-      newKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
-      counter: 0
-      padding: {^FastRandomString: {length: {^RandomInt: {min: *ApproxDocumentSize80Pct, max: *ApproxDocumentSize}}}}
-  - *Nop
-
-- Name: WriteCollection
-  Type: RunCommand
-  Threads: 450
-  Database: *Database
-  Phases:
-  - *Nop
-  - *Nop
-  - MetricsName: UpdateOneMetrics
-    Duration: 200 seconds
-    Collection: *Collection
-    Operations:
-      - OperationName: RunCommand
-        OperationCommand:
-          update: Collection0
-          updates:
-            { ^Parameter: { Name: "Operations", Default: *UpdateOps1000x } }
-          ordered: false
+    Phases:
+      - *Nop
+      - *Nop
+      - MetricsName: UpdateOneMetrics
+        Duration: 200 seconds
+        Collection: *Collection
+        Operations:
+          - OperationName: RunCommand
+            OperationCommand:
+              update: Collection0
+              updates: {^Parameter: {Name: "Operations", Default: *UpdateOps1000x}}
+              ordered: false
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - shard
-      - shard-80-feature-flags
-      - shard-lite
-      - shard-lite-80-feature-flags
-      - shard-lite-all-feature-flags
-    branch_name:
-      $gte: v8.0
+  - When:
+      mongodb_setup:
+        $eq:
+          - shard
+          - shard-80-feature-flags
+          - shard-all-feature-flags
+          - shard-lite-80-feature-flags
+      branch_name:
+        $gte: v8.0

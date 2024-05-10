@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-optimization"
+Owner: Query Optimization
 
 Description: |
   This workload measures performance of boolean expressions which can be simplified by
@@ -12,16 +12,15 @@ LoadConfig:
     DocumentCount: 1e5
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica
-      - single-replica
-      - standalone
-      - standalone-80-feature-flags
-      - standalone-all-feature-flags
-      - standalone-classic-query-engine
-      - standalone-heuristic-bonsai
-      - standalone-sampling-bonsai
-    branch_name:
-      $gte: v7.3
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - standalone
+          - standalone-80-feature-flags
+          - standalone-all-feature-flags
+          - standalone-classic-query-engine
+          - standalone-heuristic-bonsai
+          - standalone-sampling-bonsai
+      branch_name:
+        $gte: v7.3

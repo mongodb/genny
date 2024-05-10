@@ -7,15 +7,15 @@
 # but here it is 'as is' for the moment when work was stopped
 
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   Workload to Benchmark the effect of LongLivedTransactions on an Update workload.
 
 Keywords:
-- transactions
-- long lived
-- snapshot
-- update
+  - transactions
+  - long lived
+  - snapshot
+  - update
 
 GlobalDefaults:
   # That is 236M docs (4 collections x 59M docs), result in about 144GB for /data/dbs after the test
@@ -36,15 +36,19 @@ GlobalDefaults:
     prod: {^RandomInt: {min: 0, max: 10000}}
     price: {^RandomDouble: {min: 0.0, max: 1000.0}}
     data: {^Join: {array: ["aaaaaaaaaa", {^FastRandomString: {length: {^RandomInt: {min: 0, max: 10}}}}]}}
-    orders: {^Array: {of: {ts: { ^RandomDate: { min: "2011-01-01", max: "2021-01-01" }},
-                           quantity: { ^RandomInt: { min: 1, max: 100 } },
-                           unitPrice: { ^RandomDouble: {min: 0.0, max: 1000.0 } } },
-                      number: { ^RandomInt: { min: 0, max: 10 }} }}
+    orders: {^Array: {
+      of: {
+        ts: {^RandomDate: {min: "2011-01-01", max: "2021-01-01"}},
+        quantity: {^RandomInt: {min: 1, max: 100}},
+        unitPrice: {^RandomDouble: {min: 0.0, max: 1000.0}}
+      },
+      number: {^RandomInt: {min: 0, max: 10}}
+    }}
 
   LLTIndexes: &LLTIndexes
-  - keys: {price: 1, ts: 1, cuid: 1}     # Ptc
-  - keys: {price: 1, cuid: 1}            # Pc
-  - keys: {caid: 1, price: 1, cuid: 1}   # Cpc
+    - keys: {price: 1, ts: 1, cuid: 1} # Ptc
+    - keys: {price: 1, cuid: 1} # Pc
+    - keys: {caid: 1, price: 1, cuid: 1} # Cpc
 
   # Loader Config.
   LoadThreads: &LoadThreads 4
@@ -59,7 +63,7 @@ GlobalDefaults:
   PtcUpdateOperation: &PtcUpdateOperation
     OperationName: updateOne
     OperationCommand:
-      Filter: {price: {'$gte': {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Filter: {price: {'$gte': {^RandomDouble: {min: 0.0, max: 500.0}}}}
       Update:
         $set:
           ts: {^Now: {}}
@@ -73,7 +77,7 @@ GlobalDefaults:
   PcUpdateOperation: &PcUpdateOperation
     OperationName: updateOne
     OperationCommand:
-      Filter: {'price': {'$gte': {^RandomDouble: { min: 0.0, max: 500.0 }}}}
+      Filter: {'price': {'$gte': {^RandomDouble: {min: 0.0, max: 500.0}}}}
       Update:
         $set:
           ts: {^Now: {}}
@@ -87,7 +91,7 @@ GlobalDefaults:
   CpcUpdateOperation: &CpcUpdateOperation
     OperationName: updateOne
     OperationCommand:
-      Filter: {'caid': {'$gte': {^RandomInt: { min: 0, max: 1000 }}}}
+      Filter: {'caid': {'$gte': {^RandomInt: {min: 0, max: 1000}}}}
       Update:
         $set:
           ts: {^Now: {}}
@@ -104,76 +108,78 @@ GlobalDefaults:
   SnapshotScannerLongDuration: &SnapshotScannerLongDuration 60 minutes
 
 ActorTemplates:
-- TemplateName: UpdateTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Short.Update.Baseline"}}
-    Type: CrudActor
-    Threads: *ThreadsValue
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "Active", Default: [5]}}
-        NopInPhasesUpTo: *MaxPhases
-        PhaseConfig:
-          GlobalRate: *GlobalRateValue
-          Threads: *ThreadsValue
-          CollectionCount: *CollectionCount
-          Database: *dbname
-          Duration: {^Parameter: {Name: "Duration", Default: *SnapshotScannerShortDuration}}
-          Blocking: {^Parameter: {Name: "Blocking", Default: true}}
-          Operations:
-          - *PtcUpdateOperation
-          - *PcUpdateOperation
-          - *CpcUpdateOperation
-          - *PtcUpdateOperation
-          - *PcUpdateOperation
-          - *CpcUpdateOperation
-          - *PtcUpdateOperation
-          - *PcUpdateOperation
-          - *CpcUpdateOperation
-          - *PtcUpdateOperation
-          - *PcUpdateOperation
-          - *CpcUpdateOperation
-          - *PtcUpdateOperation
-          - *PcUpdateOperation
-          - *CpcUpdateOperation
-          - *PtcUpdateOperation
-          - *PcUpdateOperation
-          - *CpcUpdateOperation
-          - *PtcUpdateOperation
-          - *PcUpdateOperation
-          - *CpcUpdateOperation
-          - *PtcUpdateOperation
-          - *PcUpdateOperation
-          - *CpcUpdateOperation
+  - TemplateName: UpdateTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Short.Update.Baseline"}}
+      Type: CrudActor
+      Threads: *ThreadsValue
+      Phases:
+        OnlyActiveInPhases:
+          Active: {^Parameter: {Name: "Active", Default: [5]}}
+          NopInPhasesUpTo: *MaxPhases
+          PhaseConfig:
+            GlobalRate: *GlobalRateValue
+            Threads: *ThreadsValue
+            CollectionCount: *CollectionCount
+            Database: *dbname
+            Duration: {^Parameter: {Name: "Duration", Default: *SnapshotScannerShortDuration}}
+            Blocking: {^Parameter: {Name: "Blocking", Default: true}}
+            Operations:
+              - *PtcUpdateOperation
+              - *PcUpdateOperation
+              - *CpcUpdateOperation
+              - *PtcUpdateOperation
+              - *PcUpdateOperation
+              - *CpcUpdateOperation
+              - *PtcUpdateOperation
+              - *PcUpdateOperation
+              - *CpcUpdateOperation
+              - *PtcUpdateOperation
+              - *PcUpdateOperation
+              - *CpcUpdateOperation
+              - *PtcUpdateOperation
+              - *PcUpdateOperation
+              - *CpcUpdateOperation
+              - *PtcUpdateOperation
+              - *PcUpdateOperation
+              - *CpcUpdateOperation
+              - *PtcUpdateOperation
+              - *PcUpdateOperation
+              - *CpcUpdateOperation
+              - *PtcUpdateOperation
+              - *PcUpdateOperation
+              - *CpcUpdateOperation
 
-- TemplateName: ScanTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Short.Scan.Snapshot"}}
-    Type: CollectionScanner
-    Threads: *CollectionCount
-    CollectionCount: *CollectionCount
-    Database: *dbname
-    GenerateCollectionNames: true
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "Active", Default: [7]}}  # [7]
-        NopInPhasesUpTo: *MaxPhases
-        PhaseConfig:
-          Duration: {^Parameter: {Name: "Duration", Default: *SnapshotScannerShortDuration}}
-          # ScanDuration: {^Parameter: {Name: "ScanDuration", Default: *SnapshotScannerShortDuration}}
-          ScanType: snapshot
-          # ScanContinuous: true
-          # GenerateCollectionNames: true
-          AggregatePipeline:
-            {array: [{"$match":{"cuid":{"$gte":500}}},
-                     {"$unwind": "$orders"},
-                     {"$group": {"_id": "$ts", "total": {"$sum":{ $multiply: ["$orders.unitPrice", "$orders.quantity"] }}}},
-                     {"$sort": {"_id":1}}]
+  - TemplateName: ScanTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Short.Scan.Snapshot"}}
+      Type: CollectionScanner
+      Threads: *CollectionCount
+      CollectionCount: *CollectionCount
+      Database: *dbname
+      GenerateCollectionNames: true
+      Phases:
+        OnlyActiveInPhases:
+          Active: {^Parameter: {Name: "Active", Default: [7]}} # [7]
+          NopInPhasesUpTo: *MaxPhases
+          PhaseConfig:
+            Duration: {^Parameter: {Name: "Duration", Default: *SnapshotScannerShortDuration}}
+            # ScanDuration: {^Parameter: {Name: "ScanDuration", Default: *SnapshotScannerShortDuration}}
+            ScanType: snapshot
+            # ScanContinuous: true
+            # GenerateCollectionNames: true
+            AggregatePipeline: {
+              array: [
+                {"$match": {"cuid": {"$gte": 500}}},
+                {"$unwind": "$orders"},
+                {"$group": {"_id": "$ts", "total": {"$sum": {$multiply: ["$orders.unitPrice", "$orders.quantity"]}}}},
+                {"$sort": {"_id": 1}}
+              ]
             }
-          AggregateOptions:
-            BatchSize: 1000
-            Comment: {^Parameter: {Name: "Comment", Default: "Aggregate.Snapshot"}}
-            AllowDiskUse: true  # Naming convention follows c++ driver rather than mongo shell.
+            AggregateOptions:
+              BatchSize: 1000
+              Comment: {^Parameter: {Name: "Comment", Default: "Aggregate.Snapshot"}}
+              AllowDiskUse: true # Naming convention follows c++ driver rather than mongo shell.
 
 Clients:
   Default:
@@ -183,110 +189,110 @@ Clients:
 
 # Odd phases do operations, even phases quiesce.
 Actors:
-# Ensure that transactionLifetimeLimitSeconds supports all the possible ScanDurations.
-# i.e. greater than SnapshotScannerLongDuration.
-- Name: SetTransactionLifetimeLimit
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Operation:
-          OperationName: RunCommand
-          OperationCommand:
-            setParameter: 1
-            transactionLifetimeLimitSeconds: 14400  # 4 Hours
+  # Ensure that transactionLifetimeLimitSeconds supports all the possible ScanDurations.
+  # i.e. greater than SnapshotScannerLongDuration.
+  - Name: SetTransactionLifetimeLimit
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Operation:
+            OperationName: RunCommand
+            OperationCommand:
+              setParameter: 1
+              transactionLifetimeLimitSeconds: 14400 # 4 Hours
 
-- Name: InitialLoad
-  Type: Loader
-  Threads: *LoadThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Threads: *LoadThreads
-        CollectionCount: *CollectionCount
-        Database: *dbname
-        Repeat: 1
-        Document: *Doc
-        DocumentCount: *InitialNumDocs
-        Indexes: *LLTIndexes
-        BatchSize: *LoadBatchSize
+  - Name: InitialLoad
+    Type: Loader
+    Threads: *LoadThreads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Threads: *LoadThreads
+          CollectionCount: *CollectionCount
+          Database: *dbname
+          Repeat: 1
+          Document: *Doc
+          DocumentCount: *InitialNumDocs
+          Indexes: *LLTIndexes
+          BatchSize: *LoadBatchSize
 
-- Name: SecondLoadAfterIndexes
-  Type: Loader
-  Threads: *LoadThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Threads: *LoadThreads
-        CollectionCount: *CollectionCount
-        Database: *dbname
-        Repeat: 1
-        Document: *Doc
-        DocumentCount: *SecondaryNumDocs
-        BatchSize: *LoadBatchSize
+  - Name: SecondLoadAfterIndexes
+    Type: Loader
+    Threads: *LoadThreads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Threads: *LoadThreads
+          CollectionCount: *CollectionCount
+          Database: *dbname
+          Repeat: 1
+          Document: *Doc
+          DocumentCount: *SecondaryNumDocs
+          BatchSize: *LoadBatchSize
 
-- Name: QuiescePhase
-  Type: QuiesceActor
-  Threads: 1
-  Database: *dbname
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0, 2, 4, 6, 8]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
+  - Name: QuiescePhase
+    Type: QuiesceActor
+    Threads: 1
+    Database: *dbname
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0, 2, 4, 6, 8]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
 
-# Guard Against timeout for no output.
-- Name: LoggingActor
-  Type: LoggingActor
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1, 3, 5, 7]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        LogEvery: 15 minutes
-        Blocking: None
+  # Guard Against timeout for no output.
+  - Name: LoggingActor
+    Type: LoggingActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1, 3, 5, 7]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          LogEvery: 15 minutes
+          Blocking: None
 
-# Naming Conventions:
-# Duration.Operation.Type_of_test
-# Operation:     Insert|Query|Update|Remove|Mixed
-# Duration:      Short|Medium|Long
-# Type of test:  Baseline|Benchmark
-#
-# Baseline without aggreagte, benchmark with aggregate
+  # Naming Conventions:
+  # Duration.Operation.Type_of_test
+  # Operation:     Insert|Query|Update|Remove|Mixed
+  # Duration:      Short|Medium|Long
+  # Type of test:  Baseline|Benchmark
+  #
+  # Baseline without aggreagte, benchmark with aggregate
 
-- ActorFromTemplate:
-    TemplateName: UpdateTemplate
-    TemplateParameters:
-      Name: Long.Update.Baseline
-      Active: [5]
-      Duration: *SnapshotScannerLongDuration
+  - ActorFromTemplate:
+      TemplateName: UpdateTemplate
+      TemplateParameters:
+        Name: Long.Update.Baseline
+        Active: [5]
+        Duration: *SnapshotScannerLongDuration
 
-- ActorFromTemplate:
-    TemplateName: UpdateTemplate
-    TemplateParameters:
-      Name: Long.Update.Benchmark
-      Active: [7]
-      Blocking: none
-      Duration: *SnapshotScannerLongDuration
+  - ActorFromTemplate:
+      TemplateName: UpdateTemplate
+      TemplateParameters:
+        Name: Long.Update.Benchmark
+        Active: [7]
+        Blocking: none
+        Duration: *SnapshotScannerLongDuration
 
-- ActorFromTemplate:
-    TemplateName: ScanTemplate
-    TemplateParameters:
-      Name: Long.Aggregate.Benchmark
-      Active: [7]
-      Comment: SnapshotAggregateLong
-      Duration: *SnapshotScannerLongDuration
-      # ScanDuration: *SnapshotScannerLongDuration
+  - ActorFromTemplate:
+      TemplateName: ScanTemplate
+      TemplateParameters:
+        Name: Long.Aggregate.Benchmark
+        Active: [7]
+        Comment: SnapshotAggregateLong
+        Duration: *SnapshotScannerLongDuration
+        # ScanDuration: *SnapshotScannerLongDuration
 
 # AutoRun:
 #   Requires:
@@ -294,4 +300,3 @@ Actors:
 #       - atlas
 #       - replica
 #       - replica-all-feature-flags
-#       - single-replica

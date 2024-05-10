@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-execution"
+Owner: Query Execution
 Description: |
   This workload compares performance of inserts into a collection with only the default _id index,
   and in presence of the columnstore index. It uses an artificial data set with a wide overall
@@ -10,28 +10,28 @@ Description: |
   nested data (CsiFragmentedInsertsNested.yml). Please make sure to update both when making changes.
 
 Keywords:
-- columnstore
-- insert
+  - columnstore
+  - insert
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone-80-feature-flags
-      - standalone-all-feature-flags
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
-      - v5.0
-      - v6.0
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone-80-feature-flags
+          - standalone-all-feature-flags
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4
+          - v5.0
+          - v6.0
 
 Clients:
   Default:
     QueryOptions:
       # Allow for longer duration since index builds may take a while.
-      socketTimeoutMS: 600_000  # = 10 min
+      socketTimeoutMS: 600_000 # = 10 min
       connectTimeoutMS: 600_000
 
 GlobalDefaults:
@@ -59,123 +59,125 @@ GlobalDefaults:
     #     <7 more fields like this>
     #   }
     # }
-    root: {^Object: {
+    root: { ^Object: {
       withNEntries: *objectWidth,
 
       # We are using uniform distribution of fields to make the sampling more stable.
-      havingKeys: {^FormatString: {
-        "format": "x%d",
-        "withArgs": [{^RandomInt: {min: 0, max: *schemaWidth}}]
-      }},
+      havingKeys:
+        {
+          ^FormatString:
+            {
+              "format": "x%d",
+              "withArgs": [{ ^RandomInt: { min: 0, max: *schemaWidth } }],
+            },
+        },
 
       # We don't expect the actual values to matter.
-      andValues: {^RandomInt: {min: 0, max: *schemaWidth}},
+      andValues: { ^RandomInt: { min: 0, max: *schemaWidth } },
 
       # Occasionally, the key generator might produce the same key name. For this workload,
       # it's OK to have some of the objects with fewer than 'objectWidth' fields (and we don't
       # want to test parsing of the duplicated keys for the index as it's not a common user
       # scenario).
-      duplicatedKeys: skip
-    }}
+      duplicatedKeys: skip,
+    } }
 
 ActorTemplates:
-# We want to be able to compare results from the same test between the runs in presence of different
-# indexes. For this we'll have to instantiate the same actor multiple times with a unique name.
-- TemplateName: InsertFromSample
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Insert"}}
-    Type: SamplingLoader
-    Database: *db
-    Collection: *coll
+  # We want to be able to compare results from the same test between the runs in presence of different
+  # indexes. For this we'll have to instantiate the same actor multiple times with a unique name.
+  - TemplateName: InsertFromSample
+    Config:
+      Name: { ^Parameter: { Name: "Name", Default: "Insert" } }
+      Type: SamplingLoader
+      Database: *db
+      Collection: *coll
 
-    # No more than sampleSize*objectWidth paths can be "touched" by a sample.
-    SampleSize: *sampleSize
+      # No more than sampleSize*objectWidth paths can be "touched" by a sample.
+      SampleSize: *sampleSize
 
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
-        NopInPhasesUpTo: *maxPhases
-        PhaseConfig:
-          # When the batch size is the same as sample size, each sampled document will be used in
-          # the batch exactly once, and this will be repeated for the number of batches. We expect,
-          # that the first batch might be affected by "cold" caches but the subsequent batches
-          # would be fully warmed up.
-          InsertBatchSize: *sampleSize
+      Threads: { ^Parameter: { Name: "Threads", Default: 1 } }
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{ ^Parameter: { Name: "OnlyActiveInPhase", Default: 1024 } }]
+          NopInPhasesUpTo: *maxPhases
+          PhaseConfig:
+            # When the batch size is the same as sample size, each sampled document will be used in
+            # the batch exactly once, and this will be repeated for the number of batches. We expect,
+            # that the first batch might be affected by "cold" caches but the subsequent batches
+            # would be fully warmed up.
+            InsertBatchSize: *sampleSize
 
-          # "Repeat" is pretty redundant with "InsertBatchSize", but "InsertBatchSize" is preferred.
-          # Repetitions will still share the same sample.
-          Repeat: {^Parameter: {Name: "Repeats", Default: 1}}
+            # "Repeat" is pretty redundant with "InsertBatchSize", but "InsertBatchSize" is preferred.
+            # Repetitions will still share the same sample.
+            Repeat: { ^Parameter: { Name: "Repeats", Default: 1 } }
 
-          # The instances of the template must specify the number of batches to make it clear what
-          # they are testing wrt to cold/warm state. The stats per batch will be available in the
-          # 'IndividualBulkInsert' measurement.
-          Batches: {^Parameter: {Name: "Batches", Default: 500}}
+            # The instances of the template must specify the number of batches to make it clear what
+            # they are testing wrt to cold/warm state. The stats per batch will be available in the
+            # 'IndividualBulkInsert' measurement.
+            Batches: { ^Parameter: { Name: "Batches", Default: 500 } }
 
 Actors:
-- Name: Loader
-  Type: Loader
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *maxPhases
-      PhaseConfig:
-        # Cannot have more threads than the actor itself.
-        Threads: 1
-        Repeat: 1
-        Database: *db
-        CollectionCount: 1
-        DocumentCount: *docCount
-        BatchSize: 1000
-        Document: *document
+  - Name: Loader
+    Type: Loader
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          # Cannot have more threads than the actor itself.
+          Threads: 1
+          Repeat: 1
+          Database: *db
+          CollectionCount: 1
+          DocumentCount: *docCount
+          BatchSize: 1000
+          Document: *document
 
-- Name: Quiese
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1, 4]
-      NopInPhasesUpTo: *maxPhases
-      PhaseConfig:
-        Repeat: 1
+  - Name: Quiese
+    Type: QuiesceActor
+    Threads: 1
+    Database: *db
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1, 4]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
 
-# Do multiple inserts of documents with the same schema. The performance of the first insert might
-# be affected by the inserts in the previous stages, but it should stabilize after that so, by using
-# a large number of batches, it should amortize sufficiently to have P90 similar to P50 for the
-# latency.
-# Target measurements: Latency50thPercentile
-- ActorFromTemplate:
-    TemplateName: InsertFromSample
-    TemplateParameters:
-      Name: NoIndexes
-      OnlyActiveInPhase: 2
+  # Do multiple inserts of documents with the same schema. The performance of the first insert might
+  # be affected by the inserts in the previous stages, but it should stabilize after that so, by using
+  # a large number of batches, it should amortize sufficiently to have P90 similar to P50 for the
+  # latency.
+  # Target measurements: Latency50thPercentile
+  - ActorFromTemplate:
+      TemplateName: InsertFromSample
+      TemplateParameters:
+        Name: NoIndexes
+        OnlyActiveInPhase: 2
 
-- Name: BuildColumnStoreIndex
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3]
-      NopInPhasesUpTo: *maxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *db
-        Operations:
-        - OperationMetricsName: BulkBuildColumnStoreIndex
-          OperationName: RunCommand
-          OperationCommand:
-            createIndexes: *coll
-            indexes:
-            - key: {"$**": "columnstore"}
-              name: csi
+  - Name: BuildColumnStoreIndex
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *db
+          Operations:
+            - OperationMetricsName: BulkBuildColumnStoreIndex
+              OperationName: RunCommand
+              OperationCommand:
+                createIndexes: *coll
+                indexes:
+                  - key: { "$**": "columnstore" }
+                    name: csi
 
-# Repeat the same tests as with no index in presence of CSI.
-- ActorFromTemplate:
-    TemplateName: InsertFromSample
-    TemplateParameters:
-      Name: Csi
-      OnlyActiveInPhase: 5
-
-
+  # Repeat the same tests as with no index in presence of CSI.
+  - ActorFromTemplate:
+      TemplateName: InsertFromSample
+      TemplateParameters:
+        Name: Csi
+        OnlyActiveInPhase: 5

@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: Storage Engines
+Owner: Storage Execution
 Description: |
   Test workload to evaluate Storage Engine behavior when running in a
   degraded replica set with or without eMRCf enabled.  A "degraded" replica
@@ -16,7 +16,6 @@ Description: |
   10% Updates, 90% Reads
   100% deletes
 
-
 # This section contains shared definitions that are used in the workload.
 # These defaults should match the similar declarations in the yml files for the other
 # parts of the workload.
@@ -29,7 +28,7 @@ GlobalDefaults:
   RandomMediumString: &rand_medium_string {^RandomString: {length: {^RandomInt: {min: 160, max: 960}}}}
   RandomLargeString: &rand_large_string {^RandomString: {length: {^RandomInt: {min: 960, max: 4960}}}}
 
-  TestDB: &TestDB test  # Name of test database
+  TestDB: &TestDB test # Name of test database
 
   SmallDocCount: &small_doc_count 10000000
   LargeDocCount: &large_doc_count 1000000
@@ -88,116 +87,116 @@ LargeDocument: &large_doc
 # in a different actor so we can give them different names to distinguish them in the metrics
 # output csv.
 Actors:
-- Name: InsertPhase
-  Type: CrudActor
-  Database: *TestDB
-  Threads: 10
-  Phases:
-  - Repeat: 100000
+  - Name: InsertPhase
+    Type: CrudActor
+    Database: *TestDB
     Threads: 10
-    Collection: Collection0
-    Operations:
-    - OperationName: insertOne
-      OperationCommand:
-        Document: *small_doc
-  - {Nop: true}
-  - {Nop: true}
-  - {Nop: true}
+    Phases:
+      - Repeat: 100000
+        Threads: 10
+        Collection: Collection0
+        Operations:
+          - OperationName: insertOne
+            OperationCommand:
+              Document: *small_doc
+      - {Nop: true}
+      - {Nop: true}
+      - {Nop: true}
 
-# 50/50 mix of reads and updates.  Target 2% of document population
-- Name: UpdateHeavyPhase
-  Type: CrudActor
-  Database: *TestDB
-  Threads: 10
-  Phases:
-  - {Nop: true}
-  - Repeat: 25000
+  # 50/50 mix of reads and updates.  Target 2% of document population
+  - Name: UpdateHeavyPhase
+    Type: CrudActor
+    Database: *TestDB
     Threads: 10
-    Collection: Collection0
-    Operations:
-    - OperationName: findOne
-      OperationCommand:
-        Filter: {$and: [{key1: *small_doc_key}, {key2: {$gt: 500}}]}
-    - OperationName: updateOne
-      OperationCommand:
-        Filter: {$and: [{key1: *small_doc_key}, {key2: {$lte: 500}}]}
-        Update: {$set: {data1: *rand_4b_int}}
-    - OperationName: findOne
-      OperationCommand:
-        Filter: {$and: [{key1: *small_doc_key}, {key2: {$lte: 500}}]}
-    - OperationName: updateOne
-      OperationCommand:
-        Filter: {$and: [{key1: *small_doc_key}, {key2: {$gt: 500}}]}
-        Update: {$set: {payload: *rand_short_string}}
-  - {Nop: true}
-  - {Nop: true}
+    Phases:
+      - {Nop: true}
+      - Repeat: 25000
+        Threads: 10
+        Collection: Collection0
+        Operations:
+          - OperationName: findOne
+            OperationCommand:
+              Filter: {$and: [{key1: *small_doc_key}, {key2: {$gt: 500}}]}
+          - OperationName: updateOne
+            OperationCommand:
+              Filter: {$and: [{key1: *small_doc_key}, {key2: {$lte: 500}}]}
+              Update: {$set: {data1: *rand_4b_int}}
+          - OperationName: findOne
+            OperationCommand:
+              Filter: {$and: [{key1: *small_doc_key}, {key2: {$lte: 500}}]}
+          - OperationName: updateOne
+            OperationCommand:
+              Filter: {$and: [{key1: *small_doc_key}, {key2: {$gt: 500}}]}
+              Update: {$set: {payload: *rand_short_string}}
+      - {Nop: true}
+      - {Nop: true}
 
-# 90/10 mix of reads/updates.
-- Name: ReadMostlyPhase
-  Type: CrudActor
-  Database: *TestDB
-  Threads: 10
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - Repeat: 10000
+  # 90/10 mix of reads/updates.
+  - Name: ReadMostlyPhase
+    Type: CrudActor
+    Database: *TestDB
     Threads: 10
-    Collection: Collection0
-    Operations:
-    # Updates target 1% of documents
-    - OperationName: updateOne
-      OperationCommand:
-        Filter: {key1: *small_doc_key}
-        Update: {$set: {payload: *rand_short_string}}
-    # 4 of 9 reads target 1% of documents
-    - OperationName: findOne
-      OperationCommand:
-        Filter: {key1: *small_doc_key}
-    - OperationName: findOne
-      OperationCommand:
-        Filter: {key1: *small_doc_key}
-    - OperationName: findOne
-      OperationCommand:
-        Filter: {key1: *small_doc_key}
-    - OperationName: findOne
-      OperationCommand:
-        Filter: {key1: *small_doc_key}
-    # 5 of 9 reads target 5% of documents, using secondary key pick different documents for
-    # a given primary key
-    - OperationName: findOne
-      OperationCommand:
-        Filter: {$and: [{key1: *small_doc_key}, {key2: {$gt: 0}}, {key2: {$lte: 200}}]}
-    - OperationName: findOne
-      OperationCommand:
-        Filter: {$and: [{key1: *small_doc_key}, {key2: {$gt: 200}}, {key2: {$lte: 400}}]}
-    - OperationName: findOne
-      OperationCommand:
-        Filter: {$and: [{key1: *small_doc_key}, {key2: {$gt: 400}}, {key2: {$lte: 600}}]}
-    - OperationName: findOne
-      OperationCommand:
-        Filter: {$and: [{key1: *small_doc_key}, {key2: {$gt: 600}}, {key2: {$lte: 800}}]}
-    - OperationName: findOne
-      OperationCommand:
-        Filter: {$and: [{key1: *small_doc_key}, {key2: {$gt: 800}}, {key2: {$lte: 1000}}]}
-  - {Nop: true}
+    Phases:
+      - {Nop: true}
+      - {Nop: true}
+      - Repeat: 10000
+        Threads: 10
+        Collection: Collection0
+        Operations:
+          # Updates target 1% of documents
+          - OperationName: updateOne
+            OperationCommand:
+              Filter: {key1: *small_doc_key}
+              Update: {$set: {payload: *rand_short_string}}
+          # 4 of 9 reads target 1% of documents
+          - OperationName: findOne
+            OperationCommand:
+              Filter: {key1: *small_doc_key}
+          - OperationName: findOne
+            OperationCommand:
+              Filter: {key1: *small_doc_key}
+          - OperationName: findOne
+            OperationCommand:
+              Filter: {key1: *small_doc_key}
+          - OperationName: findOne
+            OperationCommand:
+              Filter: {key1: *small_doc_key}
+          # 5 of 9 reads target 5% of documents, using secondary key pick different documents for
+          # a given primary key
+          - OperationName: findOne
+            OperationCommand:
+              Filter: {$and: [{key1: *small_doc_key}, {key2: {$gt: 0}}, {key2: {$lte: 200}}]}
+          - OperationName: findOne
+            OperationCommand:
+              Filter: {$and: [{key1: *small_doc_key}, {key2: {$gt: 200}}, {key2: {$lte: 400}}]}
+          - OperationName: findOne
+            OperationCommand:
+              Filter: {$and: [{key1: *small_doc_key}, {key2: {$gt: 400}}, {key2: {$lte: 600}}]}
+          - OperationName: findOne
+            OperationCommand:
+              Filter: {$and: [{key1: *small_doc_key}, {key2: {$gt: 600}}, {key2: {$lte: 800}}]}
+          - OperationName: findOne
+            OperationCommand:
+              Filter: {$and: [{key1: *small_doc_key}, {key2: {$gt: 800}}, {key2: {$lte: 1000}}]}
+      - {Nop: true}
 
-# Delete the same number of documents that we added, returning the database to the original
-# population (i.e., # of documents)
-- Name: DeletePhase
-  Type: CrudActor
-  Database: *TestDB
-  Threads: 10
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - {Nop: true}
-  - Repeat: 100000
+  # Delete the same number of documents that we added, returning the database to the original
+  # population (i.e., # of documents)
+  - Name: DeletePhase
+    Type: CrudActor
+    Database: *TestDB
     Threads: 10
-    Collection: Collection0
-    Operations:
-    - OperationName: deleteOne
-      OperationCommand:
-        Filter: {key1: *small_doc_key}
+    Phases:
+      - {Nop: true}
+      - {Nop: true}
+      - {Nop: true}
+      - Repeat: 100000
+        Threads: 10
+        Collection: Collection0
+        Operations:
+          - OperationName: deleteOne
+            OperationCommand:
+              Filter: {key1: *small_doc_key}
 
 # WARNING: Future versions of Genny won't support the cvs-ftdc metrics format.
 Metrics:

@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/server-security"
+Owner: Server Security
 Description: |
   Phase definitions for encrypted YCSB-like workloads. This defines the YCSBLikeActor
   that emulates the MongoDB YCSB workloads.
@@ -49,58 +49,58 @@ LoadPhase: &load_phase
   Collection: &collection_param {^Parameter: {Name: "Collection", Default: "testcoll"}}
   MetricsName: "load"
   Operations:
-  - OperationName: insertOne
-    OperationMetricsName: inserts
-    OperationCommand:
-      Document: {^Parameter: {Name: "InsertDocument", Default: *default_doc}}
+    - OperationName: insertOne
+      OperationMetricsName: inserts
+      OperationCommand:
+        Document: {^Parameter: {Name: "InsertDocument", Default: *default_doc}}
 
 100ReadPhase: &100read_phase
   Repeat: {^Parameter: {Name: "100ReadRepeat", Default: 3125}}
   Collection: *collection_param
   MetricsName: "100read"
   Operations:
-  - *find_op
+    - *find_op
 
 95Read5UpdatePhase: &95read5update_phase
   Repeat: {^Parameter: {Name: "95Read5UpdateRepeat", Default: 157}}
   Collection: *collection_param
   MetricsName: "95read5update"
   Operations:
-  - *update_op
-  - *find_op
-  - *find_op
-  - *find_op
-  - *find_op
-  - *find_op
-  - *find_op
-  - *find_op
-  - *find_op
-  - *find_op
-  - *find_op
-  - *find_op
-  - *find_op
-  - *find_op
-  - *find_op
-  - *find_op
-  - *find_op
-  - *find_op
-  - *find_op
-  - *find_op
+    - *update_op
+    - *find_op
+    - *find_op
+    - *find_op
+    - *find_op
+    - *find_op
+    - *find_op
+    - *find_op
+    - *find_op
+    - *find_op
+    - *find_op
+    - *find_op
+    - *find_op
+    - *find_op
+    - *find_op
+    - *find_op
+    - *find_op
+    - *find_op
+    - *find_op
+    - *find_op
 
 50Read50UpdatePhase: &50read50update_phase
   Repeat: {^Parameter: {Name: "50Read50UpdateRepeat", Default: 1563}}
   Collection: *collection_param
   MetricsName: "50read50update"
   Operations:
-  - *find_op
-  - *update_op
+    - *find_op
+    - *update_op
 
 100UpdatePhase: &100update_phase
   Repeat: {^Parameter: {Name: "100UpdateRepeat", Default: 3125}}
   Collection: *collection_param
   MetricsName: "100update"
   Operations:
-  - *update_op
+    - *update_op
 
 # Parameterized Actor
 YCSBLikeActor:
@@ -110,10 +110,10 @@ YCSBLikeActor:
   Database: {^Parameter: {Name: "Database", Default: ""}}
   ClientName: {^Parameter: {Name: "ClientName", Default: "Default"}}
   Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - *load_phase
-  - *100read_phase
-  - *95read5update_phase
-  - *100update_phase
-  - *50read50update_phase
+    - {Nop: true}
+    - {Nop: true}
+    - *load_phase
+    - *100read_phase
+    - *95read5update_phase
+    - *100update_phase
+    - *50read50update_phase

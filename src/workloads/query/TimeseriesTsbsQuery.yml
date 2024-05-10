@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-integration"
+Owner: Query Integration
 Description: |
   This workload runs different time-series optimizations with the tsbs dataset. During development,
   This workload runs queries from the tsbs_query benchmark in Genny. It allows us to cross-check
@@ -30,9 +30,9 @@ GlobalDefaults:
   collection: &collection point_data
   maxPhases: &maxPhases 30
   repeat: &repeat 500
-  # TSBS constructs a time windows of various sizes (1 hour, 8 hours, 12 hours) from a uniformly 
-  # random start-time within this time-period. Ideally, we would do this as well, but currently 
-  # genny doesn't support storing randomized date values as variables, so we will fix a starting 
+  # TSBS constructs a time windows of various sizes (1 hour, 8 hours, 12 hours) from a uniformly
+  # random start-time within this time-period. Ideally, we would do this as well, but currently
+  # genny doesn't support storing randomized date values as variables, so we will fix a starting
   # value and increment it each time the query runs.
   startDate: &startDate "2016-01-04T21:49:27Z"
   startDatePlusOneHour: &startDatePlusOneHour "2016-01-04T22:49:27Z"
@@ -101,8 +101,14 @@ Actors:
                                   ^Cycle:
                                     {
                                       ofLength: 100,
-                                      fromGenerator: 
-                                        { ^IncDate: { start: *startDate,step: 2520000 } },
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *startDate,
+                                              step: 2520000,
+                                            },
+                                        },
                                     },
                                 },
                               $lt:
@@ -112,7 +118,11 @@ Actors:
                                       ofLength: 100,
                                       fromGenerator:
                                         {
-                                          ^IncDate: { start: *startDatePlusOneHour, step: 2520000 },
+                                          ^IncDate:
+                                            {
+                                              start: *startDatePlusOneHour,
+                                              step: 2520000,
+                                            },
                                         },
                                     },
                                 },
@@ -122,7 +132,8 @@ Actors:
                     {
                       $group:
                         {
-                          _id: { $dateTrunc: { date: "$time", unit: "minute" } },
+                          _id:
+                            { $dateTrunc: { date: "$time", unit: "minute" } },
                           max_usage_user: { $max: "$usage_user" },
                         },
                     },
@@ -158,7 +169,13 @@ Actors:
                                     {
                                       ofLength: 100,
                                       fromGenerator:
-                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *startDate,
+                                              step: 2520000,
+                                            },
+                                        },
                                     },
                                 },
                               $lt:
@@ -168,7 +185,11 @@ Actors:
                                       ofLength: 100,
                                       fromGenerator:
                                         {
-                                          ^IncDate: { start: *startDatePlusOneHour, step: 2520000 },
+                                          ^IncDate:
+                                            {
+                                              start: *startDatePlusOneHour,
+                                              step: 2520000,
+                                            },
                                         },
                                     },
                                 },
@@ -178,7 +199,8 @@ Actors:
                     {
                       $group:
                         {
-                          _id: { $dateTrunc: { date: "$time", unit: "minute" } },
+                          _id:
+                            { $dateTrunc: { date: "$time", unit: "minute" } },
                           max_usage_user: { $max: "$usage_user" },
                         },
                     },
@@ -214,7 +236,13 @@ Actors:
                                     {
                                       ofLength: 100,
                                       fromGenerator:
-                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *startDate,
+                                              step: 2520000,
+                                            },
+                                        },
                                     },
                                 },
                               $lt:
@@ -224,7 +252,11 @@ Actors:
                                       ofLength: 100,
                                       fromGenerator:
                                         {
-                                          ^IncDate: { start: *startDatePlusOneHour, step: 2520000 },
+                                          ^IncDate:
+                                            {
+                                              start: *startDatePlusOneHour,
+                                              step: 2520000,
+                                            },
                                         },
                                     },
                                 },
@@ -234,7 +266,8 @@ Actors:
                     {
                       $group:
                         {
-                          _id: { $dateTrunc: { date: "$time", unit: "minute" } },
+                          _id:
+                            { $dateTrunc: { date: "$time", unit: "minute" } },
                           max_usage_user: { $max: "$usage_user" },
                           max_usage_guest: { $max: "$usage_guest" },
                           max_usage_system: { $max: "$usage_system" },
@@ -273,8 +306,14 @@ Actors:
                                   ^Cycle:
                                     {
                                       ofLength: 100,
-                                      fromGenerator: 
-                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *startDate,
+                                              step: 2520000,
+                                            },
+                                        },
                                     },
                                 },
                               $lt:
@@ -284,7 +323,11 @@ Actors:
                                       ofLength: 100,
                                       fromGenerator:
                                         {
-                                          ^IncDate: { start: *startDatePlusOneHour, step: 2520000 },
+                                          ^IncDate:
+                                            {
+                                              start: *startDatePlusOneHour,
+                                              step: 2520000,
+                                            },
                                         },
                                     },
                                 },
@@ -294,7 +337,8 @@ Actors:
                     {
                       $group:
                         {
-                          _id: { $dateTrunc: { date: "$time", unit: "minute" } },
+                          _id:
+                            { $dateTrunc: { date: "$time", unit: "minute" } },
                           max_usage_user: { $max: "$usage_user" },
                           max_usage_guest: { $max: "$usage_guest" },
                           max_usage_system: { $max: "$usage_system" },
@@ -333,8 +377,14 @@ Actors:
                                   ^Cycle:
                                     {
                                       ofLength: 100,
-                                      fromGenerator: 
-                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *startDate,
+                                              step: 2520000,
+                                            },
+                                        },
                                     },
                                 },
                               $lt:
@@ -344,8 +394,11 @@ Actors:
                                       ofLength: 100,
                                       fromGenerator:
                                         {
-                                          ^IncDate: 
-                                            { start: *startDatePlusTwelveHours, step: 2520000 },
+                                          ^IncDate:
+                                            {
+                                              start: *startDatePlusTwelveHours,
+                                              step: 2520000,
+                                            },
                                         },
                                     },
                                 },
@@ -355,7 +408,10 @@ Actors:
                     {
                       $group:
                         {
-                          _id: { $dateTrunc: { "date": "$time", "unit": "minute" } },
+                          _id:
+                            {
+                              $dateTrunc: { "date": "$time", "unit": "minute" },
+                            },
                           max_usage_user: { $max: "$usage_user" },
                         },
                     },
@@ -390,8 +446,14 @@ Actors:
                                   ^Cycle:
                                     {
                                       ofLength: 100,
-                                      fromGenerator: 
-                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *startDate,
+                                              step: 2520000,
+                                            },
+                                        },
                                     },
                                 },
                               $lt:
@@ -401,8 +463,11 @@ Actors:
                                       ofLength: 100,
                                       fromGenerator:
                                         {
-                                          ^IncDate: 
-                                            { start: *startDatePlusTwelveHours, step: 2520000 },
+                                          ^IncDate:
+                                            {
+                                              start: *startDatePlusTwelveHours,
+                                              step: 2520000,
+                                            },
                                         },
                                     },
                                 },
@@ -412,7 +477,10 @@ Actors:
                     {
                       $group:
                         {
-                          _id: { $dateTrunc: { "date": "$time", "unit": "minute" } },
+                          _id:
+                            {
+                              $dateTrunc: { "date": "$time", "unit": "minute" },
+                            },
                           max_usage_user: { $max: "$usage_user" },
                           max_usage_guest: { $max: "$usage_guest" },
                           max_usage_system: { $max: "$usage_system" },
@@ -453,7 +521,13 @@ Actors:
                                     {
                                       ofLength: 100,
                                       fromGenerator:
-                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *startDate,
+                                              step: 2520000,
+                                            },
+                                        },
                                     },
                                 },
                               $lt:
@@ -463,8 +537,11 @@ Actors:
                                       ofLength: 100,
                                       fromGenerator:
                                         {
-                                          ^IncDate: 
-                                            {  start: *startDatePlusTwelveHours, step: 2520000 },
+                                          ^IncDate:
+                                            {
+                                              start: *startDatePlusTwelveHours,
+                                              step: 2520000,
+                                            },
                                         },
                                     },
                                 },
@@ -476,7 +553,8 @@ Actors:
                         {
                           _id:
                             {
-                              time: { $dateTrunc: { date: "$time", unit: "hour" } },
+                              time:
+                                { $dateTrunc: { date: "$time", unit: "hour" } },
                               hostname: "$tags.hostname",
                             },
                           avg_usage_softirq: { $avg: "$usage_softirq" },
@@ -513,7 +591,13 @@ Actors:
                                     {
                                       ofLength: 100,
                                       fromGenerator:
-                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *startDate,
+                                              step: 2520000,
+                                            },
+                                        },
                                     },
                                 },
                               $lt:
@@ -524,7 +608,10 @@ Actors:
                                       fromGenerator:
                                         {
                                           ^IncDate:
-                                            { start: *startDatePlusTwelveHours, step: 2520000 },
+                                            {
+                                              start: *startDatePlusTwelveHours,
+                                              step: 2520000,
+                                            },
                                         },
                                     },
                                 },
@@ -536,7 +623,8 @@ Actors:
                         {
                           _id:
                             {
-                              time: { $dateTrunc: { date: "$time", unit: "hour" } },
+                              time:
+                                { $dateTrunc: { date: "$time", unit: "hour" } },
                               hostname: "$tags.hostname",
                             },
                           avg_usage_softirq: { $avg: "$usage_softirq" },
@@ -577,7 +665,13 @@ Actors:
                                     {
                                       ofLength: 100,
                                       fromGenerator:
-                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *startDate,
+                                              step: 2520000,
+                                            },
+                                        },
                                     },
                                 },
                               $lt:
@@ -588,7 +682,10 @@ Actors:
                                       fromGenerator:
                                         {
                                           ^IncDate:
-                                            { start: *startDatePlusTwelveHours, step: 2520000 },
+                                            {
+                                              start: *startDatePlusTwelveHours,
+                                              step: 2520000,
+                                            },
                                         },
                                     },
                                 },
@@ -600,7 +697,8 @@ Actors:
                         {
                           _id:
                             {
-                              time: { $dateTrunc: { date: "$time", unit: "hour" } },
+                              time:
+                                { $dateTrunc: { date: "$time", unit: "hour" } },
                               hostname: "$tags.hostname",
                             },
                           avg_usage_softirq: { $avg: "$usage_softirq" },
@@ -649,7 +747,13 @@ Actors:
                                     {
                                       ofLength: 100,
                                       fromGenerator:
-                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *startDate,
+                                              step: 2520000,
+                                            },
+                                        },
                                     },
                                 },
                               $lt:
@@ -658,7 +762,13 @@ Actors:
                                     {
                                       ofLength: 100,
                                       fromGenerator:
-                                        { ^IncDate: { start: *closeToEndTime, step: 2520000 } },
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *closeToEndTime,
+                                              step: 2520000,
+                                            },
+                                        },
                                     },
                                 },
                             },
@@ -667,7 +777,8 @@ Actors:
                     {
                       $group:
                         {
-                          _id: { $dateTrunc: { date: "$time", unit: "minute" } },
+                          _id:
+                            { $dateTrunc: { date: "$time", unit: "minute" } },
                           max_usage_user: { $max: "$usage_user" },
                         },
                     },
@@ -706,7 +817,13 @@ Actors:
                                     {
                                       ofLength: 100,
                                       fromGenerator:
-                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *startDate,
+                                              step: 2520000,
+                                            },
+                                        },
                                     },
                                 },
                               $lt:
@@ -714,10 +831,13 @@ Actors:
                                   ^Cycle:
                                     {
                                       ofLength: 100,
-                                      fromGenerator: 
-                                      {
-                                          ^IncDate: 
-                                            { start: *startDatePlusEightHours, step: 2520000 },
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *startDatePlusEightHours,
+                                              step: 2520000,
+                                            },
                                         },
                                     },
                                 },
@@ -772,7 +892,13 @@ Actors:
                                     {
                                       ofLength: 100,
                                       fromGenerator:
-                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *startDate,
+                                              step: 2520000,
+                                            },
+                                        },
                                     },
                                 },
                               $lt:
@@ -783,7 +909,10 @@ Actors:
                                       fromGenerator:
                                         {
                                           ^IncDate:
-                                            { start: *startDatePlusEightHours, step: 2520000 },
+                                            {
+                                              start: *startDatePlusEightHours,
+                                              step: 2520000,
+                                            },
                                         },
                                     },
                                 },
@@ -840,7 +969,13 @@ Actors:
                                     {
                                       ofLength: 100,
                                       fromGenerator:
-                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *startDate,
+                                              step: 2520000,
+                                            },
+                                        },
                                     },
                                 },
                               $lt:
@@ -851,7 +986,10 @@ Actors:
                                       fromGenerator:
                                         {
                                           ^IncDate:
-                                            { start: *startDatePlusTwelveHours, step: 2520000 },
+                                            {
+                                              start: *startDatePlusTwelveHours,
+                                              step: 2520000,
+                                            },
                                         },
                                     },
                                 },
@@ -889,8 +1027,14 @@ Actors:
                                   ^Cycle:
                                     {
                                       ofLength: 100,
-                                      fromGenerator: 
-                                        { ^IncDate: { start: *startDate, step: 2520000 } },
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *startDate,
+                                              step: 2520000,
+                                            },
+                                        },
                                     },
                                 },
                               $lt:
@@ -901,7 +1045,10 @@ Actors:
                                       fromGenerator:
                                         {
                                           ^IncDate:
-                                            { start: *startDatePlusTwelveHours, step: 2520000 },
+                                            {
+                                              start: *startDatePlusTwelveHours,
+                                              step: 2520000,
+                                            },
                                         },
                                     },
                                 },

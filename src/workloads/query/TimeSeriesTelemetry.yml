@@ -14,182 +14,235 @@ db: &db test
 coll: &coll Collection0
 
 # Operations reused in multiple Phases.
-Nop: &Nop {Nop: true}
+Nop: &Nop { Nop: true }
 
 Actors:
-# Clear any pre-existing collection state.
-- Name: ClearCollection
-  Type: CrudActor
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    Database: *db
-    Collection: *coll
-    Operations:
-      - OperationName: drop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-
-- Name: CreateTimeSeriesCollection
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - *Nop
-  - Repeat: 1
-    Database: *db
-    Operation:
-      OperationMetricsName: CreateTimeSeriesCollection
-      OperationName: RunCommand
-      OperationCommand:
-        {create: *coll, timeseries: {timeField: "timestamp", metaField: "metadata"}}
-  - *Nop
-  - *Nop
-  - *Nop
-
-- Name: InsertData
-  Type: Loader
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - Repeat: 1
-    Database: *db
-    Collection: *coll
+  # Clear any pre-existing collection state.
+  - Name: ClearCollection
+    Type: CrudActor
     Threads: 1
-    CollectionCount: 1
-    DocumentCount: 1000000
-    BatchSize: 100
-    Document:
-      timestamp: {^RandomDate: {min: "2022-01-01", max: "2022-03-01"}}
-      metadata: {
-        sensorId: {^RandomInt: {min: 0, max: 100}},
-      }
-      body: {
-        Result: {
-          Success: {^Choose: {from: [true, false, true, true]}},
-          ErrorNo: {^Choose: {from: [0, 0, 0, 0, 0, 3, 5, 17, 20, 29, 35, 142]}},
-          Details: {^Object: {
-              withNEntries: {^RandomInt: {min: 1, max: 5}},
-              havingKeys: {^Choose: {from: ["Cycle1", "Cycle2", "Cycle3", "Cycle4", "Cycle5"]}},
-              andValues: {
-                Valid: {^Choose: {from: [true, false, true, true, true, true, true, true]}},
-                Effort: {^RandomInt: {min: 0, max: 42}}
-              },
-              duplicatedKeys: skip
-            }
-          }
-        }
-      }
-  - *Nop
-  - *Nop
+    Phases:
+      - Repeat: 1
+        Database: *db
+        Collection: *coll
+        Operations:
+          - OperationName: drop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
 
-- Name: RunReport
-  Type: RunCommand
-  Database: *db
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - Duration: 30 seconds
+  - Name: CreateTimeSeriesCollection
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      - *Nop
+      - Repeat: 1
+        Database: *db
+        Operation:
+          OperationMetricsName: CreateTimeSeriesCollection
+          OperationName: RunCommand
+          OperationCommand:
+            {
+              create: *coll,
+              timeseries: { timeField: "timestamp", metaField: "metadata" },
+            }
+      - *Nop
+      - *Nop
+      - *Nop
+
+  - Name: InsertData
+    Type: Loader
+    Threads: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - Repeat: 1
+        Database: *db
+        Collection: *coll
+        Threads: 1
+        CollectionCount: 1
+        DocumentCount: 1000000
+        BatchSize: 100
+        Document:
+          timestamp: { ^RandomDate: { min: "2022-01-01", max: "2022-03-01" } }
+          metadata: { sensorId: { ^RandomInt: { min: 0, max: 100 } } }
+          body:
+            {
+              Result:
+                {
+                  Success: { ^Choose: { from: [true, false, true, true] } },
+                  ErrorNo:
+                    {
+                      ^Choose:
+                        { from: [0, 0, 0, 0, 0, 3, 5, 17, 20, 29, 35, 142] },
+                    },
+                  Details:
+                    {
+                      ^Object:
+                        {
+                          withNEntries: { ^RandomInt: { min: 1, max: 5 } },
+                          havingKeys:
+                            {
+                              ^Choose:
+                                {
+                                  from:
+                                    [
+                                      "Cycle1",
+                                      "Cycle2",
+                                      "Cycle3",
+                                      "Cycle4",
+                                      "Cycle5",
+                                    ],
+                                },
+                            },
+                          andValues:
+                            {
+                              Valid:
+                                {
+                                  ^Choose:
+                                    {
+                                      from:
+                                        [
+                                          true,
+                                          false,
+                                          true,
+                                          true,
+                                          true,
+                                          true,
+                                          true,
+                                          true,
+                                        ],
+                                    },
+                                },
+                              Effort: { ^RandomInt: { min: 0, max: 42 } },
+                            },
+                          duplicatedKeys: skip,
+                        },
+                    },
+                },
+            }
+      - *Nop
+      - *Nop
+
+  - Name: RunReport
+    Type: RunCommand
     Database: *db
-    Operations:
-    - OperationMetricsName: ReportQuery
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: *coll
-        pipeline: [
-          {
-            $match: {
-              timestamp: {
-                $gte: { ^Date: "2022-01-03T00:00:00Z" },
-                $lte: { ^Date: "2022-01-08T23:59:59Z" },
-              },
-              "body.Result": {$exists: true},
-              "body.Result.ErrorNo": {$ne: 29},
-              $or: [
-                {
-                  "body.Result.Details.Cycle1.Valid": true,
-                  "body.Result.Details.Cycle1.Effort": { $gt: 0 },
-                },
-                {
-                  "body.Result.Details.Cycle2.Valid": true,
-                  "body.Result.Details.Cycle2.Effort": { $gt: 0 },
-                },
-                {
-                  "body.Result.Details.Cycle3.Valid": true,
-                  "body.Result.Details.Cycle3.Effort": { $gt: 0 },
-                }
-              ],
-            }
-          },
-          {
-            $project: {
-              _id: 0,
-              "result": "$body.Result.Success",
-              "date": {
-                $dateTrunc: {
-                  date: "$timestamp",
-                  unit: "day"
-                },
-              },
-            },
-          },
-          {
-            $addFields: {
-              dateRange: [{$add: [{ ^Date: "2022-01-03T00:00:00Z" }, 0]},
-                          {$add: [{ ^Date: "2022-01-03T00:00:00Z" }, 86400000]},
-                          {$add: [{ ^Date: "2022-01-03T00:00:00Z" }, 172800000]},
-                          {$add: [{ ^Date: "2022-01-03T00:00:00Z" }, 259200000]},
-                          {$add: [{ ^Date: "2022-01-03T00:00:00Z" }, 345600000]},
-                          {$add: [{ ^Date: "2022-01-03T00:00:00Z" }, 432000000]},
-                          ]
-            }
-          },
-          {
-            "$unwind": {"path": "$dateRange"}
-          },
-          {
-            "$group": {
-              "_id": {
-                "date": "$dateRange",
-                "result": "$result"
-              },
-              "count": {
-                 "$sum": {
-                    "$cond": [
-                      {"$eq": ["$dateRange", "$date"]},
-                      {"$const": 1},
-                      {"$const": 0}
-                    ]
-                 }
-              }
-            }
-          },
-          {
-            "$match": {
-              "count": {"$gt" : 0}
-            }
-          },
-        ]
-        cursor: {}
-
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - Duration: 30 seconds
+        Database: *db
+        Operations:
+          - OperationMetricsName: ReportQuery
+            OperationName: RunCommand
+            OperationCommand:
+              aggregate: *coll
+              pipeline:
+                [
+                  {
+                    $match:
+                      {
+                        timestamp:
+                          {
+                            $gte: { ^Date: "2022-01-03T00:00:00Z" },
+                            $lte: { ^Date: "2022-01-08T23:59:59Z" },
+                          },
+                        "body.Result": { $exists: true },
+                        "body.Result.ErrorNo": { $ne: 29 },
+                        $or:
+                          [
+                            {
+                              "body.Result.Details.Cycle1.Valid": true,
+                              "body.Result.Details.Cycle1.Effort": { $gt: 0 },
+                            },
+                            {
+                              "body.Result.Details.Cycle2.Valid": true,
+                              "body.Result.Details.Cycle2.Effort": { $gt: 0 },
+                            },
+                            {
+                              "body.Result.Details.Cycle3.Valid": true,
+                              "body.Result.Details.Cycle3.Effort": { $gt: 0 },
+                            },
+                          ],
+                      },
+                  },
+                  {
+                    $project:
+                      {
+                        _id: 0,
+                        "result": "$body.Result.Success",
+                        "date":
+                          { $dateTrunc: { date: "$timestamp", unit: "day" } },
+                      },
+                  },
+                  {
+                    $addFields:
+                      {
+                        dateRange:
+                          [
+                            { $add: [{ ^Date: "2022-01-03T00:00:00Z" }, 0] },
+                            {
+                              $add:
+                                [{ ^Date: "2022-01-03T00:00:00Z" }, 86400000],
+                            },
+                            {
+                              $add:
+                                [{ ^Date: "2022-01-03T00:00:00Z" }, 172800000],
+                            },
+                            {
+                              $add:
+                                [{ ^Date: "2022-01-03T00:00:00Z" }, 259200000],
+                            },
+                            {
+                              $add:
+                                [{ ^Date: "2022-01-03T00:00:00Z" }, 345600000],
+                            },
+                            {
+                              $add:
+                                [{ ^Date: "2022-01-03T00:00:00Z" }, 432000000],
+                            },
+                          ],
+                      },
+                  },
+                  { "$unwind": { "path": "$dateRange" } },
+                  {
+                    "$group":
+                      {
+                        "_id": { "date": "$dateRange", "result": "$result" },
+                        "count":
+                          {
+                            "$sum":
+                              {
+                                "$cond":
+                                  [
+                                    { "$eq": ["$dateRange", "$date"] },
+                                    { "$const": 1 },
+                                    { "$const": 0 },
+                                  ],
+                              },
+                          },
+                      },
+                  },
+                  { "$match": { "count": { "$gt": 0 } } },
+                ]
+              cursor: {}
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica
-      - replica-80-feature-flags
-      - replica-all-feature-flags
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
-      - v5.0
-      - v5.1
-      - v5.2
-      - v5.3
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - replica-80-feature-flags
+          - replica-all-feature-flags
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4
+          - v5.0
+          - v5.1
+          - v5.2
+          - v5.3

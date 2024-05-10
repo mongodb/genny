@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/sharding"
+Owner: Cluster Scalability
 Description: |
 
 GlobalDefaults:
@@ -7,8 +7,8 @@ GlobalDefaults:
   Database0: &Database0 databaseForMultiShardTestingIndex0PaddingForExtraSizeAAAAAAAAAA
   Database1: &Database1 databaseForMultiShardTestingIndex1PaddingForExtraSizeAAAAAAAAAA
 
-  ApproxDocumentSize: &ApproxDocumentSize 2000  # = 2kB
-  ApproxDocumentSize50Pct: &ApproxDocumentSize50Pct 1000  # = 1kB
+  ApproxDocumentSize: &ApproxDocumentSize 2000 # = 2kB
+  ApproxDocumentSize50Pct: &ApproxDocumentSize50Pct 1000 # = 1kB
   DocumentCount: &DocumentCount 100_000
 
   MaxPhase: &MaxPhase 4
@@ -20,234 +20,233 @@ GlobalDefaults:
       Update: {$inc: {counter: 1}}
 
   UpdateOperationDatabase0: &UpdateOperationDatabase0
-    <<: *UpdateOperation
+    !!merge <<: *UpdateOperation
     Database: *Database0
 
   UpdateOperationDatabase1: &UpdateOperationDatabase1
-    <<: *UpdateOperation
+    !!merge <<: *UpdateOperation
     Database: *Database1
 
 Actors:
-- Name: CreateDatabases
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhase
-      PhaseConfig:
-        Repeat: 1
-        Database: admin
-        Operations:
-        - OperationName: AdminCommand
-          OperationCommand:
-            enableSharding: *Database0
-        - OperationName: AdminCommand
-          OperationCommand:
-            enableSharding: *Database1
-        - OperationName: AdminCommand
-          OperationCommand:
-            movePrimary: *Database0
-            to: rs0
-        - OperationName: AdminCommand
-          OperationCommand:
-            movePrimary: *Database1
-            to: rs1
+  - Name: CreateDatabases
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhase
+        PhaseConfig:
+          Repeat: 1
+          Database: admin
+          Operations:
+            - OperationName: AdminCommand
+              OperationCommand:
+                enableSharding: *Database0
+            - OperationName: AdminCommand
+              OperationCommand:
+                enableSharding: *Database1
+            - OperationName: AdminCommand
+              OperationCommand:
+                movePrimary: *Database0
+                to: rs0
+            - OperationName: AdminCommand
+              OperationCommand:
+                movePrimary: *Database1
+                to: rs1
 
-- Name: LoadInitialData
-  Type: MonotonicLoader
-  Threads: 4
-  Phases:
-  - &Nop {Nop: true}
-  - Repeat: 1
+  - Name: LoadInitialData
+    Type: MonotonicLoader
     Threads: 4
-    BatchSize: 1000
-    DocumentCount: *DocumentCount
-    CollectionCount: 30
+    Phases:
+      - &Nop {Nop: true}
+      - Repeat: 1
+        Threads: 4
+        BatchSize: 1000
+        DocumentCount: *DocumentCount
+        CollectionCount: 30
+        Database: *Database0
+        Document: &Document
+          counter: 0
+          padding: {^FastRandomString: {length: {^RandomInt: {min: *ApproxDocumentSize50Pct, max: *ApproxDocumentSize}}}}
+      - Repeat: 1
+        Threads: 4
+        BatchSize: 1000
+        DocumentCount: *DocumentCount
+        CollectionCount: 30
+        Database: *Database1
+        Document: *Document
+      - *Nop
+      - *Nop
+
+  - Name: QuiesceDatabase0
+    Type: QuiesceActor
+    Threads: 1
     Database: *Database0
-    Document: &Document
-      counter: 0
-      padding: {^FastRandomString: {length: {^RandomInt: {min: *ApproxDocumentSize50Pct, max: *ApproxDocumentSize}}}}
-  - Repeat: 1
-    Threads: 4
-    BatchSize: 1000
-    DocumentCount: *DocumentCount
-    CollectionCount: 30
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - Repeat: 1
+      - *Nop
+
+  - Name: QuiesceDatabase1
+    Type: QuiesceActor
+    Threads: 1
     Database: *Database1
-    Document: *Document
-  - *Nop
-  - *Nop
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - Repeat: 1
+      - *Nop
 
-- Name: QuiesceDatabase0
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database0
-  Phases:
-    - *Nop
-    - *Nop
-    - *Nop
-    - Repeat: 1
-    - *Nop
-
-- Name: QuiesceDatabase1
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database1
-  Phases:
-    - *Nop
-    - *Nop
-    - *Nop
-    - Repeat: 1
-    - *Nop
-
-- Name: Transactions
-  Type: CrudActor
-  Threads: 16
-  Database: *Database0
-  Phases:
-    - *Nop
-    - *Nop
-    - *Nop
-    - *Nop
-    - MetricsName: UpdateManyCollections
-      Duration: 1 minute
-      Collection: Collection0
-      ThrowOnFailure: false  # Transactions are allowed to fail.
-      RecordFailure: true  # We still want to record the metrics even if the transaction is rolled back.
-      Operations:
-      - OperationName: withTransaction
-        OperationCommand:
-          OnSession: true
-          OperationsInTransaction:
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection0
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection1
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection2
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection3
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection4
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection5
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection6
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection7
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection8
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection9
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection10
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection11
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection12
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection13
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection14
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection15
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection16
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection17
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection18
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection19
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection20
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection21
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection22
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection23
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection24
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection25
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection26
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection27
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection28
-          - <<: *UpdateOperationDatabase0
-            Collection: Collection29
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection0
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection1
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection2
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection3
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection4
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection5
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection6
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection7
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection8
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection9
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection10
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection11
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection12
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection13
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection14
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection15
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection16
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection17
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection18
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection19
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection20
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection21
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection22
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection23
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection24
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection25
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection26
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection27
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection28
-          - <<: *UpdateOperationDatabase1
-            Collection: Collection29
+  - Name: Transactions
+    Type: CrudActor
+    Threads: 16
+    Database: *Database0
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - MetricsName: UpdateManyCollections
+        Duration: 1 minute
+        Collection: Collection0
+        ThrowOnFailure: false # Transactions are allowed to fail.
+        RecordFailure: true # We still want to record the metrics even if the transaction is rolled back.
+        Operations:
+          - OperationName: withTransaction
+            OperationCommand:
+              OnSession: true
+              OperationsInTransaction:
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection0
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection1
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection2
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection3
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection4
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection5
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection6
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection7
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection8
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection9
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection10
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection11
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection12
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection13
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection14
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection15
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection16
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection17
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection18
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection19
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection20
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection21
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection22
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection23
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection24
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection25
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection26
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection27
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection28
+                - !!merge <<: *UpdateOperationDatabase0
+                  Collection: Collection29
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection0
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection1
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection2
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection3
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection4
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection5
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection6
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection7
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection8
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection9
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection10
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection11
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection12
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection13
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection14
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection15
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection16
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection17
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection18
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection19
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection20
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection21
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection22
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection23
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection24
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection25
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection26
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection27
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection28
+                - !!merge <<: *UpdateOperationDatabase1
+                  Collection: Collection29
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - shard
-      - shard-80-feature-flags
-      - shard-lite
-      - shard-lite-80-feature-flags
-      - shard-lite-all-feature-flags
-    branch_name:
-      $gte: v7.0
+  - When:
+      mongodb_setup:
+        $eq:
+          - shard
+          - shard-80-feature-flags
+          - shard-all-feature-flags
+          - shard-lite-80-feature-flags
+      branch_name:
+        $gte: v7.0

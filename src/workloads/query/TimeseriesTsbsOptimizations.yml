@@ -1,11 +1,11 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-integration"
+Owner: Query Integration
 Description: |
   This workload runs different time-series optimizations with the tsbs dataset. During development,
   we targeted optimizations that are most relevant to pushdown time-series queries to SBE. Further
   optimizations should be added to this workload. The data is preloaded by the dsi configuration.
   See 'configurations/test_control/test_control.tsbs_query_genny.yml' for all  the details.
-  
+
   Below are helpful statistics about the collection:
   1. There are 20736000 documents and 161448 buckets in the collection.
   2. "tags" is the metaField and "time" is the timeField.
@@ -104,7 +104,7 @@ Actors:
                     },
                   ]
 
-  # If the following stages after unpack doesn't depend on the fields of the documents, the unpack stage 
+  # If the following stages after unpack doesn't depend on the fields of the documents, the unpack stage
   # will only return empty documents. The following task tests this optimization.
   - Name: EmptyUnpackWithGroupSum
     Type: CrudActor

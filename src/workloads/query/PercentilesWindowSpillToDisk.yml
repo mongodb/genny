@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-integration"
+Owner: Query Integration
 Description: |
   This tests $percentile window functions with different partitions and indexes to test its behavior
   when it spills to disk. There are a few cases to consider
@@ -13,21 +13,20 @@ Description: |
   partition to control whether or not the $_internalSetWindowsFields will spill.
 
 Keywords:
-- setWindowFields
-- percentile
-- spill
+  - setWindowFields
+  - percentile
+  - spill
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone-80-feature-flags
-      - standalone-all-feature-flags
-      - standalone-classic-query-engine
-      - standalone-sbe
-    branch_name:
-      $gte:
-        v7.0
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone-80-feature-flags
+          - standalone-all-feature-flags
+          - standalone-classic-query-engine
+          - standalone-sbe
+      branch_name:
+        $gte: v7.0
 
 GlobalDefaults:
   MaxPhases: &maxPhases 8
@@ -35,96 +34,150 @@ GlobalDefaults:
   Collection: &coll Collection0
 
 ActorTemplates:
-- TemplateName: ComputePercentile
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "ComputePercentile"}}
-    Type: CrudActor
+  - TemplateName: ComputePercentile
+    Config:
+      Name: { ^Parameter: { Name: "Name", Default: "ComputePercentile" } }
+      Type: CrudActor
+      Threads: 1
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{ ^Parameter: { Name: "OnlyActiveInPhase", Default: 1024 } }]
+          NopInPhasesUpTo: *maxPhases
+          PhaseConfig:
+            Repeat: 10
+            Database: *db
+            Collection: *coll
+            Operations:
+              - OperationName: aggregate
+                OperationCommand:
+                  Pipeline:
+                    [
+                      {
+                        $setWindowFields:
+                          {
+                            partitionBy:
+                              {
+                                ^Parameter:
+                                  { Name: "Partition", Default: null },
+                              },
+                            sortBy:
+                              {
+                                ^Parameter:
+                                  {
+                                    Name: "Sort",
+                                    Default: { not_spill_indexed: 1 },
+                                  },
+                              },
+                            output:
+                              {
+                                p:
+                                  {
+                                    $percentile:
+                                      {
+                                        p: [0.75],
+                                        input: "$data",
+                                        method: "approximate",
+                                      },
+                                    window: { documents: [0, "unbounded"] },
+                                  },
+                              },
+                          },
+                      },
+                    ]
+                  Options:
+                    AllowDiskUse:
+                      { ^Parameter: { Name: "Disk", Default: true } }
+
+Actors:
+  - Name: CreateDataset
+    Type: Loader
     Threads: 1
     Phases:
       OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
+        Active: [0]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
-          Repeat: 10
+          Threads: 1
+          Repeat: 1
           Database: *db
-          Collection: *coll
-          Operations:
-          - OperationName: aggregate
-            OperationCommand:
-              Pipeline: [{
-                $setWindowFields: {
-                  partitionBy: {^Parameter: {Name: "Partition", Default: null}},
-                  sortBy: {^Parameter: {Name: "Sort", Default: {not_spill_indexed: 1}}},
-                  output: {
-                    p: {
-                      $percentile: {p: [0.75], input: "$data", method: "approximate" },
-                      window: { documents: [0, "unbounded"] }
-                    }}
-                }}
-              ]
-              Options:
-                AllowDiskUse: {^Parameter: {Name: "Disk", Default: true}}
+          CollectionCount: 1
+          # We have 100k documents with each being between 10kB to 20kB. When divided into 20 partitions,
+          # it won't spill, but when divided into fewer partitions (like 2) it will spill.
+          DocumentCount: 100000
+          BatchSize: 1000
+          Document:
+            _id: { ^Inc: { start: 0 } }
+            # This data field is what we calculate the percentiles of.
+            data:
+              {
+                ^RandomDouble:
+                  { distribution: normal, mean: 50.0, sigma: 10.0 },
+              }
+            # This string pads the doc size out to around 10KB. Since spilling occurs in '$_internalSetWindowFields'
+            # and spills full documents, even though 'string' is not used in the $percentile window function, this
+            # field will increase the document size to trigger a spill.
+            string: &string { ^RandomString: { length: 10000 } }
+            # We will use the fields below to create approximately even partitions.
+            spill_indexed: { ^Choose: { from: [1, 2] } }
+            spill_unindexed: { ^Choose: { from: [1, 2] } }
+            not_spill_indexed:
+              {
+                ^Choose:
+                  {
+                    from:
+                      [
+                        1,
+                        2,
+                        3,
+                        4,
+                        5,
+                        6,
+                        7,
+                        8,
+                        9,
+                        10,
+                        11,
+                        12,
+                        13,
+                        14,
+                        15,
+                        16,
+                        17,
+                        18,
+                        19,
+                      ],
+                  },
+              }
+          Indexes:
+            - keys: { not_spill_indexed: 1 }
+            - keys: { spill_indexed: 1 }
 
-Actors:
-- Name: CreateDataset
-  Type: Loader
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *maxPhases
-      PhaseConfig:
-        Threads: 1
-        Repeat: 1
-        Database: *db
-        CollectionCount: 1
-        # We have 100k documents with each being between 10kB to 20kB. When divided into 20 partitions,
-        # it won't spill, but when divided into fewer partitions (like 2) it will spill.
-        DocumentCount: 100000
-        BatchSize: 1000
-        Document:
-          _id: {^Inc: {start: 0}}
-          # This data field is what we calculate the percentiles of.
-          data: {^RandomDouble: {distribution: normal, mean: 50.0, sigma: 10.0}}
-          # This string pads the doc size out to around 10KB. Since spilling occurs in '$_internalSetWindowFields'
-          # and spills full documents, even though 'string' is not used in the $percentile window function, this
-          # field will increase the document size to trigger a spill.
-          string: &string {^RandomString: {length: 10000}}
-          # We will use the fields below to create approximately even partitions.
-          spill_indexed: {^Choose: {from: [1, 2]}}
-          spill_unindexed: {^Choose: {from: [1, 2]}}
-          not_spill_indexed: {^Choose: {
-            from: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]}}
-        Indexes:
-        - keys: {not_spill_indexed: 1}
-        - keys: {spill_indexed: 1}
+  # Both the $sort and the $_internalSetWindowFields will spill.
+  # The partitions are too large to fit in memory and the $sort is not indexed.
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        OnlyActiveInPhase: 1
+        Name: "percentile_sort_spill"
+        Partition: "$spill_unindexed"
+        Sort: { spill_unindexed: 1 }
 
-# Both the $sort and the $_internalSetWindowFields will spill.
-# The partitions are too large to fit in memory and the $sort is not indexed.
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      OnlyActiveInPhase: 1
-      Name: "percentile_sort_spill"
-      Partition: "$spill_unindexed"
-      Sort: {spill_unindexed: 1}
+  # Just the $_internalSetWindowFields will spill.
+  # The partitions are too large to fit in memory, and the $sort is indexed.
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        OnlyActiveInPhase: 2
+        Name: "only_percentile_spill"
+        Partition: "$spill_indexed"
+        Sort: { spill_indexed: 1 }
 
-# Just the $_internalSetWindowFields will spill.
-# The partitions are too large to fit in memory, and the $sort is indexed.
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      OnlyActiveInPhase: 2
-      Name: "only_percentile_spill"
-      Partition: "$spill_indexed"
-      Sort: {spill_indexed: 1}
-
-# Nothing spills.
-# The partitions are small enough to fit in memory and the $sort is indexed.
-- ActorFromTemplate:
-    TemplateName: ComputePercentile
-    TemplateParameters:
-      Name: "no_spill"
-      OnlyActiveInPhase: 3
-      Partition: "$not_spill_indexed"
-      Disk: false
+  # Nothing spills.
+  # The partitions are small enough to fit in memory and the $sort is indexed.
+  - ActorFromTemplate:
+      TemplateName: ComputePercentile
+      TemplateParameters:
+        Name: "no_spill"
+        OnlyActiveInPhase: 3
+        Partition: "$not_spill_indexed"
+        Disk: false

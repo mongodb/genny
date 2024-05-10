@@ -1,9 +1,9 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  This workload runs different math expressions on time-series optimizations with the tsbs dataset. 
-  During development, This workload runs queries from the tsbs_query benchmark in Genny. It allows us 
-  to cross-check the results of the TSBS benchmarks, collect additional measurements, profile individual 
+  This workload runs different math expressions on time-series optimizations with the tsbs dataset.
+  During development, This workload runs queries from the tsbs_query benchmark in Genny. It allows us
+  to cross-check the results of the TSBS benchmarks, collect additional measurements, profile individual
   queries, and extend some of the queries as needed. The data is preloaded by the dsi configuration. See
   'configurations/test_control/test_control.tsbs_query_genny.yml' for all  the details. There are 20736000
   documents in the collection. There are some differences between the queries in this workload and tsbs,
@@ -30,9 +30,9 @@ GlobalDefaults:
   collection: &collection point_data
   maxPhases: &maxPhases 14
   repeat: &repeat 500
-  # TSBS constructs a time windows of various sizes (1 hour, 8 hours, 12 hours) from a uniformly 
-  # random start-time within this time-period. Ideally, we would do this as well, but currently 
-  # genny doesn't support storing randomized date values as variables, so we will fix a starting 
+  # TSBS constructs a time windows of various sizes (1 hour, 8 hours, 12 hours) from a uniformly
+  # random start-time within this time-period. Ideally, we would do this as well, but currently
+  # genny doesn't support storing randomized date values as variables, so we will fix a starting
   # value and increment it each time the query runs.
   startDate: &startDate "2016-01-04T21:49:27Z"
   startDatePlusOneHour: &startDatePlusOneHour "2016-01-04T22:49:27Z"
@@ -73,7 +73,7 @@ Actors:
   # hosts in a random time window of size T(1h|12h).
 
   # All usage_* fields are random integers between 0-100 represented as double.
-  
+
   - Name: single_groupby_1_1_1_divide
     Type: CrudActor
     Threads: 8
@@ -91,20 +91,12 @@ Actors:
                 Pipeline:
                   [
                     {
-                      $addFields: {
-                        usage_user_int: {
-                          $divide: [
-                            "$usage_user",
-                            10
-                          ]
+                      $addFields:
+                        {
+                          usage_user_int: { $divide: ["$usage_user", 10] },
+                          usage_system_double:
+                            { $divide: ["$usage_system", 5.5] },
                         },
-                        usage_system_double: {
-                          $divide: [
-                            "$usage_system",
-                            5.5
-                          ]
-                        }
-                      }
                     },
                     {
                       $match:
@@ -117,8 +109,14 @@ Actors:
                                   ^Cycle:
                                     {
                                       ofLength: 100,
-                                      fromGenerator: 
-                                        { ^IncDate: { start: *startDate,step: 2520000 } },
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *startDate,
+                                              step: 2520000,
+                                            },
+                                        },
                                     },
                                 },
                               $lt:
@@ -128,7 +126,11 @@ Actors:
                                       ofLength: 100,
                                       fromGenerator:
                                         {
-                                          ^IncDate: { start: *startDatePlusOneHour, step: 2520000 },
+                                          ^IncDate:
+                                            {
+                                              start: *startDatePlusOneHour,
+                                              step: 2520000,
+                                            },
                                         },
                                     },
                                 },
@@ -138,9 +140,11 @@ Actors:
                     {
                       $group:
                         {
-                          _id: { $dateTrunc: { date: "$time", unit: "minute" } },
+                          _id:
+                            { $dateTrunc: { date: "$time", unit: "minute" } },
                           max_usage_user_int: { $max: "$usage_user_int" },
-                          max_usage_system_double: { $max: "$usage_system_double" }
+                          max_usage_system_double:
+                            { $max: "$usage_system_double" },
                         },
                     },
                     { $sort: { _id: 1 } },
@@ -162,20 +166,11 @@ Actors:
                 Pipeline:
                   [
                     {
-                      $addFields: {
-                        usage_user_int: {
-                          $add: [
-                            "$usage_user",
-                            10
-                          ]
+                      $addFields:
+                        {
+                          usage_user_int: { $add: ["$usage_user", 10] },
+                          usage_system_double: { $add: ["$usage_system", 5.5] },
                         },
-                        usage_system_double: {
-                          $add: [
-                            "$usage_system",
-                            5.5
-                          ]
-                        }
-                      }
                     },
                     {
                       $match:
@@ -188,8 +183,14 @@ Actors:
                                   ^Cycle:
                                     {
                                       ofLength: 100,
-                                      fromGenerator: 
-                                        { ^IncDate: { start: *startDate,step: 2520000 } },
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *startDate,
+                                              step: 2520000,
+                                            },
+                                        },
                                     },
                                 },
                               $lt:
@@ -199,7 +200,11 @@ Actors:
                                       ofLength: 100,
                                       fromGenerator:
                                         {
-                                          ^IncDate: { start: *startDatePlusOneHour, step: 2520000 },
+                                          ^IncDate:
+                                            {
+                                              start: *startDatePlusOneHour,
+                                              step: 2520000,
+                                            },
                                         },
                                     },
                                 },
@@ -209,9 +214,11 @@ Actors:
                     {
                       $group:
                         {
-                          _id: { $dateTrunc: { date: "$time", unit: "minute" } },
+                          _id:
+                            { $dateTrunc: { date: "$time", unit: "minute" } },
                           max_usage_user_int: { $max: "$usage_user_int" },
-                          max_usage_system_double: { $max: "$usage_system_double" }
+                          max_usage_system_double:
+                            { $max: "$usage_system_double" },
                         },
                     },
                     { $sort: { _id: 1 } },
@@ -233,20 +240,12 @@ Actors:
                 Pipeline:
                   [
                     {
-                      $addFields: {
-                        usage_user_int: {
-                          $multiply: [
-                            "$usage_user",
-                            10
-                          ]
+                      $addFields:
+                        {
+                          usage_user_int: { $multiply: ["$usage_user", 10] },
+                          usage_system_double:
+                            { $multiply: ["$usage_system", 5.5] },
                         },
-                        usage_system_double: {
-                          $multiply: [
-                            "$usage_system",
-                            5.5
-                          ]
-                        }
-                      }
                     },
                     {
                       $match:
@@ -259,8 +258,14 @@ Actors:
                                   ^Cycle:
                                     {
                                       ofLength: 100,
-                                      fromGenerator: 
-                                        { ^IncDate: { start: *startDate,step: 2520000 } },
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *startDate,
+                                              step: 2520000,
+                                            },
+                                        },
                                     },
                                 },
                               $lt:
@@ -270,7 +275,11 @@ Actors:
                                       ofLength: 100,
                                       fromGenerator:
                                         {
-                                          ^IncDate: { start: *startDatePlusOneHour, step: 2520000 },
+                                          ^IncDate:
+                                            {
+                                              start: *startDatePlusOneHour,
+                                              step: 2520000,
+                                            },
                                         },
                                     },
                                 },
@@ -280,9 +289,11 @@ Actors:
                     {
                       $group:
                         {
-                          _id: { $dateTrunc: { date: "$time", unit: "minute" } },
+                          _id:
+                            { $dateTrunc: { date: "$time", unit: "minute" } },
                           max_usage_user_int: { $max: "$usage_user_int" },
-                          max_usage_system_double: { $max: "$usage_system_double" }
+                          max_usage_system_double:
+                            { $max: "$usage_system_double" },
                         },
                     },
                     { $sort: { _id: 1 } },
@@ -304,20 +315,12 @@ Actors:
                 Pipeline:
                   [
                     {
-                      $addFields: {
-                        usage_user_int: {
-                          $subtract: [
-                            "$usage_user",
-                            10
-                          ]
+                      $addFields:
+                        {
+                          usage_user_int: { $subtract: ["$usage_user", 10] },
+                          usage_system_double:
+                            { $subtract: ["$usage_system", 5.5] },
                         },
-                        usage_system_double: {
-                          $subtract: [
-                            "$usage_system",
-                            5.5
-                          ]
-                        }
-                      }
                     },
                     {
                       $match:
@@ -330,8 +333,14 @@ Actors:
                                   ^Cycle:
                                     {
                                       ofLength: 100,
-                                      fromGenerator: 
-                                        { ^IncDate: { start: *startDate,step: 2520000 } },
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *startDate,
+                                              step: 2520000,
+                                            },
+                                        },
                                     },
                                 },
                               $lt:
@@ -341,7 +350,11 @@ Actors:
                                       ofLength: 100,
                                       fromGenerator:
                                         {
-                                          ^IncDate: { start: *startDatePlusOneHour, step: 2520000 },
+                                          ^IncDate:
+                                            {
+                                              start: *startDatePlusOneHour,
+                                              step: 2520000,
+                                            },
                                         },
                                     },
                                 },
@@ -351,9 +364,11 @@ Actors:
                     {
                       $group:
                         {
-                          _id: { $dateTrunc: { date: "$time", unit: "minute" } },
+                          _id:
+                            { $dateTrunc: { date: "$time", unit: "minute" } },
                           max_usage_user_int: { $max: "$usage_user_int" },
-                          max_usage_system_double: { $max: "$usage_system_double" }
+                          max_usage_system_double:
+                            { $max: "$usage_system_double" },
                         },
                     },
                     { $sort: { _id: 1 } },
@@ -375,14 +390,8 @@ Actors:
                 Pipeline:
                   [
                     {
-                      $addFields: {
-                        usage_user_int: {
-                          $round: [
-                            "$usage_user",
-                            0
-                          ]
-                        }
-                      }
+                      $addFields:
+                        { usage_user_int: { $round: ["$usage_user", 0] } },
                     },
                     {
                       $match:
@@ -395,8 +404,14 @@ Actors:
                                   ^Cycle:
                                     {
                                       ofLength: 100,
-                                      fromGenerator: 
-                                        { ^IncDate: { start: *startDate,step: 2520000 } },
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *startDate,
+                                              step: 2520000,
+                                            },
+                                        },
                                     },
                                 },
                               $lt:
@@ -406,7 +421,11 @@ Actors:
                                       ofLength: 100,
                                       fromGenerator:
                                         {
-                                          ^IncDate: { start: *startDatePlusOneHour, step: 2520000 },
+                                          ^IncDate:
+                                            {
+                                              start: *startDatePlusOneHour,
+                                              step: 2520000,
+                                            },
                                         },
                                     },
                                 },
@@ -416,8 +435,9 @@ Actors:
                     {
                       $group:
                         {
-                          _id: { $dateTrunc: { date: "$time", unit: "minute" } },
-                          max_usage_user_int: { $max: "$usage_user_int" }
+                          _id:
+                            { $dateTrunc: { date: "$time", unit: "minute" } },
+                          max_usage_user_int: { $max: "$usage_user_int" },
                         },
                     },
                     { $sort: { _id: 1 } },
@@ -439,20 +459,11 @@ Actors:
                 Pipeline:
                   [
                     {
-                      $addFields: {
-                        usage_user_int: {
-                          $mod: [
-                            "$usage_user",
-                            10
-                          ]
+                      $addFields:
+                        {
+                          usage_user_int: { $mod: ["$usage_user", 10] },
+                          usage_system_double: { $mod: ["$usage_system", 5.5] },
                         },
-                        usage_system_double: {
-                          $mod: [
-                            "$usage_system",
-                            5.5
-                          ]
-                        }
-                      }
                     },
                     {
                       $match:
@@ -465,8 +476,14 @@ Actors:
                                   ^Cycle:
                                     {
                                       ofLength: 100,
-                                      fromGenerator: 
-                                        { ^IncDate: { start: *startDate,step: 2520000 } },
+                                      fromGenerator:
+                                        {
+                                          ^IncDate:
+                                            {
+                                              start: *startDate,
+                                              step: 2520000,
+                                            },
+                                        },
                                     },
                                 },
                               $lt:
@@ -476,7 +493,11 @@ Actors:
                                       ofLength: 100,
                                       fromGenerator:
                                         {
-                                          ^IncDate: { start: *startDatePlusOneHour, step: 2520000 },
+                                          ^IncDate:
+                                            {
+                                              start: *startDatePlusOneHour,
+                                              step: 2520000,
+                                            },
                                         },
                                     },
                                 },
@@ -486,9 +507,11 @@ Actors:
                     {
                       $group:
                         {
-                          _id: { $dateTrunc: { date: "$time", unit: "minute" } },
+                          _id:
+                            { $dateTrunc: { date: "$time", unit: "minute" } },
                           max_usage_user_int: { $max: "$usage_user_int" },
-                          max_usage_system_double: { $max: "$usage_system_double" }
+                          max_usage_system_double:
+                            { $max: "$usage_system_double" },
                         },
                     },
                     { $sort: { _id: 1 } },

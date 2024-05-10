@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   This workload was created to reproduce the issue described in SERVER-58997. The goal
   is to induce periods of latency in the MongoS processes that are not caused by the MongoD processes.
@@ -26,7 +26,7 @@ GlobalDefaults:
   Collection: &col Collection0
   FullName: &fullname test.Collection0
 
-  ClassId: &classId {^ObjectId: {^FormatString: {"format": "c%04xbbbbbbbbbbbbbbbbbbb", "withArgs":[{^RandomInt: {min: 0, max: 200}}]}}}
+  ClassId: &classId {^ObjectId: {^FormatString: {"format": "c%04xbbbbbbbbbbbbbbbbbbb", "withArgs": [{^RandomInt: {min: 0, max: 200}}]}}}
   StudentId: &studentId {^ObjectId: {^FormatString: {"format": "%04xbbbbbbbbbbbbbbbbbbbb", "withArgs": [{^RandomInt: {min: 0, max: 30}}]}}}
 
   Student: &student
@@ -49,185 +49,182 @@ GlobalDefaults:
       OnSession: true
 
   LoggerPhase: &LoggerPhase
-    LogEvery: 10 second  # TimeSpec
-    Blocking: None  # must be Blocking:None
+    LogEvery: 10 second # TimeSpec
+    Blocking: None # must be Blocking:None
 
-  Nop: &Nop
-    {Nop: true}
+  Nop: &Nop {Nop: true}
 
 Actors:
-- Name: EnableSharding
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    Database: admin
-    Operations:
-    - OperationMetricsName: EnableShardingMetrics
-      OperationName: AdminCommand
-      OperationCommand:
-        enableSharding: *db
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-
-- Name: ShardCollection
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-  - *Nop
-  - Repeat: 1
-    Database: admin
-    Operations:
-    - OperationMetricsName: ShardCollectionMetrics
-      OperationName: AdminCommand
-      OperationCommand:
-        shardCollection: *fullname
-        key:
-          _id: 1
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-
-- Name: InsertData
-  Type: Loader
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - Repeat: 1
+  - Name: EnableSharding
+    Type: AdminCommand
     Threads: 1
+    Phases:
+      - Repeat: 1
+        Database: admin
+        Operations:
+          - OperationMetricsName: EnableShardingMetrics
+            OperationName: AdminCommand
+            OperationCommand:
+              enableSharding: *db
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+
+  - Name: ShardCollection
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      - *Nop
+      - Repeat: 1
+        Database: admin
+        Operations:
+          - OperationMetricsName: ShardCollectionMetrics
+            OperationName: AdminCommand
+            OperationCommand:
+              shardCollection: *fullname
+              key:
+                _id: 1
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+
+  - Name: InsertData
+    Type: Loader
+    Threads: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - Repeat: 1
+        Threads: 1
+        Database: *db
+        CollectionCount: 1
+        DocumentCount: 6000
+        BatchSize: 1000
+        Document: *student
+        Indexes:
+          - keys: {classId: 1, studentId: 1}
+          - keys: {classId: 1, studentId: 1, connectedTime: 1, lastPing: 1, _id: 1}
+          - keys: {classId: 1, lastPing: 1}
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+
+  - Name: DisableBalancer
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - Repeat: 1
+        Database: admin
+        Operations:
+          - OperationMetricsName: DisableBalancer
+            OperationName: AdminCommand
+            OperationCommand:
+              balancerStop: 1
+      - *Nop
+      - *Nop
+
+  - Name: DisableAutoSpit
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - Repeat: 1
+        Database: config
+        Collection: settings
+        Operations:
+          - OperationName: updateOne
+            OperationCommand:
+              Filter: {_id: 'autosplit'}
+              Update: {$set: {enabled: false}}
+              UpdateOptions: {upsert: true, writeConcern: {w: 'majority', wtimeout: 30000}}
+      - *Nop
+
+  - Name: WorkPhase
+    Type: CrudActor
     Database: *db
-    CollectionCount: 1
-    DocumentCount: 6000
-    BatchSize: 1000
-    Document: *student
-    Indexes:
-    - keys: {classId: 1, studentId: 1}
-    - keys: {classId: 1, studentId: 1, connectedTime: 1, lastPing: 1, _id: 1}
-    - keys: {classId: 1, lastPing: 1}
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+    Threads: &threads 270
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - Duration: 60 minutes
+        SleepAfter: 1 seconds
+        Threads: *threads
+        Collection: *col
+        Operations:
+          - *FindOperation
+          - *UpdateOperation
+          - *FindOperation
+          - *UpdateOperation
+          - *FindOperation
+          - *UpdateOperation
+          - *FindOperation
+          - *UpdateOperation
+          - *FindOperation
+          - *UpdateOperation
+          - *FindOperation
+          - *UpdateOperation
+          - *FindOperation
+          - *UpdateOperation
+          - *FindOperation
+          - *UpdateOperation
+          - *FindOperation
+          - *UpdateOperation
+          - *FindOperation
+          - *UpdateOperation
+          - *FindOperation
+          - *UpdateOperation
+          - *FindOperation
+          - *UpdateOperation
+          - *FindOperation
+          - *UpdateOperation
+          - *FindOperation
+          - *UpdateOperation
+          - *FindOperation
+          - *UpdateOperation
+          - *FindOperation
+          - *UpdateOperation
+          - *FindOperation
+          - *UpdateOperation
+          - *FindOperation
+          - *UpdateOperation
+          - *FindOperation
+          - *UpdateOperation
+          - *FindOperation
+          - *UpdateOperation
 
-- Name: DisableBalancer
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: 1
-    Database: admin
-    Operations:
-    - OperationMetricsName: DisableBalancer
-      OperationName: AdminCommand
-      OperationCommand:
-        balancerStop: 1
-  - *Nop
-  - *Nop
-
-- Name: DisableAutoSpit
-  Type: CrudActor
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: 1
-    Database: config
-    Collection: settings
-    Operations:
-    - OperationName: updateOne
-      OperationCommand:
-        Filter: {_id: 'autosplit'}
-        Update: {$set: {enabled: false}}
-        UpdateOptions: {upsert: true, writeConcern: {w: 'majority', wtimeout: 30000}}
-  - *Nop
-
-
-- Name: WorkPhase
-  Type: CrudActor
-  Database: *db
-  Threads: &threads 270
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - Duration: 60 minutes
-    SleepAfter: 1 seconds
-    Threads: *threads
-    Collection: *col
-    Operations:
-    - *FindOperation
-    - *UpdateOperation
-    - *FindOperation
-    - *UpdateOperation
-    - *FindOperation
-    - *UpdateOperation
-    - *FindOperation
-    - *UpdateOperation
-    - *FindOperation
-    - *UpdateOperation
-    - *FindOperation
-    - *UpdateOperation
-    - *FindOperation
-    - *UpdateOperation
-    - *FindOperation
-    - *UpdateOperation
-    - *FindOperation
-    - *UpdateOperation
-    - *FindOperation
-    - *UpdateOperation
-    - *FindOperation
-    - *UpdateOperation
-    - *FindOperation
-    - *UpdateOperation
-    - *FindOperation
-    - *UpdateOperation
-    - *FindOperation
-    - *UpdateOperation
-    - *FindOperation
-    - *UpdateOperation
-    - *FindOperation
-    - *UpdateOperation
-    - *FindOperation
-    - *UpdateOperation
-    - *FindOperation
-    - *UpdateOperation
-    - *FindOperation
-    - *UpdateOperation
-    - *FindOperation
-    - *UpdateOperation
-
-
-# to avoid connection closing
-- Name: LoggingActor
-  Type: LoggingActor
-  Threads: 1  # must be 1
-  Phases:
-  - *LoggerPhase
-  - *LoggerPhase
-  - *LoggerPhase
-  - *LoggerPhase
-  - *LoggerPhase
-  - *LoggerPhase
-  - *LoggerPhase
+  # to avoid connection closing
+  - Name: LoggingActor
+    Type: LoggingActor
+    Threads: 1 # must be 1
+    Phases:
+      - *LoggerPhase
+      - *LoggerPhase
+      - *LoggerPhase
+      - *LoggerPhase
+      - *LoggerPhase
+      - *LoggerPhase
+      - *LoggerPhase
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - atlas-shard
+  - When:
+      mongodb_setup:
+        $eq:
+          - atlas-shard

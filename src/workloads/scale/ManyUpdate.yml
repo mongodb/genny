@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/server-replication"
+Owner: Replication
 Description: |
   This workload loads a large number of small documents into a single collection, and then does a
   small multi-update which touches all of them.  It is intended to measure the impact of the load of
@@ -10,13 +10,13 @@ Description: |
   3-node replica sets are affected) or some other reason.
 
 Keywords:
-- RunCommand
-- Loader
-- CrudActor
-- updateMany
-- update
-- replication
-- oplogSourceOverhead
+  - RunCommand
+  - Loader
+  - CrudActor
+  - updateMany
+  - update
+  - replication
+  - oplogSourceOverhead
 
 Clients:
   Default:
@@ -24,66 +24,65 @@ Clients:
       maxPoolSize: 1000
 
 Actors:
-- Name: Setup
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    Database: &DB test
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand: {dropDatabase: 1}
-  - &Nop {Nop: true}
-  - *Nop
+  - Name: Setup
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      - Repeat: 1
+        Database: &DB test
+        Operations:
+          - OperationName: RunCommand
+            OperationCommand: {dropDatabase: 1}
+      - &Nop {Nop: true}
+      - *Nop
 
-- Name: Loader
-  Type: Loader
-  Threads: 10
-  Phases:
-  - *Nop
-  - Repeat: 1
+  - Name: Loader
+    Type: Loader
+    Threads: 10
+    Phases:
+      - *Nop
+      - Repeat: 1
+        Database: *DB
+        CollectionCount: 1
+        MultipleThreadsPerCollection: true
+        DocumentCount: 50000
+        BatchSize: 1000
+        Document: # Documents are approximately 100B in size
+          i: 0
+          string0: {^FastRandomString: {length: 100}}
+      - *Nop
+
+  - Name: DocumentUpdater
+    Type: CrudActor
+    Threads: 1
     Database: *DB
-    CollectionCount: 1
-    MultipleThreadsPerCollection: true
-    DocumentCount: 50000
-    BatchSize: 1000
-    Document:  # Documents are approximately 100B in size
-      i: 0
-      string0: {^FastRandomString: {length: 100}}
-  - *Nop
-
-- Name: DocumentUpdater
-  Type: CrudActor
-  Threads: 1
-  Database: *DB
-  Phases:
-  - *Nop
-  - *Nop
-  - Duration: 5 minutes
-    MetricsName: Update
-    Collection: Collection0
-    Operations:
-    - OperationName: updateMany
-      OperationCommand:
-        Filter: {}
-        Update: {$inc: {i: 1}}
-        OperationOptions:
-          WriteConcern:
-            Level: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - Duration: 5 minutes
+        MetricsName: Update
+        Collection: Collection0
+        Operations:
+          - OperationName: updateMany
+            OperationCommand:
+              Filter: {}
+              Update: {$inc: {i: 1}}
+              OperationOptions:
+                WriteConcern:
+                  Level: 1
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - atlas
-      - atlas-like-replica.2022-10
-      - replica
-      - replica-noflowcontrol
-      - replica-1dayhistory-15gbwtcache
-      - replica-80-feature-flags
-      - replica-all-feature-flags
-      - single-replica
-      - standalone
-    atlas_setup:
-      $neq:
-      - M30-repl
+  - When:
+      mongodb_setup:
+        $eq:
+          - atlas
+          - atlas-like-replica.2022-10
+          - replica
+          - replica-noflowcontrol
+          - replica-1dayhistory-15gbwtcache
+          - replica-80-feature-flags
+          - replica-all-feature-flags
+          - standalone
+      atlas_setup:
+        $neq:
+          - M30-repl

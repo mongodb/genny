@@ -4,55 +4,158 @@ Description: |
   Run TPC-H query 12 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
+batchSize: &batchSize { ^Parameter: { Name: "BatchSize", Default: 101 } }
 
-query12ShipMode1: &query12ShipMode1 {^Parameter: {Name: "Query12ShipMode1", Default: "MAIL"}}
-query12ShipMode2: &query12ShipMode2 {^Parameter: {Name: "Query12ShipMode2", Default: "SHIP"}}
-query12Date: &query12Date {^Parameter: {Name: "Query12Date", Default: "1994-01-01"}}
+query12ShipMode1:
+  &query12ShipMode1 {
+    ^Parameter: { Name: "Query12ShipMode1", Default: "MAIL" },
+  }
+query12ShipMode2:
+  &query12ShipMode2 {
+    ^Parameter: { Name: "Query12ShipMode2", Default: "SHIP" },
+  }
+query12Date:
+  &query12Date { ^Parameter: { Name: "Query12Date", Default: "1994-01-01" } }
 
 TPCHDenormalizedQuery12Aggregation: &TPCHDenormalizedQuery12Aggregation
   aggregate: customer
   pipeline:
     [
-      {$unwind: "$orders"},
-      {$addFields: {lineitem: "$orders.lineitem", "orders.lineitem": "$$REMOVE"}},
-      {$unwind: "$lineitem"},
-      {$match: {$and: [
-        {$or: [{"lineitem.l_shipmode": *query12ShipMode1}, {"lineitem.l_shipmode": *query12ShipMode2}]},
-        {$expr: {$lt: ["$lineitem.l_commitdate", "$lineitem.l_receiptdate"]}},
-        {$expr: {$lt: ["$lineitem.l_shipdate", "$lineitem.l_commitdate"]}},
-        {$expr: {$gte: ["$lineitem.l_receiptdate", {^Date: *query12Date}]}},
-        {$expr: {$lt: ["$lineitem.l_receiptdate", {$dateAdd: {startDate: {^Date: *query12Date}, unit: "year", amount: 1}}]}}]}},
-      {$group: {_id: "$lineitem.l_shipmode", high_line_count: {$sum: {$cond: {if: {$or: [{$eq: ["$orders.o_orderpriority", "1-URGENT"]}, {$eq: ["$orders.o_orderpriority", "2-HIGH"]}]}, then: 1, else: 0}}}, low_line_count: {$sum: {$cond: {if: {$and: [{$ne: ["$orders.o_orderpriority", "1-URGENT"]}, {$ne: ["$orders.o_orderpriority", "2-HIGH"]}]}, then: 1, else: 0}}}}},
-      {$project: {_id: 0, l_shipmode: "$_id", high_line_count: 1, low_line_count: 1}},
-      {$sort: {l_shipmode: 1}}
+      { $unwind: "$orders" },
+      {
+        $addFields:
+          { lineitem: "$orders.lineitem", "orders.lineitem": "$$REMOVE" },
+      },
+      { $unwind: "$lineitem" },
+      {
+        $match:
+          {
+            $and:
+              [
+                {
+                  $or:
+                    [
+                      { "lineitem.l_shipmode": *query12ShipMode1 },
+                      { "lineitem.l_shipmode": *query12ShipMode2 },
+                    ],
+                },
+                {
+                  $expr:
+                    {
+                      $lt:
+                        ["$lineitem.l_commitdate", "$lineitem.l_receiptdate"],
+                    },
+                },
+                {
+                  $expr:
+                    { $lt: ["$lineitem.l_shipdate", "$lineitem.l_commitdate"] },
+                },
+                {
+                  $expr:
+                    {
+                      $gte:
+                        ["$lineitem.l_receiptdate", { ^Date: *query12Date }],
+                    },
+                },
+                {
+                  $expr:
+                    {
+                      $lt:
+                        [
+                          "$lineitem.l_receiptdate",
+                          {
+                            $dateAdd:
+                              {
+                                startDate: { ^Date: *query12Date },
+                                unit: "year",
+                                amount: 1,
+                              },
+                          },
+                        ],
+                    },
+                },
+              ],
+          },
+      },
+      {
+        $group:
+          {
+            _id: "$lineitem.l_shipmode",
+            high_line_count:
+              {
+                $sum:
+                  {
+                    $cond:
+                      {
+                        if:
+                          {
+                            $or:
+                              [
+                                {
+                                  $eq: ["$orders.o_orderpriority", "1-URGENT"],
+                                },
+                                { $eq: ["$orders.o_orderpriority", "2-HIGH"] },
+                              ],
+                          },
+                        then: 1,
+                        else: 0,
+                      },
+                  },
+              },
+            low_line_count:
+              {
+                $sum:
+                  {
+                    $cond:
+                      {
+                        if:
+                          {
+                            $and:
+                              [
+                                {
+                                  $ne: ["$orders.o_orderpriority", "1-URGENT"],
+                                },
+                                { $ne: ["$orders.o_orderpriority", "2-HIGH"] },
+                              ],
+                          },
+                        then: 1,
+                        else: 0,
+                      },
+                  },
+              },
+          },
+      },
+      {
+        $project:
+          { _id: 0, l_shipmode: "$_id", high_line_count: 1, low_line_count: 1 },
+      },
+      { $sort: { l_shipmode: 1 } },
     ]
-  cursor: {batchSize: *batchSize}
+  cursor: { batchSize: *batchSize }
   allowDiskUse: true
 
 TPCHDenormalizedQuery12Warmup:
-  Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
+  Repeat: &Repeat { ^Parameter: { Name: "Repeat", Default: 1 } }
   Database: &db tpch
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedQuery12Aggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedQuery12Aggregation
 
 TPCHDenormalizedQuery12:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query12
-    OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedQuery12Aggregation
+    - OperationMetricsName: Query12
+      OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedQuery12Aggregation
 
 TPCHDenormalizedQuery12Explain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query12
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHDenormalizedQuery12Aggregation
-      verbosity:
-        executionStats
+    - OperationMetricsName: Query12
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHDenormalizedQuery12Aggregation
+        verbosity: executionStats

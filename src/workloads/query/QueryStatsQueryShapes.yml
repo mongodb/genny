@@ -6,9 +6,9 @@ Description: |
   It can be run with and without queryStats for comparison.
 
 KeyWords:
-- queryStats
-- query
-- shape
+  - queryStats
+  - query
+  - shape
 
 Clients:
   Default:
@@ -26,121 +26,106 @@ GlobalDefaults:
   dbname: &db test
 
 ActorTemplates:
-- TemplateName: ComputeFindQuery
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "ComputeFindQuery"}}
-    Type: CrudActor
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
-        NopInPhasesUpTo: *MaxPhases
-        PhaseConfig:
-          Repeat: *Repeat
-          Database: *Database
-          Collection: *Collection
-          Operations:
-          - OperationName: find
-            OperationCommand:
-              Filter: {^Parameter: {Name: "Filter", Default: {a1: 1, a2: 2, x0: {$exists: false}}}}
+  - TemplateName: ComputeFindQuery
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "ComputeFindQuery"}}
+      Type: CrudActor
+      Threads: {^Parameter: {Name: "Threads", Default: 1}}
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
+          NopInPhasesUpTo: *MaxPhases
+          PhaseConfig:
+            Repeat: *Repeat
+            Database: *Database
+            Collection: *Collection
+            Operations:
+              - OperationName: find
+                OperationCommand:
+                  Filter: {^Parameter: {Name: "Filter", Default: {a1: 1, a2: 2, x0: {$exists: false}}}}
 
 Actors:
-# Clear any pre-existing collection state.
-- Name: ClearCollection
-  Type: CrudActor
-  Database: *Database
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
-        Collection: *Collection
-        Operations:
-        - OperationName: drop
+  # Clear any pre-existing collection state.
+  - Name: ClearCollection
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+          Collection: *Collection
+          Operations:
+            - OperationName: drop
 
-- Name: InsertData
-  Type: Loader
-  Threads: 4
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        MultipleThreadsPerCollection: true
-        CollectionCount: 1
-        DocumentCount: *DocumentCount
-        BatchSize: 1000
-        Document:
-          a1: &integer {^RandomInt: {min: -100, max: 100}}
-          a2: *integer
-        Indexes:
-        - keys: {a1: 1, a2: 1}
+  - Name: InsertData
+    Type: Loader
+    Threads: 4
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          MultipleThreadsPerCollection: true
+          CollectionCount: 1
+          DocumentCount: *DocumentCount
+          BatchSize: 1000
+          Document:
+            a1: &integer {^RandomInt: {min: -100, max: 100}}
+            a2: *integer
+          Indexes:
+            - keys: {a1: 1, a2: 1}
 
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
 
-# 32 threads with distinct query shapes.
-- ActorFromTemplate:
-    TemplateName: ComputeFindQuery
-    TemplateParameters:
-      Name: "AlternatingShapes"
-      Threads: 32
-      Filter:
-        # Will find around 0.005 * 0.005 * 1e6 = 2.5 documents.
-        {$and:
-           [{a1: 1}, {a2: 1}, {^Object: {
-             withNEntries: 1,
-             havingKeys: {^RandomString: {length: 10}},
-             andValues: {$exists: false},
-             duplicatedKeys: skip
-           }}]
-        }
-      OnlyActiveInPhase: 3
+  # 32 threads with distinct query shapes.
+  - ActorFromTemplate:
+      TemplateName: ComputeFindQuery
+      TemplateParameters:
+        Name: "AlternatingShapes"
+        Threads: 32
+        Filter: {
+          # Will find around 0.005 * 0.005 * 1e6 = 2.5 documents.
+          $and: [{a1: 1}, {a2: 1}, {^Object: {withNEntries: 1, havingKeys: {^RandomString: {length: 10}}, andValues: {$exists: false}, duplicatedKeys: skip}}]}
+        OnlyActiveInPhase: 3
 
-# 32 threads with the same query shape.
-- ActorFromTemplate:
-    TemplateName: ComputeFindQuery
-    TemplateParameters:
-      Name: "OneShape"
-      Threads: 32
-      Filter:
-        # This can be simplified to {a1: 1, a2: 2, x0: {$exists: false}} but we are keeping
-        # it the same as the actor with oscillating shapes to rule out performance impact there.
-        # Will find around 0.005 * 0.005 * 1e6 = 2.5 documents.
-        {$and:
-           [{a1: 1}, {a2: 1}, {^Object: {
-             withNEntries: 1,
-             havingKeys: "x0",
-             andValues: {$exists: false},
-             duplicatedKeys: skip
-           }}]
-        }
-      OnlyActiveInPhase: 4
+  # 32 threads with the same query shape.
+  - ActorFromTemplate:
+      TemplateName: ComputeFindQuery
+      TemplateParameters:
+        Name: "OneShape"
+        Threads: 32
+        Filter: {
+          # This can be simplified to {a1: 1, a2: 2, x0: {$exists: false}} but we are keeping
+          # it the same as the actor with oscillating shapes to rule out performance impact there.
+          # Will find around 0.005 * 0.005 * 1e6 = 2.5 documents.
+          $and: [{a1: 1}, {a2: 1}, {^Object: {withNEntries: 1, havingKeys: "x0", andValues: {$exists: false}, duplicatedKeys: skip}}]}
+        OnlyActiveInPhase: 4
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone-80-feature-flags
-      - standalone-all-feature-flags
-      - standalone
-      - standalone-query-stats
-      - single-replica
-      - replica
-      - replica-query-stats-rate-limit
-      - atlas-like-replica.2022-10
-      - atlas-like-replica.2023-09
-      - atlas-like-replica-query-stats.2023-09
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone-80-feature-flags
+          - standalone-all-feature-flags
+          - standalone
+          - standalone-query-stats
+          - replica
+          - replica-query-stats-rate-limit
+          - atlas-like-replica.2022-10
+          - atlas-like-replica.2023-09
+          - atlas-like-replica-query-stats.2023-09

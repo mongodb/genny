@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   This workload tests distinct commands with large strings to repro SERVER-43096.
   The main metrics to look at for this test are the throughput for the finds and
@@ -12,57 +12,57 @@ Clients:
       maxPoolSize: 20000
 
 Keywords:
-- Distinct
-- Large Strings
+  - Distinct
+  - Large Strings
 
 Actors:
-- Name: Loader
-  Type: Loader
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    Database: test
-    CollectionCount: 1
+  - Name: Loader
+    Type: Loader
     Threads: 1
-    DocumentCount: 10000
-    BatchSize: 50000
-    Document:
-      shardKey: &RandomString {^FastRandomString: {length: 22}}
-  - {Nop: true}
-  - {Nop: true}
+    Phases:
+      - Repeat: 1
+        Database: test
+        CollectionCount: 1
+        Threads: 1
+        DocumentCount: 10000
+        BatchSize: 50000
+        Document:
+          shardKey: &RandomString {^FastRandomString: {length: 22}}
+      - {Nop: true}
+      - {Nop: true}
 
-- Name: Distinct
-  Type: RunCommand
-  Threads: 32
-  Phases:
-  - {Nop: true}
-  - Duration: 5 minutes
-    Database: test
-    Operations:
-    - OperationMetricsName: Distinct
-      OperationName: RunCommand
-      OperationCommand:
-        distinct: Collection0
-        key: shardKey
-  - {Nop: true}
+  - Name: Distinct
+    Type: RunCommand
+    Threads: 32
+    Phases:
+      - {Nop: true}
+      - Duration: 5 minutes
+        Database: test
+        Operations:
+          - OperationMetricsName: Distinct
+            OperationName: RunCommand
+            OperationCommand:
+              distinct: Collection0
+              key: shardKey
+      - {Nop: true}
 
-- Name: Finds
-  Type: CrudActor
-  Threads: 32
-  Database: test
-  Phases:
-  - {Nop: true}
-  - Duration: 5 minutes
+  - Name: Finds
+    Type: CrudActor
+    Threads: 32
     Database: test
-    Collection: Collection0
-    Operations:
-    - OperationName: findOne
-      OperationCommand:
-        Filter: {shardKey: *RandomString}
-  - Duration: 5 minutes
-    Database: test
-    Collection: Collection0
-    Operations:
-    - OperationName: findOne
-      OperationCommand:
-        Filter: {shardKey: *RandomString}
+    Phases:
+      - {Nop: true}
+      - Duration: 5 minutes
+        Database: test
+        Collection: Collection0
+        Operations:
+          - OperationName: findOne
+            OperationCommand:
+              Filter: {shardKey: *RandomString}
+      - Duration: 5 minutes
+        Database: test
+        Collection: Collection0
+        Operations:
+          - OperationName: findOne
+            OperationCommand:
+              Filter: {shardKey: *RandomString}

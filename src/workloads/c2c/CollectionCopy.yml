@@ -1,24 +1,24 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   This workload is a short version load used to test Mongosync Collection Copy stage performance.
   The workload starts Mongosync on a cluster with an preloaded initial dataset.
 
 Keywords:
-- c2c
-- replication
-- collection copy
-- cluster to cluster sync
+  - c2c
+  - replication
+  - collection copy
+  - cluster to cluster sync
 
 # These two values should match those are the top of MixPhases.yml
 ScriptsPath: &scriptsPath ./MongosyncScripts.yml
 
 EnvironmentDetails:
   MongosyncConnectionURIs:
-  - http://localhost:27182
+    - http://localhost:27182
 
 Parameters:
-- &Nop {Nop: true}
+  - &Nop {Nop: true}
 
 Clients:
   Default:
@@ -27,61 +27,61 @@ Clients:
 
 Actors:
 
-- Name: SetupSharding
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-  - LoadConfig:
-      Path: *scriptsPath
-      Key: SetupShardKey
-  - LoadConfig:
-      Path: *scriptsPath
-      Key: ShardCollection
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - Name: SetupSharding
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      - LoadConfig:
+          Path: *scriptsPath
+          Key: SetupShardKey
+      - LoadConfig:
+          Path: *scriptsPath
+          Key: ShardCollection
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
 
-- Name: Setup
-  Type: Loader
-  Threads: 100
-  Phases:
-  - *Nop
-  - *Nop
-  - LoadConfig:
-      Path: *scriptsPath
-      Key: InsertShortTestData
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - Name: Setup
+    Type: Loader
+    Threads: 100
+    Phases:
+      - *Nop
+      - *Nop
+      - LoadConfig:
+          Path: *scriptsPath
+          Key: InsertShortTestData
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
 
-- Name: Mongosync
-  Type: Python
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - LoadConfig:
-      Path: *scriptsPath
-      Key: StartMongosync
-  - LoadConfig:
-      Path: *scriptsPath
-      Key: PollForCEA
-  - *Nop
-  - LoadConfig:
-      Path: *scriptsPath
-      Key: DrainWrites
-  - LoadConfig:
-      Path: *scriptsPath
-      Key: Commit
-  - LoadConfig:
-      Path: *scriptsPath
-      Key: WaitForCommit
+  - Name: Mongosync
+    Type: Python
+    Threads: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - LoadConfig:
+          Path: *scriptsPath
+          Key: StartMongosync
+      - LoadConfig:
+          Path: *scriptsPath
+          Key: PollForCEA
+      - *Nop
+      - LoadConfig:
+          Path: *scriptsPath
+          Key: DrainWrites
+      - LoadConfig:
+          Path: *scriptsPath
+          Key: Commit
+      - LoadConfig:
+          Path: *scriptsPath
+          Key: WaitForCommit
 

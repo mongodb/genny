@@ -389,7 +389,7 @@ Genny's primary output is time-series data. Every time an Actor performs an oper
 
 Genny outputs to `./build/WorkloadOutput`. When running Genny for the first time, you should see two outputs in that directory:
 
--   `CedarMetrics` - a directory full of FTDC files, where each file corresponds to a single time-series metric for a single operation. For more details about the format and contents of these FTDC files, see our tool-agnostic documentation [here](https://github.com/10gen/performance-tooling-docs/blob/main/getting_started/intrarun_data_generation.md).
+-   `CedarMetrics` - a directory full of FTDC files, where each file corresponds to a single time-series metric for a single operation. For more details about the format and contents of these FTDC files, see our tool-agnostic documentation [here](https://github.com/10gen/performance-tooling-docs/blob/main/getting_started/intrarun_data_generation.md). NOTE: this FTDC is different from the [MongoDB server Full Time Diagnostic Data Capture](https://www.mongodb.com/docs/manual/administration/analyzing-mongodb-performance/#full-time-diagnostic-data-capture).
 -   `workload` - a directory containing the preprocessed workload. Learn more about the preprocessor [here](#org2078b23).
 
 If you run Genny and the `CedarMetrics` directory already exists, it will be moved to `CedarMetrics-<current_time>` to avoid overwriting results. The preprocessed workload will be deposited into the `workload` directory, possibly overwriting the existing one. (Or you may end up with multiple workloads in the directory, if they have different names. This has no impact on execution.)
@@ -441,11 +441,14 @@ Try using `python test_result_summary.py --help` for more options.
 
 1.  Create a yaml file in `./src/workloads` in whatever topical subdirectory you deem appropriate and populate it with appropriate configuration. If you have yaml configuration that may need loading, place it in `./src/phases` (and for more details about what that means, see [here](#org2078b23)). Consider whether existing Actors can be repurposed for your workload, or whether a new one is needed. For the latter, see [here](#org7e6c6bd).
 
+
     ```bash
     vim src/workloads/[workload_dir]/[workload_name.yml]
     vim src/phases/[phase_dir]/[phases_name.yml] # Only necessary if creating external configuration
     ./run-genny create-new-actor  # Only necessary if creating a new Actor
     ```
+    
+    Note: The `Owner` field in the workload yaml is expected to be a valid team in the [mothra](https://github.com/10gen/mothra/tree/main/mothra/teams) repo. Each team in Mothra that is referenced in Genny is expected to have a `support_slack_channel_name` and `support_slack_channel_id` in Mothra, if these values are not present you will need to add them before merging your workload.
 
 2.  Run the self-tests:
 
@@ -457,20 +460,28 @@ Try using `python test_result_summary.py --help` for more options.
 
     Note the current [issue](#orgb084b49) running resmoke-test. Also, note that there is no schema-checking of the yaml.
 
-3.  (Optional) To double-check which Actors run in each Phase, run your workload in dry-run mode with `debug` log level.
+3. Update workload documentation.
+
+    ```bash
+    ./run-genny generate-docs
+    ```
+
+    If changes have been made to the workload name, description, owners, or keywords you need to generate documentation for the workload. Include the generated documentation with your commit.
+
+4.  (Optional) To double-check which Actors run in each Phase, run your workload in dry-run mode with `debug` log level.
 This would set up the workload and print it as a list of Phases with the Actors that run in each Phase, then quit:
 
     ```bash
     ./run-genny workload --dry-run --verbosity debug src/workloads/[workload_dir/workload_name.yml]
     ```
 
-4.  (Optional) If you can run your system under test locally, you can test against it as a sanity-check:
+5.  (Optional) If you can run your system under test locally, you can test against it as a sanity-check:
 
     ```bash
     ./run-genny workload -u [connection_uri] src/workloads/[workload_dir/workload_name.yml]
     ```
 
-5.  (Optional) If you are using DSI, you can run your workload through it by copying or symlinking your Genny directory into your DSI workdir. See [Running DSI Locally](go/running-dsi-locally) for details:
+6.  (Optional) If you are using DSI, you can run your workload through it by copying or symlinking your Genny directory into your DSI workdir. See [Running DSI Locally](go/running-dsi-locally) for details:
 
 	```bash
 	./run-dsi onboarding  # introductory DSI command; see link above for details
@@ -480,7 +491,7 @@ This would set up the workload and print it as a list of Phases with the Actors 
 	vim bootstrap.yml
 	```
 
-6.  Before merging, you should run your workload in realistic situations in CI and check the resultant metrics. For Genny workloads run through DSI using [AutoRun](#org2b04b49), you can create a patch using the following:
+7.  Before merging, you should run your workload in realistic situations in CI and check the resultant metrics. For Genny workloads run through DSI using [AutoRun](#org2b04b49), you can create a patch using the following:
 
 	```bash
 	cd ~/[path_to_evg_project_repo]

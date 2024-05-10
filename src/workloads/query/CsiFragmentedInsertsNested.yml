@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query-execution"
+Owner: Query Execution
 Description: |
   This workload compares performance of inserts into a collection with only the default _id index
   and in presence of a full columnstore index. We are not comparing to wildcard index because the
@@ -10,27 +10,27 @@ Description: |
   omitted, please refer to the "flat" workload for the details.
 
 Keywords:
-- columnstore
-- insert
+  - columnstore
+  - insert
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone-80-feature-flags
-      - standalone-all-feature-flags
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
-      - v5.0
-      - v6.0
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone-80-feature-flags
+          - standalone-all-feature-flags
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4
+          - v5.0
+          - v6.0
 
 Clients:
   Default:
     QueryOptions:
-      socketTimeoutMS: 600_000  # = 10 min
+      socketTimeoutMS: 600_000 # = 10 min
       connectTimeoutMS: 600_000
 
 GlobalDefaults:
@@ -39,7 +39,7 @@ GlobalDefaults:
   Collection: &coll Collection0
   DocumentCount: &docCount 1e6
   SchemaWidth: &schemaWidth 10000
-  ObjectWidth: &objectWidth 5  # with two nested paths, get 10 paths_per_object
+  ObjectWidth: &objectWidth 5 # with two nested paths, get 10 paths_per_object
   SampleSize: &sampleSize 10
 
   Document: &document
@@ -57,112 +57,161 @@ GlobalDefaults:
     #     }
     #   ]
     # }
-    root: {^Array: {
-      of: {^Object: {
-        withNEntries: *objectWidth,
-        havingKeys: {^FormatString: {
-          "format": "x%d", "withArgs": [{^RandomInt: {min: 0, max: *schemaWidth}}]
-        }},
-        andValues: {^Array: {
-          of:
-            # Create an object with either "a" or "b" key, or both. This is achieved by using
-            # 'duplicatedKeys: skip' parameter, which would ignore the second generated key if
-            # it has the same name as the first, so with probability 1/2 we'll get both fields
-            # and with probability 1/4 each of {a: } and {b: }.
-            {^Object: {
-              withNEntries: 2,
-              havingKeys: {^RandomString: {length: 1, alphabet: ab}},
-              andValues: {^Choose: {from: [
-                {^RandomInt: {min: 0, max: *schemaWidth}},
-                [42, {^RandomInt: {min: 0, max: *schemaWidth}}],
-                {obj: {^RandomInt: {min: 0, max: *schemaWidth}}}
-              ]}},
-              duplicatedKeys: skip
-            }},
-          # 5 elements make it almost certain that both "a" and "b" are used in the array to
-          # yield ~10 paths per object.
-          number: 5
-        }},
-        duplicatedKeys: skip
-      }},
-      number: 1
-    }}
+    root:
+      {
+        ^Array:
+          {
+            of:
+              {
+                ^Object:
+                  {
+                    withNEntries: *objectWidth,
+                    havingKeys:
+                      {
+                        ^FormatString:
+                          {
+                            "format": "x%d",
+                            "withArgs":
+                              [{ ^RandomInt: { min: 0, max: *schemaWidth } }],
+                          },
+                      },
+                    andValues: { ^Array: {
+                      of: {
+                        # Create an object with either "a" or "b" key, or both. This is achieved by using
+                        # 'duplicatedKeys: skip' parameter, which would ignore the second generated key if
+                        # it has the same name as the first, so with probability 1/2 we'll get both fields
+                        # and with probability 1/4 each of {a: } and {b: }.
+                        ^Object:
+                          {
+                            withNEntries: 2,
+                            havingKeys:
+                              {
+                                ^RandomString:
+                                  { length: 1, alphabet: ab },
+                              },
+                            andValues:
+                              {
+                                ^Choose:
+                                  {
+                                    from:
+                                      [
+                                        {
+                                          ^RandomInt:
+                                            {
+                                              min: 0,
+                                              max: *schemaWidth,
+                                            },
+                                        },
+                                        [
+                                          42,
+                                          {
+                                            ^RandomInt:
+                                              {
+                                                min: 0,
+                                                max: *schemaWidth,
+                                              },
+                                          },
+                                        ],
+                                        {
+                                          obj:
+                                            {
+                                              ^RandomInt:
+                                                {
+                                                  min: 0,
+                                                  max: *schemaWidth,
+                                                },
+                                            },
+                                        },
+                                      ],
+                                  },
+                              },
+                            duplicatedKeys: skip,
+                          },
+                      },
+                      # 5 elements make it almost certain that both "a" and "b" are used in the array to
+                      # yield ~10 paths per object.
+                      number: 5,
+                    } },
+                    duplicatedKeys: skip,
+                  },
+              },
+            number: 1,
+          },
+      }
 
 ActorTemplates:
-- TemplateName: InsertFromSample
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Insert"}}
-    Type: SamplingLoader
-    Database: *db
-    Collection: *coll
-    SampleSize: *sampleSize
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1024}}]
-        NopInPhasesUpTo: *maxPhases
-        PhaseConfig:
-          InsertBatchSize: *sampleSize
-          Repeat: {^Parameter: {Name: "Repeats", Default: 1}}
-          Batches: {^Parameter: {Name: "Batches", Default: 500}}
+  - TemplateName: InsertFromSample
+    Config:
+      Name: { ^Parameter: { Name: "Name", Default: "Insert" } }
+      Type: SamplingLoader
+      Database: *db
+      Collection: *coll
+      SampleSize: *sampleSize
+      Threads: { ^Parameter: { Name: "Threads", Default: 1 } }
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{ ^Parameter: { Name: "OnlyActiveInPhase", Default: 1024 } }]
+          NopInPhasesUpTo: *maxPhases
+          PhaseConfig:
+            InsertBatchSize: *sampleSize
+            Repeat: { ^Parameter: { Name: "Repeats", Default: 1 } }
+            Batches: { ^Parameter: { Name: "Batches", Default: 500 } }
 
 Actors:
-- Name: Loader
-  Type: Loader
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *maxPhases
-      PhaseConfig:
-        Threads: 1
-        Repeat: 1
-        Database: *db
-        CollectionCount: 1
-        DocumentCount: *docCount
-        BatchSize: 1000
-        Document: *document
+  - Name: Loader
+    Type: Loader
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Threads: 1
+          Repeat: 1
+          Database: *db
+          CollectionCount: 1
+          DocumentCount: *docCount
+          BatchSize: 1000
+          Document: *document
 
-- Name: Quiese
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1, 4]
-      NopInPhasesUpTo: *maxPhases
-      PhaseConfig:
-        Repeat: 1
+  - Name: Quiese
+    Type: QuiesceActor
+    Threads: 1
+    Database: *db
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1, 4]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
 
-- ActorFromTemplate:
-    TemplateName: InsertFromSample
-    TemplateParameters:
-      Name: NoIndexes
-      OnlyActiveInPhase: 2
+  - ActorFromTemplate:
+      TemplateName: InsertFromSample
+      TemplateParameters:
+        Name: NoIndexes
+        OnlyActiveInPhase: 2
 
-- Name: BuildColumnStoreIndex
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3]
-      NopInPhasesUpTo: *maxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *db
-        Operations:
-        - OperationMetricsName: BulkBuildColumnStoreIndex
-          OperationName: RunCommand
-          OperationCommand:
-            createIndexes: *coll
-            indexes:
-            - key: {"$**": "columnstore"}
-              name: csi
+  - Name: BuildColumnStoreIndex
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *db
+          Operations:
+            - OperationMetricsName: BulkBuildColumnStoreIndex
+              OperationName: RunCommand
+              OperationCommand:
+                createIndexes: *coll
+                indexes:
+                  - key: { "$**": "columnstore" }
+                    name: csi
 
-- ActorFromTemplate:
-    TemplateName: InsertFromSample
-    TemplateParameters:
-      Name: Csi
-      OnlyActiveInPhase: 5
-
-
+  - ActorFromTemplate:
+      TemplateName: InsertFromSample
+      TemplateParameters:
+        Name: Csi
+        OnlyActiveInPhase: 5

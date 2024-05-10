@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: Storage Engines
+Owner: Storage Execution
 Description: |
   A workload which creates 2 databases a "cold" database which is scanned periodically and a "hot"
   database which is read continuously throughout the workload. The intention is that the hot
@@ -14,59 +14,59 @@ Clients:
       maxPoolSize: 400
 
 Actors:
-- Name: Loader
-  Type: Loader
-  Threads: 60
-  Phases:
-  - Repeat: 1
-    Database: cold
-    CollectionCount: 1
-    Threads: 1
-    DocumentCount: 1600000
-    BatchSize: 100000
-    Document:
-      a: {^RandomString: { length: 100 }}
-  - Repeat: 1
-    Database: hot
-    CollectionCount: 1
-    Threads: 1
+  - Name: Loader
+    Type: Loader
+    Threads: 60
+    Phases:
+      - Repeat: 1
+        Database: cold
+        CollectionCount: 1
+        Threads: 1
+        DocumentCount: 1600000
+        BatchSize: 100000
+        Document:
+          a: {^RandomString: {length: 100}}
+      - Repeat: 1
+        Database: hot
+        CollectionCount: 1
+        Threads: 1
+        DocumentCount: 2700000
+        BatchSize: 100000
+        Document:
+          _id: {^Inc: {start: 0}}
+          a: {^RandomString: {length: 100}}
+      - {Nop: true}
+      - {Nop: true}
+
+  - Name: HotSampler
+    Type: RandomSampler
+    Threads: 10
+    CollectionCount: 50
     DocumentCount: 2700000
-    BatchSize: 100000
-    Document:
-      _id: {^Inc: {start: 0}}
-      a: {^RandomString: {length: 100 }}
-  - {Nop: true}
-  - {Nop: true}
+    Database: hot
+    Phases:
+      - {Nop: true}
+      - {Nop: true}
+      - Duration: 5 minutes
+        GlobalRate: 100 per 10 milliseconds
+      - Duration: 59 minutes
+        GlobalRate: 100 per 10 milliseconds
 
-- Name: HotSampler
-  Type: RandomSampler
-  Threads: 10
-  CollectionCount: 50
-  DocumentCount: 2700000
-  Database: hot
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - Duration: 5 minutes
-    GlobalRate: 100 per 10 milliseconds
-  - Duration: 59 minutes
-    GlobalRate: 100 per 10 milliseconds
-
-- Name: ColdScanner
-  Type: CollectionScanner
-  Threads: 6
-  Database: cold
-  GenerateCollectionNames: true
-  CollectionCount: 60
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - {Nop: true}
-  - Duration: 59 minutes
-    ScanType: Standard
-    GlobalRate: 6 per 10 minutes
+  - Name: ColdScanner
+    Type: CollectionScanner
+    Threads: 6
+    Database: cold
+    GenerateCollectionNames: true
+    CollectionCount: 60
+    Phases:
+      - {Nop: true}
+      - {Nop: true}
+      - {Nop: true}
+      - Duration: 59 minutes
+        ScanType: Standard
+        GlobalRate: 6 per 10 minutes
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq: single-replica-15gbwtcache
+  - When:
+      mongodb_setup:
+        $eq: single-replica-15gbwtcache

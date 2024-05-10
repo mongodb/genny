@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   This workload was created to reproduce SERVER-53853: Large buildup of mongos to mongod connections and
   low performance with secondaryPreferred reads. This workload was originally two separate files,
@@ -7,10 +7,10 @@ Description: |
   "OnlyRunInInstance: sharded" became an option.
 
 Keywords:
-- reproducer
-- connections
-- secondaryPreferred
-- sharding
+  - reproducer
+  - connections
+  - secondaryPreferred
+  - sharding
 
 Clients:
   Default:
@@ -43,65 +43,64 @@ ConnectionsBuildup: &ConnectionsBuildup
     Key: ConnectionsBuildup
 
 Actors:
-- Name: EnableSharding
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-  - *EnableSharding
-  - *Nop
-  - *Nop
-  - *Nop
+  - Name: EnableSharding
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      - *EnableSharding
+      - *Nop
+      - *Nop
+      - *Nop
 
-- Name: ShardCollection
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-  - *Nop
-  - *ShardCollection
-  - *Nop
-  - *Nop
+  - Name: ShardCollection
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      - *Nop
+      - *ShardCollection
+      - *Nop
+      - *Nop
 
-- Name: InsertData
-  Type: Loader
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - *InsertData
-  - *Nop
+  - Name: InsertData
+    Type: Loader
+    Threads: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - *InsertData
+      - *Nop
 
-- Name: ConnectionsBuildup
-  Type: CrudActor
-  ClientName: Default
-  Database: *db
-  Threads: 500
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *ConnectionsBuildup
+  - Name: ConnectionsBuildup
+    Type: CrudActor
+    ClientName: Default
+    Database: *db
+    Threads: 500
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - *ConnectionsBuildup
 
-# to avoid connection closing
-- Name: LoggingActor
-  Type: LoggingActor
-  Threads: 1  # must be 1
-  Phases:
-  - LogEvery: 10 second  # TimeSpec
-    Blocking: None  # must be Blocking:None
-  - LogEvery: 10 second  # TimeSpec
-    Blocking: None  # must be Blocking:None
-  - LogEvery: 10 second  # TimeSpec
-    Blocking: None  # must be Blocking:None
-  - LogEvery: 1 minute  # TimeSpec
-    Blocking: None  # must be Blocking:None
+  # to avoid connection closing
+  - Name: LoggingActor
+    Type: LoggingActor
+    Threads: 1 # must be 1
+    Phases:
+      - LogEvery: 10 second # TimeSpec
+        Blocking: None # must be Blocking:None
+      - LogEvery: 10 second # TimeSpec
+        Blocking: None # must be Blocking:None
+      - LogEvery: 10 second # TimeSpec
+        Blocking: None # must be Blocking:None
+      - LogEvery: 1 minute # TimeSpec
+        Blocking: None # must be Blocking:None
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - atlas-like-replica.2022-10
-      - replica
-      - replica-80-feature-flags
-      - replica-all-feature-flags
-      - single-replica
-      - shard-single
+  - When:
+      mongodb_setup:
+        $eq:
+          - atlas-like-replica.2022-10
+          - replica
+          - replica-80-feature-flags
+          - replica-all-feature-flags
+          - shard-single

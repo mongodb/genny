@@ -10,17 +10,17 @@ Clients:
 
 Actors:
 
-# At the start of the workload, the mongod will have been restarted and all caches will have been cleared.
-# This is when we start the cold data run. We use 'executionStats' here to cause each command to run its
-# execution plan until no documents remain, which ensures that the query executes in its entirety.
-# This is also configured to log an explain for the query plan to help debug regressions.
-- Name: TPCHDenormalizedQuery19Cold
-  Type: RunCommand
-  Database: &db tpch
-  Phases:
-  - LoadConfig:
-      Path: ../../../../phases/tpch/denormalized/Q19.yml
-      Key: TPCHDenormalizedQuery19Explain
+  # At the start of the workload, the mongod will have been restarted and all caches will have been cleared.
+  # This is when we start the cold data run. We use 'executionStats' here to cause each command to run its
+  # execution plan until no documents remain, which ensures that the query executes in its entirety.
+  # This is also configured to log an explain for the query plan to help debug regressions.
+  - Name: TPCHDenormalizedQuery19Cold
+    Type: RunCommand
+    Database: &db tpch
+    Phases:
+      - LoadConfig:
+          Path: ../../../../phases/tpch/denormalized/Q19.yml
+          Key: TPCHDenormalizedQuery19Explain
 # TODO: PERF-2995 uncomment
 #   - &Nop {Nop: true}
 #   - *Nop

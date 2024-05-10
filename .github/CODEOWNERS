@@ -1,9 +1,37 @@
-# https://help.github.com/articles/about-code-owners/
+# DevProd Performance Infrastructure Team
+# Operates through the DEVPROD Jira board.
+# @mongodb/devprod-performance-infrastructure
 
-# global match unless overridden below
-* @mongodb/dev-prod-tips
+# Product Performance Team
+# Operates through the PERF Jira board.
+# @mongodb/performance
 
-# everyone can contribute to workloads and actors, they are unowned, unless overridden below
-src/workloads/
-src/cast_core/
-src/phases/
+# DevProd Performance Infrastructure owns unowned files. Files that are
+# explicitly owned by Performance Infrastructure should be added to this file
+# too.
+*                 @mongodb/devprod-performance-infrastructure
+
+
+# Repository Configuration
+/.gitignore       @mongodb/devprod-performance-infrastructure james.littlejohn@mongodb.com
+/.github          @mongodb/devprod-performance-infrastructure james.littlejohn@mongodb.com
+/.vscode          @mongodb/devprod-performance-infrastructure james.littlejohn@mongodb.com
+
+# Workload Configuration
+/src/workloads    @mongodb/performance
+/src/phases       @mongodb/performance
+# There is a list of workloads in this file that needs to be kept up to date
+src/lamplib/src/genny/tasks/dry_run.py @mongodb/performance
+
+
+# Genny Core Components
+/cmake            @mongodb/devprod-performance-infrastructure
+/poetry.lock      @mongodb/devprod-performance-infrastructure
+/pyproject.toml   @mongodb/devprod-performance-infrastructure
+
+# Workload-related C++ Components
+/src/value_generators    @mongodb/performance @mongodb/devprod-performance-infrastructure
+
+# Generated files owned by nobody that don't require review. These files are
+# modifiable without review by anybody with write access to the repository.
+/docs/generated/**.md

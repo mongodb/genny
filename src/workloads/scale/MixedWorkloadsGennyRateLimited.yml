@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   This workload is a Rate Limited version of  MixedWorkloadsGenny, which is a port of the mixed_workloads in the workloads repo.
   https://github.com/10gen/workloads/blob/master/workloads/mix.js. It runs 4 sets of
@@ -9,23 +9,22 @@ Description: |
   Rate Limits were added to maintain CPU utlization at 30-40%, along with using a higher thread level and decreasing phase number count from 4 to 1.
 # This workload does not support sharding yet.
 Keywords:
-- scale
-- insertOne
-- insert
-- findOne
-- find
-- updateOne
-- update
-- deleteOne
-- delete
-- rateLimited
-- globalRate
+  - scale
+  - insertOne
+  - insert
+  - findOne
+  - find
+  - updateOne
+  - update
+  - deleteOne
+  - delete
+  - rateLimited
+  - globalRate
 
 # These two values should match those are the top of MixPhasesRateLimited.yml
 dbname: &dbname mix
 DocumentCount: &NumDocs 100000
 CollectionCount: &NumColls 1
-
 
 Clients:
   Default:
@@ -45,153 +44,152 @@ Clients:
       maxPoolSize: 500
 
 ActorTemplates:
-- TemplateName: UpdateTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Update"}}
-    Type: CrudActor
-    Database: *dbname
-    ClientName: Update
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        NopInPhasesUpTo: 2
-        PhaseConfig:
-          LoadConfig:
-            Path: ../../phases/scale/MixPhases.yml
-            Key: UpdatePhase
-          GlobalRate: 500 per 250 milliseconds
+  - TemplateName: UpdateTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Update"}}
+      Type: CrudActor
+      Database: *dbname
+      ClientName: Update
+      Threads: {^Parameter: {Name: "Threads", Default: 1}}
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          NopInPhasesUpTo: 2
+          PhaseConfig:
+            LoadConfig:
+              Path: ../../phases/scale/MixPhases.yml
+              Key: UpdatePhase
+            GlobalRate: 500 per 250 milliseconds
 
-- TemplateName: RemoveTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Remove"}}
-    Type: CrudActor
-    Database: *dbname
-    ClientName: Remove
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        NopInPhasesUpTo: 2
-        PhaseConfig:
-          LoadConfig:
-            Path: ../../phases/scale/MixPhases.yml
-            Key: RemovePhase
-          GlobalRate: 500 per 125 milliseconds
+  - TemplateName: RemoveTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Remove"}}
+      Type: CrudActor
+      Database: *dbname
+      ClientName: Remove
+      Threads: {^Parameter: {Name: "Threads", Default: 1}}
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          NopInPhasesUpTo: 2
+          PhaseConfig:
+            LoadConfig:
+              Path: ../../phases/scale/MixPhases.yml
+              Key: RemovePhase
+            GlobalRate: 500 per 125 milliseconds
 
-- TemplateName: InsertTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Insert"}}
-    Type: CrudActor
-    Database: *dbname
-    ClientName: Insert
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        NopInPhasesUpTo: 2
-        PhaseConfig:
-          LoadConfig:
-            Path: ../../phases/scale/MixPhases.yml
-            Key: InsertPhase
-          GlobalRate: 500 per 125 milliseconds
+  - TemplateName: InsertTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Insert"}}
+      Type: CrudActor
+      Database: *dbname
+      ClientName: Insert
+      Threads: {^Parameter: {Name: "Threads", Default: 1}}
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          NopInPhasesUpTo: 2
+          PhaseConfig:
+            LoadConfig:
+              Path: ../../phases/scale/MixPhases.yml
+              Key: InsertPhase
+            GlobalRate: 500 per 125 milliseconds
 
-- TemplateName: FindTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Find"}}
-    Type: CrudActor
-    Database: *dbname
-    ClientName: Query
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        NopInPhasesUpTo: 2
-        PhaseConfig:
-          LoadConfig:
-            Path: ../../phases/scale/MixPhases.yml
-            Key: FindPhase
-          GlobalRate: 500 per 125 milliseconds
+  - TemplateName: FindTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Find"}}
+      Type: CrudActor
+      Database: *dbname
+      ClientName: Query
+      Threads: {^Parameter: {Name: "Threads", Default: 1}}
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          NopInPhasesUpTo: 2
+          PhaseConfig:
+            LoadConfig:
+              Path: ../../phases/scale/MixPhases.yml
+              Key: FindPhase
+            GlobalRate: 500 per 125 milliseconds
 
 Actors:
-- Name: Setup
-  Type: Loader
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    BatchSize: 100
+  - Name: Setup
+    Type: Loader
     Threads: 1
-    DocumentCount: *NumDocs
+    Phases:
+      - Repeat: 1
+        BatchSize: 100
+        Threads: 1
+        DocumentCount: *NumDocs
+        Database: *dbname
+        CollectionCount: *NumColls
+        Document: &doc
+          id: {^RandomInt: {min: 0, max: *NumDocs}}
+          a: {^RandomInt: {min: 0, max: *NumDocs}}
+          # Note that in the original workload the string c was perfectly compressable. We can put a
+          # constant there if needed.
+          c: &string {^RandomString: {length: 50}} # Adjust this so the doc comes out as 100 B.
+        Indexes:
+          - keys: {id: 1}
+          - keys: {a: 1}
+      - Phase: 1..2
+        Nop: true
+
+  - Name: QuiesceBetweenLevels
+    Type: QuiesceActor
+    Threads: 1
     Database: *dbname
-    CollectionCount: *NumColls
-    Document: &doc
-      id: {^RandomInt: {min: 0, max: *NumDocs}}
-      a: {^RandomInt: {min: 0, max: *NumDocs}}
-      # Note that in the original workload the string c was perfectly compressable. We can put a
-      # constant there if needed.
-      c: &string {^RandomString: {length: 50}}  # Adjust this so the doc comes out as 100 B.
-    Indexes:
-    - keys: {id: 1}
-    - keys: {a: 1}
-  - Phase: 1..2
-    Nop: true
+    Phases:
+      - &nop {Nop: true}
+      - Repeat: 1
+      - *nop
 
-- Name: QuiesceBetweenLevels
-  Type: QuiesceActor
-  Threads: 1
-  Database: *dbname
-  Phases:
-  - &nop {Nop: true}
-  - Repeat: 1
-  - *nop
+  # Update Actors
+  - ActorFromTemplate:
+      TemplateName: UpdateTemplate
+      TemplateParameters:
+        Name: Update_250
+        Threads: 250
+        OnlyActiveInPhase: 2
 
-# Update Actors
-- ActorFromTemplate:
-    TemplateName: UpdateTemplate
-    TemplateParameters:
-      Name: Update_250
-      Threads: 250
-      OnlyActiveInPhase: 2
+  #
+  ## Remove Actors
+  #
+  - ActorFromTemplate:
+      TemplateName: RemoveTemplate
+      TemplateParameters:
+        Name: Remove_250
+        Threads: 250
+        OnlyActiveInPhase: 2
 
-#
-## Remove Actors
-#
-- ActorFromTemplate:
-    TemplateName: RemoveTemplate
-    TemplateParameters:
-      Name: Remove_250
-      Threads: 250
-      OnlyActiveInPhase: 2
+  ## Insert Actors
+  #
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: Insert_250
+        Threads: 250
+        OnlyActiveInPhase: 2
 
-## Insert Actors
-#
-- ActorFromTemplate:
-    TemplateName: InsertTemplate
-    TemplateParameters:
-      Name: Insert_250
-      Threads: 250
-      OnlyActiveInPhase: 2
+  ## Find Actors
 
-## Find Actors
-
-- ActorFromTemplate:
-    TemplateName: FindTemplate
-    TemplateParameters:
-      Name: Find_250
-      Threads: 250
-      OnlyActiveInPhase: 2
+  - ActorFromTemplate:
+      TemplateName: FindTemplate
+      TemplateParameters:
+        Name: Find_250
+        Threads: 250
+        OnlyActiveInPhase: 2
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica
-      - replica-1dayhistory-15gbwtcache
-      - replica-80-feature-flags
-      - replica-all-feature-flags
-      - replica-maintenance-events
-      - replica-noflowcontrol
-      - single-replica
-      - single-replica-classic-query-engine
-      - single-replica-sbe
-      - standalone
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - replica-1dayhistory-15gbwtcache
+          - replica-80-feature-flags
+          - replica-all-feature-flags
+          - replica-maintenance-events
+          - replica-noflowcontrol
+          - single-replica-classic-query-engine
+          - single-replica-sbe
+          - standalone

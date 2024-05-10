@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   This workload tests the performance of the bulkWrite API, and compares it to normal writes.
   It is modeled as a collection of sensor data. It would be common for this use case to do batching using, e.g., AWS SQS.
@@ -86,90 +86,73 @@ GlobalDefaults:
   # so this is close to the maximum document complexity we can use here.
   # Using ^RandomDate for the timestamp is too compute intensive.
   - &Document {
-      sensorId: { ^RandomInt: { min: 0, max: 200000000 } },
-      timestamp: { ^RandomInt: { min: 1577836800000, max: 1692020604000 } },
-      eventId: { ^RandomInt: { min: 1, max: 10 } },
-      dataField1: { ^FastRandomString: { length: 10 } },
-      dataField2: { ^FastRandomString: { length: 20 } },
-      dataField3: { ^FastRandomString: { length: 30 } },
-      dataField4: { ^FastRandomString: { length: 40 } },
-      dataField5: { ^FastRandomString: { length: 50 } },
-    }
+    sensorId: {^RandomInt: {min: 0, max: 200000000}},
+    timestamp: {^RandomInt: {min: 1577836800000, max: 1692020604000}},
+    eventId: {^RandomInt: {min: 1, max: 10}},
+    dataField1: {^FastRandomString: {length: 10}},
+    dataField2: {^FastRandomString: {length: 20}},
+    dataField3: {^FastRandomString: {length: 30}},
+    dataField4: {^FastRandomString: {length: 40}},
+    dataField5: {^FastRandomString: {length: 50}},
+  }
 
   # This workload uses a batch size of 100 for the bulk writes.
   # We evaluated the impact of different batch sizes and the document throughput
   # does not appear to be impacted by the batch size.
-  - &WriteOp { WriteCommand: insertOne, Document: *Document }
-  - &WriteOps10x [
-      *WriteOp, *WriteOp, *WriteOp, *WriteOp, *WriteOp,
-      *WriteOp, *WriteOp, *WriteOp, *WriteOp, *WriteOp,
-    ]
+  - &WriteOp {WriteCommand: insertOne, Document: *Document}
+  - &WriteOps10x [*WriteOp, *WriteOp, *WriteOp, *WriteOp, *WriteOp, *WriteOp, *WriteOp, *WriteOp, *WriteOp, *WriteOp]
   - &WriteOps100x {
-      ^FlattenOnce:
-        [
-          *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x,
-          *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x,
-        ],
-    }
+    ^FlattenOnce: [*WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x, *WriteOps10x]
+  }
   - &UpsertOp {
-      WriteCommand: updateOne,
-      Filter: { sensorId: { ^RandomInt: { min: 0, max: 200000000 } } },
-      Update:
-        {
-          $set:
-            { eventId: 0, dataField1: { ^FastRandomString: { length: 10 } } },
-        },
-      OperationOptions: { Upsert: true },
-    }
-  - &UpsertOps10x [
-      *UpsertOp, *UpsertOp, *UpsertOp, *UpsertOp, *UpsertOp,
-      *UpsertOp, *UpsertOp, *UpsertOp, *UpsertOp, *UpsertOp,
-    ]
+    WriteCommand: updateOne,
+    Filter: {sensorId: {^RandomInt: {min: 0, max: 200000000}}},
+    Update: {$set: {eventId: 0, dataField1: {^FastRandomString: {length: 10}}}},
+    OperationOptions: {Upsert: true}}
+  - &UpsertOps10x [*UpsertOp, *UpsertOp, *UpsertOp, *UpsertOp, *UpsertOp, *UpsertOp, *UpsertOp, *UpsertOp, *UpsertOp, *UpsertOp]
   - &UpsertOps100x {
-      ^FlattenOnce:
-        [
-          *UpsertOps10x, *UpsertOps10x, *UpsertOps10x, *UpsertOps10x, *UpsertOps10x,
-          *UpsertOps10x, *UpsertOps10x, *UpsertOps10x, *UpsertOps10x, *UpsertOps10x,
-        ],
-    }
+    ^FlattenOnce: [
+      *UpsertOps10x, *UpsertOps10x, *UpsertOps10x, *UpsertOps10x, *UpsertOps10x,
+      *UpsertOps10x, *UpsertOps10x, *UpsertOps10x, *UpsertOps10x, *UpsertOps10x
+    ]
+  }
 
 ActorTemplates:
   - TemplateName: BulkWriterTemplate
     Config:
       # TODO https://jira.mongodb.org/browse/EVG-20735
-      Name: { ^Parameter: { Name: "Name", Default: "unset" } }
+      Name: {^Parameter: {Name: "Name", Default: "unset"}}
       Type: CrudActor
-      Threads: { ^Parameter: { Name: "Threads", Default: *BulkWriteThreadCount } }
+      Threads: {^Parameter: {Name: "Threads", Default: *BulkWriteThreadCount}}
       Phases:
         OnlyActiveInPhases:
-          Active:
+          Active: {
             # TODO https://jira.mongodb.org/browse/EVG-20735
-            { ^Parameter: { Name: "OnlyActiveInPhase", Default: "unset" } }
+            ^Parameter: {Name: "OnlyActiveInPhase", Default: "unset"}}
           NopInPhasesUpTo: *NumPhases
           PhaseConfig:
-            Duration: { ^Parameter: { Name: "Duration", Default: *MeasurementDuration } }
+            Duration: {^Parameter: {Name: "Duration", Default: *MeasurementDuration}}
             Database: *DbName
             Collection: *CollectionName
             Operations:
               - OperationName: bulkWrite
                 OperationCommand:
-                  WriteOperations:
-                    { ^Parameter: { Name: "Operations", Default: *WriteOps100x } }
+                  WriteOperations: {^Parameter: {Name: "Operations", Default: *WriteOps100x}}
 
   - TemplateName: NormalWriterTemplate
     Config:
       # TODO https://jira.mongodb.org/browse/EVG-20735
-      Name: { ^Parameter: { Name: "Name", Default: "unset" } }
+      Name: {^Parameter: {Name: "Name", Default: "unset"}}
       Type: CrudActor
-      Threads: { ^Parameter: { Name: "Threads", Default: *NormalWriteThreadCount } }
+      Threads: {^Parameter: {Name: "Threads", Default: *NormalWriteThreadCount}}
       Phases:
         OnlyActiveInPhases:
-          Active:
+          Active: {
             # TODO https://jira.mongodb.org/browse/EVG-20735
-            { ^Parameter: { Name: "OnlyActiveInPhase", Default: "unset" } }
+            ^Parameter: {Name: "OnlyActiveInPhase", Default: "unset"}}
           NopInPhasesUpTo: *NumPhases
           PhaseConfig:
-            Duration: { ^Parameter: { Name: "Duration", Default: *MeasurementDuration } }
+            Duration: {^Parameter: {Name: "Duration", Default: *MeasurementDuration}}
             Database: *DbName
             Collection: *CollectionName
             Operations:
@@ -202,9 +185,9 @@ Actors:
               OperationCommand:
                 createIndexes: *CollectionName
                 indexes:
-                  - key: { sensorId: 1, timestamp: -1 }
+                  - key: {sensorId: 1, timestamp: -1}
                     name: SensorAndTimestamp
-                  - key: { timestamp: -1 }
+                  - key: {timestamp: -1}
                     name: Timestamp
 
   - Name: DeleteCollectionActor

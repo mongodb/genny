@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/dev-prod-tips"
+Owner: Performance Analysis
 Description: |
   This is a demonstration of the CrudActor. It performs writes, updates, and drops
   to demonstrate the actor.
@@ -13,73 +13,73 @@ Clients:
       maxPoolSize: 400
 
 Actors:
-- Name: CrudActor
-  Type: CrudActor
-  Database: mydb
-  ClientName: SomeOtherPool  # Which connection pool to use. Must be defined in Clients section.
-  Phases:
-  - Repeat: 10
-    Collection: test
-    Operations:
-    - OperationName: bulkWrite
-      OperationMetricsName: InsertAndUpdate  # This overrides the default metric name of bulkWrite
-      OperationCommand:
-        WriteOperations:
-        - WriteCommand: insertOne
-          Document: {a: 1}
-        - WriteCommand: updateOne
-          Filter: {a: 1}
-          Update: {$set: {a: {^RandomInt: {min: 5, max: 15}}}}
-          Options:
-            WriteConcern:
-              Level: majority
-              TimeoutMillis: 5000
-    - OperationName: insertMany
-      OperationCommand:
-        Documents:
-        - {a: 1}
-        - {a: {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}}}
-        - {b: {^RandomInt: {min: 5, max: 15}}}
-      ThrowOnFailure: false  # Whether to throw an exception if an operation fails
-      # RecordFailure: true  # If ThrowOnFailure is false, whether the failed operations should be recorded.
-  - Repeat: 1
-    Collection: test
-    Operation:
-      OperationName: drop
-      OperationCommand:
-        Options:
-          WriteConcern:
-            Level: majority
-  - Repeat: 10
-    Threads: 8
-    # The MetricsName gets included in each of the generated metric names below. If not explicitly
-    # named, the results files will be of the form CrudActor.Phase3.2.ftdc. If OperationMetricsName
-    # is specified for the operation, both will be included.
-    MetricsName: Phase3
-    # Generate names from Collection0 to Collection<CollectionCount -1>.
-    # The collection names are generated from the current actor id mod CollectionCount.
-    CollectionCount: 4
-    Operations:
-    - OperationName: bulkWrite
-      # The combination of MetricsName at the phase level and OperationMetricsName here will result
-      # in an output file called CrudActor.Phase3.OtherInsertAndUpdate.ftdc
-      OperationMetricsName: OtherInsertAndUpdate
-      OperationCommand:
-        WriteOperations:
-        - WriteCommand: insertOne
-          Document: {a: 1}
-        - WriteCommand: updateOne
-          Filter: {a: 1}
-          Update: {$set: {a: {^RandomInt: {min: 5, max: 15}}}}
-          Options:
-            WriteConcern:
-              Level: majority
-              TimeoutMillis: 5000
-    - OperationName: insertMany
-      OperationCommand:
-        Documents:
-        - {a: 1}
-        - {a: {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}}}
-        - {b: {^RandomInt: {min: 5, max: 15}}}
-      ThrowOnFailure: false  # Whether to throw an exception if an operation fails
-      # RecordFailure: true  # If ThrowOnFailure is false, whether the failed operations should be recorded.
+  - Name: CrudActor
+    Type: CrudActor
+    Database: mydb
+    ClientName: SomeOtherPool # Which connection pool to use. Must be defined in Clients section.
+    Phases:
+      - Repeat: 10
+        Collection: test
+        Operations:
+          - OperationName: bulkWrite
+            OperationMetricsName: InsertAndUpdate # This overrides the default metric name of bulkWrite
+            OperationCommand:
+              WriteOperations:
+                - WriteCommand: insertOne
+                  Document: {a: 1}
+                - WriteCommand: updateOne
+                  Filter: {a: 1}
+                  Update: {$set: {a: {^RandomInt: {min: 5, max: 15}}}}
+                  Options:
+                    WriteConcern:
+                      Level: majority
+                      TimeoutMillis: 5000
+          - OperationName: insertMany
+            OperationCommand:
+              Documents:
+                - {a: 1}
+                - {a: {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}}}
+                - {b: {^RandomInt: {min: 5, max: 15}}}
+            ThrowOnFailure: false # Whether to throw an exception if an operation fails
+            # RecordFailure: true  # If ThrowOnFailure is false, whether the failed operations should be recorded.
+      - Repeat: 1
+        Collection: test
+        Operation:
+          OperationName: drop
+          OperationCommand:
+            Options:
+              WriteConcern:
+                Level: majority
+      - Repeat: 10
+        Threads: 8
+        # The MetricsName gets included in each of the generated metric names below. If not explicitly
+        # named, the results files will be of the form CrudActor.Phase3.2.ftdc. If OperationMetricsName
+        # is specified for the operation, both will be included.
+        MetricsName: Phase3
+        # Generate names from Collection0 to Collection<CollectionCount -1>.
+        # The collection names are generated from the current actor id mod CollectionCount.
+        CollectionCount: 4
+        Operations:
+          - OperationName: bulkWrite
+            # The combination of MetricsName at the phase level and OperationMetricsName here will result
+            # in an output file called CrudActor.Phase3.OtherInsertAndUpdate.ftdc
+            OperationMetricsName: OtherInsertAndUpdate
+            OperationCommand:
+              WriteOperations:
+                - WriteCommand: insertOne
+                  Document: {a: 1}
+                - WriteCommand: updateOne
+                  Filter: {a: 1}
+                  Update: {$set: {a: {^RandomInt: {min: 5, max: 15}}}}
+                  Options:
+                    WriteConcern:
+                      Level: majority
+                      TimeoutMillis: 5000
+          - OperationName: insertMany
+            OperationCommand:
+              Documents:
+                - {a: 1}
+                - {a: {^RandomString: {length: {^RandomInt: {min: 3, max: 5}}}}}
+                - {b: {^RandomInt: {min: 5, max: 15}}}
+            ThrowOnFailure: false # Whether to throw an exception if an operation fails
+            # RecordFailure: true  # If ThrowOnFailure is false, whether the failed operations should be recorded.

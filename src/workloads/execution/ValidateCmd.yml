@@ -1,14 +1,14 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/server-execution"
+Owner: Storage Execution
 Description: |
-   This workload inserts ~1GB of documents, creates various indexes on the data, and then runs the
-   validate command. We created this workload to see the performance benefits of improvements
-   to the validate command, including background validation.
+  This workload inserts ~1GB of documents, creates various indexes on the data, and then runs the
+  validate command. We created this workload to see the performance benefits of improvements
+  to the validate command, including background validation.
 
 Keywords:
-- RunCommand
-- Loader
-- validate
+  - RunCommand
+  - Loader
+  - validate
 
 LoadConfig:
   Path: "../../phases/execution/ValidateCmd.yml"
@@ -16,6 +16,6 @@ LoadConfig:
     FullValidation: false
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq: standalone
+  - When:
+      mongodb_setup:
+        $eq: standalone

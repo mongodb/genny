@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: Storage Engines
+Owner: Storage Execution
 Description: |
   The model workload for the large scale workload automation project. It consists of a 150GB cold
   database which is scanned by the snapshot scanner and a number of hot db collections and rolling
@@ -14,7 +14,7 @@ Description: |
 GlobalDefaults:
   TrackProportion: &TrackProportion 0
 
-  LongLivedDB: &LongLivedDB longlived  # name of the long lived database
+  LongLivedDB: &LongLivedDB longlived # name of the long lived database
   LongLivedDocumentCount: &LongLivedDocumentCount 1000
   LongLivedCollectionCount: &LongLivedCollectionCount 1000
 
@@ -42,16 +42,16 @@ GlobalDefaults:
   AllDB: &AllDB hotdoc,hotcoll,rolling,longlived,scancold
 
   # According to the design, the number of writes should add up to 10K second.
-  LongLivedWrites: &LongLivedWrites 600 per 1 second           #  x5 threads
-  RollingWrites: &RollingWrites 1000 per 1 second              # x40 threads
-  HotDocumentWrites: &HotDocumentWrites 1000 per 1 second      # x40 threads
-  HotCollectionWrites: &HotCollectionWrites 1000 per 1 second  # x40 threads
+  LongLivedWrites: &LongLivedWrites 600 per 1 second #  x5 threads
+  RollingWrites: &RollingWrites 1000 per 1 second # x40 threads
+  HotDocumentWrites: &HotDocumentWrites 1000 per 1 second # x40 threads
+  HotCollectionWrites: &HotCollectionWrites 1000 per 1 second # x40 threads
 
   # According to the design, the number of reads should add up to 1K second.
-  LongLivedReads: &LongLivedReads 20 per 1 second            # x10 threads
-  LongLivedIndexReads: &LongLivedIndexReads 20 per 1 second  # x10 threads
-  RollingReads1: &RollingReads1 50 per 1 second              # x10 threads
-  RollingReads2: &RollingReads2 100 per 1 second             # x1 thread
+  LongLivedReads: &LongLivedReads 20 per 1 second # x10 threads
+  LongLivedIndexReads: &LongLivedIndexReads 20 per 1 second # x10 threads
+  RollingReads1: &RollingReads1 50 per 1 second # x10 threads
+  RollingReads2: &RollingReads2 100 per 1 second # x1 thread
 
 Clients:
   Default:
@@ -64,281 +64,281 @@ Clients:
 # in parallel.  The third phase is the "steady-state" workload that
 # it specified in the "Large Scale Workload Automation" JIRA epic.
 Actors:
-- Name: LongLivedCreator
-  Type: Loader
-  Threads: 10
-  TrackProportion: *TrackProportion
-  Phases:
-  - {Nop: true}
-  - LoadConfig:
-      Path: ../../phases/scale/LargeScalePhases.yml
-      Key: LongLivedCreatorCmd
-      Parameters:
-        Database: *LongLivedDB
-        CollectionCount: *LongLivedCollectionCount
-        DocumentCount: *LongLivedDocumentCount
-  - {Nop: true}
+  - Name: LongLivedCreator
+    Type: Loader
+    Threads: 10
+    TrackProportion: *TrackProportion
+    Phases:
+      - {Nop: true}
+      - LoadConfig:
+          Path: ../../phases/scale/LargeScalePhases.yml
+          Key: LongLivedCreatorCmd
+          Parameters:
+            Database: *LongLivedDB
+            CollectionCount: *LongLivedCollectionCount
+            DocumentCount: *LongLivedDocumentCount
+      - {Nop: true}
 
-- Name: LongLivedIndexReader
-  Type: MultiCollectionQuery
-  Threads: 10
-  GlobalRate: *LongLivedIndexReads
-  TrackProportion: *TrackProportion
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - LoadConfig:
-      Path: ../../phases/scale/LargeScalePhases.yml
-      Key: LongLivedIndexReaderCmd
-      Parameters:
-        Database: *LongLivedDB
-        CollectionCount: *LongLivedCollectionCount
-        DocumentCount: *LongLivedDocumentCount
+  - Name: LongLivedIndexReader
+    Type: MultiCollectionQuery
+    Threads: 10
+    GlobalRate: *LongLivedIndexReads
+    TrackProportion: *TrackProportion
+    Phases:
+      - {Nop: true}
+      - {Nop: true}
+      - LoadConfig:
+          Path: ../../phases/scale/LargeScalePhases.yml
+          Key: LongLivedIndexReaderCmd
+          Parameters:
+            Database: *LongLivedDB
+            CollectionCount: *LongLivedCollectionCount
+            DocumentCount: *LongLivedDocumentCount
 
-- Name: LongLivedReader
-  Type: MultiCollectionQuery
-  Threads: 10
-  GlobalRate: *LongLivedReads
-  TrackProportion: *TrackProportion
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - LoadConfig:
-      Path: ../../phases/scale/LargeScalePhases.yml
-      Key: LongLivedReaderCmd
-      Parameters:
-        Database: *LongLivedDB
-        CollectionCount: *LongLivedCollectionCount
-        DocumentCount: *LongLivedDocumentCount
+  - Name: LongLivedReader
+    Type: MultiCollectionQuery
+    Threads: 10
+    GlobalRate: *LongLivedReads
+    TrackProportion: *TrackProportion
+    Phases:
+      - {Nop: true}
+      - {Nop: true}
+      - LoadConfig:
+          Path: ../../phases/scale/LargeScalePhases.yml
+          Key: LongLivedReaderCmd
+          Parameters:
+            Database: *LongLivedDB
+            CollectionCount: *LongLivedCollectionCount
+            DocumentCount: *LongLivedDocumentCount
 
-- Name: LongLivedWriter
-  Type: MultiCollectionUpdate
-  Threads: 5
-  GlobalRate: *LongLivedWrites
-  TrackProportion: *TrackProportion
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - LoadConfig:
-      Path: ../../phases/scale/LargeScalePhases.yml
-      Key: LongLivedWriterCmd
-      Parameters:
-        Database: *LongLivedDB
-        CollectionCount: *LongLivedCollectionCount
-        DocumentCount: *LongLivedDocumentCount
+  - Name: LongLivedWriter
+    Type: MultiCollectionUpdate
+    Threads: 5
+    GlobalRate: *LongLivedWrites
+    TrackProportion: *TrackProportion
+    Phases:
+      - {Nop: true}
+      - {Nop: true}
+      - LoadConfig:
+          Path: ../../phases/scale/LargeScalePhases.yml
+          Key: LongLivedWriterCmd
+          Parameters:
+            Database: *LongLivedDB
+            CollectionCount: *LongLivedCollectionCount
+            DocumentCount: *LongLivedDocumentCount
 
-- Name: RollingSetup
-  Type: RollingCollections
-  # The setup operation creates CollectionWindowSize collections, and populates hem with
-  # DocumentCount documents, each collection will have indexes created as specified in
-  # the index block.
-  Operation: Setup
-  Database: *RollingDB
-  Threads: 1
-  Phases:
-  - {Nop: true}
-  - LoadConfig:
-      Path: ../../phases/scale/LargeScalePhases.yml
-      Key: RollingSetupCmd
-      Parameters:
-        TrackProportion: *TrackProportion
-  - {Nop: true}
+  - Name: RollingSetup
+    Type: RollingCollections
+    # The setup operation creates CollectionWindowSize collections, and populates hem with
+    # DocumentCount documents, each collection will have indexes created as specified in
+    # the index block.
+    Operation: Setup
+    Database: *RollingDB
+    Threads: 1
+    Phases:
+      - {Nop: true}
+      - LoadConfig:
+          Path: ../../phases/scale/LargeScalePhases.yml
+          Key: RollingSetupCmd
+          Parameters:
+            TrackProportion: *TrackProportion
+      - {Nop: true}
 
-- Name: RollingManage
-  Type: RollingCollections
-  Threads: 1
-  # The manage operation creates and drops one collection per iteration,
-  # it also creates indexes for that collection.
-  Operation: Manage
-  Database: *RollingDB
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - LoadConfig:
-      Path: ../../phases/scale/LargeScalePhases.yml
-      Key: RollingManageCmd
+  - Name: RollingManage
+    Type: RollingCollections
+    Threads: 1
+    # The manage operation creates and drops one collection per iteration,
+    # it also creates indexes for that collection.
+    Operation: Manage
+    Database: *RollingDB
+    Phases:
+      - {Nop: true}
+      - {Nop: true}
+      - LoadConfig:
+          Path: ../../phases/scale/LargeScalePhases.yml
+          Key: RollingManageCmd
 
-- Name: RollingWriter
-  Type: RollingCollections
-  Threads: 40
-  Operation: Write
-  Database: *RollingDB
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - LoadConfig:
-      Path: ../../phases/scale/LargeScalePhases.yml
-      Key: RollingWriterCmd
-      Parameters:
-        TrackProportion: *TrackProportion
-        Writes: *RollingWrites
+  - Name: RollingWriter
+    Type: RollingCollections
+    Threads: 40
+    Operation: Write
+    Database: *RollingDB
+    Phases:
+      - {Nop: true}
+      - {Nop: true}
+      - LoadConfig:
+          Path: ../../phases/scale/LargeScalePhases.yml
+          Key: RollingWriterCmd
+          Parameters:
+            TrackProportion: *TrackProportion
+            Writes: *RollingWrites
 
-- Name: RollingReader1
-  Type: RollingCollections
-  Threads: 10
-  Database: *RollingDB
-  Operation: Read
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - LoadConfig:
-      Path: ../../phases/scale/LargeScalePhases.yml
-      Key: RollingReader1Cmd
-      Parameters:
-        TrackProportion: *TrackProportion
-        Reads: *RollingReads1
+  - Name: RollingReader1
+    Type: RollingCollections
+    Threads: 10
+    Database: *RollingDB
+    Operation: Read
+    Phases:
+      - {Nop: true}
+      - {Nop: true}
+      - LoadConfig:
+          Path: ../../phases/scale/LargeScalePhases.yml
+          Key: RollingReader1Cmd
+          Parameters:
+            TrackProportion: *TrackProportion
+            Reads: *RollingReads1
 
-- Name: RollingReader2
-  Type: RollingCollections
-  Threads: 1
-  Database: *RollingDB
-  Operation: Read
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - LoadConfig:
-      Path: ../../phases/scale/LargeScalePhases.yml
-      Key: RollingReader2Cmd
-      Parameters:
-        TrackProportion: *TrackProportion
-        Reads: *RollingReads2
+  - Name: RollingReader2
+    Type: RollingCollections
+    Threads: 1
+    Database: *RollingDB
+    Operation: Read
+    Phases:
+      - {Nop: true}
+      - {Nop: true}
+      - LoadConfig:
+          Path: ../../phases/scale/LargeScalePhases.yml
+          Key: RollingReader2Cmd
+          Parameters:
+            TrackProportion: *TrackProportion
+            Reads: *RollingReads2
 
-- Name: HotDocumentLoader
-  Type: Loader
-  TrackProportion: *TrackProportion
-  Threads: 1
-  Phases:
-  - {Nop: true}
-  - LoadConfig:
-      Path: ../../phases/scale/LargeScalePhases.yml
-      Key: HotDocumentLoaderCmd
-      Parameters:
-        Database: *HotDocumentDB
-  - {Nop: true}
+  - Name: HotDocumentLoader
+    Type: Loader
+    TrackProportion: *TrackProportion
+    Threads: 1
+    Phases:
+      - {Nop: true}
+      - LoadConfig:
+          Path: ../../phases/scale/LargeScalePhases.yml
+          Key: HotDocumentLoaderCmd
+          Parameters:
+            Database: *HotDocumentDB
+      - {Nop: true}
 
-- Name: HotDocumentUpdater
-  Type: CrudActor
-  Threads: 40
-  Database: *HotDocumentDB
-  TrackProportion: *TrackProportion
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - LoadConfig:
-      Path: ../../phases/scale/LargeScalePhases.yml
-      Key: HotDocumentUpdaterCmd
-      Parameters:
-        Writes: *HotDocumentWrites
+  - Name: HotDocumentUpdater
+    Type: CrudActor
+    Threads: 40
+    Database: *HotDocumentDB
+    TrackProportion: *TrackProportion
+    Phases:
+      - {Nop: true}
+      - {Nop: true}
+      - LoadConfig:
+          Path: ../../phases/scale/LargeScalePhases.yml
+          Key: HotDocumentUpdaterCmd
+          Parameters:
+            Writes: *HotDocumentWrites
 
-- Name: HotCollectionLoader
-  Type: Loader
-  TrackProportion: *TrackProportion
-  Threads: 1
-  Phases:
-  - {Nop: true}
-  - LoadConfig:
-      Path: ../../phases/scale/LargeScalePhases.yml
-      Key: HotCollectionLoaderCmd
-      Parameters:
-        Database: *HotCollectionDB
-  - {Nop: true}
+  - Name: HotCollectionLoader
+    Type: Loader
+    TrackProportion: *TrackProportion
+    Threads: 1
+    Phases:
+      - {Nop: true}
+      - LoadConfig:
+          Path: ../../phases/scale/LargeScalePhases.yml
+          Key: HotCollectionLoaderCmd
+          Parameters:
+            Database: *HotCollectionDB
+      - {Nop: true}
 
-- Name: HotCollectionUpdater
-  Type: CrudActor
-  TrackProportion: *TrackProportion
-  Threads: 40
-  Database: *HotCollectionDB
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - LoadConfig:
-      Path: ../../phases/scale/LargeScalePhases.yml
-      Key: HotCollectionUpdaterCmd
-      Parameters:
-        Writes: *HotCollectionWrites
+  - Name: HotCollectionUpdater
+    Type: CrudActor
+    TrackProportion: *TrackProportion
+    Threads: 40
+    Database: *HotCollectionDB
+    Phases:
+      - {Nop: true}
+      - {Nop: true}
+      - LoadConfig:
+          Path: ../../phases/scale/LargeScalePhases.yml
+          Key: HotCollectionUpdaterCmd
+          Parameters:
+            Writes: *HotCollectionWrites
 
-- Name: HotCollectionDeleter
-  Type: Deleter
-  Threads: 40
-  Database: *HotCollectionDB
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - LoadConfig:
-      Path: ../../phases/scale/LargeScalePhases.yml
-      Key: HotCollectionDeleterCmd
+  - Name: HotCollectionDeleter
+    Type: Deleter
+    Threads: 40
+    Database: *HotCollectionDB
+    Phases:
+      - {Nop: true}
+      - {Nop: true}
+      - LoadConfig:
+          Path: ../../phases/scale/LargeScalePhases.yml
+          Key: HotCollectionDeleterCmd
 
-# Create the cold database only.  For the hot database, we'll
-# use the rolling collection or the longlived collection, as they
-# are actively being updated and queried.
-- Name: ScannerLoader
-  Type: Loader
-  TrackProportion: *TrackProportion
-  # Note: we've cut down on the number of threads, as this load
-  # can sometimes causes failures.
-  Threads: 5
-  Phases:
-  # Each collection is ~100M.  Assuming N is equal to ScannerColdDBGigabytes.
-  # Each thread has N collections, and with 10 threads, that's
-  # 10*N collections, or N gigabytes of space.
-  - LoadConfig:
-      Path: ../../phases/scale/LargeScalePhases.yml
-      Key: ScannerLoaderCmd
-      Parameters:
-        Database: *ScannerColdDB
-        CollectionCount: *ScannerColdDBGigabytes
-  - {Nop: true}
-  - {Nop: true}
+  # Create the cold database only.  For the hot database, we'll
+  # use the rolling collection or the longlived collection, as they
+  # are actively being updated and queried.
+  - Name: ScannerLoader
+    Type: Loader
+    TrackProportion: *TrackProportion
+    # Note: we've cut down on the number of threads, as this load
+    # can sometimes causes failures.
+    Threads: 5
+    Phases:
+      # Each collection is ~100M.  Assuming N is equal to ScannerColdDBGigabytes.
+      # Each thread has N collections, and with 10 threads, that's
+      # 10*N collections, or N gigabytes of space.
+      - LoadConfig:
+          Path: ../../phases/scale/LargeScalePhases.yml
+          Key: ScannerLoaderCmd
+          Parameters:
+            Database: *ScannerColdDB
+            CollectionCount: *ScannerColdDBGigabytes
+      - {Nop: true}
+      - {Nop: true}
 
-# A snapshot scanner begins a transaction prior to starting its scan
-# with read concern majority, which should pin the read for the
-# duration of the scan.
-#
-# We want one of these snapshots to start every minute, and we want each scan
-# to take at least 2 minutes.  The allocated number of threads forms
-# a pool to ensure that overlapping scans will occur on schedule.
-- Name: SnapshotScanner1Gigabytes
-  Type: CollectionScanner
-  Threads: 10
-  Database: *ScannerHotDB
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - LoadConfig:
-      Path: ../../phases/scale/LargeScalePhases.yml
-      Key: SnapshotScanner1GigabytesCmd
+  # A snapshot scanner begins a transaction prior to starting its scan
+  # with read concern majority, which should pin the read for the
+  # duration of the scan.
+  #
+  # We want one of these snapshots to start every minute, and we want each scan
+  # to take at least 2 minutes.  The allocated number of threads forms
+  # a pool to ensure that overlapping scans will occur on schedule.
+  - Name: SnapshotScanner1Gigabytes
+    Type: CollectionScanner
+    Threads: 10
+    Database: *ScannerHotDB
+    Phases:
+      - {Nop: true}
+      - {Nop: true}
+      - LoadConfig:
+          Path: ../../phases/scale/LargeScalePhases.yml
+          Key: SnapshotScanner1GigabytesCmd
 
-- Name: SnapshotScanner5Gigabytes
-  Type: CollectionScanner
-  Threads: 10
-  Database: *ScannerHotDB
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - LoadConfig:
-      Path: ../../phases/scale/LargeScalePhases.yml
-      Key: SnapshotScanner5GigabytesCmd
+  - Name: SnapshotScanner5Gigabytes
+    Type: CollectionScanner
+    Threads: 10
+    Database: *ScannerHotDB
+    Phases:
+      - {Nop: true}
+      - {Nop: true}
+      - LoadConfig:
+          Path: ../../phases/scale/LargeScalePhases.yml
+          Key: SnapshotScanner5GigabytesCmd
 
-# We scan all the documents in all databases.
-- Name: SnapshotScannerAll
-  Type: CollectionScanner
-  Threads: 10
-  Database: *AllDB
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - LoadConfig:
-      Path: ../../phases/scale/LargeScalePhases.yml
-      Key: SnapshotScannerAllCmd
+  # We scan all the documents in all databases.
+  - Name: SnapshotScannerAll
+    Type: CollectionScanner
+    Threads: 10
+    Database: *AllDB
+    Phases:
+      - {Nop: true}
+      - {Nop: true}
+      - LoadConfig:
+          Path: ../../phases/scale/LargeScalePhases.yml
+          Key: SnapshotScannerAllCmd
 
-- Name: OplogTailer
-  Type: RollingCollections
-  Database: *RollingDB
-  Threads: 1
-  Operation: OplogTailer
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - LoadConfig:
-      Path: ../../phases/scale/LargeScalePhases.yml
-      Key: OplogTrailerCmd
+  - Name: OplogTailer
+    Type: RollingCollections
+    Database: *RollingDB
+    Threads: 1
+    Operation: OplogTailer
+    Phases:
+      - {Nop: true}
+      - {Nop: true}
+      - LoadConfig:
+          Path: ../../phases/scale/LargeScalePhases.yml
+          Key: OplogTrailerCmd

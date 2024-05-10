@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/product-perf"
+Owner: Product Performance
 Description: |
   This workload is a more stressful version of MixedWorkloadsGenny.yml, which itself is a port of
   the mixed_workloads in the workloads,
@@ -11,25 +11,25 @@ Description: |
   starved out by writes.
 
   This more stressful version of the test only runs one test phase, using 1024 threads per operation
-  for 45 minutes.
+  for 10 minutes.
 
 # This workload does not support sharding yet.
 
 Keywords:
-- scale
-- insertOne
-- insert
-- findOne
-- find
-- updateOne
-- update
-- deleteOne
-- delete
+  - scale
+  - insertOne
+  - insert
+  - findOne
+  - find
+  - updateOne
+  - update
+  - deleteOne
+  - delete
 
 dbname: &dbname mix
 DocumentCount: &NumDocs 1024
 CollectionCount: &NumColls 512
-PhaseDuration: &PhaseDuration 15 minutes
+PhaseDuration: &PhaseDuration 10 minutes
 StringLength: &StringLength 950
 Filter: &filter {id: {^RandomInt: {min: 0, max: *NumDocs}}}
 Document: &doc
@@ -37,7 +37,7 @@ Document: &doc
   a: {^RandomInt: {min: 0, max: *NumDocs}}
   # Note that in the original workload the string c was perfectly compressable. We can put a
   # constant there if needed.
-  c: &string {^FastRandomString: {length: *StringLength}}  # Adjust StringLength for 1000B docs
+  c: &string {^FastRandomString: {length: *StringLength}} # Adjust StringLength for 1000B docs
 
 Clients:
   Default:
@@ -57,189 +57,189 @@ Clients:
       maxPoolSize: 2500
 
 ActorTemplates:
-- TemplateName: UpdateTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Update"}}
-    Type: CrudActor
-    Database: *dbname
-    ClientName: Update
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        NopInPhasesUpTo: 2
-        PhaseConfig:
-          Duration: *PhaseDuration
-          RecordFailure: true
-          CollectionCount: *NumColls
-          NumDocs: *NumDocs
-          Operations:
-          - OperationName: updateOne
-            OperationCommand:
-              Filter: *filter
-              Update:
-                $inc: {a: 1}
-                $set: {c: *string}
+  - TemplateName: UpdateTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Update"}}
+      Type: CrudActor
+      Database: *dbname
+      ClientName: Update
+      Threads: {^Parameter: {Name: "Threads", Default: 1}}
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          NopInPhasesUpTo: 2
+          PhaseConfig:
+            Duration: *PhaseDuration
+            RecordFailure: true
+            CollectionCount: *NumColls
+            NumDocs: *NumDocs
+            Operations:
+              - OperationName: updateOne
+                OperationCommand:
+                  Filter: *filter
+                  Update:
+                    $inc: {a: 1}
+                    $set: {c: *string}
 
-- TemplateName: RemoveTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Remove"}}
-    Type: CrudActor
-    Database: *dbname
-    ClientName: Remove
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        NopInPhasesUpTo: 2
-        PhaseConfig:
-          Duration: *PhaseDuration
-          RecordFailure: true
-          CollectionCount: *NumColls
-          Operations:
-          - OperationName: deleteOne
-            OperationCommand:
-              Filter: *filter
+  - TemplateName: RemoveTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Remove"}}
+      Type: CrudActor
+      Database: *dbname
+      ClientName: Remove
+      Threads: {^Parameter: {Name: "Threads", Default: 1}}
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          NopInPhasesUpTo: 2
+          PhaseConfig:
+            Duration: *PhaseDuration
+            RecordFailure: true
+            CollectionCount: *NumColls
+            Operations:
+              - OperationName: deleteOne
+                OperationCommand:
+                  Filter: *filter
 
-- TemplateName: InsertTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Insert"}}
-    Type: CrudActor
-    Database: *dbname
-    ClientName: Insert
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        NopInPhasesUpTo: 2
-        PhaseConfig:
-          Duration: *PhaseDuration
-          RecordFailure: true
-          CollectionCount: *NumColls
-          Operations:
-          - OperationName: insertOne
-            OperationCommand:
-              Document: *doc
+  - TemplateName: InsertTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Insert"}}
+      Type: CrudActor
+      Database: *dbname
+      ClientName: Insert
+      Threads: {^Parameter: {Name: "Threads", Default: 1}}
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          NopInPhasesUpTo: 2
+          PhaseConfig:
+            Duration: *PhaseDuration
+            RecordFailure: true
+            CollectionCount: *NumColls
+            Operations:
+              - OperationName: insertOne
+                OperationCommand:
+                  Document: *doc
 
-- TemplateName: FindTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "Find"}}
-    Type: CrudActor
-    Database: *dbname
-    ClientName: Query
-    Threads: {^Parameter: {Name: "Threads", Default: 1}}
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        NopInPhasesUpTo: 2
-        PhaseConfig:
-          Duration: *PhaseDuration
-          RecordFailure: true
-          CollectionCount: *NumColls
-          Operations:
-          - OperationName: findOne
-            OperationCommand:
-              Filter: *filter
+  - TemplateName: FindTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "Find"}}
+      Type: CrudActor
+      Database: *dbname
+      ClientName: Query
+      Threads: {^Parameter: {Name: "Threads", Default: 1}}
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          NopInPhasesUpTo: 2
+          PhaseConfig:
+            Duration: *PhaseDuration
+            RecordFailure: true
+            CollectionCount: *NumColls
+            Operations:
+              - OperationName: findOne
+                OperationCommand:
+                  Filter: *filter
 
 Actors:
-#
-## Reduce the log level to avoid creating log files
-## of serveral GB
-#
-- Name: LogLevel
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    Database: admin
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand: { profile: 0, slowms: 1000, sampleRate: 0.1 }
-  - &nop {Nop: true}
-  - *nop
+  #
+  ## Reduce the log level to avoid creating log files
+  ## of serveral GB
+  #
+  - Name: LogLevel
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      - Repeat: 1
+        Database: admin
+        Operations:
+          - OperationName: RunCommand
+            OperationCommand: {profile: 0, slowms: 1000, sampleRate: 0.1}
+      - &nop {Nop: true}
+      - *nop
 
-- Name: Setup
-  Type: Loader
-  Threads: 8
-  Phases:
-  - Repeat: 1
-    BatchSize: 100
+  - Name: Setup
+    Type: Loader
     Threads: 8
-    DocumentCount: *NumDocs
+    Phases:
+      - Repeat: 1
+        BatchSize: 100
+        Threads: 8
+        DocumentCount: *NumDocs
+        Database: *dbname
+        CollectionCount: *NumColls
+        Document: *doc
+        Indexes:
+          - keys: {id: 1}
+          - keys: {a: 1}
+      - Phase: 1..2
+        Nop: true
+
+  - Name: QuiesceBetweenLevels
+    Type: QuiesceActor
+    Threads: 1
     Database: *dbname
-    CollectionCount: *NumColls
-    Document: *doc
-    Indexes:
-    - keys: {id: 1}
-    - keys: {a: 1}
-  - Phase: 1..2
-    Nop: true
+    Phases:
+      - *nop
+      - Repeat: 1
+      - *nop
 
-- Name: QuiesceBetweenLevels
-  Type: QuiesceActor
-  Threads: 1
-  Database: *dbname
-  Phases:
-  - *nop
-  - Repeat: 1
-  - *nop
+  # Update Actors
+  - ActorFromTemplate:
+      TemplateName: UpdateTemplate
+      TemplateParameters:
+        Name: Update_1024
+        Threads: 1024
+        OnlyActiveInPhase: 2
 
-# Update Actors
-- ActorFromTemplate:
-    TemplateName: UpdateTemplate
-    TemplateParameters:
-      Name: Update_1024
-      Threads: 1024
-      OnlyActiveInPhase: 2
+  #
+  ## Remove Actors
+  #
+  - ActorFromTemplate:
+      TemplateName: RemoveTemplate
+      TemplateParameters:
+        Name: Remove_1024
+        Threads: 1024
+        OnlyActiveInPhase: 2
 
-#
-## Remove Actors
-#
-- ActorFromTemplate:
-    TemplateName: RemoveTemplate
-    TemplateParameters:
-      Name: Remove_1024
-      Threads: 1024
-      OnlyActiveInPhase: 2
+  ## Insert Actors
+  #
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: Insert_1024
+        Threads: 1024
+        OnlyActiveInPhase: 2
 
-## Insert Actors
-#
-- ActorFromTemplate:
-    TemplateName: InsertTemplate
-    TemplateParameters:
-      Name: Insert_1024
-      Threads: 1024
-      OnlyActiveInPhase: 2
+  ## Find Actors
 
-## Find Actors
+  - ActorFromTemplate:
+      TemplateName: FindTemplate
+      TemplateParameters:
+        Name: Find_1024
+        Threads: 1024
+        OnlyActiveInPhase: 2
 
-- ActorFromTemplate:
-    TemplateName: FindTemplate
-    TemplateParameters:
-      Name: Find_1024
-      Threads: 1024
-      OnlyActiveInPhase: 2
-
-# Guard Against timeout for no output.
-- Name: LoggingActor
-  Type: LoggingActor
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0, 2]
-      NopInPhasesUpTo: 2
-      PhaseConfig:
-        LogEvery: 10 seconds
-        Blocking: None
+  # Guard Against timeout for no output.
+  - Name: LoggingActor
+    Type: LoggingActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0, 2]
+        NopInPhasesUpTo: 2
+        PhaseConfig:
+          LogEvery: 10 seconds
+          Blocking: None
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - atlas
-      - replica
-      - replica-disable-execution-control
-      - atlas-like-replica.2022-10
-    atlas_setup:
-      $neq:
-      - M30-repl
+  - When:
+      mongodb_setup:
+        $eq:
+          - atlas
+          - replica
+          - replica-disable-execution-control
+          - atlas-like-replica.2022-10
+      atlas_setup:
+        $neq:
+          - M30-repl

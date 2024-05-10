@@ -1,6 +1,6 @@
 SchemaVersion: 2018-07-01
-Owner: mongodb/server-replication"
-Description: >
+Owner: Replication
+Description: |
   Adds DDL operations to be replayed during startup recovery for the light phase.
   To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.
 
@@ -10,6 +10,7 @@ Description: >
   applied during startup recovery:
 
   Sample logs:
+  ```
   +------------------------------------------------------------------------------------+
   |   1- Alot of "Dropping unknown ident".                                             |
   |   2- Alot of createCollection ops:                                                 |
@@ -44,12 +45,12 @@ Description: >
   |     interceptors to be majority committed",                                        |
   |   }                                                                                |
   +------------------------------------------------------------------------------------+
-
+  ```
 Keywords:
-- startup
-- stopCheckpointing
-- collections
-- indexes
+  - startup
+  - stopCheckpointing
+  - collections
+  - indexes
 
 Clients:
   Default:
@@ -62,22 +63,22 @@ GlobalDefaults:
   - CollectionCount: &collectionCount 5
 
 Actors:
-- StopCheckpointing:
-  LoadConfig:
-    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
-    Key: StopCheckpointTemplate
-    Parameters:
-      active: [0]
-      nopInPhasesUpTo: *max_phase
+  - StopCheckpointing:
+    LoadConfig:
+      Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+      Key: StopCheckpointTemplate
+      Parameters:
+        active: [0]
+        nopInPhasesUpTo: *max_phase
 
-- DDLAndCrudOperations:
-  LoadConfig:
-    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
-    Key: InsertDataTemplate
-    Parameters:
-      active: [1]
-      nopInPhasesUpTo: *max_phase
-      database: *database
-      collectionCount: *collectionCount
-      approxDocumentSize: 10000  # 10kB
-      documentCount: 100  # for an approximate total of ~1MB per collection, ~5MB total.
+  - DDLAndCrudOperations:
+    LoadConfig:
+      Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+      Key: InsertDataTemplate
+      Parameters:
+        active: [1]
+        nopInPhasesUpTo: *max_phase
+        database: *database
+        collectionCount: *collectionCount
+        approxDocumentSize: 10000 # 10kB
+        documentCount: 100 # for an approximate total of ~1MB per collection, ~5MB total.

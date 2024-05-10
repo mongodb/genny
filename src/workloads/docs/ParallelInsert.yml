@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/repl"
+Owner: Replication
 Description: |
   TODO: TIG-3321
 
@@ -9,165 +9,165 @@ Clients:
       maxPoolSize: 10000
 
 Actors:
-- Name: ParallelInsert-1
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - &Insert_WMajority
-    MetricsName: Insert_WMajority
-    Duration: 30 seconds
-    Database: test
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        insert: myCollection
-        documents: &Doc [{a: {^FastRandomString: {length: 1000}}}]
-        writeConcern: {w: majority}
-  - &Nop {Nop: true}
-  - *Nop
-  - *Nop
-  - &Insert_WMajority_JFalse
-    MetricsName: Insert_WMajority_JFalse
-    Duration: 30 seconds
-    Database: test
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        insert: myCollection
-        documents: *Doc
-        writeConcern: {w: majority, j: false}
-  - *Nop
-  - *Nop
-  - *Nop
-  - Phase: 8..39
-    Nop: true
+  - Name: ParallelInsert-1
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      - &Insert_WMajority
+        MetricsName: Insert_WMajority
+        Duration: 30 seconds
+        Database: test
+        Operations:
+          - OperationName: RunCommand
+            OperationCommand:
+              insert: myCollection
+              documents: &Doc [{a: {^FastRandomString: {length: 1000}}}]
+              writeConcern: {w: majority}
+      - &Nop {Nop: true}
+      - *Nop
+      - *Nop
+      - &Insert_WMajority_JFalse
+        MetricsName: Insert_WMajority_JFalse
+        Duration: 30 seconds
+        Database: test
+        Operations:
+          - OperationName: RunCommand
+            OperationCommand:
+              insert: myCollection
+              documents: *Doc
+              writeConcern: {w: majority, j: false}
+      - *Nop
+      - *Nop
+      - *Nop
+      - Phase: 8..39
+        Nop: true
 
-- Name: ParallelInsert-32
-  Type: RunCommand
-  Threads: 32
-  Phases:
-  - Phase: 0..7
-    Nop: true
-  - *Insert_WMajority
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Insert_WMajority_JFalse
-  - *Nop
-  - *Nop
-  - *Nop
-  - Phase: 16..39
-    Nop: true
+  - Name: ParallelInsert-32
+    Type: RunCommand
+    Threads: 32
+    Phases:
+      - Phase: 0..7
+        Nop: true
+      - *Insert_WMajority
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Insert_WMajority_JFalse
+      - *Nop
+      - *Nop
+      - *Nop
+      - Phase: 16..39
+        Nop: true
 
-- Name: ParallelInsert-256
-  Type: RunCommand
-  Threads: 256
-  Phases:
-  - Phase: 0..15
-    Nop: true
-  - *Insert_WMajority
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Insert_WMajority_JFalse
-  - *Nop
-  - *Nop
-  - *Nop
-  - Phase: 24..39
-    Nop: true
+  - Name: ParallelInsert-256
+    Type: RunCommand
+    Threads: 256
+    Phases:
+      - Phase: 0..15
+        Nop: true
+      - *Insert_WMajority
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Insert_WMajority_JFalse
+      - *Nop
+      - *Nop
+      - *Nop
+      - Phase: 24..39
+        Nop: true
 
-- Name: ParallelInsert-512
-  Type: RunCommand
-  Threads: 512
-  Phases:
-  - Phase: 0..23
-    Nop: true
-  - *Insert_WMajority
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Insert_WMajority_JFalse
-  - *Nop
-  - *Nop
-  - *Nop
-  - Phase: 32..39
-    Nop: true
+  - Name: ParallelInsert-512
+    Type: RunCommand
+    Threads: 512
+    Phases:
+      - Phase: 0..23
+        Nop: true
+      - *Insert_WMajority
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Insert_WMajority_JFalse
+      - *Nop
+      - *Nop
+      - *Nop
+      - Phase: 32..39
+        Nop: true
 
-- Name: ParallelInsert-1024
-  Type: RunCommand
-  Threads: 1024
-  Phases:
-  - Phase: 0..31
-    Nop: true
-  - *Insert_WMajority
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Insert_WMajority_JFalse
-  - *Nop
-  - *Nop
-  - *Nop
+  - Name: ParallelInsert-1024
+    Type: RunCommand
+    Threads: 1024
+    Phases:
+      - Phase: 0..31
+        Nop: true
+      - *Insert_WMajority
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Insert_WMajority_JFalse
+      - *Nop
+      - *Nop
+      - *Nop
 
-- Name: CleanUp
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - *Nop
-  - &DropCollection
-    Repeat: 1
-    Database: test
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        drop: myCollection
-        writeConcern: {w: majority}
-  - *Nop
-  - *Nop
-  - *Nop
-  - *DropCollection
-  - *Nop
-  - *Nop
-  - *Nop
-  - *DropCollection
-  - *Nop
-  - *Nop
-  - *Nop
-  - *DropCollection
-  - *Nop
-  - *Nop
-  - *Nop
-  - *DropCollection
-  - *Nop
-  - *Nop
-  - *Nop
-  - *DropCollection
-  - *Nop
-  - *Nop
-  - *Nop
-  - *DropCollection
-  - *Nop
-  - *Nop
-  - *Nop
-  - *DropCollection
-  - *Nop
-  - *Nop
-  - *Nop
-  - *DropCollection
-  - *Nop
-  - *Nop
-  - *Nop
-  - *DropCollection
-  - *Nop
-  - *Nop
+  - Name: CleanUp
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      - *Nop
+      - &DropCollection
+        Repeat: 1
+        Database: test
+        Operations:
+          - OperationName: RunCommand
+            OperationCommand:
+              drop: myCollection
+              writeConcern: {w: majority}
+      - *Nop
+      - *Nop
+      - *Nop
+      - *DropCollection
+      - *Nop
+      - *Nop
+      - *Nop
+      - *DropCollection
+      - *Nop
+      - *Nop
+      - *Nop
+      - *DropCollection
+      - *Nop
+      - *Nop
+      - *Nop
+      - *DropCollection
+      - *Nop
+      - *Nop
+      - *Nop
+      - *DropCollection
+      - *Nop
+      - *Nop
+      - *Nop
+      - *DropCollection
+      - *Nop
+      - *Nop
+      - *Nop
+      - *DropCollection
+      - *Nop
+      - *Nop
+      - *Nop
+      - *DropCollection
+      - *Nop
+      - *Nop
+      - *Nop
+      - *DropCollection
+      - *Nop
+      - *Nop
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica
-    branch_name:
-      $neq:
-      - v4.0
-  ThenRun:
-  - mongodb_setup: replica-delay-mixed
-  - mongodb_setup: replica
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+      branch_name:
+        $neq:
+          - v4.0
+    ThenRun:
+      - mongodb_setup: replica-delay-mixed
+      - mongodb_setup: replica

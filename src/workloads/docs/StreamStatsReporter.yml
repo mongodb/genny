@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@10gen/atlas-streams"
+Owner: Atlas Streams
 Description: |
   Generates load against a stream processor and has a stats reporter actor that will
   report stats about that stream processor after the insert phase is complete since
@@ -7,75 +7,83 @@ Description: |
 
 GlobalDefaults:
   DatabaseName: &DatabaseName test
-  StreamProcessorName: &StreamProcessorName sp1
+  TenantId: &TenantId test
+  StreamProcessorName: &StreamProcessorName sp
+  StreamProcessorId: &StreamProcessorId spid
   Document: &Document
-    id: {^Inc: { start: 1000 }}
+    id: {^Inc: {start: 1000}}
   BatchSize: &BatchSize 1000
-  Batch1000x: &Batch1000x {^Array: { number: *BatchSize, of: *Document }}
+  Batch1000x: &Batch1000x {^Array: {number: *BatchSize, of: *Document}}
   NumBatches: &NumBatches 1000
   NumThreads: &NumThreads 8
   ExpectedDocumentCount: &ExpectedDocumentCount 8000000
 
 Actors:
-- Name: Setup
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - Phase: 0
-    Repeat: 1
-    Database: *DatabaseName
-    Operations:
-    - OperationMetricsName: CreateStreamProcessor
-      OperationName: RunCommand
-      OperationCommand:
-        streams_startStreamProcessor: ""
-        name: *StreamProcessorName
-        pipeline: [
-          { $source: { connectionName: "__testMemory" } },
-          { $emit: { connectionName: "__testMemory" } }
-        ]
-        connections: [{ name: "__testMemory", type: "in_memory", options: {} }]
-  - Phase: 1
-    Nop: true
-  - Phase: 2
-    Repeat: 1
-    Database: *DatabaseName
-    Operations:
-    - OperationMetricsName: Stop
-      OperationName: RunCommand
-      OperationCommand:
-        streams_stopStreamProcessor: ""
-        name: *StreamProcessorName
+  - Name: Setup
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      - Phase: 0
+        Repeat: 1
+        Database: *DatabaseName
+        Operations:
+          - OperationMetricsName: CreateStreamProcessor
+            OperationName: RunCommand
+            OperationCommand:
+              streams_startStreamProcessor: ""
+              tenantId: *TenantId
+              name: *StreamProcessorName
+              processorId: *StreamProcessorId
+              pipeline: [{$source: {connectionName: "__testMemory"}}, {$emit: {connectionName: "__testMemory"}}]
+              connections: [{name: "__testMemory", type: "in_memory", options: {}}]
+              options: { featureFlags: {} }
+      - Phase: 1
+        Nop: true
+      - Phase: 2
+        Repeat: 1
+        Database: *DatabaseName
+        Operations:
+          - OperationMetricsName: Stop
+            OperationName: RunCommand
+            OperationCommand:
+              streams_stopStreamProcessor: ""
+              tenantId: *TenantId
+              name: *StreamProcessorName
+              processorId: *StreamProcessorId
 
-- Name: Inserter
-  Type: RunCommand
-  Threads: 8
-  Phases:
-  - Phase: 0
-    Nop: true
-  - Phase: 1
+  - Name: Inserter
+    Type: RunCommand
+    Threads: 8
+    Phases:
+      - Phase: 0
+        Nop: true
+      - Phase: 1
+        Database: test
+        Repeat: *NumBatches
+        Operations:
+          - OperationMetricsName: Insert
+            OperationName: RunCommand
+            OperationCommand:
+              streams_testOnlyInsert: ""
+              tenantId: *TenantId
+              name: *StreamProcessorName
+              processorId: *StreamProcessorId
+              documents: *Batch1000x
+      - Phase: 2
+        Nop: true
+
+  - Name: StreamStatsReporter
+    Type: StreamStatsReporter
+    Threads: 1
     Database: test
-    Repeat: *NumBatches
-    Operations:
-    - OperationMetricsName: Insert
-      OperationName: RunCommand
-      OperationCommand:
-        streams_testOnlyInsert: ""
-        name: *StreamProcessorName
-        documents: *Batch1000x
-  - Phase: 2
-    Nop: true
-
-- Name: StreamStatsReporter
-  Type: StreamStatsReporter
-  Threads: 1
-  Database: test
-  Phases:
-  - Phase: 0
-    Nop: true
-  - Phase: 1
-    Repeat: 1
-    StreamProcessorName: *StreamProcessorName
-    ExpectedDocumentCount: *ExpectedDocumentCount
-  - Phase: 2
-    Nop: true
+    Phases:
+      - Phase: 0
+        Nop: true
+      - Phase: 1
+        Repeat: 1
+        TenantId: *TenantId
+        StreamProcessorName: *StreamProcessorName
+        StreamProcessorId: *StreamProcessorId
+        ExpectedDocumentCount: *ExpectedDocumentCount
+      - Phase: 2
+        Nop: true
