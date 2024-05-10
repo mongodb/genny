@@ -14,7 +14,7 @@ Description: |
   The Classic multiplanner with SBE execution would normally be able to avoid starting over,
   when the query finishes during multiplanning, but in this test it can't because of the $group.
   When there are any pipeline stages beyond the access-path part of the query, then when
-  multiplanning finishes we construct a new SBE plan with both the access path and the other
+  multiplanning finishes we construct a new SBE plan with both the access path and the remaining
   pipeline stages.
 
 GlobalDefaults:
