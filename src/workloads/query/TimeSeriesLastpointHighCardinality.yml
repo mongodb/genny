@@ -12,6 +12,12 @@ Description: |
 
   This workload is a companion workload of TimeSeriesLastpoint.yml but focuses on the run-time
   benefits of related optimizations by the high group cardinality by 100,000 sensorIds.
+Keywords:
+  - timeseries
+  - aggregate
+  - group
+  - sort
+  - lastpoint
 
 # Parameters reused in multiple Actors.
 db: &db test

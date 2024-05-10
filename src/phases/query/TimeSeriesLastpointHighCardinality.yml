@@ -2,6 +2,12 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
   These are the phases used to measure performance of the last-point-in-time query optimization on timeseries collections.
+Keywords:
+  - timeseries
+  - aggregate
+  - group
+  - sort
+  - lastpoint
 
 CreateIndex:
   Repeat: 1
