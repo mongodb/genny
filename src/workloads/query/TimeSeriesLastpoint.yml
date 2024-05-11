@@ -13,6 +13,7 @@ Description: |
 db: &db test
 coll: &coll Collection0
 phasePath: &phasePath ../../phases/query/TimeSeriesLastpoint.yml
+MaxPhases: &MaxPhases 26
 
 # Operations reused in multiple Phases.
 Nop: &Nop {Nop: true}
@@ -53,369 +54,330 @@ LastpointQueryMetaAscTimeAsc: &LastpointQueryMetaAscTimeAsc
       GroupPattern: {_id: "$metadata.sensorId", timestamp: {$last: "$timestamp"}, temp: {$last: "$temp"}}
       GroupPatternTopOrBottom: {$bottom: {sortBy: *sortPatternMetaAscTimeAsc, output: *output}}
 
+LastpointQueryMetaAscTimeDescRepeat100: &LastpointQueryMetaAscTimeDescRepeat100
+  LoadConfig:
+    Path: *phasePath
+    Key: RunLastPointQuery
+    Parameters:
+      Repeat: 100
+      Collection: *coll
+      SortPattern: *sortPatternMetaAscTimeDesc
+      GroupPattern: {_id: "$metadata.sensorId", timestamp: {$first: "$timestamp"}, temp: {$first: "$temp"}}
+      GroupPatternTopOrBottom: {$top: {sortBy: *sortPatternMetaAscTimeDesc, output: *output}}
+LastpointQueryMetaDescTimeDescRepeat100: &LastpointQueryMetaDescTimeDescRepeat100
+  LoadConfig:
+    Path: *phasePath
+    Key: RunLastPointQuery
+    Parameters:
+      Repeat: 100
+      Collection: *coll
+      SortPattern: *sortPatternMetaDescTimeDesc
+      GroupPattern: {_id: "$metadata.sensorId", timestamp: {$first: "$timestamp"}, temp: {$first: "$temp"}}
+      GroupPatternTopOrBottom: {$top: {sortBy: *sortPatternMetaDescTimeDesc, output: *output}}
+LastpointQueryMetaDescTimeAscRepeat100: &LastpointQueryMetaDescTimeAscRepeat100
+  LoadConfig:
+    Path: *phasePath
+    Key: RunLastPointQuery
+    Parameters:
+      Repeat: 100
+      Collection: *coll
+      SortPattern: *sortPatternMetaDescTimeAsc
+      GroupPattern: {_id: "$metadata.sensorId", timestamp: {$last: "$timestamp"}, temp: {$last: "$temp"}}
+      GroupPatternTopOrBottom: {$bottom: {sortBy: *sortPatternMetaDescTimeAsc, output: *output}}
+LastpointQueryMetaAscTimeAscRepeat100: &LastpointQueryMetaAscTimeAscRepeat100
+  LoadConfig:
+    Path: *phasePath
+    Key: RunLastPointQuery
+    Parameters:
+      Repeat: 100
+      Collection: *coll
+      SortPattern: *sortPatternMetaAscTimeAsc
+      GroupPattern: {_id: "$metadata.sensorId", timestamp: {$last: "$timestamp"}, temp: {$last: "$temp"}}
+      GroupPatternTopOrBottom: {$bottom: {sortBy: *sortPatternMetaAscTimeAsc, output: *output}}
+
 Actors:
+  - Name: DropTimeSeriesCollection
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *db
+          Operation:
+            OperationName: RunCommand
+            OperationCommand: {drop: *coll}
+
   - Name: CreateTimeSeriesCollection
     Type: RunCommand
     Threads: 1
     Phases:
-      - Repeat: 1
-        Database: *db
-        Operation:
-          OperationMetricsName: CreateTimeSeriesCollection
-          OperationName: RunCommand
-          OperationCommand: {create: *coll, timeseries: {timeField: "timestamp", metaField: "metadata"}}
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *db
+          Operation:
+            OperationMetricsName: CreateTimeSeriesCollection
+            OperationName: RunCommand
+            OperationCommand: {create: *coll, timeseries: {timeField: "timestamp", metaField: "metadata"}}
 
   - Name: InsertData
     Type: Loader
     Threads: 1
     Phases:
-      - *Nop
-      - Repeat: 1
-        Database: *db
-        Collection: *coll
-        Threads: 1
-        CollectionCount: 1
-        DocumentCount: 1000000
-        BatchSize: 100
-        Document:
-          timestamp: {^RandomDate: {min: "2022-01-01", max: "2022-03-01"}}
-          metadata: {sensorId: {^RandomInt: {min: 0, max: 100}}, type: "temperature"}
-          temp: {^RandomDouble: {min: -30, max: 120}}
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *db
+          Collection: *coll
+          Threads: 1
+          CollectionCount: 1
+          DocumentCount: 1_000_000
+          BatchSize: 100
+          Document:
+            timestamp: {^RandomDate: {min: "2022-01-01", max: "2022-03-01"}}
+            metadata: {sensorId: {^RandomInt: {min: 0, max: 100}}, type: "temperature"}
+            temp: {^RandomDouble: {min: -30, max: 120}}
+
+  # QuiesceActor will run in phase 3.
 
   # Lastpoint query with a sort and group with meta subfield descending and time ascending, but no index.
   - Name: RunLastpointQueryWithMetaSubfieldAscendingTimeDescendingNoIndex
+    Type: CrudActor
+    Database: *db
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          *LastpointQueryMetaAscTimeDesc
+
+  - Name: CreateIdxForMetaAscTimeDesc
     Type: RunCommand
     Database: *db
     Phases:
-      - *Nop
-      - *Nop
-      - *Nop
-      - *LastpointQueryMetaAscTimeDesc
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
+      OnlyActiveInPhases:
+        Active: [5]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          LoadConfig:
+            Path: *phasePath
+            Key: CreateIndex
+            Parameters:
+              Collection: *coll
+              IndexName: &metaAscTimeDesc "MetaSubfieldAscendingTimeDescending"
+              IndexPattern: *sortPatternMetaAscTimeDesc
+
+  # QuiesceActor will run in phase 6.
 
   # Lastpoint query with a sort and group on meta subfield ascending and time descending.
   - Name: RunLastpointQueryWithMetaSubfieldAscendingTimeDescending
+    Type: CrudActor
+    Database: *db
+    Phases:
+      OnlyActiveInPhases:
+        Active: [7]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          *LastpointQueryMetaAscTimeDescRepeat100
+
+  - Name: DropIdxForMetaAscTimeDesc
     Type: RunCommand
     Database: *db
     Phases:
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - LoadConfig:
-          Path: *phasePath
-          Key: CreateIndex
-          Parameters:
-            Collection: *coll
-            IndexName: &metaAscTimeDesc "MetaSubfieldAscendingTimeDescending"
-            IndexPattern: *sortPatternMetaAscTimeDesc
-      - *Nop
-      - *LastpointQueryMetaAscTimeDesc
-      - LoadConfig:
-          Path: *phasePath
-          Key: DropIndex
-          Parameters:
-            Collection: *coll
-            IndexName: *metaAscTimeDesc
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
+      OnlyActiveInPhases:
+        Active: [8]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          LoadConfig:
+            Path: *phasePath
+            Key: DropIndex
+            Parameters:
+              Collection: *coll
+              IndexName: *metaAscTimeDesc
+
+  # QuiesceActor will run in phase 9.
 
   # Lastpoint query with a sort and group with meta subfield descending and time ascending, but no index.
   - Name: RunLastpointQueryWithMetaSubfieldDescendingTimeDescendingNoIndex
+    Type: CrudActor
+    Database: *db
+    Phases:
+      OnlyActiveInPhases:
+        Active: [10]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          *LastpointQueryMetaDescTimeDesc
+
+  - Name: CreateIndexForMetaDescTimeDesc
     Type: RunCommand
     Database: *db
     Phases:
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *LastpointQueryMetaDescTimeDesc
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
+      OnlyActiveInPhases:
+        Active: [11]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          LoadConfig:
+            Path: *phasePath
+            Key: CreateIndex
+            Parameters:
+              Collection: *coll
+              IndexName: &metaDescTimeDesc "MetaSubfieldDescendingTimeDescending"
+              IndexPattern: *sortPatternMetaDescTimeDesc
+
+  # QuiesceActor will run in phase 12.
 
   # Lastpoint query with a compound index with meta subfield descending and time descending.
   - Name: RunLastpointQueryWithMetaSubfieldDescendingTimeDescending
+    Type: CrudActor
+    Database: *db
+    Phases:
+      OnlyActiveInPhases:
+        Active: [13]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          *LastpointQueryMetaDescTimeDescRepeat100
+
+  - Name: DropIndexForMetaDescTimeDesc
     Type: RunCommand
     Database: *db
     Phases:
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - LoadConfig:
-          Path: *phasePath
-          Key: CreateIndex
-          Parameters:
-            Collection: *coll
-            IndexName: &metaDescTimeDesc "MetaSubfieldDescendingTimeDescending"
-            IndexPattern: *sortPatternMetaDescTimeDesc
-      - *Nop
-      - *LastpointQueryMetaDescTimeDesc
-      - LoadConfig:
-          Path: *phasePath
-          Key: DropIndex
-          Parameters:
-            Collection: *coll
-            IndexName: *metaDescTimeDesc
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
+      OnlyActiveInPhases:
+        Active: [14]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          LoadConfig:
+            Path: *phasePath
+            Key: DropIndex
+            Parameters:
+              Collection: *coll
+              IndexName: *metaDescTimeDesc
+
+  # QuiesceActor will run in phase 15.
 
   # Lastpoint query with a sort and group with meta subfield descending and time ascending, but no index.
   - Name: RunLastpointQueryWithMetaSubfieldDescendingTimeAscendingNoIndex
+    Type: CrudActor
+    Database: *db
+    Phases:
+      OnlyActiveInPhases:
+        Active: [16]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          *LastpointQueryMetaDescTimeAsc
+
+  - Name: CreateIndexForMetaDescTimeAsc
     Type: RunCommand
     Database: *db
     Phases:
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *LastpointQueryMetaDescTimeAsc
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
+      OnlyActiveInPhases:
+        Active: [17]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          LoadConfig:
+            Path: *phasePath
+            Key: CreateIndex
+            Parameters:
+              Collection: *coll
+              IndexName: *metaAscTimeDesc   # We need to flip the direction for the lastpoint query
+              IndexPattern: *sortPatternMetaAscTimeDesc
+
+  # QuiesceActor will run in phase 18.
 
   # Lastpoint query with a compound index with meta subfield descending and time ascending.
   - Name: RunLastpointQueryWithMetaSubfieldDescendingTimeAscending
+    Type: CrudActor
+    Database: *db
+    Phases:
+      OnlyActiveInPhases:
+        Active: [19]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          *LastpointQueryMetaDescTimeAscRepeat100
+
+  - Name: DropIndexForMetaDescTimeAsc
     Type: RunCommand
     Database: *db
     Phases:
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - LoadConfig:
-          Path: *phasePath
-          Key: CreateIndex
-          Parameters:
-            Collection: *coll
-            IndexName: &metaDescTimeAsc "MetaSubfieldDescendingTimeAscending"
-            IndexPattern: *sortPatternMetaDescTimeAsc
-      - *Nop
-      - *LastpointQueryMetaDescTimeAsc
-      - LoadConfig:
-          Path: *phasePath
-          Key: DropIndex
-          Parameters:
-            Collection: *coll
-            IndexName: *metaDescTimeAsc
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
+      OnlyActiveInPhases:
+        Active: [20]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          LoadConfig:
+            Path: *phasePath
+            Key: DropIndex
+            Parameters:
+              Collection: *coll
+              IndexName: *metaAscTimeDesc
+
+  # QuiesceActor will run in phase 21.
 
   # Lastpoint query with a sort and group with meta subfield ascending and time ascending, but no index.
   - Name: RunLastpointQueryWithMetaSubfieldAscendingTimeAscendingNoIndex
+    Type: CrudActor
+    Database: *db
+    Phases:
+      OnlyActiveInPhases:
+        Active: [22]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          *LastpointQueryMetaAscTimeAsc
+
+  - Name: CreateIndexForMetaAscTimeAsc
     Type: RunCommand
     Database: *db
     Phases:
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *LastpointQueryMetaAscTimeAsc
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
+      OnlyActiveInPhases:
+        Active: [23]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          LoadConfig:
+            Path: *phasePath
+            Key: CreateIndex
+            Parameters:
+              Collection: *coll
+              IndexName: *metaDescTimeDesc   # We need to flip the direction for the lastpoint query
+              IndexPattern: *sortPatternMetaDescTimeDesc
+
+  # QuiesceActor will run in phase 24.
 
   # Lastpoint query with a compound index with meta subfield ascending and time ascending.
   - Name: RunLastpointQueryWithMetaSubfieldAscendingTimeAscending
+    Type: CrudActor
+    Database: *db
+    Phases:
+      OnlyActiveInPhases:
+        Active: [25]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          *LastpointQueryMetaAscTimeAscRepeat100
+
+  - Name: DropIndexForMetaAscTimeAsc
     Type: RunCommand
     Database: *db
     Phases:
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - LoadConfig:
-          Path: *phasePath
-          Key: CreateIndex
-          Parameters:
-            Collection: *coll
-            IndexName: &metaAscTimeAsc "MetaSubfieldAscendingTimeAscending"
-            IndexPattern: *sortPatternMetaAscTimeAsc
-      - *Nop
-      - *LastpointQueryMetaAscTimeAsc
-      - LoadConfig:
-          Path: *phasePath
-          Key: DropIndex
-          Parameters:
-            Collection: *coll
-            IndexName: *metaAscTimeAsc
+      OnlyActiveInPhases:
+        Active: [26]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          LoadConfig:
+            Path: *phasePath
+            Key: DropIndex
+            Parameters:
+              Collection: *coll
+              IndexName: *metaDescTimeDesc
 
   - LoadConfig:
       Path: *phasePath
       Key: QuiesceActor
       Parameters:
-        MaxPhases: 23
+        MaxPhases: *MaxPhases
 
 AutoRun:
   - When:

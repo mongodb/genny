@@ -22,7 +22,7 @@ Keywords:
 # Parameters reused in multiple Actors.
 db: &db test
 coll: &coll Collection0
-phasePath: &phasePath ../../phases/query/TimeSeriesLastpointHighCardinality.yml
+phasePath: &phasePath ../../phases/query/TimeSeriesLastpoint.yml
 MaxPhases: &MaxPhases 22
 
 # Operations reused in multiple Phases.
@@ -120,11 +120,11 @@ Actors:
               type: "temperature"
             temp: {^RandomDouble: {min: -30, max: 120}}
 
-# QuiesceActor will run in phase 3.
+  # QuiesceActor will run in phase 3.
 
-####################################################################################################
-# Following 5 actors including the hidden QuiesceActor in phase 4&7 run a lastpoint query with a
-# sort and group on meta subfield ascending and time descending.
+  ##################################################################################################
+  # Following 5 actors including the hidden QuiesceActor in phase 4&7 run a lastpoint query with a
+  # sort and group on meta subfield ascending and time descending.
   - Name: CreateIdxForMetaAscTimeDesc
     Type: RunCommand
     Database: *db
@@ -141,7 +141,7 @@ Actors:
               IndexName: &metaAscTimeDesc "meta_asc_time_desc"
               IndexPattern: *sortPatternMetaAscTimeDesc
 
-# QuiesceActor will run in phase 5.
+  # QuiesceActor will run in phase 5.
 
   - Name: MetaAscTimeDesc
     Type: CrudActor
@@ -168,12 +168,12 @@ Actors:
               Collection: *coll
               IndexName: *metaAscTimeDesc
 
-# QuiesceActor will run in phase 8.
-####################################################################################################
+  # QuiesceActor will run in phase 8.
+  ##################################################################################################
 
-####################################################################################################
-# Following 5 actors including the hidden QuiesceActor in phase 10&13 run a lastpoint query with a
-# sort and group on meta subfield ascending and time descending.
+  ##################################################################################################
+  # Following 5 actors including the hidden QuiesceActor in phase 10&13 run a lastpoint query with a
+  # sort and group on meta subfield ascending and time descending.
   - Name: CreateIndexForMetaDescTimeDesc
     Type: RunCommand
     Database: *db
@@ -190,7 +190,7 @@ Actors:
               IndexName: &metaDescTimeDesc "meta_desc_time_desc"
               IndexPattern: *sortPatternMetaDescTimeDesc
 
-# QuiesceActor will run in phase 10.
+  # QuiesceActor will run in phase 10.
 
   - Name: MetaDescTimeDesc
     Type: CrudActor
@@ -217,12 +217,12 @@ Actors:
               Collection: *coll
               IndexName: *metaDescTimeDesc
 
-# QuiesceActor will run in phase 13.
-####################################################################################################
+  # QuiesceActor will run in phase 13.
+  ##################################################################################################
 
-####################################################################################################
-# Following 5 actors including the hidden QuiesceActor in phase 15&18 run a lastpoint query with a
-# sort and group on meta subfield ascending and time descending.
+  ##################################################################################################
+  # Following 5 actors including the hidden QuiesceActor in phase 15&18 run a lastpoint query with a
+  # sort and group on meta subfield ascending and time descending.
   - Name: CreateIndexForMetaDescTimeAsc
     Type: RunCommand
     Database: *db
@@ -239,7 +239,7 @@ Actors:
               IndexName: *metaAscTimeDesc   # We need to flip the direction for the lastpoint query
               IndexPattern: *sortPatternMetaAscTimeDesc
 
-# QuiesceActor will run in phase 15.
+  # QuiesceActor will run in phase 15.
 
   - Name: MetaDescTimeAsc
     Type: CrudActor
@@ -266,12 +266,12 @@ Actors:
               Collection: *coll
               IndexName: *metaAscTimeDesc
 
-# QuiesceActor will run in phase 18.
-####################################################################################################
+  # QuiesceActor will run in phase 18.
+  ##################################################################################################
 
-####################################################################################################
-# Following 4 actors including the hidden QuiesceActor in phase 20 run a lastpoint query with a sort
-# and group on meta subfield ascending and time descending.
+  ##################################################################################################
+  # Following 4 actors including the hidden QuiesceActor in phase 20 run a lastpoint query with a
+  # sort and group on meta subfield ascending and time descending.
   - Name: CreateIndexForMetaAscTimeAsc
     Type: RunCommand
     Database: *db
@@ -288,7 +288,7 @@ Actors:
               IndexName: *metaDescTimeDesc   # We need to flip the direction for the lastpoint query
               IndexPattern: *sortPatternMetaDescTimeDesc
 
-# QuiesceActor will run in phase 20.
+  # QuiesceActor will run in phase 20.
 
   - Name: MetaAscTimeAsc
     Type: CrudActor
@@ -314,7 +314,7 @@ Actors:
             Parameters:
               Collection: *coll
               IndexName: *metaDescTimeDesc
-####################################################################################################
+  ##################################################################################################
 
   - LoadConfig:
       Path: *phasePath
