@@ -3817,6 +3817,31 @@ currently supported lastpoint aggregate pipelines that are tested here include:
 
 
 
+## [TimeSeriesLastpointHighCardinality](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TimeSeriesLastpointHighCardinality.yml)
+### Owner 
+@mongodb/query-integration 
+
+
+
+### Description
+This test exercises the behavior of lastpoint-type queries on time-series collections _with high
+group cardinality_. The currently supported lastpoint aggregate pipelines that are tested here
+include:
+  1. a \$sort on a meta field (both ascending and descending) and time (descending) and \$group
+     with \_id on the meta field and only \$first accumulators.
+  2. a \$sort on a meta field (both ascending and descending) and time (ascending) and \$group
+     with \_id on the meta field and only \$last accumulators.
+  3. any of the above pipelines with a preceding match predicate on a meta field.
+
+This workload is a companion workload of [TimeSeriesLastpoint](#timeserieslastpoint) but focuses on the run-time
+benefits of related optimizations by the high group cardinality of 100,000 sensorIds.
+
+  
+
+### Keywords
+timeseries, aggregate, group, sort, lastpoint 
+
+
 ## [TimeSeriesSort](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TimeSeriesSort.yml)
 ### Owner 
 @mongodb/query 
