@@ -26,7 +26,7 @@ RunLastPointQuery:
   Database: *db
   Collection: &coll {^Parameter: {Name: "Collection", Default: "Collection0"}}
   Operations:
-    - OperationMetricsName: Query
+    - OperationMetricsName: RunLastPointQuery
       OperationName: aggregate
       OperationCommand:
         Pipeline:
@@ -35,7 +35,7 @@ RunLastPointQuery:
             &groupStage {$group: {^Parameter: {Name: "GroupPattern", Default: {}}}}
           ]
     # This predicate should select 90% of documents.
-    - OperationMetricsName: QueryWithLargePredicate
+    - OperationMetricsName: RunLastPointQueryWithLargePredicate
       OperationName: aggregate
       OperationCommand:
         Pipeline:
@@ -45,7 +45,7 @@ RunLastPointQuery:
             *groupStage
           ]
     # This predicate should select 10% of documents.
-    - OperationMetricsName: QueryWithSmallPredicate
+    - OperationMetricsName: RunLastPointQueryWithSmallPredicate
       OperationName: aggregate
       OperationCommand:
         Pipeline:
@@ -55,7 +55,7 @@ RunLastPointQuery:
             *groupStage
           ]
     # Test the lastpoint optimization with $top or $bottom.
-    - OperationMetricsName: QueryWithTopOrBottom
+    - OperationMetricsName: RunLastPointQueryWithTopOrBottom
       OperationName: aggregate
       OperationCommand:
         Pipeline:
