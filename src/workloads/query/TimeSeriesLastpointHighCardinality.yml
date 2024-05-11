@@ -326,8 +326,7 @@ Actors:
 AutoRun:
 - When:
     branch_name:
-      $gte:
-      - v7.0
+      $gte: v7.0
     mongodb_setup:
       $eq:
       - standalone
