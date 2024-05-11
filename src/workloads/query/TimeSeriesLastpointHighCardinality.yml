@@ -111,7 +111,7 @@ Actors:
           Collection: *coll
           CollectionCount: 1
           MultipleThreadsPerCollection: true
-          DocumentCount: 100_000_000
+          DocumentCount: 10_000_000
           BatchSize: 1_000
           Document:
             timestamp: {^RandomDate: {min: "2022-01-01", max: "2022-03-01"}}
