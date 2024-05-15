@@ -8,13 +8,16 @@ Description: |
   to minimize the execution time.
 
   The sources of overhead are:
+
     - The Classic plan cache does not store an SBE plan, so we have to run stage-builders
       even after retrieving from it.
-    - When the access-path is obvious (no indexes -> collection scan), we don't insert
+
+    - (Until SERVER-13341) When the access-path is obvious (no indexes -> collection scan), we don't insert
       any entry to the Classic plan cache. So there may be some overhead from query
       plan enumeration--although we'd expect this to be very small if there are no indexes.
 
-        TODO except Matt says Jess changed or will change this
+      After SERVER-13341 the Classic plan cache creates cache entries even for single-solution plans,
+      removing this difference between Classic and SBE plan caches.
 
 
 GlobalDefaults:
