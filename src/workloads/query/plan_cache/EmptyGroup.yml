@@ -26,7 +26,7 @@ GlobalDefaults:
   coll: &coll Collection0
 
   maxPhase: &maxPhase 7
-  queryRepeats: &queryRepeats 1
+  queryRepeats: &queryRepeats 1000
 
 Actors:
   - Name: Setup
@@ -55,17 +55,17 @@ Actors:
     Database: *db
     Phases:
       OnlyActiveInPhases:
-        Active: [2]
+        Active: [1,3]
         NopInPhasesUpTo: *maxPhase
         PhaseConfig:
           Repeat: 1
 
-  - Name: GroupQuery
+  - Name: GroupQuery01Accum
     Type: CrudActor
     Threads: 1
     Phases:
       OnlyActiveInPhases:
-        Active: [3]
+        Active: [2]
         NopInPhasesUpTo: *maxPhase
         PhaseConfig:
           Repeat: *queryRepeats
@@ -78,6 +78,106 @@ Actors:
                   # Include at least one accumulator, and not $count, just to ensure we really execute
                   # a query rather than checking some collection metadata.
                   {$group: {_id: null, avg: {$avg: "$x"}}},
+                ]
+
+  - Name: GroupQuery04Accum
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4]
+        NopInPhasesUpTo: *maxPhase
+        PhaseConfig:
+          Repeat: *queryRepeats
+          Database: *db
+          Collection: *coll
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline: [
+                  # Include many accumulators in an attempt to increase the cost of stage-builders.
+                  {$group: {
+                    _id: null,
+
+                    avg00: {$avg: "$x"},
+                    avg01: {$avg: "$x"},
+                    avg02: {$avg: "$x"},
+                    avg03: {$avg: "$x"},
+                  }},
+                ]
+
+  - Name: GroupQuery08Accum
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4]
+        NopInPhasesUpTo: *maxPhase
+        PhaseConfig:
+          Repeat: *queryRepeats
+          Database: *db
+          Collection: *coll
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline: [
+                  # Include many accumulators in an attempt to increase the cost of stage-builders.
+                  {$group: {
+                    _id: null,
+
+                    avg00: {$avg: "$x"},
+                    avg01: {$avg: "$x"},
+                    avg02: {$avg: "$x"},
+                    avg03: {$avg: "$x"},
+
+                    avg04: {$avg: "$x"},
+                    avg05: {$avg: "$x"},
+                    avg06: {$avg: "$x"},
+                    avg07: {$avg: "$x"},
+
+                  }},
+                ]
+
+  - Name: GroupQuery16Accum
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4]
+        NopInPhasesUpTo: *maxPhase
+        PhaseConfig:
+          Repeat: *queryRepeats
+          Database: *db
+          Collection: *coll
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline: [
+                  # Include many accumulators in an attempt to increase the cost of stage-builders.
+                  {$group: {
+                    _id: null,
+
+                    avg00: {$avg: "$x"},
+                    avg01: {$avg: "$x"},
+                    avg02: {$avg: "$x"},
+                    avg03: {$avg: "$x"},
+
+                    avg04: {$avg: "$x"},
+                    avg05: {$avg: "$x"},
+                    avg06: {$avg: "$x"},
+                    avg07: {$avg: "$x"},
+
+                    avg08: {$avg: "$x"},
+                    avg09: {$avg: "$x"},
+                    avg10: {$avg: "$x"},
+                    avg11: {$avg: "$x"},
+
+                    avg12: {$avg: "$x"},
+                    avg13: {$avg: "$x"},
+                    avg14: {$avg: "$x"},
+                    avg15: {$avg: "$x"},
+
+                  }},
                 ]
 
 AutoRun:
