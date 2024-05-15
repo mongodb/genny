@@ -1,0 +1,87 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  This test was created to compare using the Classic vs SBE plan caches, for an SBE query,
+  by testing a worst case.
+  
+  The test uses a $group query to ensure the query is SBE-eligible, but uses an empty collection
+  to minimize the execution time.
+
+  The sources of overhead are:
+    - The Classic plan cache does not store an SBE plan, so we have to run stage-builders
+      even after retrieving from it.
+    - When the access-path is obvious (no indexes -> collection scan), we don't insert
+      any entry to the Classic plan cache. So there may be some overhead from query
+      plan enumeration--although we'd expect this to be very small if there are no indexes.
+
+        TODO except Matt says Jess changed or will change this
+
+
+GlobalDefaults:
+  dbname: &db test
+  # This name is not actually something we choose: the Loader actor chooses it.
+  coll: &coll Collection0
+
+  maxPhase: &maxPhase 7
+  queryRepeats: &queryRepeats 1
+
+Actors:
+  - Name: Setup
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *maxPhase
+        PhaseConfig:
+          Repeat: 1
+          Database: *db
+          Operations:
+            - OperationName: RunCommand
+              OperationCommand:
+                drop: *coll
+            # Explicitly create the collection, to avoid a special case where empty collections
+            # give you an EOF plan.
+            - OperationName: RunCommand
+              OperationCommand:
+                create: *coll
+
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *db
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *maxPhase
+        PhaseConfig:
+          Repeat: 1
+
+  - Name: GroupQuery
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *maxPhase
+        PhaseConfig:
+          Repeat: *queryRepeats
+          Database: *db
+          Collection: *coll
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline: [
+                  # Include at least one accumulator, and not $count, just to ensure we really execute
+                  # a query rather than checking some collection metadata.
+                  {$group: {_id: null, avg: {$avg: "$x"}}},
+                ]
+
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone-sbe
+          - standalone-80-feature-flags
+      branch_name:
+        $gte: v8.0
