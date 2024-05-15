@@ -25,7 +25,7 @@ GlobalDefaults:
   # This name is not actually something we choose: the Loader actor chooses it.
   coll: &coll Collection0
 
-  maxPhase: &maxPhase 7
+  maxPhase: &maxPhase 11
   queryRepeats: &queryRepeats 1000
 
 Actors:
@@ -55,7 +55,7 @@ Actors:
     Database: *db
     Phases:
       OnlyActiveInPhases:
-        Active: [1,3]
+        Active: [1,3,5,7,9]
         NopInPhasesUpTo: *maxPhase
         PhaseConfig:
           Repeat: 1
@@ -111,7 +111,7 @@ Actors:
     Threads: 1
     Phases:
       OnlyActiveInPhases:
-        Active: [4]
+        Active: [6]
         NopInPhasesUpTo: *maxPhase
         PhaseConfig:
           Repeat: *queryRepeats
@@ -143,7 +143,7 @@ Actors:
     Threads: 1
     Phases:
       OnlyActiveInPhases:
-        Active: [4]
+        Active: [8]
         NopInPhasesUpTo: *maxPhase
         PhaseConfig:
           Repeat: *queryRepeats
@@ -176,6 +176,64 @@ Actors:
                     avg13: {$avg: "$x"},
                     avg14: {$avg: "$x"},
                     avg15: {$avg: "$x"},
+
+                  }},
+                ]
+
+  - Name: GroupQuery32Accum
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [10]
+        NopInPhasesUpTo: *maxPhase
+        PhaseConfig:
+          Repeat: *queryRepeats
+          Database: *db
+          Collection: *coll
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline: [
+                  # Include many accumulators in an attempt to increase the cost of stage-builders.
+                  {$group: {
+                    _id: null,
+
+                    avg00: {$avg: "$x"},
+                    avg01: {$avg: "$x"},
+                    avg02: {$avg: "$x"},
+                    avg03: {$avg: "$x"},
+                    avg04: {$avg: "$x"},
+                    avg05: {$avg: "$x"},
+                    avg06: {$avg: "$x"},
+                    avg07: {$avg: "$x"},
+
+                    avg08: {$avg: "$x"},
+                    avg09: {$avg: "$x"},
+                    avg10: {$avg: "$x"},
+                    avg11: {$avg: "$x"},
+                    avg12: {$avg: "$x"},
+                    avg13: {$avg: "$x"},
+                    avg14: {$avg: "$x"},
+                    avg15: {$avg: "$x"},
+
+                    avg16: {$avg: "$x"},
+                    avg17: {$avg: "$x"},
+                    avg18: {$avg: "$x"},
+                    avg19: {$avg: "$x"},
+                    avg20: {$avg: "$x"},
+                    avg21: {$avg: "$x"},
+                    avg22: {$avg: "$x"},
+                    avg23: {$avg: "$x"},
+
+                    avg24: {$avg: "$x"},
+                    avg25: {$avg: "$x"},
+                    avg26: {$avg: "$x"},
+                    avg27: {$avg: "$x"},
+                    avg28: {$avg: "$x"},
+                    avg29: {$avg: "$x"},
+                    avg30: {$avg: "$x"},
+                    avg31: {$avg: "$x"},
 
                   }},
                 ]
