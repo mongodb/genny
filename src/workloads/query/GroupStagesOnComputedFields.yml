@@ -148,7 +148,7 @@ GroupStageAfterSortAndAddFields: &GroupStageAfterSortAndAddFields
               {
                 "t":
                   {
-                    $dateTrunc: { date: "$time", unit: "second", binSize: "" },
+                    $dateTrunc: { date: "$time", unit: "second", binSize: null },
                   },
               },
           },
