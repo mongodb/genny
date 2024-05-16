@@ -5,7 +5,8 @@ Description: |
   by testing a worst case.
   
   The test uses a $group query to ensure the query is SBE-eligible, but uses an empty collection
-  to minimize the execution time.
+  to minimize the query execution time--to make the query planning time a higher proportion of
+  the overall request latency.
 
   The sources of overhead are:
 
