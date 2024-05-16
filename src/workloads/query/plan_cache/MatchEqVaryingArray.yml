@@ -12,7 +12,7 @@ GlobalDefaults:
   # This name is not actually something we choose: the Loader actor chooses it.
   coll: &coll Collection0
 
-  docCount: &docCount 1e5
+  docCount: &docCount 1e4
   maxPhase: &maxPhase 7
   queryRepeats: &queryRepeats 100
 
