@@ -40,7 +40,6 @@ Actors:
   - Name: CreateDataset
     Type: Loader
     Threads: 1
-    Database: *db  # TODO unused?
     Phases:
       OnlyActiveInPhases:
         Active: [1]
@@ -48,8 +47,7 @@ Actors:
         PhaseConfig:
           Threads: 1
           Repeat: 1
-          Database: *db  # TODO unused?
-          Collection: *coll  # TODO unused?
+          Database: *db
           CollectionCount: 1
           DocumentCount: *docCount
           BatchSize: 1000
