@@ -1,5 +1,9 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
+Keywords:
+  - query
+  - plan_cache
+  - group
 Description: |
   This test was created to compare using the Classic vs SBE plan caches, for an SBE query,
   by testing a worst case.
@@ -56,7 +60,7 @@ Actors:
     Database: *db
     Phases:
       OnlyActiveInPhases:
-        Active: [1,3,5,7,9]
+        Active: [1, 3, 5, 7, 9]
         NopInPhasesUpTo: *maxPhase
         PhaseConfig:
           Repeat: 1

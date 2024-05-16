@@ -1,5 +1,9 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
+Keywords:
+  - query
+  - plan_cache
+  - array
 Description: |
   This test was created to demonstrate a problem with the hit rate of the SBE plan cache.
 
@@ -99,7 +103,7 @@ Actors:
                 Pipeline: [
                   {$match: {
                     # The main predicate which we vary to show the problem with auto-parameterization.
-                    a: {$eq: [ {^Inc: {}}, ]},
+                    a: {$eq: [{^Inc: {}}]},
 
                     # Other indexed but nonselective predicates which we include only to increase the cost of planning.
                     # Multiplanning only happens if there are at least two indexed predicates.
@@ -134,7 +138,7 @@ Actors:
                 Pipeline: [
                   {$match: {
                     # The main predicate which we vary to show the problem with auto-parameterization.
-                    a: {$eq: [ {^Inc: {}}, ]},
+                    a: {$eq: [{^Inc: {}}]},
 
                     # Other indexed but nonselective predicates which we include only to increase the cost of planning.
                     # Multiplanning only happens if there are at least two indexed predicates.
@@ -171,7 +175,7 @@ Actors:
                 Pipeline: [
                   {$match: {
                     # The main predicate which we vary to show the problem with auto-parameterization.
-                    a: {$eq: [ {^Inc: {}}, ]},
+                    a: {$eq: [{^Inc: {}}]},
 
                     # Other indexed but nonselective predicates which we include only to increase the cost of planning.
                     # Multiplanning only happens if there are at least two indexed predicates.
