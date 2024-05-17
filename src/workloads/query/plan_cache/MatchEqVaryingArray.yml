@@ -203,7 +203,6 @@ AutoRun:
   - When:
       mongodb_setup:
         $eq:
-          - standalone-sbe
-          - standalone-80-feature-flags
+          - replica
       branch_name:
         $gte: v8.0
