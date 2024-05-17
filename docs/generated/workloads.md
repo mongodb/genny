@@ -4504,6 +4504,56 @@ as well as classic.
 
 
 
+## [EmptyGroup](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/plan_cache/EmptyGroup.yml)
+### Owner 
+@mongodb/query 
+
+
+
+### Description
+This test was created to compare using the Classic vs SBE plan caches, for an SBE query,
+by testing a worst case.
+
+The test uses a $group query to ensure the query is SBE-eligible, but uses an empty collection
+to minimize the query execution time--to make the query planning time a higher proportion of
+the overall request latency.
+
+The sources of overhead are:
+
+  1. The Classic plan cache does not store an SBE plan, so we have to run stage-builders
+     even after retrieving from it.
+
+  2. (Until SERVER-13341) When the access-path is obvious (no indexes -> collection scan), we don't insert
+     any entry to the Classic plan cache. So there may be some overhead from query
+     plan enumeration--although we'd expect this to be very small if there are no indexes.
+     After SERVER-13341 the Classic plan cache creates cache entries even for single-solution plans,
+     removing this difference between Classic and SBE plan caches.
+
+  
+
+### Keywords
+query, plan_cache, group 
+
+
+## [MatchEqVaryingArray](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/plan_cache/MatchEqVaryingArray.yml)
+### Owner 
+@mongodb/query 
+
+
+
+### Description
+This test was created to demonstrate a problem with the hit rate of the SBE plan cache.
+
+It runs a query like {$match: {a: {$eq: [1]}}} where the number varies. The Classic plan
+cache is able to reuse the same plan even as the parameter varies, but the SBE plan cache
+treats each one separately, resulting in much more planning.
+
+  
+
+### Keywords
+query, plan_cache, array 
+
+
 ## [dbcheck_40GB](https://www.github.com/mongodb/genny/blob/master/src/workloads/replication/dbcheck/dbcheck_40GB.yml)
 ### Owner 
 Replication 
