@@ -1,0 +1,165 @@
+SchemaVersion: 2018-07-01
+Owner: Query Execution
+Description: |
+  This workload measures performance of BSON-to-BSON transforms.
+
+Keywords:
+  - sbe
+
+GlobalDefaults:
+  Database: &Database test
+  Collection: &Collection Collection0
+  DocumentCount: &DocumentCount 1e6
+  Repeat: &Repeat 10
+  Threads: &Threads 1
+  MaxPhases: &MaxPhases 4
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 400
+
+Actors:
+  # Clear any pre-existing collection state.
+  - Name: ClearCollection
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: *Threads
+          Collection: *Collection
+          Operations:
+            - OperationName: drop
+
+  - Name: InsertData
+    Type: Loader
+    Threads: 4
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          MultipleThreadsPerCollection: true
+          CollectionCount: 1
+          DocumentCount: *DocumentCount
+          BatchSize: 1000
+          Document:
+            int: &integer { ^RandomInt: { min: -100, max: 100 } }
+            int2: *integer
+            zero: 0
+            year: { ^RandomInt: { min: 1, max: 9999 } }
+            month: { ^RandomInt: { min: 1, max: 12 } }
+            day: { ^RandomInt: { min: 1, max: 31 } }
+            hour: { ^RandomInt: { min: 1, max: 24 } }
+            posInt: { ^RandomInt: { min: 1, max: 100 } }
+            bool: { ^Choose: { from: [true, false], weights: [1, 1] } }
+            string: &string { ^RandomString: { length: 16 } }
+            hello: "hellohellohellohellobye"
+            upper: "THISISANALLUPPERCASESTRING"
+            array:
+              &array [{ ^Repeat: { count: 10, fromGenerator: { b: 0, c: 0 } } }]
+            array2: *array
+            array3:
+              [
+                {
+                  ^Cycle:
+                    {
+                      ofLength: 10,
+                      fromGenerator:
+                        {
+                          k: { ^RandomString: { length: 16 } },
+                          v: { ^RandomString: { length: 16 } },
+                        },
+                    },
+                },
+              ]
+            array4:
+              [
+                {
+                  ^Cycle:
+                    {
+                      ofLength: 10,
+                      fromGenerator:
+                        [
+                          { ^RandomString: { length: 16 } },
+                          { ^RandomString: { length: 16 } },
+                        ],
+                    },
+                },
+              ]
+            nested: { int: *integer, array: *array }
+            double:
+              &double {
+                ^RandomDouble: { distribution: normal, mean: 50, sigma: 13 },
+              }
+            date1:
+              &date {
+                ^RandomDate:
+                  {
+                    min: "2021-01-01T00:00:02.000Z",
+                    max: "2054-01-01T00:00:10.000Z",
+                  },
+              }
+            date2: *date
+            obj:
+              {
+                int: *integer,
+                double: *double,
+                date: *date,
+                string: *string,
+                array: *array,
+              }
+
+  # Phase 2: Ensure all data is synced to disk.
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+
+  # Phase 3: Run exclusion projections.
+  - Name: ExclusionProjection
+    Type: CrudActor
+    Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: {}
+                Options:
+                  Projection: {_id: 0, hour: 0, string: 0}
+
+  # Phase 4: Run addition projections.
+  - Name: AdditionProjection
+    Type: CrudActor
+    Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline: [{$addFields: {upper: "$zero", zero: "$upper", upper2: "$upper"}}]
