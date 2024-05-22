@@ -380,22 +380,15 @@ Actors:
       Path: *phasePath
       Key: QuiesceActor
       Parameters:
+        Active: [3, 6, 9, 12, 15, 18, 21, 24]
         MaxPhases: *MaxPhases
 
 AutoRun:
   - When:
       branch_name:
-        $neq:
-          - v4.0
-          - v4.2
-          - v4.4
-          - v5.0
-          - v5.1
+        $gte: v5.3
       mongodb_setup:
         $eq:
-          - standalone
-          - standalone-80-feature-flags
-          - standalone-all-feature-flags
           - replica
           - replica-80-feature-flags
           - replica-all-feature-flags
