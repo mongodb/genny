@@ -275,7 +275,7 @@ Actors:
 
   ##################################################################################################
   # Following 4 actors including the hidden QuiesceActor in phase 20 run a lastpoint query with a
-  # sort and group on meta subfield ascending and time descending.
+  # sort and group on meta subfield descending and time descending.
   - Name: CreateIndexForMetaAscTimeAsc
     Type: RunCommand
     Database: *db
