@@ -16,7 +16,7 @@ faker = "^16.8.1"
 
 
 [tool.poetry.group.dev.dependencies]
-black = "^23.1.0"
+black = "^24.3.0"
 
 [build-system]
 requires = ["poetry-core"]
