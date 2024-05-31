@@ -100,7 +100,7 @@ LastpointQueryMetaAscTimeAscRepeat100: &LastpointQueryMetaAscTimeAscRepeat100
 
 Actors:
   - Name: DropTimeSeriesCollection
-    Type: RunCommand
+    Type: CrudActor
     Threads: 1
     Phases:
       OnlyActiveInPhases:
@@ -109,9 +109,9 @@ Actors:
         PhaseConfig:
           Repeat: 1
           Database: *db
+          Collection: *coll
           Operation:
-            OperationName: RunCommand
-            OperationCommand: {drop: *coll}
+            OperationName: drop
 
   - Name: CreateTimeSeriesCollection
     Type: RunCommand
