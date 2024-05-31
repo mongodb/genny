@@ -4352,25 +4352,6 @@ as well as classic.
 
 
 
-## [NoGoodPlan](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/multiplanner/NoGoodPlan.yml)
-### Owner 
-@mongodb/query 
-
-
-
-### Description
-The goal of this test is to exercise multiplanning. We create 64 indexes and run a query that
-makes all of them eligible, so we get as many competing plans as possible. The only selective
-field is unindexed, however, meaning no index will be effective in planning. By ensuring all plans
-are relatively equally bad, we are likely to hit the works limit sooner than the 101 results
-limit.
-
-We expect classic to have better latency and throughput than SBE on this workload,
-and we expect the combination of classic planner + SBE execution (PM-3591) to perform about
-as well as classic.
-
-
-
 ## [NoResults](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/multiplanner/NoResults.yml)
 ### Owner 
 @mongodb/query 
