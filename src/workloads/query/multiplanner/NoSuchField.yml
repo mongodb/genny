@@ -6,7 +6,7 @@ Description: |
   false on this dataset. All of the other predicates match all the data, meaning none of the indexed
   predicates are selective. This guarantees that the query will not be able to finish multi-planning
   by producing enough documents, so instead we will hit getTrialPeriodMaxWorks().
-
+@
   This also covers the special case in which the trial period hits max works without any of the
   candidate plans producing any documents. This is known to be a troublesome scenario for the
   multi-planner for a few reasons:

@@ -7,10 +7,6 @@ Description: |
   multi-planner will behave more optimally than the SBE multiplanner because it will cut off execution
   when the one good plan reaches the end.
 
-  We expect classic to have better latency and throughput than SBE on this workload,
-  and we expect the combination of classic planner + SBE execution (PM-3591) to perform about
-  as well as classic.
-
 GlobalDefaults:
   dbname: &db test
   # Collection name used for queries.

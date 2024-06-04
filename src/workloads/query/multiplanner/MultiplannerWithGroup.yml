@@ -7,16 +7,6 @@ Description: |
   selective, which means only one of those plans is efficient. Where this test departs from
   'Simple.yml' is by adding a $group stage after the access-path part of the query.
 
-  We expect the Classic multiplanner with Classic execution to reach EOF during planning, and
-  then feed those documents into the $group stage. By contrast the SBE multiplanner will not
-  reuse results gathered during multiplanning.
-
-  The Classic multiplanner with SBE execution would normally be able to avoid starting over,
-  when the query finishes during multiplanning, but in this test it can't because of the $group.
-  When there are any pipeline stages beyond the access-path part of the query, then when
-  multiplanning finishes we construct a new SBE plan with both the access path and the remaining
-  pipeline stages.
-
 GlobalDefaults:
   dbname: &db test
   # Collection name used for queries.
