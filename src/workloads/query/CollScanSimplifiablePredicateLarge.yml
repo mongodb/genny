@@ -23,4 +23,4 @@ AutoRun:
           - standalone-sampling-bonsai
           - standalone-sbe
       branch_name:
-        $gte: v6.0
+        $gte: v7.3
