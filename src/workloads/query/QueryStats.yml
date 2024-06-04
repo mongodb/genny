@@ -216,5 +216,6 @@ AutoRun:
           - shard-single
           - replica
           - atlas-like-replica.2022-10
+          - atlas-like-replica.2023-09
       branch_name:
         $gte: v6.0
