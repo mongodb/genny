@@ -8,10 +8,6 @@ Description: |
   leads to many index seeks on the less effective indices (..., x1). Because every time we hit a non-
   matching field we seek again, and the scan ends when we reach a non-matching x1.
 
-  We expect classic to have better latency and throughput than SBE on this workload,
-  and we expect the combination of classic planner + SBE execution (PM-3591) to perform about
-  as well as classic.
-
 GlobalDefaults:
   dbname: &db test
   # Collection name used for queries.
