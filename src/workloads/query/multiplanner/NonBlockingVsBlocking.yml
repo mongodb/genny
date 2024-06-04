@@ -4,10 +4,10 @@ Description: |
   The goal of this test is to exercise multiplanning when both blocking and non-blocking plans are
   available.
 
-  If the selectivity value is small enough (less than 0.5), the optimal plan is to employ a
-  blocking plan by scanning a segment of empty data and conducting a blocking-sort operation,
-  whereas the other plans' index provides the right sort order, but requires a full scan, and
-  every document is rejected after the FETCH stage.
+  If the selectivity value is small enough (less than 0.5), the optimal plan is to scan a narrow
+  range of an index and then blocking sort. An alternative, suboptimal query plan does a full scan
+  of an index that provides the right sort order, and requires fetching each document before running
+  a residual predicate.
   
   Because the SBE multiplanner can't round-robin, it has a heuristic "try nonblocking plans first".
   This scenario is a worst case for that heuristic, because we'll try the best plan last.
