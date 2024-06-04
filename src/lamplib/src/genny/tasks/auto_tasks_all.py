@@ -28,7 +28,8 @@ def get_all_builds(
     variants = project["buildvariants"]
     all_builds = []
     for variant in variants:
-        if "expansions" in variant and "mongodb_setup" in variant["expansions"]:
+        contains_auto_task = any(task["name"] == "schedule_variant_auto_tasks" for task in variant["tasks"])
+        if "expansions" in variant and "mongodb_setup" in variant["expansions"] and contains_auto_task:
             build_info_dict = {}
             build_info_dict.update(global_expansions)
             build_info_dict.update(variant["expansions"])
