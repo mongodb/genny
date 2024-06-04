@@ -27,34 +27,10 @@ def _create_compile_environment(
 
     # For mongodbtoolchain compiler (if there).
     paths.insert(0, "/opt/mongodbtoolchain/v4/bin")
-
-    if triplet_arch == "arm64" and triplet_os == "linux":
-        paths.insert(
-            0,
-            os.path.join(
-                toolchain_dir, "installed/arm64-linux/tools/cmake-3.25.0-rc4-linux-aarch64/bin"
-            ),
-        )
-        paths.insert(0, os.path.join(toolchain_dir, "installed/arm64-linux/tools/ninja"))
-
-    else:
-        # For cmake and ctest
-        if triplet_os == "linux":
-            # Only use bundled cmake on Linux because bundled cmake doesn't work on OS X due to integrity checks.
-            # It's easier just to ask users to "brew install cmake"
-            paths.insert(
-                0,
-                os.path.join(
-                    toolchain_dir,
-                    "downloads/tools/cmake-3.24.0-linux/cmake-3.24.0-linux-x86_64/bin",
-                ),
-            )
-
-        # For ninja
-        ninja_bin_dir = os.path.join(
-            toolchain_dir, "downloads/tools/ninja/1.10.2-{}:".format(triplet_os)
-        )
-        paths.insert(0, ninja_bin_dir)
+    # But use our toolchain's ninja
+    paths.insert(
+        0, os.path.join(toolchain_dir, f"installed/{triplet_arch}-{triplet_os}-release/tools/ninja")
+    )
 
     out["PATH"] = ":".join(paths)
     out["NINJA_STATUS"] = "[%f/%t (%p) %es] "  # make the ninja output even nicer
@@ -199,7 +175,9 @@ class ToolchainDownloader(Downloader):
     # If we were 💅 we could do the string logic here in python, but we're not that fancy.
     #
 
-    TOOLCHAIN_BUILD_ID = "cf5743e0a96212cb7fae298399b1759489723cdb_24_04_16_17_45_56"
+    TOOLCHAIN_BUILD_ID = (
+        "e5a0c94080f72e00a20ba8fd6ca6a3082e0873a6_24_05_30_06_59_47"
+    )
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
 
     def __init__(
