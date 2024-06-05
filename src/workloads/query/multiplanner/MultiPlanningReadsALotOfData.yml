@@ -155,11 +155,11 @@ AutoRun:
   - When:
       mongodb_setup:
         $eq:
-          - standalone
+          - single-replica
+          - single-replica-all-feature-flags
+          - single-replica-sbe
+          - single-replica-classic-query-engine
           - standalone-80-feature-flags
-          - standalone-all-feature-flags
-          - standalone-classic-query-engine
-          - standalone-sbe
           - replica
           - replica-all-feature-flags
       branch_name:
