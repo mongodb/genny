@@ -4377,13 +4377,19 @@ as well as classic.
 
 
 ### Description
-The goal of this test is to exercise multiplanning. We create as many indexes as possible, and run a
-query that makes all of them eligible, so we get as many competing plans as possible. Here, we add
-an additional predicate: {no_such_field: "none"} to guarantee that we hit getTrialPeriodMaxWorks().
+The goal of this test is to exercise the "max works" case of multi-planning. The test is similar
+to 'Simple.yml' except we add an additional predicate: {no_such_field: "none"}, which is always
+false on this dataset. All of the other predicates match all the data, meaning none of the indexed
+predicates are selective. This guarantees that the query will not be able to finish multi-planning
+by producing enough documents, so instead we will hit getTrialPeriodMaxWorks().
 
-We expect classic to have better latency and throughput than SBE on this workload,
-and we expect the combination of classic planner + SBE execution (PM-3591) to perform about
-as well as classic.
+This also covers the special case in which the trial period hits max works without any of the
+candidate plans producing any documents. This is known to be a troublesome scenario for the
+multi-planner for a few reasons:
+    1) Multi-planning can run for too long and become expensive, especially when there are lots of
+    candidate plans and none of them produce any results.
+    2) When there are zero results, each plan has a productivity ratio of zero. This makes ties
+    likely during plan ranking, which can in turn lead to an incorrect plan choice.
 
 
 
