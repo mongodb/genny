@@ -1,0 +1,243 @@
+SchemaVersion: 2018-07-01
+Owner: Cluster Scalability
+Description: |
+  The workload consists of the following phases:
+    0. Create two empty databases, database0 and database1, with the config shard as the primary
+       shard. Both contain a collection called collection0 with documents have the following form:
+          {_id: 10, key0: 20, key1: 30, counter: 0, padding: 'random string of bytes ...'}
+       database0.collection0 is sharded on {key0: 1}.
+    1. Insert 5 million documents (~7.5GB) into database0.collection0 (sharded).
+    2. Set the chunk size for database0.collection0 to 1MB and start the balancer.
+    3. Perform the below concurrently:
+        - Insert 5 million documents (~7.5GB) into database1.collection0 (unsharded) while
+          database0.collection0 is being balanced. The inserts will not get blocked by the chunk
+          migrations since they are writes to a completely different database and collection. They
+          should cause replication lag.
+        - Perform flushRouterConfig once against all the routers.
+        - Perform find and update operations filtering by key0 against database0.collection0 while
+          it is being balanced. The full refreshes caused by the flushRouterConfig commands above,
+          and the incremental refreshes caused by concurrent chunk migrations are subject to the
+          fluctuating replication lag.
+    4. Stop the balancer.
+    5. Perform the below concurrently:
+        - Insert another 5 million documents (~7.5GB) into database1.collection0 (unsharded).
+          The inserts should cause replication lag.
+        - Perform flushRouterConfig against all the routers every 5 seconds.
+        - Perform find and update operations filtering by key0 against database0.collection0. The
+          full refreshes caused by the concurrent flushRouterConfig commands above are subject to
+          the fluctuating replication lag.
+
+    Phase 3 is for testing refreshes while there are both replication lag and chunk migrations
+    (e.g. caused by a new shard being added). Phase 5 is for testing refreshes while there is only
+    replication lag.
+
+GlobalDefaults:
+  Nop: &Nop {Nop: true}
+
+  Database0: &Database0 test0
+  # Collection0 is the default collection populated by the Loader.
+  Collection: &Collection0 Collection0
+  Namespace: &Namespace0 test0.Collection0
+
+  Database1: &Database1 test1
+
+  NumRouters: &NumRouters 9
+
+  # Note that the exact document size may exceed ApproxDocumentSize because of field names and other
+  # fields in the document.
+  ApproxDocumentSize: &ApproxDocumentSize 2000 # = 2kB
+  ApproxDocumentSize50Pct: &ApproxDocumentSize50Pct 1000 # = 1kB
+  DocumentCount0: &DocumentCount0 5_000_000 # for an approximate total of 7.5GB
+  HalfDocumentCount1: &HalfDocumentCount1 5_000_000 # for an approximate total of 15GB
+
+  KeyValueMin: &KeyValueMin 1
+  # We use a large value for 'KeyValueMax', when compared to the number of chunks.
+  KeyValueMax: &KeyValueMax 1_000_000
+
+  ReadRate: &ReadRate 1 per 200 microseconds # 5000/second
+  WriteRate: &WriteRate 1 per 200 microseconds # 5000/second
+
+  ReadOperations: &ReadOperations
+    - OperationName: findOne
+      OperationCommand:
+        Filter: {key0: {^RandomInt: {min: *KeyValueMin, max: *KeyValueMax}}}
+
+  WriteOperations: &WriteOperations
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: {key0: {^RandomInt: {min: *KeyValueMin, max: *KeyValueMax}}}
+        Update: {$inc: {counter: 1}}
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 501
+
+Actors:
+  - Name: CreateShardedCollection
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      - Repeat: 1
+        Database: admin
+        Operations:
+          - OperationMetricsName: EnableSharding
+            OperationName: AdminCommand
+            OperationCommand:
+              enableSharding: *Database0
+              primaryShard: "config"
+          - OperationMetricsName: EnableSharding
+            OperationName: AdminCommand
+            OperationCommand:
+              enableSharding: *Database1
+              primaryShard: "config"
+          - OperationMetricsName: ShardCollection
+            OperationName: AdminCommand
+            OperationCommand:
+              shardCollection: *Namespace0
+              key: {key0: 1}
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+
+  - Name: LoadData
+    Type: Loader
+    Threads: 50
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: 5
+        PhaseConfig:
+          Repeat: 1
+          Threads: 50
+          BatchSize: 1000
+          DocumentCount: *DocumentCount0
+          CollectionCount: 1
+          Database: *Database0
+          Document:
+            key0: {^RandomInt: {min: *KeyValueMin, max: *KeyValueMax}}
+            key1: {^RandomInt: {min: *KeyValueMin, max: *KeyValueMax}}
+            counter: 0
+            padding: {^FastRandomString: {length: {^RandomInt: {min: *ApproxDocumentSize50Pct, max: *ApproxDocumentSize}}}}
+
+  - Name: LoadDataDatabase1
+    Type: Loader
+    Threads: 150
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3, 5]
+        NopInPhasesUpTo: 5
+        PhaseConfig:
+          Repeat: 1
+          Threads: 150
+          BatchSize: 1000
+          DocumentCount: *HalfDocumentCount1
+          CollectionCount: 1
+          Database: *Database1
+          Document:
+            key0: {^RandomInt: {min: *KeyValueMin, max: *KeyValueMax}}
+            key1: {^RandomInt: {min: *KeyValueMin, max: *KeyValueMax}}
+            counter: 0
+            padding: {^FastRandomString: {length: {^RandomInt: {min: *ApproxDocumentSize50Pct, max: *ApproxDocumentSize}}}}
+
+  - Name: ConfigureBalancing
+    Type: AdminCommand
+    Threads: *NumRouters
+    Phases:
+      - *Nop
+      - *Nop
+      - Repeat: 1
+        Database: admin
+        Operations:
+          - OperationMetricsName: ConfigureCollectionBalancing
+            OperationName: AdminCommand
+            OperationCommand:
+              configureCollectionBalancing: *Namespace0
+              chunkSize: 1 # 1MB
+          - OperationMetricsName: StartBalancer
+            OperationName: AdminCommand
+            OperationCommand:
+              balancerStart: 1
+      - Repeat: *NumRouters
+        Threads: *NumRouters
+        Database: admin
+        Operations:
+          - OperationMetricsName: FlushRouterConfig
+            OperationName: AdminCommand
+            OperationCommand:
+              flushRouterConfig: *Namespace0
+      - Repeat: 1
+        Database: admin
+        Operations:
+          - OperationMetricsName: StopBalancer
+            OperationName: AdminCommand
+            OperationCommand:
+              balancerStop: 1
+      - GlobalRate: 9 per 5 seconds
+        Blocking: None
+        Database: admin
+        Operations:
+          - OperationMetricsName: FlushRouterConfig
+            OperationName: AdminCommand
+            OperationCommand:
+              flushRouterConfig: *Namespace0
+
+  - Name: PerformReads
+    Type: CrudActor
+    Threads: 50
+    Database: *Database0
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - MetricsName: PerformReads
+        Duration: 10 minutes
+        GlobalRate: *ReadRate
+        Collection: *Collection0
+        Operations: *ReadOperations
+      - *Nop
+      - MetricsName: PerformReads
+        Duration: 10 minutes
+        GlobalRate: *ReadRate
+        Collection: *Collection0
+        Operations: *ReadOperations
+
+  - Name: PerformWrites
+    Type: CrudActor
+    Threads: 50
+    Database: *Database0
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - MetricsName: PerformWrites
+        Duration: 10 minutes
+        GlobalRate: *WriteRate
+        Collection: *Collection0
+        Operations: *WriteOperations
+      - *Nop
+      - MetricsName: PerformWrites
+        Duration: 10 minutes
+        GlobalRate: *WriteRate
+        Collection: *Collection0
+        Operations: *WriteOperations
+
+  # Guard against timeout for no output.
+  - Name: LoggingActor
+    Type: LoggingActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0, 1, 2, 3, 4, 5]
+        NopInPhasesUpTo: 5
+        PhaseConfig:
+          LogEvery: 15 minutes
+          Blocking: None
+
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - embedded-configsvr-3shard
