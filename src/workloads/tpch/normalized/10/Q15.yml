@@ -9,10 +9,25 @@ Clients:
       socketTimeoutMS: -1
 
 Actors:
+  # This query creates a view before running any workloads, and then destroys the view afterwards.
+  - Name: TPCHNormalizedQuery15SetupAndCleanup
+    Type: RunCommand
+    Database: &db tpch
+    Phases:
+      - LoadConfig:
+          Path: ../../../../phases/tpch/normalized/Q15.yml
+          Key: TPCHNormalizedQuery15CreateView
+      - &Nop { Nop: true }
+      - LoadConfig:
+          Path: ../../../../phases/tpch/normalized/Q15.yml
+          Key: TPCHNormalizedQuery15DropView
+
   - Name: TPCHNormalizedQuery15Explain
     Type: RunCommand
     Database: tpch
     Phases:
+      - *Nop
       - LoadConfig:
           Path: ../../../../phases/tpch/normalized/Q15.yml
           Key: TPCHNormalizedQuery15Explain
+      - *Nop
