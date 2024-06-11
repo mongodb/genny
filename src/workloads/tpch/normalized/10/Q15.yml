@@ -24,7 +24,7 @@ Actors:
 
   - Name: TPCHNormalizedQuery15Explain
     Type: RunCommand
-    Database: tpch
+    Database: *db
     Phases:
       - *Nop
       - LoadConfig:
