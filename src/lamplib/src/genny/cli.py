@@ -367,6 +367,14 @@ def benchmark_test(ctx: click.Context) -> None:
     help=("Run with every phase of every actor having repeat: 1."),
 )
 @click.option(
+    "-r",
+    "--calculate-rollups",
+    required=False,
+    default=False,
+    is_flag=True,
+    help=("Whether to automatically calculate rollups from all created FTDC files. "),
+)
+@click.option(
     "-b",
     "--debug",
     required=False,
@@ -387,6 +395,7 @@ def workload(
     override: str,
     dry_run: bool,
     smoke_test: bool,
+    calculate_rollups: bool,
     debug: bool,
 ):
     from genny.tasks import genny_runner
@@ -405,6 +414,7 @@ def workload(
         workspace_root=ctx.obj["WORKSPACE_ROOT"],
         cleanup_metrics=True,
         hang=debug,
+        should_calculate_rollups=calculate_rollups
     )
 
 
