@@ -54,7 +54,7 @@ ActorTemplates:
       Phases:
         OnlyActiveInPhases:
           Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-          NopInPhasesUpTo: 10
+          NopInPhasesUpTo: 3
           PhaseConfig:
             LoadConfig:
               Path: ../../phases/scale/MixPhases.yml
@@ -70,7 +70,7 @@ ActorTemplates:
       Phases:
         OnlyActiveInPhases:
           Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-          NopInPhasesUpTo: 10
+          NopInPhasesUpTo: 3
           PhaseConfig:
             LoadConfig:
               Path: ../../phases/scale/MixPhases.yml
@@ -86,7 +86,7 @@ ActorTemplates:
       Phases:
         OnlyActiveInPhases:
           Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-          NopInPhasesUpTo: 10
+          NopInPhasesUpTo: 3
           PhaseConfig:
             LoadConfig:
               Path: ../../phases/scale/MixPhases.yml
@@ -102,7 +102,7 @@ ActorTemplates:
       Phases:
         OnlyActiveInPhases:
           Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-          NopInPhasesUpTo: 10
+          NopInPhasesUpTo: 3
           PhaseConfig:
             LoadConfig:
               Path: ../../phases/scale/MixPhases.yml
@@ -128,7 +128,7 @@ Actors:
         Indexes:
           - keys: {id: 1}
           - keys: {a: 1}
-      - Phase: 1..10
+      - Phase: 1..3
         Nop: true
 
   - Name: QuiesceBetweenLevels
@@ -146,7 +146,7 @@ Actors:
       TemplateParameters:
         Name: Update_128
         Threads: 128
-        OnlyActiveInPhase: 10
+        OnlyActiveInPhase: 3
 
   #
   ## Remove Actors
@@ -156,7 +156,7 @@ Actors:
       TemplateParameters:
         Name: Remove_128
         Threads: 128
-        OnlyActiveInPhase: 10
+        OnlyActiveInPhase: 3
 
   ## Insert Actors
   #
@@ -165,7 +165,7 @@ Actors:
       TemplateParameters:
         Name: Insert_128
         Threads: 128
-        OnlyActiveInPhase: 10
+        OnlyActiveInPhase: 3
 
   ## Find Actors
   - ActorFromTemplate:
@@ -173,7 +173,7 @@ Actors:
       TemplateParameters:
         Name: Find_128
         Threads: 128
-        OnlyActiveInPhase: 10
+        OnlyActiveInPhase: 3
 
 AutoRun:
   - When:
