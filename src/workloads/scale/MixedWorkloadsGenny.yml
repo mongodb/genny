@@ -139,44 +139,8 @@ Actors:
       - &nop {Nop: true}
       - Repeat: 1
       - *nop
-      - Repeat: 1
-      - *nop
-      - Repeat: 1
-      - *nop
-      - Repeat: 1
-      - *nop
-      - Repeat: 1
-      - *nop
 
   # Update Actors
-  - ActorFromTemplate:
-      TemplateName: UpdateTemplate
-      TemplateParameters:
-        Name: Update_1
-        Threads: 1
-        OnlyActiveInPhase: 2
-
-  - ActorFromTemplate:
-      TemplateName: UpdateTemplate
-      TemplateParameters:
-        Name: Update_16
-        Threads: 16
-        OnlyActiveInPhase: 4
-
-  - ActorFromTemplate:
-      TemplateName: UpdateTemplate
-      TemplateParameters:
-        Name: Update_32
-        Threads: 32
-        OnlyActiveInPhase: 6
-
-  - ActorFromTemplate:
-      TemplateName: UpdateTemplate
-      TemplateParameters:
-        Name: Update_64
-        Threads: 64
-        OnlyActiveInPhase: 8
-
   - ActorFromTemplate:
       TemplateName: UpdateTemplate
       TemplateParameters:
@@ -190,34 +154,6 @@ Actors:
   - ActorFromTemplate:
       TemplateName: RemoveTemplate
       TemplateParameters:
-        Name: Remove_1
-        Threads: 1
-        OnlyActiveInPhase: 2
-
-  - ActorFromTemplate:
-      TemplateName: RemoveTemplate
-      TemplateParameters:
-        Name: Remove_16
-        Threads: 16
-        OnlyActiveInPhase: 4
-
-  - ActorFromTemplate:
-      TemplateName: RemoveTemplate
-      TemplateParameters:
-        Name: Remove_32
-        Threads: 32
-        OnlyActiveInPhase: 6
-
-  - ActorFromTemplate:
-      TemplateName: RemoveTemplate
-      TemplateParameters:
-        Name: Remove_64
-        Threads: 64
-        OnlyActiveInPhase: 8
-
-  - ActorFromTemplate:
-      TemplateName: RemoveTemplate
-      TemplateParameters:
         Name: Remove_128
         Threads: 128
         OnlyActiveInPhase: 10
@@ -227,68 +163,11 @@ Actors:
   - ActorFromTemplate:
       TemplateName: InsertTemplate
       TemplateParameters:
-        Name: Insert_1
-        Threads: 1
-        OnlyActiveInPhase: 2
-
-  - ActorFromTemplate:
-      TemplateName: InsertTemplate
-      TemplateParameters:
-        Name: Insert_16
-        Threads: 16
-        OnlyActiveInPhase: 4
-
-  - ActorFromTemplate:
-      TemplateName: InsertTemplate
-      TemplateParameters:
-        Name: Insert_32
-        Threads: 32
-        OnlyActiveInPhase: 6
-
-  - ActorFromTemplate:
-      TemplateName: InsertTemplate
-      TemplateParameters:
-        Name: Insert_64
-        Threads: 64
-        OnlyActiveInPhase: 8
-
-  - ActorFromTemplate:
-      TemplateName: InsertTemplate
-      TemplateParameters:
         Name: Insert_128
         Threads: 128
         OnlyActiveInPhase: 10
 
   ## Find Actors
-
-  - ActorFromTemplate:
-      TemplateName: FindTemplate
-      TemplateParameters:
-        Name: Find_1
-        Threads: 1
-        OnlyActiveInPhase: 2
-
-  - ActorFromTemplate:
-      TemplateName: FindTemplate
-      TemplateParameters:
-        Name: Find_16
-        Threads: 16
-        OnlyActiveInPhase: 4
-
-  - ActorFromTemplate:
-      TemplateName: FindTemplate
-      TemplateParameters:
-        Name: Find_32
-        Threads: 32
-        OnlyActiveInPhase: 6
-
-  - ActorFromTemplate:
-      TemplateName: FindTemplate
-      TemplateParameters:
-        Name: Find_64
-        Threads: 64
-        OnlyActiveInPhase: 8
-
   - ActorFromTemplate:
       TemplateName: FindTemplate
       TemplateParameters:
