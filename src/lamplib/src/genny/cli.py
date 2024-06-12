@@ -414,7 +414,7 @@ def workload(
         workspace_root=ctx.obj["WORKSPACE_ROOT"],
         cleanup_metrics=True,
         hang=debug,
-        should_calculate_rollups=calculate_rollups
+        should_calculate_rollups=calculate_rollups,
     )
 
 

@@ -133,6 +133,7 @@ def translate(
     )
     subprocess.run(args, check=True)
 
+
 # Calculate rollups from all the FTDC outputs that are not from canaries.
 def calculate_rollups(output_dir: str, workspace_root: str, genny_repo_root: str) -> None:
     curator = _find_curator(workspace_root, genny_repo_root)
@@ -150,10 +151,9 @@ def calculate_rollups(output_dir: str, workspace_root: str, genny_repo_root: str
                         "--inputFile",
                         ftdc_file_name,
                         "--outputFile",
-                        rollup_file_name
+                        rollup_file_name,
                     ]
                     subprocess.run(args, stderr=subprocess.STDOUT, text=True)
-
 
 
 @contextmanager

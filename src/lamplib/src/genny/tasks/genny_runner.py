@@ -87,4 +87,6 @@ def main_genny_runner(
             cwd=workspace_root,
         )
     if should_calculate_rollups:
-        calculate_rollups(output_dir=output_dir, workspace_root=workspace_root, genny_repo_root=genny_repo_root)
+        calculate_rollups(
+            output_dir=output_dir, workspace_root=workspace_root, genny_repo_root=genny_repo_root
+        )
