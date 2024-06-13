@@ -214,18 +214,12 @@ Actors:
       - &Nop { Nop: true }
       - *Nop
       - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
 
   - Name: Quiesce
     Type: QuiesceActor
     Threads: 1
     Database: *DB
     Phases:
-      - *Nop
-      - Repeat: 1
-      - *Nop
       - *Nop
       - *Nop
       - Repeat: 1
@@ -235,9 +229,6 @@ Actors:
     Type: RunCommand
     Threads: 1
     Phases:
-      - *Nop
-      - *Nop
-      - *Nop
       - *Nop
       # Create index *after* running some queries without it.
       - Repeat: 1
@@ -263,6 +254,7 @@ Actors:
     Phases:
       - *Nop
       - *Nop
+      - *Nop
       - Repeat: 100
         Duration: 5 minutes
         Database: *DB
@@ -271,6 +263,9 @@ Actors:
           - OperationMetricsName: QueryNoProjectionNoIndex
             OperationName: find
             OperationCommand:
+              Options:
+                Projection:
+                  &projection { _id: 0, firstname: 1, lastname: 1, dob: 1 }
               Filter: &filter { gender: "Female", dob: {
                 # Currently, using generator is the only way to generate date value with the appropriate BSON type.
                 # TODO: PERF-2084 Use ^Date instead.
@@ -291,31 +286,6 @@ Actors:
                       },
                   },
               }, address.state: "UT", policies: { $elemMatch: { policyType: "life", insured_person.smoking: 1 } } }
-      - Repeat: 100
-        Duration: 5 minutes
-        Database: *DB
-        Collection: Collection0
-        Operations:
-          - OperationMetricsName: QueryWithProjectionNoIndex
-            OperationName: find
-            OperationCommand:
-              Filter: *filter
-              Options:
-                Projection:
-                  &projection { _id: 0, firstname: 1, lastname: 1, dob: 1 }
-      - *Nop
-      - *Nop
-      - Repeat: 1000 # This query is very fast, so we need to run it more times than others.
-        Duration: 5 minutes
-        Database: *DB
-        Collection: Collection0
-        Operations:
-          - OperationMetricsName: QueryWithProjectionWithIndex
-            OperationName: find
-            OperationCommand:
-              Filter: *filter
-              Options:
-                Projection: *projection
 
 AutoRun:
   - When:
