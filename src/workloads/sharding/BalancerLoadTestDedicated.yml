@@ -2,12 +2,13 @@ SchemaVersion: 2018-07-01
 Owner: Cluster Scalability
 Description: |
   The workload consists of the following phases:
-    0. Create two empty databases, database0 and database1, with shard-00 as the primary
-       shard. Both contain a collection called collection0 with documents have the following form:
-          {_id: 10, key0: 20, key1: 30, counter: 0, padding: 'random string of bytes ...'}
-       database0.collection0 is sharded on {key0: 1}.
+    dsi pre_task:
+       Create database0 with the config shard as the primary shard and collection0 which is sharded
+       on {key0: 1}. Set maxChunkSizeBytes for this collection and balancerMigrationsThrottling to
+       to make balancing create more chunks for this collection and run more frequently.
+    0. Create database1 with shard-00 as the primary shard and collection0 which is unsharded.
     1. Insert 5 million documents (~7.5GB) into database0.collection0 (sharded).
-    2. Set the chunk size for database0.collection0 to 1MB and start the balancer.
+    2. Start the balancer.
     3. Perform the below concurrently:
         - Insert 5 million documents (~7.5GB) into database1.collection0 (unsharded) while
           database0.collection0 is being balanced. The inserts will not get blocked by the chunk
@@ -26,6 +27,9 @@ Description: |
         - Perform find and update operations filtering by key0 against database0.collection0. The
           full refreshes caused by the concurrent flushRouterConfig commands above are subject to
           the fluctuating replication lag.
+
+    The documents in database0.collection0 and database1.collection0 have the following form:
+    {_id: 10, key0: 20, key1: 30, counter: 0, padding: 'random string of bytes ...'}
 
     Phase 3 is for testing refreshes while there are both replication lag and chunk migrations
     (e.g. caused by a new shard being added). Phase 5 is for testing refreshes while there is only
@@ -52,10 +56,10 @@ GlobalDefaults:
 
   KeyValueMin: &KeyValueMin 1
   # We use a large value for 'KeyValueMax', when compared to the number of chunks.
-  KeyValueMax: &KeyValueMax 1_000_000
+  KeyValueMax: &KeyValueMax 10_000_000
 
-  ReadRate: &ReadRate 1 per 200 microseconds # 5000/second
-  WriteRate: &WriteRate 1 per 200 microseconds # 5000/second
+  ReadRate: &ReadRate 1 per 100 microseconds # 10000/second
+  WriteRate: &WriteRate 1 per 100 microseconds # 10000/second
 
   ReadOperations: &ReadOperations
     - OperationName: findOne
@@ -74,7 +78,7 @@ Clients:
       maxPoolSize: 501
 
 Actors:
-  - Name: CreateShardedCollection
+  - Name: CreateDatabase1
     Type: AdminCommand
     Threads: 1
     Phases:
@@ -84,18 +88,8 @@ Actors:
           - OperationMetricsName: EnableSharding
             OperationName: AdminCommand
             OperationCommand:
-              enableSharding: *Database0
-              primaryShard: "shard-00"
-          - OperationMetricsName: EnableSharding
-            OperationName: AdminCommand
-            OperationCommand:
               enableSharding: *Database1
               primaryShard: "shard-00"
-          - OperationMetricsName: ShardCollection
-            OperationName: AdminCommand
-            OperationCommand:
-              shardCollection: *Namespace0
-              key: {key0: 1}
       - *Nop
       - *Nop
       - *Nop
@@ -151,11 +145,6 @@ Actors:
       - Repeat: 1
         Database: admin
         Operations:
-          - OperationMetricsName: ConfigureCollectionBalancing
-            OperationName: AdminCommand
-            OperationCommand:
-              configureCollectionBalancing: *Namespace0
-              chunkSize: 1 # 1MB
           - OperationMetricsName: StartBalancer
             OperationName: AdminCommand
             OperationCommand:
@@ -193,13 +182,13 @@ Actors:
       - *Nop
       - *Nop
       - MetricsName: PerformReads
-        Duration: 10 minutes
+        Duration: 20 minutes
         GlobalRate: *ReadRate
         Collection: *Collection0
         Operations: *ReadOperations
       - *Nop
       - MetricsName: PerformReads
-        Duration: 10 minutes
+        Duration: 20 minutes
         GlobalRate: *ReadRate
         Collection: *Collection0
         Operations: *ReadOperations
@@ -213,13 +202,13 @@ Actors:
       - *Nop
       - *Nop
       - MetricsName: PerformWrites
-        Duration: 10 minutes
+        Duration: 20 minutes
         GlobalRate: *WriteRate
         Collection: *Collection0
         Operations: *WriteOperations
       - *Nop
       - MetricsName: PerformWrites
-        Duration: 10 minutes
+        Duration: 20 minutes
         GlobalRate: *WriteRate
         Collection: *Collection0
         Operations: *WriteOperations
