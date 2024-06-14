@@ -1,0 +1,29 @@
+# This workload is developed to test the performance of materialized view maintenance.
+
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Description: |
+  Materialize views experiments with $__numClientThreads__ client(s).
+
+ExperimentParameters: &ExprParams
+  Transactional: $__isTransactional__
+  NumInitialDocs: $__numInitialDocs__
+  BaseDocumentSizePaddingBytes: $__minBaseDocSizeBytes__
+  NumGroupsAndDistribution: {^RandomInt: $__numGroupsAndDistribution__}
+  ClientThreads: $__numClientThreads__
+  NumInsertBatchesPerClinet: $__numClientBatches__
+  NumInsertOpsPerClinetBatch: $__numInsertsPerClientBatch__
+  ClientBatchInsertMode: "$__insertMode__"
+  NumMatViews: $__numMatViews__
+  MatViewMaintenanceMode: "$__matViewMode__"
+
+ExperimentDefaults:
+  PhasePath: &PhasePath ./$__matViewParamsFile__
+
+Actors:
+  LoadConfig:
+    Path: *PhasePath
+    Key: ActorsConf
+    Parameters: *ExprParams
+
+AutoRun:$__autoRunConf__
