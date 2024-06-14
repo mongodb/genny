@@ -1,0 +1,186 @@
+# bazel build //src/gennylib
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+# Boost
+# Famous C++ library that has given rise to many new additions to the C++ Standard Library
+# Makes @boost available for use: For example, add `@boost//:algorithm` to your deps.
+# For more, see https://github.com/nelhage/rules_boost and https://www.boost.org
+# http_archive(
+#     name = "com_github_nelhage_rules_boost",
+#     sha256 = "2215e6910eb763a971b1f63f53c45c0f2b7607df38c96287666d94d954da8cdc",
+#     strip_prefix = "rules_boost-4ab574f9a84b42b1809978114a4664184716f4bf",
+#     url = "https://github.com/nelhage/rules_boost/archive/4ab574f9a84b42b1809978114a4664184716f4bf.tar.gz",
+# )
+
+# load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
+
+# boost_deps()
+
+# http_archive(
+#     name = "com_github_jbeder_yaml_cpp",
+#     sha256 = "fbe74bbdcee21d656715688706da3c8becfd946d92cd44705cc6098bb23b3a16",
+#     strip_prefix = "yaml-cpp-0.8.0",
+#     url = "https://github.com/jbeder/yaml-cpp/archive/refs/tags/0.8.0.tar.gz",
+# )
+
+http_archive(
+    name = "bazel_skylib",
+    sha256 = "d847b08d6702d2779e9eb399b54ff8920fa7521dc45e3e53572d1d8907767de7",
+    strip_prefix = "bazel-skylib-2a87d4a62af886fb320883aba102255aba87275e",
+    urls = [
+        "https://github.com/bazelbuild/bazel-skylib/archive/2a87d4a62af886fb320883aba102255aba87275e.tar.gz",
+    ],
+)
+
+load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
+
+bazel_skylib_workspace()
+
+# http_archive(
+#     name = "rules_foreign_cc",
+#     sha256 = "2a4d07cd64b0719b39a7c12218a3e507672b82a97b98c6a89d38565894cf7c51",
+#     strip_prefix = "rules_foreign_cc-0.9.0",
+#     url = "https://github.com/bazelbuild/rules_foreign_cc/archive/0.9.0.tar.gz",
+# )
+
+# load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_dependencies")
+
+# rules_foreign_cc_dependencies()
+
+# _ALL_CONTENT = """\
+# filegroup(
+#     name = "all_srcs",
+#     srcs = glob(["**"]),
+#     visibility = ["//visibility:public"],
+# )
+# """
+
+# http_archive(
+#     name = "com_github_mongodb_mongo_cxx_driver",
+#     build_file_content = _ALL_CONTENT,
+#     sha256 = "b12c96670e1e68bae1a6f5cb08541f3da52f5ddeb5def274d2cf5d662ef73160",
+#     strip_prefix = "mongo-cxx-driver-r3.8.1",
+#     urls = [
+#         "https://github.com/mongodb/mongo-cxx-driver/releases/download/r3.8.1/mongo-cxx-driver-r3.8.1.tar.gz",
+#     ],
+# )
+
+# http_archive(
+#     name = "boost",
+#     build_file_content = _ALL_CONTENT,
+#     patch_cmds = ["rm -r libs/wave/test"],
+#     sha256 = "c0685b68dd44cc46574cce86c4e17c0f611b15e195be9848dfd0769a0a207628",
+#     strip_prefix = "boost_1_83_0",
+#     urls = ["https://boostorg.jfrog.io/artifactory/main/release/1.83.0/source/boost_1_83_0.tar.gz"],
+# )
+
+# http_archive(
+#     name = "com_google_googletest",
+#     sha256 = "ce7366fe57eb49928311189cb0e40e0a8bf3d3682fca89af30d884c25e983786",
+#     strip_prefix = "googletest-release-1.12.0",
+#     # Keep this URL in sync with ABSL_GOOGLETEST_COMMIT in ci/cmake_common.sh.
+#     urls = ["https://github.com/google/googletest/archive/refs/tags/release-1.12.0.zip"],
+# )
+
+# # RE2 (the regular expression library used by GoogleTest)
+# # Note this must use a commit from the `abseil` branch of the RE2 project.
+# # https://github.com/google/re2/tree/abseil
+# http_archive(
+#     name = "com_googlesource_code_re2",
+#     sha256 = "0a890c2aa0bb05b2ce906a15efb520d0f5ad4c7d37b8db959c43772802991887",
+#     strip_prefix = "re2-a427f10b9fb4622dd6d8643032600aa1b50fbd12",
+#     urls = ["https://github.com/google/re2/archive/a427f10b9fb4622dd6d8643032600aa1b50fbd12.zip"],  # 2022-06-09
+# )
+
+# # Google benchmark.
+# http_archive(
+#     name = "com_github_google_benchmark",  # 2021-09-20T09:19:51Z
+#     sha256 = "62e2f2e6d8a744d67e4bbc212fcfd06647080de4253c97ad5c6749e09faf2cb0",
+#     strip_prefix = "benchmark-0baacde3618ca617da95375e0af13ce1baadea47",
+#     urls = ["https://github.com/google/benchmark/archive/0baacde3618ca617da95375e0af13ce1baadea47.zip"],
+# )
+
+# # Bazel Skylib.
+# http_archive(
+#     name = "bazel_skylib",
+#     sha256 = "f7be3474d42aae265405a592bb7da8e171919d74c16f082a5457840f06054728",
+#     urls = ["https://github.com/bazelbuild/bazel-skylib/releases/download/1.2.1/bazel-skylib-1.2.1.tar.gz"],
+# )
+
+# # Bazel platform rules.
+# http_archive(
+#     name = "platforms",
+#     sha256 = "a879ea428c6d56ab0ec18224f976515948822451473a80d06c2e50af0bbe5121",
+#     strip_prefix = "platforms-da5541f26b7de1dc8e04c075c99df5351742a4a2",
+#     urls = ["https://github.com/bazelbuild/platforms/archive/da5541f26b7de1dc8e04c075c99df5351742a4a2.zip"],  # 2022-05-27
+# )
+
+# http_archive(
+#     name = "abseil",
+#     sha256 = "54707f411cb62a26a776dad5fd60829098c181700edcd022ea5c2ca49e9b7ef1",
+#     strip_prefix = "abseil-cpp-20220623.1",
+#     urls = ["https://github.com/abseil/abseil-cpp/archive/refs/tags/20220623.1.zip"],
+# )
+
+# http_archive(
+#     name = "sasl2",
+#     build_file_content = _ALL_CONTENT,
+#     sha256 = "7ccfc6abd01ed67c1a0924b353e526f1b766b21f42d4562ee635a8ebfc5bb38c",
+#     strip_prefix = "cyrus-sasl-2.1.28",
+#     urls = ["https://github.com/cyrusimap/cyrus-sasl/releases/download/cyrus-sasl-2.1.28/cyrus-sasl-2.1.28.tar.gz"],
+# )
+
+new_local_repository(
+    name = "local_packages",
+    build_file_content = """
+cc_library(
+    name = "sasl2",
+    srcs = ["libsasl2.a"],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "resolv",
+    srcs = ["libresolv.a"],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "snappy",
+    srcs = ["libsnappy.a"],
+    visibility = ["//visibility:public"],
+)
+""",
+    path = "/usr/lib/aarch64-linux-gnu/",
+)
+
+http_archive(
+    name = "catch2",
+    sha256 = "7219c2ca75a6b2a157b1b162e4ad819fb32585995cac32542a4f72d950dd96f7",
+    strip_prefix = "Catch2-3.1.0",
+    urls = ["https://github.com/catchorg/Catch2/archive/refs/tags/v3.1.0.zip"],
+)
+
+http_archive(
+    name = "genny_toolchain",
+    build_file = "@//bazel:genny_toolchain.BUILD.bazel",
+    sha256 = "8380e746b26495c593938203f87060ddfb30cb9cf2ba176bad3a149d36bafa25",
+    urls = ["https://mciuploads.s3.amazonaws.com/genny-toolchain/genny_toolchain_ubuntu2204_arm64_7ea933da9e013e65600f880fd41e2990920ee297_23_10_03_23_11_48/gennytoolchain.tgz"],
+)
+
+register_toolchains(
+    "//bazel/toolchain:genny_toolchain",
+)
+
+# http_archive(
+#     name = "com_github_mongodb_mongo_cxx_driver",
+#     build_file = "@//bazel:mongo_cxx_driver.BUILD",
+#     sha256 = "9f687d91a0aba2c7b147b30b03becaca794e15da19b5987e328e690d7dd0f35d",
+#     strip_prefix = "mongo-cxx-driver-r3.8.1",
+#     url = "https://github.com/mongodb/mongo-cxx-driver/archive/refs/tags/r3.8.1.tar.gz",
+# )
+
+# load("@com_github_jbeder_yaml_cpp//:boost/boost.bzl", "boost_deps")
+
+# boost_deps()
