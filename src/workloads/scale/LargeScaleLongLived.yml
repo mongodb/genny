@@ -89,7 +89,6 @@ AutoRun:
         $eq:
           - atlas
           - atlas-like-replica.2022-10
-          - atlas-like-replica.2023-09
           - replica
           - replica-80-feature-flags
           - replica-all-feature-flags

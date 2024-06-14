@@ -216,7 +216,6 @@ AutoRun:
           - shard-single
           - replica
           - atlas-like-replica.2022-10
-          - atlas-like-replica.2023-09
       branch_name:
         # TODO PERF-5539 Change the version to v6.0
         $gte: v7.0
