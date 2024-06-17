@@ -4388,14 +4388,13 @@ available.
 If the selectivity value is small enough (less than 0.5), the optimal plan is to scan a narrow
 range of an index and then blocking sort. An alternative, suboptimal query plan does a full scan
 of an index that provides the right sort order, and requires fetching each document before running
-a residual predicate.
+a very selective residual predicate: this means each getNext() has to scan many index entries
+(1/selectivity on average).
 
-Because the SBE multiplanner can't round-robin, it has a heuristic "try nonblocking plans first".
-This scenario is a worst case for that heuristic, because we'll try the best plan last.
-Otherwise, an IXSCAN and FETCH non-blocking plan will be used.
-
-Another point of view: this scenario shows that "non-blocking" plans can still do an unbounded
-amount of work per getNext().
+This case shows that it's important for the multiplanner to round-robin the execution of the candidate
+plans. Historically (in an alternative multiplanner based on SBE execution) we have tried a simpler
+strategy that runs the candidates sequentially, starting with the nonblocking plans--this heuristic
+does not work, because a nonblocking plan can still do an unbounded amount of work per getNext().
 
 
 
