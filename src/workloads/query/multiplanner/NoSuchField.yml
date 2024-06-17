@@ -14,6 +14,8 @@ Description: |
       candidate plans and none of them produce any results.
       2) When there are zero results, each plan has a productivity ratio of zero. This makes ties
       likely during plan ranking, which can in turn lead to an incorrect plan choice.
+Keywords:
+  - multiplanner
 
 GlobalDefaults:
   dbname: &db test
