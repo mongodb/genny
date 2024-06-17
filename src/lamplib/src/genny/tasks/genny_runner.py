@@ -6,7 +6,7 @@ import shutil
 import os
 
 from genny.cmd_runner import run_command
-from genny.curator import poplar_grpc
+from genny.curator import poplar_grpc, calculate_rollups
 from genny.tasks import preprocess
 
 SLOG = structlog.get_logger(__name__)
@@ -22,6 +22,7 @@ def main_genny_runner(
     genny_repo_root: str,
     cleanup_metrics: bool,
     workspace_root: str,
+    should_calculate_rollups: bool,
     hang: bool = False,
     mongostream_uri: Optional[str] = None,
 ):
@@ -47,7 +48,8 @@ def main_genny_runner(
         cmd.append("--verbosity")
         cmd.append(verbosity)
 
-        preprocessed_dir = os.path.join(workspace_root, "build/WorkloadOutput/workload")
+        output_dir = os.path.join(workspace_root, "build/WorkloadOutput")
+        preprocessed_dir = os.path.join(output_dir, "workload")
         os.makedirs(preprocessed_dir, exist_ok=True)
 
         processed_workload = os.path.join(preprocessed_dir, os.path.basename(workload_yaml_path))
@@ -83,4 +85,8 @@ def main_genny_runner(
             capture=False,
             check=True,
             cwd=workspace_root,
+        )
+    if should_calculate_rollups:
+        calculate_rollups(
+            output_dir=output_dir, workspace_root=workspace_root, genny_repo_root=genny_repo_root
         )
