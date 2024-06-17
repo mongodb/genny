@@ -244,12 +244,7 @@ class CuratorDownloader(Downloader):
     # These build IDs are from the Curator Evergreen task.
     # https://evergreen.mongodb.com/waterfall/curator
 
-    CURATOR_VERSION = "3df28d2514d4c4de7c903d027e43f3ee48bf8ec1"
-    ARM_CURATOR_VERSION = "965d53845fd1987ddbf04a937ff625f3c243dee3"
-
-    SPECIAL_CURATOR_VERSIONS = {
-        "arm": ARM_CURATOR_VERSION,
-    }
+    CURATOR_VERSION = "a1293258b30e04ea503e6b91b6b1628789e90093"
 
     DISTRO_MAPPING = {
         "archlinux": "linux-amd64",
@@ -295,11 +290,7 @@ class CuratorDownloader(Downloader):
         )
 
     def _get_url(self):
-        # Check if we need a special curator version for the distro. Otherwise use the default
-        # CURATOR_VERSION
-        version = CuratorDownloader.SPECIAL_CURATOR_VERSIONS.get(
-            self._curator_distro, CuratorDownloader.CURATOR_VERSION
-        )
+        version = CuratorDownloader.CURATOR_VERSION
         return (
             "https://s3.amazonaws.com/boxes.10gen.com/build/curator/"
             "curator-dist-{distro}-{build}.tar.gz".format(

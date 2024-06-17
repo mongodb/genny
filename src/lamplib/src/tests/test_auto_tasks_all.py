@@ -363,6 +363,8 @@ buildvariants:
       - "rhel70-perf-single"
     tasks:
       - name: bestbuy_agg_merge_target_hashed
+      - name: schedule_patch_auto_tasks
+      - name: schedule_variant_auto_tasks
 
   - name: linux-standalone-all-feature-flags.2022-11
     display_name: Linux Standalone (all feature flags) 2022-11
@@ -382,6 +384,26 @@ buildvariants:
       - "rhel70-perf-single"
     tasks:
       - name: schedule_patch_auto_tasks
+      - name: schedule_variant_auto_tasks
+
+  - name: do-not-schedule-no-autotasks.2022-11
+    display_name: Linux Standalone (all feature flags) 2022-11
+    cron: "0 0 * * 2,4,6"  # Tuesday, Thursday and Saturday at 00:00
+    expansions:
+      mongodb_setup_release: 2022-11
+      mongodb_setup: standalone-all-feature-flags
+      infrastructure_provisioning_release: 2022-11
+      infrastructure_provisioning: single
+      workload_setup: 2022-11
+      platform: linux
+      project_dir: dsi
+      authentication: enabled
+      storageEngine: wiredTiger
+      compile_variant: "-arm64"
+    run_on:
+      - "rhel70-perf-single"
+    tasks:
+      - name: some-specific-task
         """
 
         m = mock_open(read_data=YAML_INPUT)

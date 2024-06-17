@@ -273,7 +273,6 @@ GRANDFATHERED_WORKLOADS_WITHOUT_KEYWORDS = set(
         "src/workloads/query/multiplanner/Simple.yml",
         "src/workloads/query/multiplanner/ManyIndexSeeks.yml",
         "src/workloads/query/multiplanner/NoResults.yml",
-        "src/workloads/query/multiplanner/NoSuchField.yml",
         "src/workloads/query/multiplanner/BlockingSort.yml",
         "src/workloads/query/multiplanner/MultiplannerWithGroup.yml",
         "src/workloads/query/multiplanner/ClusteredCollection.yml",

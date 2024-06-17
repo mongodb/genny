@@ -4352,25 +4352,6 @@ as well as classic.
 
 
 
-## [NoGoodPlan](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/multiplanner/NoGoodPlan.yml)
-### Owner 
-@mongodb/query 
-
-
-
-### Description
-The goal of this test is to exercise multiplanning. We create 64 indexes and run a query that
-makes all of them eligible, so we get as many competing plans as possible. The only selective
-field is unindexed, however, meaning no index will be effective in planning. By ensuring all plans
-are relatively equally bad, we are likely to hit the works limit sooner than the 101 results
-limit.
-
-We expect classic to have better latency and throughput than SBE on this workload,
-and we expect the combination of classic planner + SBE execution (PM-3591) to perform about
-as well as classic.
-
-
-
 ## [NoResults](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/multiplanner/NoResults.yml)
 ### Owner 
 @mongodb/query 
@@ -4396,13 +4377,19 @@ as well as classic.
 
 
 ### Description
-The goal of this test is to exercise multiplanning. We create as many indexes as possible, and run a
-query that makes all of them eligible, so we get as many competing plans as possible. Here, we add
-an additional predicate: {no_such_field: "none"} to guarantee that we hit getTrialPeriodMaxWorks().
+The goal of this test is to exercise the "max works" case of multi-planning. The test is similar
+to 'Simple.yml' except we add an additional predicate: {no_such_field: "none"}, which is always
+false on this dataset. All of the other predicates match all the data, meaning none of the indexed
+predicates are selective. This guarantees that the query will not be able to finish multi-planning
+by producing enough documents, so instead we will hit getTrialPeriodMaxWorks().
 
-We expect classic to have better latency and throughput than SBE on this workload,
-and we expect the combination of classic planner + SBE execution (PM-3591) to perform about
-as well as classic.
+This also covers the special case in which the trial period hits max works without any of the
+candidate plans producing any documents. This is known to be a troublesome scenario for the
+multi-planner for a few reasons:
+    1) Multi-planning can run for too long and become expensive, especially when there are lots of
+    candidate plans and none of them produce any results.
+    2) When there are zero results, each plan has a productivity ratio of zero. This makes ties
+    likely during plan ranking, which can in turn lead to an incorrect plan choice.
 
 
 
@@ -4502,6 +4489,56 @@ We expect classic to have better latency and throughput than SBE on this workloa
 and we expect the combination of classic planner + SBE execution (PM-3591) to perform about
 as well as classic.
 
+
+
+## [EmptyGroup](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/plan_cache/EmptyGroup.yml)
+### Owner 
+@mongodb/query 
+
+
+
+### Description
+This test was created to compare using the Classic vs SBE plan caches, for an SBE query,
+by testing a worst case.
+
+The test uses a $group query to ensure the query is SBE-eligible, but uses an empty collection
+to minimize the query execution time--to make the query planning time a higher proportion of
+the overall request latency.
+
+The sources of overhead are:
+
+  1. The Classic plan cache does not store an SBE plan, so we have to run stage-builders
+     even after retrieving from it.
+
+  2. (Until SERVER-13341) When the access-path is obvious (no indexes -> collection scan), we don't insert
+     any entry to the Classic plan cache. So there may be some overhead from query
+     plan enumeration--although we'd expect this to be very small if there are no indexes.
+     After SERVER-13341 the Classic plan cache creates cache entries even for single-solution plans,
+     removing this difference between Classic and SBE plan caches.
+
+  
+
+### Keywords
+query, plan_cache, group 
+
+
+## [MatchEqVaryingArray](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/plan_cache/MatchEqVaryingArray.yml)
+### Owner 
+@mongodb/query 
+
+
+
+### Description
+This test was created to demonstrate a problem with the hit rate of the SBE plan cache.
+
+It runs a query like {$match: {a: {$eq: [1]}}} where the number varies. The Classic plan
+cache is able to reuse the same plan even as the parameter varies, but the SBE plan cache
+treats each one separately, resulting in much more planning.
+
+  
+
+### Keywords
+query, plan_cache, array 
 
 
 ## [dbcheck_40GB](https://www.github.com/mongodb/genny/blob/master/src/workloads/replication/dbcheck/dbcheck_40GB.yml)

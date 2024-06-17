@@ -169,20 +169,20 @@ def cmake(
     cmake_prefix_paths = [
         os.path.join(
             toolchain_info.toolchain_dir,
-            f"installed/{toolchain_info.triplet_arch}-{toolchain_info.triplet_os}-dynamic",
+            f"installed/{toolchain_info.triplet_arch}-{toolchain_info.triplet_os}-release",
         ),
         os.path.join(
             toolchain_info.toolchain_dir,
-            f"installed/{toolchain_info.triplet_arch}-{toolchain_info.triplet_os}",
+            f"installed/{toolchain_info.triplet_arch}-{toolchain_info.triplet_os}-dynamic",
         ),
     ]
 
     cmake_cmd += [
         "-DGENNY_WORKSPACE_ROOT={}".format(workspace_root),
         "-DGENNY_TOOLCHAIN_DIR={}".format(toolchain_info.toolchain_dir),
-        "-DCMAKE_PREFIX_PATH={}".format(";".join(cmake_prefix_paths)),
+        "-DCMAKE_PREFIX_PATH='{}'".format(";".join(cmake_prefix_paths)),
         "-DCMAKE_EXPORT_COMPILE_COMMANDS=1",
-        f"-DVCPKG_TARGET_TRIPLET={toolchain_info.triplet_arch}-{toolchain_info.triplet_os}",
+        f"-DVCPKG_TARGET_TRIPLET={toolchain_info.triplet_arch}-{toolchain_info.triplet_os}-release",
     ]
 
     cmake_cmd += _sanitizer_flags(sanitizer, genny_repo_root)

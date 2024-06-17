@@ -36,15 +36,9 @@ AutoRun:
   - When:
       mongodb_setup:
         $eq:
-          - standalone
-          - standalone-80-feature-flags
-          - standalone-all-feature-flags
-          - standalone-classic-query-engine
-          - standalone-query-stats
-          - standalone-heuristic-bonsai
-          - standalone-sampling-bonsai
-          - standalone-sbe
           - replica
+          - standalone-sbe
+          - standalone-classic-query-engine
       branch_name:
         $neq:
           - v4.0

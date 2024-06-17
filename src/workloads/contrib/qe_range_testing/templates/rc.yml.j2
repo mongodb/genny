@@ -154,8 +154,7 @@ Actors: {% if not encrypt %}
     Type: LoggingActor
     Threads: 1
     Phases:
-      - *nop
-      - Phase: 1..2
+      - Phase: 0..1
         LogEvery: 5 minutes
         Blocking: None
 
@@ -166,4 +165,4 @@ AutoRun:
       - single-replica-fle
       - shard-lite-fle
     branch_name:
-      $gte: v7.0
+      $gte: v8.0
