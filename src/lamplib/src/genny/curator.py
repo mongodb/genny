@@ -145,6 +145,11 @@ def calculate_rollups(output_dir: str, workspace_root: str, genny_repo_root: str
                 if file.endswith(".ftdc") and "canary" not in file:
                     ftdc_file_name = os.path.join(root, file)
                     rollup_file_name = ftdc_file_name.replace(".ftdc", ".json")
+                    SLOG.info(
+                        "Creating perf rollup from FTDC file.",
+                        ftdc_file=ftdc_file_name,
+                        output=rollup_file_name,
+                    )
                     args = [
                         curator,
                         "calculate-rollups",
