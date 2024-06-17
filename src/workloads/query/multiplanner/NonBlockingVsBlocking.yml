@@ -7,7 +7,8 @@ Description: |
   If the selectivity value is small enough (less than 0.5), the optimal plan is to scan a narrow
   range of an index and then blocking sort. An alternative, suboptimal query plan does a full scan
   of an index that provides the right sort order, and requires fetching each document before running
-  a residual predicate.
+  a very selective residual predicate: this means each getNext() has to scan many index entries
+  (1/selectivity on average).
   
   This case shows that it's important for the multiplanner to round-robin the execution of the candidate
   plans. Historically (in an alternative multiplanner based on SBE execution) we have tried a simpler
