@@ -4214,15 +4214,12 @@ https://docs.mongodb.com/manual/reference/operator/aggregation/setWindowFields/
 
 
 ### Description
-The goal of this test is to exercise multiplanning. We create as many indexes as possible, and run
-a query that makes all of them eligible, so we get as many competing plans as possible. We also
-add a sort stage on an unindexed field, ensuring that every plan is a blocking plan. Because all
-plans are blocking and return as many documents as possible, multiplanning will hit "max works"
-instead of EOF of numToReturn. This maximizes the overhead of multiplanning on both classic and SBE.
-
-We expect classic to have better latency and throughput than SBE on this workload,
-and we expect the combination of classic planner + SBE execution (PM-3591) to perform about
-as well as classic.
+The goal of this test is to show how a blocking sort can increase the overhead of multiplanning.
+We create as many indexes as possible, and run a query that makes all of them eligible, so we
+get as many competing plans as possible. We also add a sort stage on an unindexed field,
+ensuring that every plan is a blocking plan. Because all plans are blocking and return as many
+documents as possible, multiplanning will hit "max works" instead of EOF or numToReturn.
+This maximizes the overhead of multiplanning.
 
 
 
@@ -4233,13 +4230,14 @@ as well as classic.
 
 
 ### Description
-The goal of this test is to exercise multiplanning. We create as many indexes as possible, and run a
- query that makes all of them eligible, so we get as many competing plans as possible. Here, we do this on a
- clustered collection that has very large strings as _id.
+The goal of this test is to exercise multiplanning in the presence of clustered indexes. We
+create as many indexes as possible, and run a query that makes all of them eligible, so we get
+as many competing plans as possible. The collection is clustered and has very large strings as
+_id.
 
- We expect classic to have better latency and throughput than SBE on this workload,
- and we expect the combination of classic planner + SBE execution (PM-3591) to perform about
- as well as classic.
+This workload is similar to 'Simple.yml' except that the collection is clustered. None of the
+competing plans actually take advantage of the clustering (there is no bounded collection scan
+plan). Maybe we expect the larger record IDs to make fetch take more wall clock time.
 
 
 
@@ -4277,10 +4275,6 @@ the most effective index, while the rest of them (..., x1) are very ineffective.
 having predicates on all the fields, while only the predicate on field x1 has selective range. This
 leads to many index seeks on the less effective indices (..., x1). Because every time we hit a non-
 matching field we seek again, and the scan ends when we reach a non-matching x1.
-
-We expect classic to have better latency and throughput than SBE on this workload,
-and we expect the combination of classic planner + SBE execution (PM-3591) to perform about
-as well as classic.
 
 
 
@@ -4327,10 +4321,6 @@ an IXSCAN of a multikey index has to deduplicate RIDs, a lot of space will be us
 multi-planner will behave more optimally than the SBE multiplanner because it will cut off execution
 when the one good plan reaches the end.
 
-We expect classic to have better latency and throughput than SBE on this workload,
-and we expect the combination of classic planner + SBE execution (PM-3591) to perform about
-as well as classic.
-
 
 
 ## [MultiplannerWithGroup](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/multiplanner/MultiplannerWithGroup.yml)
@@ -4340,15 +4330,11 @@ as well as classic.
 
 
 ### Description
-The goal of this test is to exercise multiplanning. We create as many indexes as possible, and run a
-query that makes all of them eligible, so we get as many competing plans as possible. We add a
-group stage, which is blocking. The SBE multiplanner will multiplan group as it is a part of the
-canonical query, but the classic multiplanner will not plan. This means the SBE multiplanner will
-have the overhead of trial running blocking plans when compared to the classic multiplanner.
-
-We expect classic to have better latency and throughput than SBE on this workload,
-and we expect the combination of classic planner + SBE execution (PM-3591) to perform about
-as well as classic.
+This test was created to show how three different multiplanners handle $group.
+The query is essentially the one from 'Simple.yml': we have as many indexed predicates as
+possible, to create as many indexed plans as possible, but only one of those predicates is
+selective, which means only one of those plans is efficient. Where this test departs from
+'Simple.yml' is by adding a $group stage after the access-path part of the query.
 
 
 
@@ -4363,10 +4349,6 @@ The goal of this test is to exercise multiplanning. We create as many indexes as
 query that makes all of them eligible, so we get as many competing plans as possible. All predicates
 are very selective (match 0% of the documents). With zero results, we do no hit the EOF optimization
 and all competing plans hit the works limit instead of document limit.
-
-We expect classic to have better latency and throughput than SBE on this workload,
-and we expect the combination of classic planner + SBE execution (PM-3591) to perform about
-as well as classic.
 
 
 
@@ -4400,16 +4382,20 @@ multi-planner for a few reasons:
 
 
 ### Description
-The goal of this test is to exercise multiplanning. If the selectivity value is small enough (less
-than 0.5), the optimal plan is to employ a blocking plan by scanning a segment of empty data and
-conducting a blocking-sort operation, whereas the other plans' index provides the right sort
-order, but requires a full scan, and every document is rejected after the FETCH stage. Because the
-SBE multiplanner can't round-robin, it has a heuristic "try nonblocking plans first".  This
-scenario is a worst case for that heuristic, because we'll try the best plan last. Otherwise, an
-IXSCAN and FETCH non-blocking plan will be used.
+The goal of this test is to exercise multiplanning when both blocking and non-blocking plans are
+available.
 
-We expect classic to have better latency and throughput than SBE on this workload, and we expect
-the combination of classic planner + SBE execution (PM-3591) to perform about as well as classic.
+If the selectivity value is small enough (less than 0.5), the optimal plan is to scan a narrow
+range of an index and then blocking sort. An alternative, suboptimal query plan does a full scan
+of an index that provides the right sort order, and requires fetching each document before running
+a residual predicate.
+
+Because the SBE multiplanner can't round-robin, it has a heuristic "try nonblocking plans first".
+This scenario is a worst case for that heuristic, because we'll try the best plan last.
+Otherwise, an IXSCAN and FETCH non-blocking plan will be used.
+
+Another point of view: this scenario shows that "non-blocking" plans can still do an unbounded
+amount of work per getNext().
 
 
 
@@ -4423,14 +4409,10 @@ the combination of classic planner + SBE execution (PM-3591) to perform about as
 The goal of this test is to exercise multiplanning. We create as many indexes as possible, and run a
 query that makes all of them eligible, so we get as many competing plans as possible.
 
-The original goal of this test was to demonstrate weaknesses of the SBE multiplanner when compared to
+This test was originally created to demonstrate weaknesses of the SBE multiplanner when compared to
 the classic multiplanner. Mainly, the SBE multiplanner can't round-robin between plans, which means it
 has to run the list of plans sequentially, which means we can't short-circuit when the shortest-running
 plan finishes.
-
-We expect classic to have better latency and throughput than SBE on this workload,
-and we expect the combination of classic planner + SBE execution (PM-3591) to perform about
-as well as classic.
 
 
 
@@ -4447,10 +4429,6 @@ query that makes all of them eligible, so we get as many competing plans as poss
 The workload uses an $or query with 8 clauses each containing 8 predicates. Each branch have
 only one selective predicate.
 
-We expect classic to have better latency and throughput than SBE on this workload,
-and we expect the combination of classic planner + SBE execution (PM-3591) to perform about
-as well as classic.
-
 
 
 ## [UseClusteredIndex](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/multiplanner/UseClusteredIndex.yml)
@@ -4460,13 +4438,14 @@ as well as classic.
 
 
 ### Description
-The goal of this test is to exercise multiplanning. We create as many indexes as possible, and run a
- query that makes all of them eligible, so we get as many competing plans as possible. Here, we do this on a
- clustered collection and add a selective predicate on _id, so that the clustered index is a viable candidate plan.
+The goal of this test is to exercise multiplanning in the presence of clustered indexes. We
+create as many indexes as possible, and run a query that makes all of them eligible, so we get
+as many competing plans as possible. The collection is clustered and has very large strings as
+_id; also, one of the predicates is on _id which means a clustered collection scan is included
+in the competing plans.
 
- We expect classic to have better latency and throughput than SBE on this workload,
- and we expect the combination of classic planner + SBE execution (PM-3591) to perform about
- as well as classic.
+This workload is similar to 'Simple.yml' except for the collection being clustered, and the
+extra predicate.
 
 
 
@@ -4477,17 +4456,24 @@ The goal of this test is to exercise multiplanning. We create as many indexes as
 
 
 ### Description
-The goal of this test is to exercise multiplanning. We run the same query 7 times, each one with a
-different selectivity value that we are comparing against x1, calcuated based on the number of
-documents we want the query to match. This will help us measure the overhead of throwing out the
-result set gathered during multi-planning when the result set exceeds 101 documents.  Unlike many
-of the other multiplanner/ workloads, we only test with 2 indexes here, because 2 indexes is a
-worst case for throwing away results. Having more indexes increases planning time, but not query
-execution time, so having more indexes makes the *relative* cost of throwing away results smaller.
+The goal of this test is to measure the overhead of "throwing out" the initial results returned by
+multiplanning.
 
-We expect classic to have better latency and throughput than SBE on this workload,
-and we expect the combination of classic planner + SBE execution (PM-3591) to perform about
-as well as classic.
+When a query runs with Classic multiplanner + Classic execution, then when multiplanning finishes
+the query can resume running and reuse the partial results it gathered during multiplanning. By
+contrast when running with SBE execution, the query has
+to start over--unless it already finished during multiplanning. This means SBE has a
+discontinuity in performance as the size of the result set grows: when it crosses from 100 to
+102 documents, it has to recompute those first ~100 documents.
+
+To measure this, we run the same query 7 times, each one with a different selectivity value.
+For example, in phase 'MultiplannerWith50ExpectedResults' we choose a selectivity of
+'50 / collectionSize' to make the query return (approximately) 50 documents.
+
+Unlike many of the other multiplanner/ workloads, we only test with 2 indexes here, because
+2 indexes is a worst case for throwing away results. Having more indexes increases planning
+time, but not query execution time, so having more indexes makes the *relative* cost of
+throwing away results smaller.
 
 
 
