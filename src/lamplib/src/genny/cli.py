@@ -584,7 +584,7 @@ def self_test(ctx: click.Context):
 def lint_yaml(ctx: click.Context, lint_format: bool):
     from genny.tasks.yaml_linter import YamlLinter
 
-    YamlLinter().lint(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], lint_format=lint_format)
+    YamlLinter(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"]).lint(lint_format=lint_format)
 
 
 @cli.command(name="generate-docs", help="Generate documentation for all workloads.")
@@ -592,7 +592,7 @@ def lint_yaml(ctx: click.Context, lint_format: bool):
 def generate_docs(ctx: click.Context):
     from genny.tasks.documentation_generator import DocumentationGenerator
 
-    DocumentationGenerator().generate(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"])
+    DocumentationGenerator(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"]).generate()
 
 
 @cli.command(

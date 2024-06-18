@@ -24,29 +24,31 @@ class Workload(NamedTuple):
 
 
 class DocumentationGenerator:
+    def __init__(self, genny_repo_root: str):
+        self.genny_repo_root = genny_repo_root
+        self.mothra_service = MothraService(genny_repo_root)
 
-    def __init__(self):
-        self.mothra_service = MothraService()
-
-    def generate(self, genny_repo_root: str):
+    def generate(self):
         SLOG.info("Generating workload documentation.")
-        input_dir = path.join(genny_repo_root, "src", "workloads")
-        output_file = path.join(genny_repo_root, "docs", "generated", "workloads.md")
-        self._generate_workload_documentation(genny_repo_root, input_dir, output_file, "workload")
+        input_dir = path.join(self.genny_repo_root, "src", "workloads")
+        output_file = path.join(
+            self.genny_repo_root, "docs", "generated", "workloads.md"
+        )
+        self._generate_workload_documentation(input_dir, output_file, "workload")
 
         SLOG.info("Generating phase documentation.")
-        input_dir = path.join(genny_repo_root, "src", "phases")
-        output_file = path.join(genny_repo_root, "docs", "generated", "phases.md")
-        self._generate_workload_documentation(genny_repo_root, input_dir, output_file, "phase")
+        input_dir = path.join(self.genny_repo_root, "src", "phases")
+        output_file = path.join(self.genny_repo_root, "docs", "generated", "phases.md")
+        self._generate_workload_documentation(input_dir, output_file, "phase")
 
     def _generate_workload_documentation(
-        self, genny_repo_root, input_dir, output_file, documentation_type
+        self, input_dir, output_file, documentation_type
     ):
         workload_dirs = [input_dir]
         SLOG.info("Gathering workloads from files.", workload_dirs=workload_dirs)
 
         workloads = [
-            self._get_workload_from_file(yaml_path, genny_repo_root)
+            self._get_workload_from_file(yaml_path)
             for yaml_path in self._get_workload_files(workload_dirs)
         ]
         # Sort workloads by path to ensure consistent ordering.
@@ -69,11 +71,11 @@ class DocumentationGenerator:
                         yaml_files.append(path.join(dirpath, filename))
         return yaml_files
 
-    def _get_workload_from_file(self, yaml_path: str, genny_repo_root: str) -> Workload:
+    def _get_workload_from_file(self, yaml_path: str) -> Workload:
         with open(yaml_path, "r") as f:
             workload_yaml = yaml.safe_load(f)
             workload_name = PurePosixPath(yaml_path).stem
-            path = yaml_path.replace(genny_repo_root, "")
+            path = yaml_path.replace(self.genny_repo_root, "")
             team = self.mothra_service.get_team(workload_yaml.get("Owner"))
 
             return Workload(
@@ -90,7 +92,9 @@ class DocumentationGenerator:
     def _generate_markdown(self, workloads: list[Workload], documentation_type) -> str:
         environment = Environment(loader=PackageLoader("genny"), autoescape=False)
         template = environment.get_template("documentation.md.j2")
-        return template.render(workloads=workloads, documentation_type=documentation_type)
+        return template.render(
+            workloads=workloads, documentation_type=documentation_type
+        )
 
     def _write_documentation(self, documentation: str, output_file: str):
         with open(output_file, "w") as f:
