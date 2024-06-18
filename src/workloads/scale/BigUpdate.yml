@@ -137,7 +137,6 @@ AutoRun:
           - replica-noflowcontrol
           - standalone
           - standalone-classic-query-engine
-          - standalone-query-stats
           - standalone-sbe
       atlas_setup:
         $neq:

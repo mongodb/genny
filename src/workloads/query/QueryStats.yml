@@ -217,13 +217,5 @@ AutoRun:
           - replica
           - atlas-like-replica.2022-10
       branch_name:
-        $gte: v7.1
-  - When:
-      mongodb_setup:
-        $eq:
-          - atlas-like-replica-query-stats.2023-09
-          # Note: this is just using the configuration used for all of our 3-node repl query stats variants.
-          # The workload will still override the rate limit regardless of what the base configuration is.
-          - replica-query-stats-rate-limit
-      branch_name:
-        $gte: v6.0
+        # TODO PERF-5539 Change the version to v6.0
+        $gte: v7.0

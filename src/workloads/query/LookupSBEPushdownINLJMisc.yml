@@ -387,7 +387,6 @@ AutoRun:
           - standalone-80-feature-flags
           - standalone-all-feature-flags
           - standalone-classic-query-engine
-          - standalone-query-stats
           - standalone-sbe
       branch_name:
         $neq:
