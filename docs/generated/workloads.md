@@ -4317,9 +4317,7 @@ indexes
 ### Description
 The goal of this test is to exercise multiplanning with multikey indexes. We create many indexes and
 run a query that makes all of them eligible, so we get as many competing plans as possible. Because
-an IXSCAN of a multikey index has to deduplicate RIDs, a lot of space will be used. The classic
-multi-planner will behave more optimally than the SBE multiplanner because it will cut off execution
-when the one good plan reaches the end.
+an IXSCAN of a multikey index has to deduplicate RIDs, a lot of space will be used.
 
 
 
@@ -4330,7 +4328,7 @@ when the one good plan reaches the end.
 
 
 ### Description
-This test was created to show how three different multiplanners handle $group.
+This test was created to show how the multiplanner handles $group.
 The query is essentially the one from 'Simple.yml': we have as many indexed predicates as
 possible, to create as many indexed plans as possible, but only one of those predicates is
 selective, which means only one of those plans is efficient. Where this test departs from
@@ -4346,9 +4344,9 @@ selective, which means only one of those plans is efficient. Where this test dep
 
 ### Description
 The goal of this test is to exercise multiplanning. We create as many indexes as possible, and run a
-query that makes all of them eligible, so we get as many competing plans as possible. All predicates
-are very selective (match 0% of the documents). With zero results, we do no hit the EOF optimization
-and all competing plans hit the works limit instead of document limit.
+query that makes all of them eligible, so we get as many competing plans as possible. However, all
+the indexed predicates are very selective (match 0% of the documents). This should result in empty
+index bounds, so multiplanning should finish immediately.
 
 
 
@@ -4373,6 +4371,10 @@ multi-planner for a few reasons:
     2) When there are zero results, each plan has a productivity ratio of zero. This makes ties
     likely during plan ranking, which can in turn lead to an incorrect plan choice.
 
+  
+
+### Keywords
+multiplanner 
 
 
 ## [NonBlockingVsBlocking](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/multiplanner/NonBlockingVsBlocking.yml)
@@ -4439,9 +4441,8 @@ only one selective predicate.
 ### Description
 The goal of this test is to exercise multiplanning in the presence of clustered indexes. We
 create as many indexes as possible, and run a query that makes all of them eligible, so we get
-as many competing plans as possible. The collection is clustered and has very large strings as
-_id; also, one of the predicates is on _id which means a clustered collection scan is included
-in the competing plans.
+as many competing plans as possible. The collection is clustered and one of the predicates is
+on _id, which means a clustered collection scan is included in the competing plans.
 
 This workload is similar to 'Simple.yml' except for the collection being clustered, and the
 extra predicate.
