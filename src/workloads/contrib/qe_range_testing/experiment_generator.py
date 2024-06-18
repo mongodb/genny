@@ -289,9 +289,9 @@ if __name__ == "__main__":
     # generate_rc_workloads(is_local=True)
     # generate_rc_config_file()
 
-    # generate_compact1_workloads(is_local=False)
-    # generate_compact1_workloads(is_local=True)
-    # generate_compact1_data('./', DOCUMENT_COUNT)
+    generate_compact1_workloads(is_local=False)
+    generate_compact1_workloads(is_local=True)
+    generate_compact1_data('./', DOCUMENT_COUNT)
 
     generate_compact2_workloads(is_local=False)
     generate_compact2_workloads(is_local=True)

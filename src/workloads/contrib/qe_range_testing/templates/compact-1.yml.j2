@@ -49,6 +49,7 @@ ActorTemplates:
           Document:
             field1: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "{{ insert_file }}", "sequential": true, "startFromLine": &StartLine {^Parameter: {Name: "StartLine", Default: -1}}}}}}
     - *nop
+    - *nop
 
 
 
@@ -76,14 +77,25 @@ Actors:
         OperationCommand:
           {{ test_op }}StructuredEncryptionData: *encrypted_coll {% if test_op == 'compact' %}
           anchorPaddingFactor: 1.0 {% endif %}
+    - *nop
 
 {% endif %}
+
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *encrypted_db
+    ClientName: EncryptedPool
+    Phases:
+      - *nop
+      - *nop
+      - Repeat: 1
   
   - Name: LoggingActor0
     Type: LoggingActor
     Threads: 1
     Phases:
-      - Phase: 0..1
+      - Phase: 0..2
         LogEvery: 5 minutes
         Blocking: None
 
