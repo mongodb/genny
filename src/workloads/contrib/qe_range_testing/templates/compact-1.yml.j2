@@ -1,0 +1,97 @@
+SchemaVersion: 2018-07-01
+Owner: Server Security
+Description: |
+  QE Range Cleanup/Compact Experiment
+Keywords:
+- Queryable Encryption
+
+GlobalDefaults:
+  MyDatabase: &encrypted_db genny_release_criteria
+  MyCollection: &encrypted_coll my_coll
+  NopAlias: &nop {Nop: true}
+Encryption:
+  {% if use_crypt_shared_lib %}
+  UseCryptSharedLib: true
+  CryptSharedLibPath: {{ crypt_shared_lib_path }} {% endif %}
+  EncryptedCollections:
+  - Database: *encrypted_db
+    Collection: *encrypted_coll
+    EncryptionType: queryable
+
+    QueryableEncryptedFields:
+      field1: { type: "decimal", queries: [{queryType: "range", min: {{ field_min }}, max: {{ field_max }}, precision: {{ precision }}, contention: {{ cf }}, sparsity: {{ sp }}, trimFactor: {{ tf }}}] }
+Clients:
+  EncryptedPool:
+    QueryOptions:
+      maxPoolSize: 400
+    EncryptionOptions:
+      KeyVaultDatabase: "keyvault"
+      KeyVaultCollection: "datakeys"
+      EncryptedCollections:
+      - genny_release_criteria.my_coll
+
+ActorTemplates:
+- TemplateName: InsertTemplate
+  Config: 
+    Name: {^Parameter: {Name: "Name", Default: "unused"}}
+    Type: CrudActor
+    Threads: 1
+    Database: *encrypted_db
+    ClientName: EncryptedPool
+    Phases: 
+    - Repeat: {{ document_count // insert_threads }}
+      Collection: *encrypted_coll
+      MetricsName: "load"
+      Operations:
+      - OperationName: insertOne
+        OperationMetricsName: insert
+        OperationCommand:
+          Document:
+            field1: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "{{ insert_file }}", "sequential": true, "startFromLine": &StartLine {^Parameter: {Name: "StartLine", Default: -1}}}}}}
+    - *nop
+
+
+
+Actors: 
+  {% for t in range(insert_threads) %}
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread{{ t }}
+        StartLine: {{t * document_count // insert_threads}}
+    {% endfor %}
+
+{% if test_op != '' %}
+  - Name: CompactCleanupActor
+    Type: RunCommand
+    Threads: 1
+    ClientName: EncryptedPool
+    Phases: 
+    - *nop
+    - Repeat: 1
+      Database: *encrypted_db
+      Operations:
+      - OperationMetricsName: {{ test_op }}
+        OperationName: RunCommand 
+        OperationCommand:
+          {{ test_op }}StructuredEncryptionData: *encrypted_coll {% if test_op == 'compact' %}
+          anchorPaddingFactor: 1.0 {% endif %}
+
+{% endif %}
+  
+  - Name: LoggingActor0
+    Type: LoggingActor
+    Threads: 1
+    Phases:
+      - Phase: 0..1
+        LogEvery: 5 minutes
+        Blocking: None
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - single-replica-fle
+      - shard-lite-fle
+    branch_name:
+      $gte: v8.0

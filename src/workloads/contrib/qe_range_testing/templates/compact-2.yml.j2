@@ -1,0 +1,144 @@
+SchemaVersion: 2018-07-01
+Owner: Server Security
+Description: |
+  QE Range Cleanup/Compact Experiment
+Keywords:
+- Queryable Encryption
+
+GlobalDefaults:
+  MyDatabase: &encrypted_db genny_release_criteria
+  MyCollection: &encrypted_coll my_coll
+  NopAlias: &nop {Nop: true}
+  MaxPhases: &MaxPhases 3
+Encryption:
+  {% if use_crypt_shared_lib %}
+  UseCryptSharedLib: true
+  CryptSharedLibPath: {{ crypt_shared_lib_path }} {% endif %}
+  EncryptedCollections:
+  - Database: *encrypted_db
+    Collection: *encrypted_coll
+    EncryptionType: queryable
+
+    QueryableEncryptedFields:
+      field1: { type: "int", queries: [{queryType: "range", min: {{ field_min }}, max: {{ field_max }}, contention: {{ cf }}, sparsity: {{ sp }}, trimFactor: {{ tf }}}] }
+Clients:
+  EncryptedPool:
+    QueryOptions:
+      maxPoolSize: 400
+    EncryptionOptions:
+      KeyVaultDatabase: "keyvault"
+      KeyVaultCollection: "datakeys"
+      EncryptedCollections:
+      - genny_release_criteria.my_coll
+
+ActorTemplates:
+- TemplateName: InsertTemplate
+  Config: 
+    Name: {^Parameter: {Name: "Name", Default: "unused"}}
+    Type: CrudActor
+    Threads: 1
+    Database: *encrypted_db
+    ClientName: EncryptedPool
+    Phases: 
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: Phase, Default: {unused: ...}}}]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: {{ document_count // insert_threads }}
+          MetricsName: "load"
+          Collection: *encrypted_coll
+          Operations:
+          - OperationName: insertOne
+            OperationMetricsName: insert
+            OperationCommand:
+              Document:
+                field1: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "{{ insert_file }}", "sequential": true, "startFromLine": &StartLine {^Parameter: {Name: "StartLine", Default: -1}}}}}}
+
+- TemplateName: QueryTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "unused"}}
+    Type: CrudActor
+    Threads: 1
+    Database: *encrypted_db
+    ClientName: EncryptedPool
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: Phase, Default: {unused: ...}}}]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: {{ query_count // query_threads }}
+          MetricsName: "query"
+          Collection: *encrypted_coll
+          Operations:
+          - OperationName: find
+            OperationMetricsName: query
+            OperationCommand:
+              Filter: { field1: {
+                  $gte: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "{{ min_file }}", "sequential": true, "startFromLine": *StartLine}}}},
+                  $lte: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "{{ max_file }}", "sequential": true, "startFromLine": *StartLine}}}}
+                }
+              }
+
+Actors: 
+  {% for t in range(insert_threads) %}
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread{{ t }}
+        StartLine: {{t * document_count // insert_threads}}
+        Phase: 0
+    {% endfor %}
+
+{% for t in range(query_threads) %}
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: BeforeCompact_QueryActor_Thread{{ t }}
+        StartLine: {{t * query_count // query_threads}}
+        Phase: 1
+{% endfor %}
+
+  - Name: CompactCleanupActor
+    Type: RunCommand
+    Threads: 1
+    ClientName: EncryptedPool
+    Phases: 
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *encrypted_db
+          Operations:
+          - OperationMetricsName: {{ test_op }}
+            OperationName: RunCommand 
+            OperationCommand:
+              {{ test_op }}StructuredEncryptionData: *encrypted_coll {% if test_op == 'compact' %}
+              anchorPaddingFactor: 1.0 {% endif %}
+
+{% for t in range(query_threads) %}
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: AfterCompact_QueryActor_Thread{{ t }}
+        StartLine: {{t * query_count // query_threads}}
+        Phase: 3
+{% endfor %}
+       
+
+  - Name: LoggingActor0
+    Type: LoggingActor
+    Threads: 1
+    Phases:
+      - Phase: 0..3
+        LogEvery: 5 minutes
+        Blocking: None
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - single-replica-fle
+      - shard-lite-fle
+    branch_name:
+      $gte: v8.0

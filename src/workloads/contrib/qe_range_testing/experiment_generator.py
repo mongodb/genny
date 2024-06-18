@@ -1,5 +1,5 @@
 from jinja2 import Environment, PackageLoader, select_autoescape
-from data_generation import generate_all_data
+from data_generation import generate_all_data, generate_compact1_data, generate_compact2_data
 import os.path
 
 env = Environment(
@@ -201,9 +201,98 @@ def generate_rc_config_file():
             )
         )
 
+compact1_collinfo = {'small': {'field_min': 0, 'field_max': 199, 'precision': 0},
+                     'large': {'field_min': 0, 'field_max': 100, 'precision': 2}}
+
+def generate_compact1_workloads(is_local):
+    if is_local:
+        basedir = "./src/workloads/contrib/qe_range_testing/"
+        crypt_path = MONGO_CRYPT_PATH
+        if not os.path.exists(crypt_path):
+            print(
+                "Please point MONGO_CRYPT_PATH to the mongo_crypt_v1.so shared library for local workload generation."
+            )
+            exit(1)
+        wldir = "local"
+    else:
+        basedir = "./src/genny/src/workloads/contrib/qe_range_testing/"
+        crypt_path = "/data/workdir/mongocrypt/lib/mongo_crypt_v1.so"
+        wldir = "evergreen"
+    template = env.get_template("compact-1.yml.j2")
+    for op in ['compact', 'cleanup', '']:
+        for coll in ['small', 'large']:
+            datafile = f'{basedir}/data/compact_zipf{coll}.txt'
+            name = f'compact1-{op if op != "" else "baseline"}-{coll}'
+            with open(f"workloads/{wldir}/{name}.yml", "w") as f:
+                f.write(
+                    template.render(
+                        document_count=DOCUMENT_COUNT,
+                        insert_threads=N_THREADS,
+                        insert_file=datafile,
+                        test_op=op,
+                        cf=8, sp=2, tf=6,
+                        use_crypt_shared_lib=True,
+                        crypt_shared_lib_path=crypt_path,
+                        **compact1_collinfo[coll] # field_min, field_max, precision
+                    )
+                )
+
+compact2_collinfo = {'small_support': {'field_min': 0, 'field_max': 2**31 - 1},
+                     'contiguous_freq_one': {'field_min': -2**31, 'field_max': 2**31 - 1}}
+
+
+def generate_compact2_workloads(is_local):
+    if is_local:
+        basedir = "./src/workloads/contrib/qe_range_testing/"
+        crypt_path = MONGO_CRYPT_PATH
+        if not os.path.exists(crypt_path):
+            print(
+                "Please point MONGO_CRYPT_PATH to the mongo_crypt_v1.so shared library for local workload generation."
+            )
+            exit(1)
+        wldir = "local"
+    else:
+        basedir = "./src/genny/src/workloads/contrib/qe_range_testing/"
+        crypt_path = "/data/workdir/mongocrypt/lib/mongo_crypt_v1.so"
+        wldir = "evergreen"
+    template = env.get_template("compact-2.yml.j2")
+    for op in ['compact', 'cleanup']:
+        for coll in ['small_support', 'contiguous_freq_one']:
+            datafile = f'{basedir}/data/compact_{coll}.txt'
+            minfile = f'{basedir}/queries/compact_{coll}_min.txt'
+            maxfile = f'{basedir}/queries/compact_{coll}_max.txt'
+            name = f'compact2-{op}-{coll}'
+            with open(f"workloads/{wldir}/{name}.yml", "w") as f:
+                f.write(
+                    template.render(
+                        document_count=DOCUMENT_COUNT,
+                        insert_threads=N_THREADS,
+                        query_count=QUERY_COUNT,
+                        query_threads=N_THREADS,
+                        insert_file=datafile,
+                        min_file=minfile,
+                        max_file=maxfile,
+                        test_op=op,
+                        cf=8, sp=2, tf=6,
+                        use_crypt_shared_lib=True,
+                        crypt_shared_lib_path=crypt_path,
+                        **compact2_collinfo[coll] # field_min, field_max
+                    )
+                )
+
+
+
 
 if __name__ == "__main__":
-    generate_all_data("./", DOCUMENT_COUNT, QUERY_COUNT)
-    generate_rc_workloads(is_local=False)
-    generate_rc_workloads(is_local=True)
-    generate_rc_config_file()
+    # generate_all_data("./", DOCUMENT_COUNT, QUERY_COUNT)
+    # generate_rc_workloads(is_local=False)
+    # generate_rc_workloads(is_local=True)
+    # generate_rc_config_file()
+
+    # generate_compact1_workloads(is_local=False)
+    # generate_compact1_workloads(is_local=True)
+    # generate_compact1_data('./', DOCUMENT_COUNT)
+
+    generate_compact2_workloads(is_local=False)
+    generate_compact2_workloads(is_local=True)
+    generate_compact2_data('./', DOCUMENT_COUNT, QUERY_COUNT)
