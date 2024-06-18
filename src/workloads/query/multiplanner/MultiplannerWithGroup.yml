@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  This test was created to show how three different multiplanners handle $group.
+  This test was created to show how the multiplanner handles $group.
   The query is essentially the one from 'Simple.yml': we have as many indexed predicates as
   possible, to create as many indexed plans as possible, but only one of those predicates is
   selective, which means only one of those plans is efficient. Where this test departs from
