@@ -89,15 +89,12 @@ AutoRun:
         $eq:
           - atlas
           - atlas-like-replica.2022-10
-          - atlas-like-replica.2023-09
-          - atlas-like-replica-query-stats.2023-09
           - replica
           - replica-80-feature-flags
           - replica-all-feature-flags
           - single-replica-15gbwtcache
           - standalone
           - standalone-classic-query-engine
-          - standalone-query-stats
           - standalone-sbe
       atlas_setup:
         $neq:

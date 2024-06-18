@@ -22,18 +22,13 @@ AutoRun:
           - standalone
           - standalone-80-feature-flags
           - standalone-all-feature-flags
-          - standalone-query-stats
           - replica
           - replica-80-feature-flags
           - replica-all-feature-flags
-          - replica-query-stats-rate-limit
           - atlas-like-replica.2022-10
-          - atlas-like-replica.2023-09
-          - atlas-like-replica-query-stats.2023-09
           - shard
           - shard-80-feature-flags
           - shard-all-feature-flags
           - shard-lite-80-feature-flags
-          - shard-query-stats
       branch_name:
         $gte: v5.3

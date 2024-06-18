@@ -110,9 +110,5 @@ AutoRun:
           - standalone-80-feature-flags
           - standalone-all-feature-flags
           - standalone
-          - standalone-query-stats
           - replica
-          - replica-query-stats-rate-limit
           - atlas-like-replica.2022-10
-          - atlas-like-replica.2023-09
-          - atlas-like-replica-query-stats.2023-09

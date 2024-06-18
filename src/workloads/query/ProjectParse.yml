@@ -139,7 +139,6 @@ AutoRun:
           - standalone-80-feature-flags
           - standalone-all-feature-flags
           - standalone-classic-query-engine
-          - standalone-query-stats
           - standalone-sbe
       branch_name:
-        $gte: v6.0
+        $gte: v7.0
