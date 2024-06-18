@@ -134,31 +134,30 @@ def translate(
     subprocess.run(args, check=True)
 
 
-# Calculate rollups from all the FTDC outputs that are not from canaries.
+# Calculate rollups from all FTDC outputs.
 def calculate_rollups(output_dir: str, workspace_root: str, genny_repo_root: str) -> None:
     curator = _find_curator(workspace_root, genny_repo_root)
     if not curator:
         raise OSError("Could not find Curator.")
     for root, dirs, files in os.walk(output_dir):
-        if "internal" not in root:
-            for file in files:
-                if file.endswith(".ftdc") and "canary" not in file:
-                    ftdc_file_name = os.path.join(root, file)
-                    rollup_file_name = ftdc_file_name.replace(".ftdc", ".json")
-                    SLOG.info(
-                        "Creating perf rollup from FTDC file.",
-                        ftdc_file=ftdc_file_name,
-                        output=rollup_file_name,
-                    )
-                    args = [
-                        curator,
-                        "calculate-rollups",
-                        "--inputFile",
-                        ftdc_file_name,
-                        "--outputFile",
-                        rollup_file_name,
-                    ]
-                    subprocess.run(args, stderr=subprocess.STDOUT, text=True)
+        for file in files:
+            if file.endswith(".ftdc"):
+                ftdc_file_name = os.path.join(root, file)
+                rollup_file_name = ftdc_file_name.replace(".ftdc", ".json")
+                SLOG.info(
+                    "Creating perf rollup from FTDC file.",
+                    ftdc_file=ftdc_file_name,
+                    output=rollup_file_name,
+                )
+                args = [
+                    curator,
+                    "calculate-rollups",
+                    "--inputFile",
+                    ftdc_file_name,
+                    "--outputFile",
+                    rollup_file_name,
+                ]
+                subprocess.run(args, stderr=subprocess.STDOUT, text=True)
 
 
 @contextmanager
