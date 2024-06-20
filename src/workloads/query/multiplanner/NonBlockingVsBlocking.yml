@@ -9,7 +9,7 @@ Description: |
   of an index that provides the right sort order, and requires fetching each document before running
   a very selective residual predicate: this means each getNext() has to scan many index entries
   (1/selectivity on average).
-  
+
   This case shows that it's important for the multiplanner to round-robin the execution of the candidate
   plans. Historically (in an alternative multiplanner based on SBE execution) we have tried a simpler
   strategy that runs the candidates sequentially, starting with the nonblocking plans--this heuristic
