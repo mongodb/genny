@@ -35,4 +35,4 @@ curator
 .cache
 
 # Mothra repo is cloned for use in the genny repo, but we don't want to track it.
-src/mothra
+mothra

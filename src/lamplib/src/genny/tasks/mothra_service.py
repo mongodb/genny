@@ -30,7 +30,7 @@ class MothraService:
         return self.team_map.get(team_name, None)
 
     def _load_team_map(self) -> dict[str, Team]:
-        mothra_dir = os.path.join(self.genny_repo_root, "src", "mothra")
+        mothra_dir = os.path.join(self.genny_repo_root, "mothra")
         if not os.path.exists(mothra_dir):
             raise FileNotFoundError(
                 "Mothra repository does not exist on your system. Please clone the repository in src/ using: git clone git@github.com:10gen/mothra.git"

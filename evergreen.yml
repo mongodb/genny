@@ -505,6 +505,4 @@ modules:
     branch: master
   - name: mothra
     repo: git@github.com:10gen/mothra.git
-    # I.e., src/genny/src/mothra
-    prefix: src/
     branch: main

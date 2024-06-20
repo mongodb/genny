@@ -32,10 +32,7 @@ class TestMothraService:
         service = MothraService(genny_repo_root)
 
         mock_open.assert_has_calls(
-            [
-                call(f"{genny_repo_root}/src/mothra/{file}")
-                for file in TEAMS_FILES_PATHS
-            ],
+            [call(f"{genny_repo_root}/mothra/{file}") for file in TEAMS_FILES_PATHS],
             any_order=True,
         )
         assert service.get_team("team1") is not None

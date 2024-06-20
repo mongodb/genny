@@ -452,9 +452,9 @@ Try using `python test_result_summary.py --help` for more options.
 
 2.  Run the self-tests:
 
-    To run `self-test` it is required that the Mothra repository exists in your local storage at src/mothra.
+    To run `self-test` it is required that the [Mothra repository](https://github.com/10gen/mothra/) exists at the root of the repository.
     ```bash
-    cd src && git clone git@github.com:10gen/mothra.git && cd ..
+    git clone git@github.com:10gen/mothra.git 
     ```
 
     ```bash
