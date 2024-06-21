@@ -452,10 +452,16 @@ Try using `python test_result_summary.py --help` for more options.
 
 2.  Run the self-tests:
 
+    To run `self-test` it is required that the [Mothra repository](https://github.com/10gen/mothra/) exists at the root of the repository.
     ```bash
-	./run-genny lint-yaml  # Lint all YAML files
-	./run-genny cmake-test  # Run C++ Unit test - only necessary if editing core C++ code
-	./run-genny resmoke-test  # Run Actor integration tests - only necessary if adding/editing Actors
+    git clone git@github.com:10gen/mothra.git 
+    ```
+
+    ```bash
+    ./run-genny lint-yaml  # Lint all YAML files
+    ./run-genny self-test # Python unit tests
+    ./run-genny cmake-test  # Run C++ Unit test - only necessary if editing core C++ code
+    ./run-genny resmoke-test  # Run Actor integration tests - only necessary if adding/editing Actors
     ```
 
     Note the current [issue](#orgb084b49) running resmoke-test. Also, note that there is no schema-checking of the yaml.

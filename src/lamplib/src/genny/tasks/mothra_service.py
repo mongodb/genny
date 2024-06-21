@@ -1,11 +1,9 @@
 from dataclasses import dataclass
-import subprocess
-import tempfile
+import os
 from typing import Optional
 import structlog
 import yaml
 
-MOTHRA_REPO = "git@github.com:10gen/mothra.git"
 TEAMS_DIR = "mothra/teams"
 TEAMS_FILES = ["cloud.yaml", "database.yaml", "rnd_dev_prod.yaml", "star.yaml"]
 TEAMS_FILES_PATHS = [f"{TEAMS_DIR}/{file}" for file in TEAMS_FILES]
@@ -24,25 +22,28 @@ class Team:
 
 
 class MothraService:
-
-    def __init__(self):
+    def __init__(self, genny_repo_root: str):
+        self.genny_repo_root = genny_repo_root
         self.team_map = self._load_team_map()
 
     def get_team(self, team_name: str) -> Optional[Team]:
         return self.team_map.get(team_name, None)
 
     def _load_team_map(self) -> dict[str, Team]:
-        SLOG.info("Cloning Mothra repository to get team information.")
-        with tempfile.TemporaryDirectory() as temp_dir:
-            subprocess.run(["git", "clone", "--depth=1", MOTHRA_REPO, temp_dir])
-            teams = []
-            team_map = {}
-            for file in TEAMS_FILES_PATHS:
-                with open(f"{temp_dir}/{file}") as f:
-                    teams.extend(yaml.safe_load(f)["teams"])
+        mothra_dir = os.path.join(self.genny_repo_root, "mothra")
+        if not os.path.exists(mothra_dir):
+            raise FileNotFoundError(
+                "Mothra repository does not exist on your system. Please clone the repository in src/ using: git clone git@github.com:10gen/mothra.git"
+            )
 
-            for team in teams:
-                team_data = Team.create(**team)
-                team_map[team_data.name] = team_data
+        teams = []
+        team_map = {}
+        for file in TEAMS_FILES_PATHS:
+            with open(f"{mothra_dir}/{file}") as f:
+                teams.extend(yaml.safe_load(f)["teams"])
 
-            return team_map
+        for team in teams:
+            team_data = Team.create(**team)
+            team_map[team_data.name] = team_data
+
+        return team_map

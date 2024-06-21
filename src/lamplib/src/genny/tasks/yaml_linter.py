@@ -16,19 +16,19 @@ SLOG = structlog.get_logger(__name__)
 
 
 class YamlLinter:
+    def __init__(self, genny_repo_root: str):
+        self.genny_repo_root = genny_repo_root
+        self.mothra_service = MothraService(genny_repo_root)
 
-    def __init__(self):
-        self.mothra_service = MothraService()
-
-    def lint(self, genny_repo_root: str, lint_format: bool):
+    def lint(self, lint_format: bool):
         workload_dirs = [
-            path.join(genny_repo_root, "src", "workloads"),
-            path.join(genny_repo_root, "src", "phases"),
+            path.join(self.genny_repo_root, "src", "workloads"),
+            path.join(self.genny_repo_root, "src", "phases"),
         ]
 
         has_errors = False
-        resmoke_dirs = [path.join(genny_repo_root, "src", "resmokeconfig")]
-        evergreen_dirs = [path.join(genny_repo_root, "evergreen.yml")]
+        resmoke_dirs = [path.join(self.genny_repo_root, "src", "resmokeconfig")]
+        evergreen_dirs = [path.join(self.genny_repo_root, "evergreen.yml")]
 
         workload_yamls, workload_error = self._traverse_yamls(workload_dirs)
         resmoke_yamls, resmoke_error = self._traverse_yamls(resmoke_dirs)
@@ -54,7 +54,7 @@ class YamlLinter:
             has_errors = True
 
         if lint_format:
-            config_file_path = path.join(genny_repo_root, ".yamllint")
+            config_file_path = path.join(self.genny_repo_root, ".yamllint")
             yamllint_argv = (
                 ["--strict", "--config-file", config_file_path]
                 + workload_dirs
