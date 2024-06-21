@@ -1,13 +1,14 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  The goal of this test is to exercise multiplanning. We create as many indexes as possible, and run a
-   query that makes all of them eligible, so we get as many competing plans as possible. Here, we do this on a
-   clustered collection that has very large strings as _id.
+  The goal of this test is to exercise multiplanning in the presence of clustered indexes. We
+  create as many indexes as possible, and run a query that makes all of them eligible, so we get
+  as many competing plans as possible. The collection is clustered and has very large strings as
+  _id.
 
-   We expect classic to have better latency and throughput than SBE on this workload,
-   and we expect the combination of classic planner + SBE execution (PM-3591) to perform about
-   as well as classic.
+  This workload is similar to 'Simple.yml' except that the collection is clustered. None of the
+  competing plans actually take advantage of the clustering (there is no bounded collection scan
+  plan). Maybe we expect the larger record IDs to make fetch take more wall clock time.
 
 GlobalDefaults:
   dbname: &db test

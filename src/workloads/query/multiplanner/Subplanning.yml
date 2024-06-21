@@ -7,10 +7,6 @@ Description: |
   The workload uses an $or query with 8 clauses each containing 8 predicates. Each branch have
   only one selective predicate.
 
-  We expect classic to have better latency and throughput than SBE on this workload,
-  and we expect the combination of classic planner + SBE execution (PM-3591) to perform about
-  as well as classic.
-
 GlobalDefaults:
   dbname: &db test
   # Collection name used for queries.
