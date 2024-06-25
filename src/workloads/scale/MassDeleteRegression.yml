@@ -64,11 +64,11 @@ Actors:
     Threads: 1
     Database: massdel
     Phases:
-      OnlyActiveInPhases:
-        Active: [1, 3]
-        NopInPhasesUpTo: 6
-        PhaseConfig:
-          Repeat: 1
+      - {Nop: true}
+      - Repeat: 1
+      - {Nop: true}
+      - Repeat: 1
+      - {Nop: true}
 
 AutoRun:
   - When:
