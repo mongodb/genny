@@ -52,7 +52,7 @@ Actors:
       - {Nop: true}
       - {Nop: true}
       - Name: FindNotThere
-        Repeat: 1000
+        Repeat: 10000
         Collection: Collection0
         Operations:
           - OperationName: find
