@@ -22,11 +22,14 @@ Actors:
           f: {^RandomString: {length: 10}}
       - {Nop: true}
       - {Nop: true}
+      - {Nop: true}
+      - {Nop: true}
 
   - Name: Delete
     Type: CrudActor
     Database: massdel
     Phases:
+      - {Nop: true}
       - {Nop: true}
       - Name: DeleteAllDocs
         Repeat: 1
@@ -38,6 +41,7 @@ Actors:
                 - WriteCommand: deleteMany
                   Filter: {_id: {$lte: *docs}}
       - {Nop: true}
+      - {Nop: true}
 
   - Name: Find
     Type: CrudActor
@@ -45,13 +49,26 @@ Actors:
     Phases:
       - {Nop: true}
       - {Nop: true}
+      - {Nop: true}
+      - {Nop: true}
       - Name: FindNotThere
-        Repeat: 100
+        Repeat: 100000
         Collection: Collection0
         Operations:
           - OperationName: find
             OperationCommand:
               Filter: {_id: {$lte: *docs}}
+
+  - Name: QuiesceActor
+    Type: QuiesceActor
+    Threads: 1
+    Database: massdel
+    Phases:
+      - {Nop: true}
+      - Repeat: 1
+      - {Nop: true}
+      - Repeat: 1
+      - {Nop: true}
 
 AutoRun:
   - When:
