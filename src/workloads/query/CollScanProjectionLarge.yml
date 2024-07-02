@@ -22,5 +22,6 @@ AutoRun:
           - standalone-heuristic-bonsai
           - standalone-sampling-bonsai
           - standalone-sbe
+          - replica
       branch_name:
         $gte: v7.0
