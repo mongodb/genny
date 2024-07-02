@@ -18,186 +18,213 @@ Description: |
     the partition key.
 
 Actors:
-- Name: InsertData
-  Type: Loader
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    Database: &db test
+  - Name: InsertData
+    Type: Loader
     Threads: 1
-    CollectionCount: 1
-    # Given that document size is between 10kB and 20kB, 60k documents, when divided into 12 partitions, does not spill,
-    # but divided into fewer partitions (5 partitions), does spill.
-    DocumentCount: 60000
-    BatchSize: &batchSize 1000
-    Document:
-      # Each document has a unique _id. In phase 2 we use this to create evenly distributed
-      # partition keys.
-      _id: {^Inc: {}}
-      # This int field is what we sum. Its value shouldn't matter for this test.
-      int: &int {^RandomInt: {min: 1, max: 10000}}
-      # This string pads the doc size out to around 10KB.
-      string: &string {^RandomString: {length: 10000}}
-  - Nop: true
-  - Nop: true
+    Phases:
+      - Repeat: 1
+        Database: &db test
+        Threads: 1
+        CollectionCount: 1
+        # Given that document size is between 10kB and 20kB, 60k documents, when divided into 12 partitions, does not spill,
+        # but divided into fewer partitions (5 partitions), does spill.
+        DocumentCount: 60000
+        BatchSize: &batchSize 1000
+        Document:
+          # Each document has a unique _id. In phase 2 we use this to create evenly distributed
+          # partition keys.
+          _id: { ^Inc: {} }
+          # This int field is what we sum. Its value shouldn't matter for this test.
+          int: &int { ^RandomInt: { min: 1, max: 10000 } }
+          # This string pads the doc size out to around 10KB.
+          string: &string { ^RandomString: { length: 10000 } }
+      - Nop: true
+      - Nop: true
 
-- Name: FixupDataAndCreateIndexes
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - Nop: true
-  - Repeat: 1
-    Database: *db
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        update: Collection0
-        updates: [
-          {
-            q: {},
-            u: [
-              {$set: {
-                spill_indexed: {$mod: ["$_id", 5]},
-                spill_unindexed: {$mod: ["$_id", 5]},
-                not_spill_indexed: {$mod: ["$_id", 12]},
-                not_spill_unindexed: {$mod: ["$_id", 12]},
-              }},
-            ],
-            multi: true,
-            upsert: false,
-          }
-        ]
-    - OperationName: RunCommand
-      OperationCommand:
-        createIndexes: Collection0
-        indexes: [
-          {key: {spill_indexed: 1}, name: "spill_indexed_1"},
-          {key: {not_spill_indexed: 1}, name: "not_spill_indexed_1"},
-        ]
-  - Nop: true
+  - Name: FixupDataAndCreateIndexes
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      - Nop: true
+      - Repeat: 1
+        Database: *db
+        Operations:
+          - OperationName: RunCommand
+            OperationCommand:
+              update: Collection0
+              updates:
+                [
+                  {
+                    q: {},
+                    u:
+                      [
+                        {
+                          $set:
+                            {
+                              spill_indexed: { $mod: ["$_id", 5] },
+                              spill_unindexed: { $mod: ["$_id", 5] },
+                              not_spill_indexed: { $mod: ["$_id", 12] },
+                              not_spill_unindexed: { $mod: ["$_id", 12] },
+                            },
+                        },
+                      ],
+                    multi: true,
+                    upsert: false,
+                  },
+                ]
+          - OperationName: RunCommand
+            OperationCommand:
+              createIndexes: Collection0
+              indexes:
+                [
+                  { key: { spill_indexed: 1 }, name: "spill_indexed_1" },
+                  {
+                    key: { not_spill_indexed: 1 },
+                    name: "not_spill_indexed_1",
+                  },
+                ]
+      - Nop: true
 
-- Name: SetWindowFieldsUnbounded
-  Type: CrudActor
-  Threads: 1
-  Phases:
-  - Nop: true
-  - Nop: true
-  - Repeat: 10
-    Database: *db
-    Collection: Collection0
-    Operations:
+  - Name: SetWindowFieldsUnbounded
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      - Nop: true
+      - Nop: true
+      - Repeat: 10
+        Database: *db
+        Collection: Collection0
+        Operations:
+          # Nothing spills:
+          # - $sort is indexed
+          # - partitions are small enough to fit in memory
+          - OperationMetricsName: NothingSpills
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                [
+                  {
+                    $setWindowFields:
+                      {
+                        partitionBy: "$not_spill_indexed",
+                        output: { total: { $sum: "$int" } },
+                      },
+                  },
+                  {
+                    $project:
+                      {
+                        partitionKey: 1,
+                        percentage: { $divide: ["$int", "$total"] },
+                        keepString: { $type: "$string" },
+                      },
+                  },
+                  { $limit: *batchSize },
+                ]
+              Options:
+                BatchSize: *batchSize
+                AllowDiskUse: true
 
-    # Nothing spills:
-    # - $sort is indexed
-    # - partitions are small enough to fit in memory
-    - OperationMetricsName: NothingSpills
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [
-          {$setWindowFields: {
-            partitionBy: "$not_spill_indexed",
-            output: {
-              total: {$sum: "$int"}
-            }
-          }},
-          {$project: {
-            partitionKey: 1,
-            percentage: {$divide: ["$int", "$total"]},
-            keepString: {$type: "$string"},
-          }},
-          {$limit: *batchSize}
-         ]
-        Options:
-          BatchSize: *batchSize
-          AllowDiskUse: true
+          # Only the sort spills:
+          # - $sort is not indexed
+          # - partitions are small enough to fit in memory
+          - OperationMetricsName: SortSpills
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                [
+                  {
+                    $setWindowFields:
+                      {
+                        partitionBy: "$not_spill_unindexed",
+                        output: { total: { $sum: "$int" } },
+                      },
+                  },
+                  {
+                    $project:
+                      {
+                        partitionKey: 1,
+                        percentage: { $divide: ["$int", "$total"] },
+                        keepString: { $type: "$string" },
+                      },
+                  },
+                  { $limit: *batchSize },
+                ]
+              Options:
+                BatchSize: *batchSize
+                AllowDiskUse: true
 
-    # Only the sort spills:
-    # - $sort is not indexed
-    # - partitions are small enough to fit in memory
-    - OperationMetricsName: SortSpills
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [
-          {$setWindowFields: {
-            partitionBy: "$not_spill_unindexed",
-            output: {
-              total: {$sum: "$int"}
-            }
-          }},
-          {$project: {
-            partitionKey: 1,
-            percentage: {$divide: ["$int", "$total"]},
-            keepString: {$type: "$string"},
-          }},
-          {$limit: *batchSize}
-          ]
-        Options:
-          BatchSize: *batchSize
-          AllowDiskUse: true
+          # Only the partitioning spills:
+          # - $sort is indexed
+          # - partitions are too big to fit in memory
+          - OperationMetricsName: PartitionSpills
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                [
+                  {
+                    $setWindowFields:
+                      {
+                        partitionBy: "$spill_indexed",
+                        output: { total: { $sum: "$int" } },
+                      },
+                  },
+                  {
+                    $project:
+                      {
+                        partitionKey: 1,
+                        percentage: { $divide: ["$int", "$total"] },
+                        keepString: { $type: "$string" },
+                      },
+                  },
+                  { $limit: *batchSize },
+                ]
+              Options:
+                BatchSize: *batchSize
+                AllowDiskUse: true
 
-    # Only the partitioning spills:
-    # - $sort is indexed
-    # - partitions are too big to fit in memory
-    - OperationMetricsName: PartitionSpills
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [
-          {$setWindowFields: {
-            partitionBy: "$spill_indexed",
-            output: {
-              total: {$sum: "$int"}
-            }
-          }},
-          {$project: {
-            partitionKey: 1,
-            percentage: {$divide: ["$int", "$total"]},
-            keepString: {$type: "$string"},
-          }},
-          {$limit: *batchSize}
-         ]
-        Options:
-          BatchSize: *batchSize
-          AllowDiskUse: true
-
-    # Both operations spill:
-    # - $sort is not indexed
-    # - partitions are too big to fit in memory
-    - OperationMetricsName: BothSpill
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [
-          {$setWindowFields: {
-            partitionBy: "$spill_unindexed",
-            output: {
-              total: {$sum: "$int"}
-            }
-          }},
-          {$project: {
-            partitionKey: 1,
-            percentage: {$divide: ["$int", "$total"]},
-            keepString: {$type: "$string"},
-          }},
-          {$limit: *batchSize}
-         ]
-        Options:
-          BatchSize: *batchSize
-          AllowDiskUse: true
+          # Both operations spill:
+          # - $sort is not indexed
+          # - partitions are too big to fit in memory
+          - OperationMetricsName: BothSpill
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                [
+                  {
+                    $setWindowFields:
+                      {
+                        partitionBy: "$spill_unindexed",
+                        output: { total: { $sum: "$int" } },
+                      },
+                  },
+                  {
+                    $project:
+                      {
+                        partitionKey: 1,
+                        percentage: { $divide: ["$int", "$total"] },
+                        keepString: { $type: "$string" },
+                      },
+                  },
+                  { $limit: *batchSize },
+                ]
+              Options:
+                BatchSize: *batchSize
+                AllowDiskUse: true
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-      - standalone-80-feature-flags
-      - standalone-all-feature-flags
-      - standalone-classic-query-engine
-      - standalone-sbe
-      - replica
-      - replica-80-feature-flags
-      - replica-all-feature-flags
-      - shard-lite
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone
+          - standalone-80-feature-flags
+          - standalone-all-feature-flags
+          - standalone-classic-query-engine
+          - standalone-sbe
+          - replica
+          - replica-80-feature-flags
+          - replica-all-feature-flags
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4

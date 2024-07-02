@@ -5,68 +5,78 @@ Description: |
   partitionBy expression.
 
 Actors:
-- Name: InsertData
-  Type: Loader
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    Database: &db test
+  - Name: InsertData
+    Type: Loader
     Threads: 1
-    CollectionCount: 1
-    # Choose a sufficiently small document count to keep from spilling to disk.
-    DocumentCount: 10000
-    BatchSize: &batchSize 10000
-    Document:
-      partitionKey: {^RandomInt: {min: 1, max: 5}}
-      time: {^RandomDate: {min: "2020-01-01", max: "2020-01-02"}}
-      temp: {^RandomDouble: {distribution: normal, mean: 145, sigma: 30.0}}
-  - &Nop {Nop: true}
-  - *Nop
+    Phases:
+      - Repeat: 1
+        Database: &db test
+        Threads: 1
+        CollectionCount: 1
+        # Choose a sufficiently small document count to keep from spilling to disk.
+        DocumentCount: 10000
+        BatchSize: &batchSize 10000
+        Document:
+          partitionKey: { ^RandomInt: { min: 1, max: 5 } }
+          time: { ^RandomDate: { min: "2020-01-01", max: "2020-01-02" } }
+          temp:
+            { ^RandomDouble: { distribution: normal, mean: 145, sigma: 30.0 } }
+      - &Nop { Nop: true }
+      - *Nop
 
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: admin
-  Phases:
-  - *Nop
-  - Repeat: 1
-  - *Nop
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: admin
+    Phases:
+      - *Nop
+      - Repeat: 1
+      - *Nop
 
-- Name: SlidingWindows
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - Repeat: 10
-    Database: *db
-    Operations:
-    - OperationMetricsName: MovingAvgPositionBasedWithComplexPartition
-      OperationName: RunCommand
-      OperationCommand:
-        aggregate: Collection0
-        pipeline:
-          [{$setWindowFields: {
-            partitionBy: {$mod: ["$partitionKey", 3]},
-            sortBy: {time: 1},
-            output: {avg: {$avg: "$temp", window: {documents: [-5, 5]}}}}}]
-        cursor: {batchSize: *batchSize}
+  - Name: SlidingWindows
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - Repeat: 10
+        Database: *db
+        Operations:
+          - OperationMetricsName: MovingAvgPositionBasedWithComplexPartition
+            OperationName: RunCommand
+            OperationCommand:
+              aggregate: Collection0
+              pipeline:
+                [
+                  {
+                    $setWindowFields:
+                      {
+                        partitionBy: { $mod: ["$partitionKey", 3] },
+                        sortBy: { time: 1 },
+                        output:
+                          {
+                            avg:
+                              { $avg: "$temp", window: { documents: [-5, 5] } },
+                          },
+                      },
+                  },
+                ]
+              cursor: { batchSize: *batchSize }
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-      - standalone-80-feature-flags
-      - standalone-all-feature-flags
-      - standalone-classic-query-engine
-      - standalone-sbe
-      - replica
-      - replica-80-feature-flags
-      - replica-all-feature-flags
-      - shard-lite
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone
+          - standalone-80-feature-flags
+          - standalone-all-feature-flags
+          - standalone-classic-query-engine
+          - standalone-sbe
+          - replica
+          - replica-80-feature-flags
+          - replica-all-feature-flags
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4

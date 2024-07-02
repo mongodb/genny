@@ -12,300 +12,323 @@ GlobalDefaults:
   Limit: &limit 100
 
 Actors:
-- Name: CreateTimeSeriesCollection
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    Database: &db test
-    Operation:
-      OperationMetricsName: CreateTimeSeriesCollection
-      OperationName: RunCommand
-      OperationCommand:
-        {create: &coll Collection0, timeseries: {timeField: "timestamp", metaField: "numeric"}}
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-  - Nop: true
-  - Repeat: 1
-  - Nop: true
-  - Repeat: 1
-  - Nop: true
-  - Repeat: 1
-  - Nop: true
-  - Repeat: 1
-  - Nop: true
-  - Repeat: 1
-  - Nop: true
-  - Repeat: 1
-  - Nop: true
-
-- Name: InsertData
-  Type: Loader
-  Threads: 1
-  Phases:
-  - Nop: true
-  - Nop: true
-  - Repeat: 1
-    Database: *db
-    Collection: *coll
+  - Name: CreateTimeSeriesCollection
+    Type: RunCommand
     Threads: 1
-    CollectionCount: 1
-    DocumentCount: 10000
-    BatchSize: 100
-    Document:
-      part1: {^Choose: {from: [1, 2, 3, 4]}}
-      part2: {^Choose: {from: [1, 2, 3, 4]}}
-      timestamp: {^RandomDate: {
-        min: {^Inc: {start: 0, multiplier: 1, step: 1}},
-        max: {^Inc: {start: 1, multiplier: 1, step: 1}}
-      }
-      }
-      double: {^Choose: {from: [
-        {^RandomDouble: { min: 0.0, max: 500.0 }},
-        null], weights: [2, 8]}}
-      numeric: {^Choose: {from: [
-        {^RandomInt: {min: -100, max: 100}},
-        {^RandomDouble: { min: 0.0, max: 500.0 }},
-        null], weights: [1, 1, 8]}}
-      string: {^Choose: {from: [
-        {^RandomString: {length: 15}},
-        null], weights: [1, 4]}}
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-
-- Name: LocfSingleOutput
-  Type: CrudActor
-  Threads: 1
-  Phases:
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Duration: 30 seconds
-    Database: *db
-    Collection: *coll
-    Operations:
-    - OperationMetricsName: TestLocfSingleOutput
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [
-          {
-            $fill: {
-              sortBy: {timestamp: 1},
-              output: {
-                numeric: {
-                  method: "locf"}
-              }
+    Phases:
+      - Repeat: 1
+        Database: &db test
+        Operation:
+          OperationMetricsName: CreateTimeSeriesCollection
+          OperationName: RunCommand
+          OperationCommand:
+            {
+              create: &coll Collection0,
+              timeseries: { timeField: "timestamp", metaField: "numeric" },
             }
-          },
-          {$limit: *limit}
-        ]
-        cursor: {}
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
 
-- Name: LinearFillSingleOutput
-  Type: CrudActor
-  Threads: 1
-  Phases:
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Duration: 30 seconds
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
     Database: *db
-    Collection: *coll
-    Operations:
-    - OperationMetricsName: TestLinearFillSingleOutput
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [
-          {
-            $fill: {
-              sortBy: {timestamp: 1},
-              output: {
-                numeric: {
-                  method: "linear"}
-              }
-            }
-          },
-          {$limit: *limit}
-        ]
-        cursor: {}
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
+    Phases:
+      - Nop: true
+      - Repeat: 1
+      - Nop: true
+      - Repeat: 1
+      - Nop: true
+      - Repeat: 1
+      - Nop: true
+      - Repeat: 1
+      - Nop: true
+      - Repeat: 1
+      - Nop: true
+      - Repeat: 1
+      - Nop: true
 
-- Name: LocfMultipleOutputsWithMultiplePartitions
-  Type: CrudActor
-  Threads: 1
-  Phases:
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Duration: 30 seconds
-    Database: *db
-    Collection: *coll
-    Operations:
-    - OperationMetricsName: TestLocfMultipleOutputsWithMultiplePartitions
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [
-          {
-            $fill: {
-              partitionBy: {part1: "$part1", part2: "$part2"},
-              sortBy: {timestamp: 1},
-              output: {
-                numeric: {
-                  method: "locf"},
-                string: {
-                  method: "locf"},
-              }
+  - Name: InsertData
+    Type: Loader
+    Threads: 1
+    Phases:
+      - Nop: true
+      - Nop: true
+      - Repeat: 1
+        Database: *db
+        Collection: *coll
+        Threads: 1
+        CollectionCount: 1
+        DocumentCount: 10000
+        BatchSize: 100
+        Document:
+          part1: { ^Choose: { from: [1, 2, 3, 4] } }
+          part2: { ^Choose: { from: [1, 2, 3, 4] } }
+          timestamp:
+            {
+              ^RandomDate:
+                {
+                  min: { ^Inc: { start: 0, multiplier: 1, step: 1 } },
+                  max: { ^Inc: { start: 1, multiplier: 1, step: 1 } },
+                },
             }
-          },
-          {$limit: *limit}
-        ]
-        cursor: {}
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
+          double:
+            {
+              ^Choose:
+                {
+                  from: [{ ^RandomDouble: { min: 0.0, max: 500.0 } }, null],
+                  weights: [2, 8],
+                },
+            }
+          numeric:
+            {
+              ^Choose:
+                {
+                  from:
+                    [
+                      { ^RandomInt: { min: -100, max: 100 } },
+                      { ^RandomDouble: { min: 0.0, max: 500.0 } },
+                      null,
+                    ],
+                  weights: [1, 1, 8],
+                },
+            }
+          string:
+            {
+              ^Choose:
+                {
+                  from: [{ ^RandomString: { length: 15 } }, null],
+                  weights: [1, 4],
+                },
+            }
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
 
-- Name: LinearFillMultipleOutputsWithMultiplePartitions
-  Type: CrudActor
-  Threads: 1
-  Phases:
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Duration: 30 seconds
-    Database: *db
-    Collection: *coll
-    Operations:
-    - OperationMetricsName: TestMultipleOutputsWithMultiplePartitions
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [
-          {
-            $fill: {
-              partitionBy: {part1: "$part1", part2: "$part2"},
-              sortBy: {timestamp: 1},
-              output: {
-                numeric: {
-                  method: "linear"},
-                double: {
-                  method: "linear"},
-              }
-            }
-          },
-          {$limit: *limit}
-        ]
-        cursor: {}
-  - Nop: true
-  - Nop: true
+  - Name: LocfSingleOutput
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Duration: 30 seconds
+        Database: *db
+        Collection: *coll
+        Operations:
+          - OperationMetricsName: TestLocfSingleOutput
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                [
+                  {
+                    $fill:
+                      {
+                        sortBy: { timestamp: 1 },
+                        output: { numeric: { method: "locf" } },
+                      },
+                  },
+                  { $limit: *limit },
+                ]
+              cursor: {}
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
 
-- Name: MixedMethodsMultipleOutputsWithMultiplePartitions
-  Type: CrudActor
-  Threads: 1
-  Phases:
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Nop: true
-  - Duration: 30 seconds
-    Database: *db
-    Collection: *coll
-    Operations:
-    - OperationMetricsName: TestMultipleOutputsWithMultiplePartitions
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [
-          {
-            $fill: {
-              partitionBy: {part1: "$part1", part2: "$part2"},
-              sortBy: {timestamp: 1},
-              output: {
-                numeric: {
-                  method: "linear"},
-                double: {
-                  method: "linear"},
-                string: {
-                  method: "locf"
-                }
-              }
-            }
-          },
-          {$limit: *limit}
-        ]
-        cursor: {}
+  - Name: LinearFillSingleOutput
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Duration: 30 seconds
+        Database: *db
+        Collection: *coll
+        Operations:
+          - OperationMetricsName: TestLinearFillSingleOutput
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                [
+                  {
+                    $fill:
+                      {
+                        sortBy: { timestamp: 1 },
+                        output: { numeric: { method: "linear" } },
+                      },
+                  },
+                  { $limit: *limit },
+                ]
+              cursor: {}
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+
+  - Name: LocfMultipleOutputsWithMultiplePartitions
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Duration: 30 seconds
+        Database: *db
+        Collection: *coll
+        Operations:
+          - OperationMetricsName: TestLocfMultipleOutputsWithMultiplePartitions
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                [
+                  {
+                    $fill:
+                      {
+                        partitionBy: { part1: "$part1", part2: "$part2" },
+                        sortBy: { timestamp: 1 },
+                        output:
+                          {
+                            numeric: { method: "locf" },
+                            string: { method: "locf" },
+                          },
+                      },
+                  },
+                  { $limit: *limit },
+                ]
+              cursor: {}
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+
+  - Name: LinearFillMultipleOutputsWithMultiplePartitions
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Duration: 30 seconds
+        Database: *db
+        Collection: *coll
+        Operations:
+          - OperationMetricsName: TestMultipleOutputsWithMultiplePartitions
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                [
+                  {
+                    $fill:
+                      {
+                        partitionBy: { part1: "$part1", part2: "$part2" },
+                        sortBy: { timestamp: 1 },
+                        output:
+                          {
+                            numeric: { method: "linear" },
+                            double: { method: "linear" },
+                          },
+                      },
+                  },
+                  { $limit: *limit },
+                ]
+              cursor: {}
+      - Nop: true
+      - Nop: true
+
+  - Name: MixedMethodsMultipleOutputsWithMultiplePartitions
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Nop: true
+      - Duration: 30 seconds
+        Database: *db
+        Collection: *coll
+        Operations:
+          - OperationMetricsName: TestMultipleOutputsWithMultiplePartitions
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                [
+                  {
+                    $fill:
+                      {
+                        partitionBy: { part1: "$part1", part2: "$part2" },
+                        sortBy: { timestamp: 1 },
+                        output:
+                          {
+                            numeric: { method: "linear" },
+                            double: { method: "linear" },
+                            string: { method: "locf" },
+                          },
+                      },
+                  },
+                  { $limit: *limit },
+                ]
+              cursor: {}
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-      - replica
-      - single-replica
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
-      - v5.0
-      - v5.1
-      - v5.2
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone
+          - replica
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4
+          - v5.0
+          - v5.1
+          - v5.2

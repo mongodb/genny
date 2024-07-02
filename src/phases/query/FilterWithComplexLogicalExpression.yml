@@ -20,15 +20,16 @@ Description: |
     document
 
 Keywords:
-- Loader
-- CrudActor
-- QuiesceActor
-- insert
-- find
+  - Loader
+  - CrudActor
+  - QuiesceActor
+  - insert
+  - find
 
 GlobalDefaults:
-  Database: &Database {^Parameter: {Name: Database, Default: unused}}
-  DocumentCount: &DocumentCount {^Parameter: {Name: DocumentCount, Default: -1}}
+  Database: &Database { ^Parameter: { Name: Database, Default: unused } }
+  DocumentCount:
+    &DocumentCount { ^Parameter: { Name: DocumentCount, Default: -1 } }
   Collection: &Collection Collection0
   Repeat: &Repeat 50
   Threads: &Threads 1
@@ -37,739 +38,799 @@ GlobalDefaults:
 # Set of actor templates for executing a rooted $and/$or over a configurable number of clauses for
 # the aggregation and match languages, respectively.
 ActorTemplates:
-- TemplateName: ManyChildClauseQueryTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "unused"}}
+  - TemplateName: ManyChildClauseQueryTemplate
+    Config:
+      Name: { ^Parameter: { Name: "Name", Default: "unused" } }
+      Type: CrudActor
+      Database: *Database
+      Threads: 1
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{ ^Parameter: { Name: "ActivePhase", Default: -1 } }]
+          NopInPhasesUpTo: *MaxPhases
+          PhaseConfig:
+            Repeat: { ^Parameter: { Name: "Repeat", Default: 1 } }
+            Collection: *Collection
+            Operations:
+              - OperationName: find
+                OperationCommand:
+                  Filter:
+                    {
+                      ^Parameter:
+                        {
+                          Name: "Filter",
+                          Default: { unused: "please specify a valid filter" },
+                        },
+                    }
+
+  - TemplateName: AggregationOrWithManyChildClausesTemplate
+    Config:
+      ActorFromTemplate:
+        TemplateName: ManyChildClauseQueryTemplate
+        TemplateParameters:
+          Name: { ^Parameter: { Name: "Name", Default: "unused" } }
+          Repeat: { ^Parameter: { Name: "Repeat", Default: 1 } }
+          ActivePhase: { ^Parameter: { Name: "ActivePhase", Default: -1 } }
+          Filter:
+            {
+              $expr:
+                {
+                  $or:
+                    {
+                      ^Array:
+                        {
+                          of:
+                            {
+                              $and:
+                                [
+                                  {
+                                    $eq:
+                                      [
+                                        "$a",
+                                        { ^RandomInt: { min: 2, max: 1000 } },
+                                      ],
+                                  },
+                                  {
+                                    $eq:
+                                      [
+                                        "$b",
+                                        { ^RandomInt: { min: 2, max: 1000 } },
+                                      ],
+                                  },
+                                ],
+                            },
+                          number:
+                            {
+                              ^Parameter:
+                                { Name: "NumberOfClauses", Default: -1 },
+                            },
+                        },
+                    },
+                },
+            }
+
+  - TemplateName: MatchOrWithManyChildClausesTemplate
+    Config:
+      ActorFromTemplate:
+        TemplateName: ManyChildClauseQueryTemplate
+        TemplateParameters:
+          Name: { ^Parameter: { Name: "Name", Default: "unused" } }
+          Repeat: { ^Parameter: { Name: "Repeat", Default: 1 } }
+          ActivePhase: { ^Parameter: { Name: "ActivePhase", Default: -1 } }
+          Filter:
+            {
+              $or:
+                {
+                  ^Array:
+                    {
+                      of:
+                        {
+                          a: { ^RandomInt: { min: 2, max: 1000 } },
+                          b: { ^RandomInt: { min: 2, max: 1000 } },
+                        },
+                      number:
+                        {
+                          ^Parameter: { Name: "NumberOfClauses", Default: -1 },
+                        },
+                    },
+                },
+            }
+
+  - TemplateName: MatchAndWithManyChildClausesTemplate
+    Config:
+      ActorFromTemplate:
+        TemplateName: ManyChildClauseQueryTemplate
+        TemplateParameters:
+          Name: { ^Parameter: { Name: "Name", Default: "unused" } }
+          Repeat: { ^Parameter: { Name: "Repeat", Default: 1 } }
+          ActivePhase: { ^Parameter: { Name: "ActivePhase", Default: -1 } }
+          Filter: { $and: {
+            # Each time that this template is invoked, we wish to generate a query of the form:
+            #
+            # {$and: [{"arr": 0, "arr": 1, ... "arr": NumberOfClauses - 1}]}
+            #
+            # We achieve this using the "^Inc" generator. However, because ^Inc increments
+            # globally, we need to bind the generated array and keep using it to avoid generating
+            # values greater than/equal to NumberOfClauses. As such, we generate the array within
+            # a ^Cycle of length 1 and keep repeating it to avoid this problem.
+            ^Cycle:
+              {
+                ofLength: 1,
+                fromGenerator:
+                  {
+                    ^Array:
+                      {
+                        of:
+                          {
+                            ^Object:
+                              {
+                                withNEntries: 1,
+                                havingKeys: "arr",
+                                andValues:
+                                  { ^Inc: { start: 0, step: 1 } },
+                                duplicatedKeys: insert,
+                              },
+                          },
+                        number:
+                          {
+                            ^Parameter:
+                              { Name: "NumberOfClauses", Default: -1 },
+                          },
+                      },
+                  },
+              },
+          } }
+
+Actors:
+  # Clear any pre-existing collection state.
+  - Name: ClearCollection
     Type: CrudActor
     Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+          Collection: *Collection
+          Operations:
+            - OperationName: drop
+
+  # Phase 0: Insert documents into the collection. Note that half of the documents will have the
+  # path "n5.b.d", while the second will have the path "n5.c.d".
+  - Name: InsertData
+    Type: Loader
     Threads: 1
     Phases:
       OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "ActivePhase", Default: -1}}]
+        Active: [1]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
-          Repeat: {^Parameter: {Name: "Repeat", Default: 1}}
+          Repeat: 1
+          Database: *Database
+          Threads: *Threads
+          CollectionCount: 1
+          DocumentCount: *DocumentCount
+          BatchSize: 1000
+          Document:
+            # NOTE: These documents will not produce a match for the filter below, forcing the query
+            # to scan the entire collection. The only exception to this is the 'arr' field, which
+            # is intended to be used in rooted $and queries of the form:
+            # {$and: [{arr: 1}, {arr: 2}, ..., {arr: n}]
+            a: 1
+            b: 1
+            c: 1
+            d: 1
+            n1: { a: { b: { c: { d: { e: 1 } } } } }
+            n2: { a: { b: { c: { d: { e: 1 } } } } }
+            n3: { a: { b: { c: { d: { e: 1 } } } } }
+            n4: { a: { b: { c: { d: { e: 1 } } } } }
+            n5:
+              {
+                ^Object:
+                  {
+                    withNEntries: 1,
+                    havingKeys:
+                      { ^RandomString: { length: 1, alphabet: "bc" } },
+                    andValues:
+                      {
+                        ^Object:
+                          {
+                            withNEntries: 1,
+                            havingKeys: "d",
+                            andValues: 1,
+                            duplicatedKeys: insert,
+                          },
+                      },
+                    duplicatedKeys: insert,
+                  },
+              }
+            arr:
+              {
+                ^Cycle:
+                  {
+                    ofLength: 1,
+                    fromGenerator:
+                      {
+                        ^Array:
+                          { number: 200, of: { ^Inc: { start: 0, step: 1 } } },
+                      },
+                  },
+              }
+
+  # Phase 1: Ensure all data is synced to disk.
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+
+  # Phase 2-N: Run various queries with complex filters.
+  - Name: AggregationExpressionWidePredicate
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
           Collection: *Collection
           Operations:
-          - OperationName: find
-            OperationCommand:
-              Filter: {^Parameter: {Name: "Filter", Default: {unused: "please specify a valid filter"}}}
-
-- TemplateName: AggregationOrWithManyChildClausesTemplate
-  Config:
-    ActorFromTemplate:
-      TemplateName: ManyChildClauseQueryTemplate
-      TemplateParameters:
-        Name: {^Parameter: {Name: "Name", Default: "unused"}}
-        Repeat: {^Parameter: {Name: "Repeat", Default: 1}}
-        ActivePhase: {^Parameter: {Name: "ActivePhase", Default: -1}}
-        Filter:
-          {$expr:
-             {$or:
-                {^Array: {of: {$and: [
-                  {$eq: ["$a", {^RandomInt: {min: 2, max: 1000}}]},
-                  {$eq: ["$b", {^RandomInt: {min: 2, max: 1000}}]}]},
-                          number: {^Parameter: { Name: "NumberOfClauses", Default: -1}}}}}}
-
-- TemplateName: MatchOrWithManyChildClausesTemplate
-  Config:
-    ActorFromTemplate:
-      TemplateName: ManyChildClauseQueryTemplate
-      TemplateParameters:
-        Name: {^Parameter: {Name: "Name", Default: "unused"}}
-        Repeat: {^Parameter: {Name: "Repeat", Default: 1}}
-        ActivePhase: {^Parameter: {Name: "ActivePhase", Default: -1}}
-        Filter:
-          {$or:
-             {^Array: {of:
-                         {a: {^RandomInt: {min: 2, max: 1000}},
-                          b: {^RandomInt: {min: 2, max: 1000}}},
-                       number: {^Parameter: {Name: "NumberOfClauses", Default: -1}}}}}
-
-- TemplateName: MatchAndWithManyChildClausesTemplate
-  Config:
-    ActorFromTemplate:
-      TemplateName: ManyChildClauseQueryTemplate
-      TemplateParameters:
-        Name: {^Parameter: {Name: "Name", Default: "unused"}}
-        Repeat: {^Parameter: {Name: "Repeat", Default: 1}}
-        ActivePhase: {^Parameter: {Name: "ActivePhase", Default: -1}}
-        Filter:
-          {$and:
-             # Each time that this template is invoked, we wish to generate a query of the form:
-             #
-             # {$and: [{"arr": 0, "arr": 1, ... "arr": NumberOfClauses - 1}]}
-             #
-             # We achieve this using the "^Inc" generator. However, because ^Inc increments
-             # globally, we need to bind the generated array and keep using it to avoid generating
-             # values greater than/equal to NumberOfClauses. As such, we generate the array within
-             # a ^Cycle of length 1 and keep repeating it to avoid this problem.
-             {^Cycle: {
-               ofLength: 1,
-               fromGenerator:
-                 {^Array: {
-                   of:
-                     {^Object: {
-                       withNEntries: 1,
-                       havingKeys: "arr",
-                       andValues: {^Inc: {start: 0, step: 1}},
-                       duplicatedKeys: insert
-                     }},
-                   number: {^Parameter: {Name: "NumberOfClauses", Default: -1}}
-                 }}
-             }}
-          }
-
-Actors:
-# Clear any pre-existing collection state.
-- Name: ClearCollection
-  Type: CrudActor
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
-        Collection: *Collection
-        Operations:
-        - OperationName: drop
-
-# Phase 0: Insert documents into the collection. Note that half of the documents will have the
-# path "n5.b.d", while the second will have the path "n5.c.d".
-- Name: InsertData
-  Type: Loader
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        Threads: *Threads
-        CollectionCount: 1
-        DocumentCount: *DocumentCount
-        BatchSize: 1000
-        Document:
-          # NOTE: These documents will not produce a match for the filter below, forcing the query
-          # to scan the entire collection. The only exception to this is the 'arr' field, which
-          # is intended to be used in rooted $and queries of the form:
-          # {$and: [{arr: 1}, {arr: 2}, ..., {arr: n}]
-          a: 1
-          b: 1
-          c: 1
-          d: 1
-          n1: {
-            a: {
-              b: {
-                c: {
-                  d: {
-                    e: 1
-                  }
-                }
-              }
-            }
-          }
-          n2: {
-            a: {
-              b: {
-                c: {
-                  d: {
-                    e: 1
-                  }
-                }
-              }
-            }
-          }
-          n3: {
-            a: {
-              b: {
-                c: {
-                  d: {
-                    e: 1
-                  }
-                }
-              }
-            }
-          }
-          n4: {
-            a: {
-              b: {
-                c: {
-                  d: {
-                    e: 1
-                  }
-                }
-              }
-            }
-          }
-          n5: { ^Object: { withNEntries: 1,
-                           havingKeys: { ^RandomString: { length: 1, alphabet: "bc" } },
-                           andValues: { ^Object: { withNEntries: 1,
-                                                   havingKeys: "d",
-                                                   andValues: 1,
-                                                   duplicatedKeys: insert } },
-                           duplicatedKeys: insert } }
-          arr: {^Cycle: {ofLength: 1, fromGenerator: {^Array: {number: 200, of: {^Inc: {start: 0, step: 1}}}}}}
-
-# Phase 1: Ensure all data is synced to disk.
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
-
-# Phase 2-N: Run various queries with complex filters.
-- Name: AggregationExpressionWidePredicate
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {
-              $expr: {
-                $or: [
-                  {$eq: ["$a", 10]},
-                  {$eq: ["$b", 11]},
-                  {$eq: ["$c", 12]},
-                  {$eq: ["$d", 13]},
-                  {$eq: ["$a", 14]},
-                  {$eq: ["$b", 15]},
-                  {$eq: ["$c", 16]},
-                  {$eq: ["$d", 17]},
-                  {$eq: ["$a", 18]},
-                  {$eq: ["$b", 19]},
-                ]
-              }
-            }
-
-- Name: MatchExpressionWidePredicate
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [4]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {
-              $or: [
-                {a: 10},
-                {b: 11},
-                {c: 12},
-                {d: 13},
-                {a: 14},
-                {b: 15},
-                {c: 16},
-                {d: 17},
-                {a: 18},
-                {b: 19},
-              ]
-            }
-
-- Name: AggregationExpressionSingletonPredicateWithDeepFieldpaths
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [5]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {
-              $expr: {
-                $eq: ["$n1.a.b.c.d.e", 10]
-              }
-            }
-
-- Name: MatchExpressionSingletonPredicateWithDeepFieldpaths
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [6]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {
-              "n1.a.b.c.d.e": 10
-            }
-
-- Name: AggregationExpressionWidePredicateWithDeepFieldpaths
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [7]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {
-              $expr: {
-                $or: [
-                  {$eq: ["$n1.a.b.c.d.e", 10]},
-                  {$eq: ["$n2.a.b.c.d.e", 11]},
-                  {$eq: ["$n3.a.b.c.d.e", 12]},
-                  {$eq: ["$n4.a.b.c.d.e", 13]},
-                  {$eq: ["$n1.a.b.c.d.e", 14]},
-                  {$eq: ["$n2.a.b.c.d.e", 15]},
-                  {$eq: ["$n3.a.b.c.d.e", 16]},
-                  {$eq: ["$n4.a.b.c.d.e", 17]},
-                  {$eq: ["$n1.a.b.c.d.e", 18]},
-                  {$eq: ["$n2.a.b.c.d.e", 19]},
-                ]
-              }
-            }
-
-- Name: MatchExpressionWidePredicateWithDeepFieldpaths
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [8]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {
-              $or: [
-                {"n1.a.b.c.d.e": 10},
-                {"n2.a.b.c.d.e": 11},
-                {"n3.a.b.c.d.e": 12},
-                {"n4.a.b.c.d.e": 13},
-                {"n1.a.b.c.d.e": 14},
-                {"n2.a.b.c.d.e": 15},
-                {"n3.a.b.c.d.e": 16},
-                {"n4.a.b.c.d.e": 17},
-                {"n1.a.b.c.d.e": 18},
-                {"n2.a.b.c.d.e": 19},
-              ]
-            }
-
-- Name: AggregationExpressionDeepPredicate
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [9]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {
-              $expr: {
-                $or: [
+            - OperationName: find
+              OperationCommand:
+                Filter:
                   {
-                    $and: [
+                    $expr:
                       {
-                        $or: [
-                          {$eq: ["$a", 10]},
-                          {$eq: ["$b", 11]}
-                        ]
+                        $or:
+                          [
+                            { $eq: ["$a", 10] },
+                            { $eq: ["$b", 11] },
+                            { $eq: ["$c", 12] },
+                            { $eq: ["$d", 13] },
+                            { $eq: ["$a", 14] },
+                            { $eq: ["$b", 15] },
+                            { $eq: ["$c", 16] },
+                            { $eq: ["$d", 17] },
+                            { $eq: ["$a", 18] },
+                            { $eq: ["$b", 19] },
+                          ],
                       },
-                      {
-                        $or: [
-                          {$eq: ["$c", 12]},
-                          {$eq: ["$d", 13]}
-                        ]
-                      },
-                    ]
-                  },
-                  {
-                    $and: [
-                      {
-                        $or: [
-                          {$eq: ["$a", 14]},
-                          {$eq: ["$b", 15]}
-                        ]
-                      },
-                      {
-                        $or: [
-                          {$eq: ["$c", 16]},
-                          {$eq: ["$d", 17]}
-                        ]
-                      },
-                    ]
                   }
-                ]
-              }
-            }
 
-- Name: MatchExpressionDeepPredicate
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [10]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {
-              $or: [
-                {
-                  $and: [
-                    {
-                      $or: [
-                        {a: 10},
-                        {b: 11}
-                      ]
-                    },
-                    {
-                      $or: [
-                        {c: 12},
-                        {d: 13}
-                      ]
-                    },
-                  ]
-                },
-                {
-                  $and: [
-                    {
-                      $or: [
-                        {a: 14},
-                        {b: 15}
-                      ]
-                    },
-                    {
-                      $or: [
-                        {c: 16},
-                        {d: 17}
-                      ]
-                    },
-                  ]
-                }
-              ]
-            }
+  - Name: MatchExpressionWidePredicate
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter:
+                  {
+                    $or:
+                      [
+                        { a: 10 },
+                        { b: 11 },
+                        { c: 12 },
+                        { d: 13 },
+                        { a: 14 },
+                        { b: 15 },
+                        { c: 16 },
+                        { d: 17 },
+                        { a: 18 },
+                        { b: 19 },
+                      ],
+                  }
 
-- Name: AggregationExpressionMixedPredicate
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [11]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {
-              $expr: {
-                $or: [
-                  {$and: [{$eq: ["$a", 10]}, {$eq: ["$b", 11]}]},
-                  {$and: [{$eq: ["$c", 12]}, {$eq: ["$d", 13]}]},
-                  {$eq: ["$a", 14]},
-                  {$eq: ["$b", 15]},
-                  {$eq: ["$c", 16]},
-                  {$eq: ["$d", 17]},
-                ]
-              }
-            }
+  - Name: AggregationExpressionSingletonPredicateWithDeepFieldpaths
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [5]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { $expr: { $eq: ["$n1.a.b.c.d.e", 10] } }
 
-- Name: MatchExpressionMixedPredicate
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [12]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {
-              $or: [
-                {$and: [{a: 10}, {b: 11}]},
-                {$and: [{c: 12}, {d: 13}]},
-                {a: 14},
-                {b: 15},
-                {c: 16},
-                {d: 17},
-              ]
-            }
+  - Name: MatchExpressionSingletonPredicateWithDeepFieldpaths
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [6]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "n1.a.b.c.d.e": 10 }
 
-# Both queries below will only target "n5.b.d", skipping the documents which have "n5.c.d".
-- Name: AggregationExpressionTargetPath
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [13]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {$expr: {$eq: ["$n5.b.d", 0]}}
+  - Name: AggregationExpressionWidePredicateWithDeepFieldpaths
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [7]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter:
+                  {
+                    $expr:
+                      {
+                        $or:
+                          [
+                            { $eq: ["$n1.a.b.c.d.e", 10] },
+                            { $eq: ["$n2.a.b.c.d.e", 11] },
+                            { $eq: ["$n3.a.b.c.d.e", 12] },
+                            { $eq: ["$n4.a.b.c.d.e", 13] },
+                            { $eq: ["$n1.a.b.c.d.e", 14] },
+                            { $eq: ["$n2.a.b.c.d.e", 15] },
+                            { $eq: ["$n3.a.b.c.d.e", 16] },
+                            { $eq: ["$n4.a.b.c.d.e", 17] },
+                            { $eq: ["$n1.a.b.c.d.e", 18] },
+                            { $eq: ["$n2.a.b.c.d.e", 19] },
+                          ],
+                      },
+                  }
 
-- Name: MatchExpressionTargetPath
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [14]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {"n5.b.d": 0}
+  - Name: MatchExpressionWidePredicateWithDeepFieldpaths
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [8]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter:
+                  {
+                    $or:
+                      [
+                        { "n1.a.b.c.d.e": 10 },
+                        { "n2.a.b.c.d.e": 11 },
+                        { "n3.a.b.c.d.e": 12 },
+                        { "n4.a.b.c.d.e": 13 },
+                        { "n1.a.b.c.d.e": 14 },
+                        { "n2.a.b.c.d.e": 15 },
+                        { "n3.a.b.c.d.e": 16 },
+                        { "n4.a.b.c.d.e": 17 },
+                        { "n1.a.b.c.d.e": 18 },
+                        { "n2.a.b.c.d.e": 19 },
+                      ],
+                  }
 
-# Set of queries whose paths' prefixes exist, but their suffixes do not.
-- Name: AggregationExpressionMissingPathSuffix
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [15]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {$expr: {$eq: ["$n1.a.b.c.d.z", 0]}}
+  - Name: AggregationExpressionDeepPredicate
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [9]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter:
+                  {
+                    $expr:
+                      {
+                        $or:
+                          [
+                            {
+                              $and:
+                                [
+                                  {
+                                    $or:
+                                      [
+                                        { $eq: ["$a", 10] },
+                                        { $eq: ["$b", 11] },
+                                      ],
+                                  },
+                                  {
+                                    $or:
+                                      [
+                                        { $eq: ["$c", 12] },
+                                        { $eq: ["$d", 13] },
+                                      ],
+                                  },
+                                ],
+                            },
+                            {
+                              $and:
+                                [
+                                  {
+                                    $or:
+                                      [
+                                        { $eq: ["$a", 14] },
+                                        { $eq: ["$b", 15] },
+                                      ],
+                                  },
+                                  {
+                                    $or:
+                                      [
+                                        { $eq: ["$c", 16] },
+                                        { $eq: ["$d", 17] },
+                                      ],
+                                  },
+                                ],
+                            },
+                          ],
+                      },
+                  }
 
-- Name: MatchExpressionMissingPathSuffix
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [16]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {"n1.a.b.c.d.z": 0}
+  - Name: MatchExpressionDeepPredicate
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [10]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter:
+                  {
+                    $or:
+                      [
+                        {
+                          $and:
+                            [
+                              { $or: [{ a: 10 }, { b: 11 }] },
+                              { $or: [{ c: 12 }, { d: 13 }] },
+                            ],
+                        },
+                        {
+                          $and:
+                            [
+                              { $or: [{ a: 14 }, { b: 15 }] },
+                              { $or: [{ c: 16 }, { d: 17 }] },
+                            ],
+                        },
+                      ],
+                  }
 
-- ActorFromTemplate:
-    TemplateName: AggregationOrWithManyChildClausesTemplate
-    TemplateParameters:
-      Name: AggregationExpressionFiftyClauseRootedOr
-      Repeat: 5
-      ActivePhase: 17
-      NumberOfClauses: 50
+  - Name: AggregationExpressionMixedPredicate
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [11]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter:
+                  {
+                    $expr:
+                      {
+                        $or:
+                          [
+                            {
+                              $and: [{ $eq: ["$a", 10] }, { $eq: ["$b", 11] }],
+                            },
+                            {
+                              $and: [{ $eq: ["$c", 12] }, { $eq: ["$d", 13] }],
+                            },
+                            { $eq: ["$a", 14] },
+                            { $eq: ["$b", 15] },
+                            { $eq: ["$c", 16] },
+                            { $eq: ["$d", 17] },
+                          ],
+                      },
+                  }
 
-- ActorFromTemplate:
-    TemplateName: MatchOrWithManyChildClausesTemplate
-    TemplateParameters:
-      Name: MatchExpressionFiftyClauseRootedOr
-      Repeat: 5
-      ActivePhase: 18
-      NumberOfClauses: 50
+  - Name: MatchExpressionMixedPredicate
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [12]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter:
+                  {
+                    $or:
+                      [
+                        { $and: [{ a: 10 }, { b: 11 }] },
+                        { $and: [{ c: 12 }, { d: 13 }] },
+                        { a: 14 },
+                        { b: 15 },
+                        { c: 16 },
+                        { d: 17 },
+                      ],
+                  }
 
-- ActorFromTemplate:
-    TemplateName: AggregationOrWithManyChildClausesTemplate
-    TemplateParameters:
-      Name: AggregationExpressionOneHundredClauseRootedOr
-      Repeat: 1
-      ActivePhase: 19
-      NumberOfClauses: 100
+  # Both queries below will only target "n5.b.d", skipping the documents which have "n5.c.d".
+  - Name: AggregationExpressionTargetPath
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [13]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { $expr: { $eq: ["$n5.b.d", 0] } }
 
-- ActorFromTemplate:
-    TemplateName: MatchOrWithManyChildClausesTemplate
-    TemplateParameters:
-      Name: MatchExpressionOneHundredClauseRootedOr
-      Repeat: 1
-      ActivePhase: 20
-      NumberOfClauses: 100
+  - Name: MatchExpressionTargetPath
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [14]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "n5.b.d": 0 }
 
-- ActorFromTemplate:
-    TemplateName: AggregationOrWithManyChildClausesTemplate
-    TemplateParameters:
-      Name: AggregationExpressionTwoHundredClauseRootedOr
-      Repeat: 1
-      ActivePhase: 21
-      NumberOfClauses: 200
+  # Set of queries whose paths' prefixes exist, but their suffixes do not.
+  - Name: AggregationExpressionMissingPathSuffix
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [15]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { $expr: { $eq: ["$n1.a.b.c.d.z", 0] } }
 
-- ActorFromTemplate:
-    TemplateName: MatchOrWithManyChildClausesTemplate
-    TemplateParameters:
-      Name: MatchExpressionTwoHundredClauseRootedOr
-      Repeat: 1
-      ActivePhase: 22
-      NumberOfClauses: 200
+  - Name: MatchExpressionMissingPathSuffix
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [16]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "n1.a.b.c.d.z": 0 }
 
-- ActorFromTemplate:
-    TemplateName: MatchAndWithManyChildClausesTemplate
-    TemplateParameters:
-      Name: MatchExpressionFiftyClauseRootedAnd
-      Repeat: 5
-      ActivePhase: 23
-      NumberOfClauses: 50
+  - ActorFromTemplate:
+      TemplateName: AggregationOrWithManyChildClausesTemplate
+      TemplateParameters:
+        Name: AggregationExpressionFiftyClauseRootedOr
+        Repeat: 5
+        ActivePhase: 17
+        NumberOfClauses: 50
 
-- ActorFromTemplate:
-    TemplateName: MatchAndWithManyChildClausesTemplate
-    TemplateParameters:
-      Name: MatchExpressionOneHundredClauseRootedAnd
-      Repeat: 1
-      ActivePhase: 24
-      NumberOfClauses: 100
+  - ActorFromTemplate:
+      TemplateName: MatchOrWithManyChildClausesTemplate
+      TemplateParameters:
+        Name: MatchExpressionFiftyClauseRootedOr
+        Repeat: 5
+        ActivePhase: 18
+        NumberOfClauses: 50
 
-- ActorFromTemplate:
-    TemplateName: MatchAndWithManyChildClausesTemplate
-    TemplateParameters:
-      Name: MatchExpressionTwoHundredClauseRootedAnd
-      Repeat: 1
-      ActivePhase: 25
-      NumberOfClauses: 200
-
-# Clear any pre-existing collection state.
-- Name: ClearCollectionAgain
-  Type: CrudActor
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [26]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
+  - ActorFromTemplate:
+      TemplateName: AggregationOrWithManyChildClausesTemplate
+      TemplateParameters:
+        Name: AggregationExpressionOneHundredClauseRootedOr
         Repeat: 1
-        Threads: 1
-        Collection: *Collection
-        Operations:
-        - OperationName: drop
+        ActivePhase: 19
+        NumberOfClauses: 100
 
-# Populate collection for rooted $or index scan plans
-- Name: InsertDataForIndexScan
-  Type: Loader
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [27]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
+  - ActorFromTemplate:
+      TemplateName: MatchOrWithManyChildClausesTemplate
+      TemplateParameters:
+        Name: MatchExpressionOneHundredClauseRootedOr
         Repeat: 1
-        Database: *Database
-        Threads: *Threads
-        CollectionCount: 1
-        DocumentCount: *DocumentCount
-        BatchSize: 1000
-        Document:
-          a: {^RandomInt: {min: 0, max: 6}}
-          b: {^RandomInt: {min: 0, max: 6}}
-          c: {^RandomInt: {min: 0, max: 6}}
+        ActivePhase: 20
+        NumberOfClauses: 100
 
-- Name: CreateIndexForRootedOr
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [28]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
+  - ActorFromTemplate:
+      TemplateName: AggregationOrWithManyChildClausesTemplate
+      TemplateParameters:
+        Name: AggregationExpressionTwoHundredClauseRootedOr
         Repeat: 1
-        Database: *Database
-        Collection: *Collection
-        Operations:
-        - OperationName: RunCommand
-          OperationCommand:
-            createIndexes: *Collection
-            indexes:
-            - key:
-                a: 1
-              name: a_1
-            - key:
-                a: 1
-                b: 1
-              name: a_1_b_1
-            - key:
-                a: 1
-                b: 1
-                c: 1
-              name: a_1_b_1_c_1
+        ActivePhase: 21
+        NumberOfClauses: 200
 
-# Ensure all data is synced to disk.
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [29]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
+  - ActorFromTemplate:
+      TemplateName: MatchOrWithManyChildClausesTemplate
+      TemplateParameters:
+        Name: MatchExpressionTwoHundredClauseRootedOr
         Repeat: 1
-        Threads: 1
+        ActivePhase: 22
+        NumberOfClauses: 200
 
-- Name: RunRootedOrQuery
-  Type: CrudActor
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [30]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Database: *Database
-        Collection: *Collection
-        Operations:
-        - OperationMetricsName: RunRootedOrQuery
-          OperationName: find
-          OperationCommand:
-            Filter: {a: 1, $or: [{b: 2, c: 2}, {b: 3,c: 3}, {b: 4,c: 4}, {b: 5,c: 5}]}
+  - ActorFromTemplate:
+      TemplateName: MatchAndWithManyChildClausesTemplate
+      TemplateParameters:
+        Name: MatchExpressionFiftyClauseRootedAnd
+        Repeat: 5
+        ActivePhase: 23
+        NumberOfClauses: 50
+
+  - ActorFromTemplate:
+      TemplateName: MatchAndWithManyChildClausesTemplate
+      TemplateParameters:
+        Name: MatchExpressionOneHundredClauseRootedAnd
+        Repeat: 1
+        ActivePhase: 24
+        NumberOfClauses: 100
+
+  - ActorFromTemplate:
+      TemplateName: MatchAndWithManyChildClausesTemplate
+      TemplateParameters:
+        Name: MatchExpressionTwoHundredClauseRootedAnd
+        Repeat: 1
+        ActivePhase: 25
+        NumberOfClauses: 200
+
+  # Clear any pre-existing collection state.
+  - Name: ClearCollectionAgain
+    Type: CrudActor
+    Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [26]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+          Collection: *Collection
+          Operations:
+            - OperationName: drop
+
+  # Populate collection for rooted $or index scan plans
+  - Name: InsertDataForIndexScan
+    Type: Loader
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [27]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          Threads: *Threads
+          CollectionCount: 1
+          DocumentCount: *DocumentCount
+          BatchSize: 1000
+          Document:
+            a: { ^RandomInt: { min: 0, max: 6 } }
+            b: { ^RandomInt: { min: 0, max: 6 } }
+            c: { ^RandomInt: { min: 0, max: 6 } }
+
+  - Name: CreateIndexForRootedOr
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [28]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          Collection: *Collection
+          Operations:
+            - OperationName: RunCommand
+              OperationCommand:
+                createIndexes: *Collection
+                indexes:
+                  - key:
+                      a: 1
+                    name: a_1
+                  - key:
+                      a: 1
+                      b: 1
+                    name: a_1_b_1
+                  - key:
+                      a: 1
+                      b: 1
+                      c: 1
+                    name: a_1_b_1_c_1
+
+  # Ensure all data is synced to disk.
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [29]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+
+  - Name: RunRootedOrQuery
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [30]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Database: *Database
+          Collection: *Collection
+          Operations:
+            - OperationMetricsName: RunRootedOrQuery
+              OperationName: find
+              OperationCommand:
+                Filter:
+                  {
+                    a: 1,
+                    $or:
+                      [
+                        { b: 2, c: 2 },
+                        { b: 3, c: 3 },
+                        { b: 4, c: 4 },
+                        { b: 5, c: 5 },
+                      ],
+                  }

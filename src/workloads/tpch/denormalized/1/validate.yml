@@ -10,223 +10,223 @@ Clients:
       socketTimeoutMS: -1
 
 ActorTemplates:
-- TemplateName: ValidateTPCHQueryActorTemplate
-  Config:
-    Name: &query {^Parameter: {Name: "Query", Default: ""}}
-    Type: AssertiveActor
-    Database: &db tpch
-    Phases:
-    - &Nop {Nop: true}
-    - Repeat: 1
-      Database: *db
-      Message: *query
-      Expected:
-        aggregate: {^Join: {array: ["res_", *query]}}
-        pipeline: [{$sort: {num: 1}}]
-        cursor: {batchSize: {^Parameter: {Name: "BatchSize", Default: 101}}}
-      Actual: {^Parameter: {Name: "Actual", Default: {}}}
-    - *Nop
+  - TemplateName: ValidateTPCHQueryActorTemplate
+    Config:
+      Name: &query {^Parameter: {Name: "Query", Default: ""}}
+      Type: AssertiveActor
+      Database: &db tpch
+      Phases:
+        - &Nop {Nop: true}
+        - Repeat: 1
+          Database: *db
+          Message: *query
+          Expected:
+            aggregate: {^Join: {array: ["res_", *query]}}
+            pipeline: [{$sort: {num: 1}}]
+            cursor: {batchSize: {^Parameter: {Name: "BatchSize", Default: 101}}}
+          Actual: {^Parameter: {Name: "Actual", Default: {}}}
+        - *Nop
 
 # Note: since the queries are all read-only and we don't care about timing metrics here, we can just run all the queries simultaneously.
 # TODO: disable metrics collection once TIG-4128 is complete.
 Actors:
-- ActorFromTemplate:
-    TemplateName: ValidateTPCHQueryActorTemplate
-    TemplateParameters:
-      Query: 1
-      Actual:
-        LoadConfig:
-          Path: ../../../../phases/tpch/denormalized/Q1.yml
-          Key: TPCHDenormalizedQuery1Aggregation
-- ActorFromTemplate:
-    TemplateName: ValidateTPCHQueryActorTemplate
-    TemplateParameters:
-      Query: 2
-      Actual:
-        LoadConfig:
-          Path: ../../../../phases/tpch/denormalized/Q2.yml
-          Key: TPCHDenormalizedQuery2Aggregation
-- ActorFromTemplate:
-    TemplateName: ValidateTPCHQueryActorTemplate
-    TemplateParameters:
-      Query: 3
-      Actual:
-        LoadConfig:
-          Path: ../../../../phases/tpch/denormalized/Q3.yml
-          Key: TPCHDenormalizedQuery3Aggregation
-- ActorFromTemplate:
-    TemplateName: ValidateTPCHQueryActorTemplate
-    TemplateParameters:
-      Query: 4
-      Actual:
-        LoadConfig:
-          Path: ../../../../phases/tpch/denormalized/Q4.yml
-          Key: TPCHDenormalizedQuery4Aggregation
-- ActorFromTemplate:
-    TemplateName: ValidateTPCHQueryActorTemplate
-    TemplateParameters:
-      Query: 5
-      Actual:
-        LoadConfig:
-          Path: ../../../../phases/tpch/denormalized/Q5.yml
-          Key: TPCHDenormalizedQuery5Aggregation
-- ActorFromTemplate:
-    TemplateName: ValidateTPCHQueryActorTemplate
-    TemplateParameters:
-      Query: 6
-      Actual:
-        LoadConfig:
-          Path: ../../../../phases/tpch/denormalized/Q6.yml
-          Key: TPCHDenormalizedQuery6Aggregation
-- ActorFromTemplate:
-    TemplateName: ValidateTPCHQueryActorTemplate
-    TemplateParameters:
-      Query: 7
-      Actual:
-        LoadConfig:
-          Path: ../../../../phases/tpch/denormalized/Q7.yml
-          Key: TPCHDenormalizedQuery7Aggregation
-- ActorFromTemplate:
-    TemplateName: ValidateTPCHQueryActorTemplate
-    TemplateParameters:
-      Query: 8
-      Actual:
-        LoadConfig:
-          Path: ../../../../phases/tpch/denormalized/Q8.yml
-          Key: TPCHDenormalizedQuery8Aggregation
-- ActorFromTemplate:
-    TemplateName: ValidateTPCHQueryActorTemplate
-    TemplateParameters:
-      Query: 9
-      BatchSize: &q9BatchSize 175  # This query is expected to return more documents than the default batch size of 101.
-      Actual:
-        LoadConfig:
-          Path: ../../../../phases/tpch/denormalized/Q9.yml
-          Key: TPCHDenormalizedQuery9Aggregation
-          Parameters:
-            BatchSize: *q9BatchSize
-- ActorFromTemplate:
-    TemplateName: ValidateTPCHQueryActorTemplate
-    TemplateParameters:
-      Query: 10
-      Actual:
-        LoadConfig:
-          Path: ../../../../phases/tpch/denormalized/Q10.yml
-          Key: TPCHDenormalizedQuery10Aggregation
-- ActorFromTemplate:
-    TemplateName: ValidateTPCHQueryActorTemplate
-    TemplateParameters:
-      Query: 11
-      BatchSize: &q11BatchSize 1048  # This query is expected to return more documents than the default batch size of 101.
-      Actual:
-        LoadConfig:
-          Path: ../../../../phases/tpch/denormalized/Q11.yml
-          Key: TPCHDenormalizedQuery11Aggregation
-          Parameters:
-            BatchSize: *q11BatchSize
-- ActorFromTemplate:
-    TemplateName: ValidateTPCHQueryActorTemplate
-    TemplateParameters:
-      Query: 12
-      Actual:
-        LoadConfig:
-          Path: ../../../../phases/tpch/denormalized/Q12.yml
-          Key: TPCHDenormalizedQuery12Aggregation
-- ActorFromTemplate:
-    TemplateName: ValidateTPCHQueryActorTemplate
-    TemplateParameters:
-      Query: 13
-      Actual:
-        LoadConfig:
-          Path: ../../../../phases/tpch/denormalized/Q13.yml
-          Key: TPCHDenormalizedQuery13Aggregation
-- ActorFromTemplate:
-    TemplateName: ValidateTPCHQueryActorTemplate
-    TemplateParameters:
-      Query: 14
-      Actual:
-        LoadConfig:
-          Path: ../../../../phases/tpch/denormalized/Q14.yml
-          Key: TPCHDenormalizedQuery14Aggregation
-# This query creates a view for query 15 before running any workloads, and then destroys the view afterwards.
-- Name: TPCHDenormalizedQuery15AggregationSetup
-  Type: RunCommand
-  Database: *db
-  Phases:
-  - LoadConfig:
-      Path: ../../../../phases/tpch/denormalized/Q15.yml
-      Key: TPCHDenormalizedQuery15CreateView
-  - *Nop
-  - LoadConfig:
-      Path: ../../../../phases/tpch/denormalized/Q15.yml
-      Key: TPCHDenormalizedQuery15DropView
-- ActorFromTemplate:
-    TemplateName: ValidateTPCHQueryActorTemplate
-    TemplateParameters:
-      Query: 15
-      Actual:
-        LoadConfig:
+  - ActorFromTemplate:
+      TemplateName: ValidateTPCHQueryActorTemplate
+      TemplateParameters:
+        Query: 1
+        Actual:
+          LoadConfig:
+            Path: ../../../../phases/tpch/denormalized/Q1.yml
+            Key: TPCHDenormalizedQuery1Aggregation
+  - ActorFromTemplate:
+      TemplateName: ValidateTPCHQueryActorTemplate
+      TemplateParameters:
+        Query: 2
+        Actual:
+          LoadConfig:
+            Path: ../../../../phases/tpch/denormalized/Q2.yml
+            Key: TPCHDenormalizedQuery2Aggregation
+  - ActorFromTemplate:
+      TemplateName: ValidateTPCHQueryActorTemplate
+      TemplateParameters:
+        Query: 3
+        Actual:
+          LoadConfig:
+            Path: ../../../../phases/tpch/denormalized/Q3.yml
+            Key: TPCHDenormalizedQuery3Aggregation
+  - ActorFromTemplate:
+      TemplateName: ValidateTPCHQueryActorTemplate
+      TemplateParameters:
+        Query: 4
+        Actual:
+          LoadConfig:
+            Path: ../../../../phases/tpch/denormalized/Q4.yml
+            Key: TPCHDenormalizedQuery4Aggregation
+  - ActorFromTemplate:
+      TemplateName: ValidateTPCHQueryActorTemplate
+      TemplateParameters:
+        Query: 5
+        Actual:
+          LoadConfig:
+            Path: ../../../../phases/tpch/denormalized/Q5.yml
+            Key: TPCHDenormalizedQuery5Aggregation
+  - ActorFromTemplate:
+      TemplateName: ValidateTPCHQueryActorTemplate
+      TemplateParameters:
+        Query: 6
+        Actual:
+          LoadConfig:
+            Path: ../../../../phases/tpch/denormalized/Q6.yml
+            Key: TPCHDenormalizedQuery6Aggregation
+  - ActorFromTemplate:
+      TemplateName: ValidateTPCHQueryActorTemplate
+      TemplateParameters:
+        Query: 7
+        Actual:
+          LoadConfig:
+            Path: ../../../../phases/tpch/denormalized/Q7.yml
+            Key: TPCHDenormalizedQuery7Aggregation
+  - ActorFromTemplate:
+      TemplateName: ValidateTPCHQueryActorTemplate
+      TemplateParameters:
+        Query: 8
+        Actual:
+          LoadConfig:
+            Path: ../../../../phases/tpch/denormalized/Q8.yml
+            Key: TPCHDenormalizedQuery8Aggregation
+  - ActorFromTemplate:
+      TemplateName: ValidateTPCHQueryActorTemplate
+      TemplateParameters:
+        Query: 9
+        BatchSize: &q9BatchSize 175 # This query is expected to return more documents than the default batch size of 101.
+        Actual:
+          LoadConfig:
+            Path: ../../../../phases/tpch/denormalized/Q9.yml
+            Key: TPCHDenormalizedQuery9Aggregation
+            Parameters:
+              BatchSize: *q9BatchSize
+  - ActorFromTemplate:
+      TemplateName: ValidateTPCHQueryActorTemplate
+      TemplateParameters:
+        Query: 10
+        Actual:
+          LoadConfig:
+            Path: ../../../../phases/tpch/denormalized/Q10.yml
+            Key: TPCHDenormalizedQuery10Aggregation
+  - ActorFromTemplate:
+      TemplateName: ValidateTPCHQueryActorTemplate
+      TemplateParameters:
+        Query: 11
+        BatchSize: &q11BatchSize 1048 # This query is expected to return more documents than the default batch size of 101.
+        Actual:
+          LoadConfig:
+            Path: ../../../../phases/tpch/denormalized/Q11.yml
+            Key: TPCHDenormalizedQuery11Aggregation
+            Parameters:
+              BatchSize: *q11BatchSize
+  - ActorFromTemplate:
+      TemplateName: ValidateTPCHQueryActorTemplate
+      TemplateParameters:
+        Query: 12
+        Actual:
+          LoadConfig:
+            Path: ../../../../phases/tpch/denormalized/Q12.yml
+            Key: TPCHDenormalizedQuery12Aggregation
+  - ActorFromTemplate:
+      TemplateName: ValidateTPCHQueryActorTemplate
+      TemplateParameters:
+        Query: 13
+        Actual:
+          LoadConfig:
+            Path: ../../../../phases/tpch/denormalized/Q13.yml
+            Key: TPCHDenormalizedQuery13Aggregation
+  - ActorFromTemplate:
+      TemplateName: ValidateTPCHQueryActorTemplate
+      TemplateParameters:
+        Query: 14
+        Actual:
+          LoadConfig:
+            Path: ../../../../phases/tpch/denormalized/Q14.yml
+            Key: TPCHDenormalizedQuery14Aggregation
+  # This query creates a view for query 15 before running any workloads, and then destroys the view afterwards.
+  - Name: TPCHDenormalizedQuery15AggregationSetup
+    Type: RunCommand
+    Database: *db
+    Phases:
+      - LoadConfig:
           Path: ../../../../phases/tpch/denormalized/Q15.yml
-          Key: TPCHDenormalizedQuery15Aggregation
-- ActorFromTemplate:
-    TemplateName: ValidateTPCHQueryActorTemplate
-    TemplateParameters:
-      Query: 16
-      BatchSize: &q16BatchSize 18314  # This query is expected to return more documents than the default batch size of 101.
-      Actual:
-        LoadConfig:
-          Path: ../../../../phases/tpch/denormalized/Q16.yml
-          Key: TPCHDenormalizedQuery16Aggregation
-          Parameters:
-            BatchSize: *q16BatchSize
-- ActorFromTemplate:
-    TemplateName: ValidateTPCHQueryActorTemplate
-    TemplateParameters:
-      Query: 17
-      Actual:
-        LoadConfig:
-          Path: ../../../../phases/tpch/denormalized/Q17.yml
-          Key: TPCHDenormalizedQuery17Aggregation
-- ActorFromTemplate:
-    TemplateName: ValidateTPCHQueryActorTemplate
-    TemplateParameters:
-      Query: 18
-      Actual:
-        LoadConfig:
-          Path: ../../../../phases/tpch/denormalized/Q18.yml
-          Key: TPCHDenormalizedQuery18Aggregation
-- ActorFromTemplate:
-    TemplateName: ValidateTPCHQueryActorTemplate
-    TemplateParameters:
-      Query: 19
-      Actual:
-        LoadConfig:
-          Path: ../../../../phases/tpch/denormalized/Q19.yml
-          Key: TPCHDenormalizedQuery19Aggregation
-- ActorFromTemplate:
-    TemplateName: ValidateTPCHQueryActorTemplate
-    TemplateParameters:
-      Query: 20
-      BatchSize: &q20BatchSize 186  # This query is expected to return more documents than the default batch size of 101.
-      Actual:
-        LoadConfig:
-          Path: ../../../../phases/tpch/denormalized/Q20.yml
-          Key: TPCHDenormalizedQuery20Aggregation
-          Parameters:
-            BatchSize: *q20BatchSize
-- ActorFromTemplate:
-    TemplateName: ValidateTPCHQueryActorTemplate
-    TemplateParameters:
-      Query: 21
-      Actual:
-        LoadConfig:
-          Path: ../../../../phases/tpch/denormalized/Q21.yml
-          Key: TPCHDenormalizedQuery21Aggregation
-- ActorFromTemplate:
-    TemplateName: ValidateTPCHQueryActorTemplate
-    TemplateParameters:
-      Query: 22
-      Actual:
-        LoadConfig:
-          Path: ../../../../phases/tpch/denormalized/Q22.yml
-          Key: TPCHDenormalizedQuery22Aggregation
+          Key: TPCHDenormalizedQuery15CreateView
+      - *Nop
+      - LoadConfig:
+          Path: ../../../../phases/tpch/denormalized/Q15.yml
+          Key: TPCHDenormalizedQuery15DropView
+  - ActorFromTemplate:
+      TemplateName: ValidateTPCHQueryActorTemplate
+      TemplateParameters:
+        Query: 15
+        Actual:
+          LoadConfig:
+            Path: ../../../../phases/tpch/denormalized/Q15.yml
+            Key: TPCHDenormalizedQuery15Aggregation
+  - ActorFromTemplate:
+      TemplateName: ValidateTPCHQueryActorTemplate
+      TemplateParameters:
+        Query: 16
+        BatchSize: &q16BatchSize 18314 # This query is expected to return more documents than the default batch size of 101.
+        Actual:
+          LoadConfig:
+            Path: ../../../../phases/tpch/denormalized/Q16.yml
+            Key: TPCHDenormalizedQuery16Aggregation
+            Parameters:
+              BatchSize: *q16BatchSize
+  - ActorFromTemplate:
+      TemplateName: ValidateTPCHQueryActorTemplate
+      TemplateParameters:
+        Query: 17
+        Actual:
+          LoadConfig:
+            Path: ../../../../phases/tpch/denormalized/Q17.yml
+            Key: TPCHDenormalizedQuery17Aggregation
+  - ActorFromTemplate:
+      TemplateName: ValidateTPCHQueryActorTemplate
+      TemplateParameters:
+        Query: 18
+        Actual:
+          LoadConfig:
+            Path: ../../../../phases/tpch/denormalized/Q18.yml
+            Key: TPCHDenormalizedQuery18Aggregation
+  - ActorFromTemplate:
+      TemplateName: ValidateTPCHQueryActorTemplate
+      TemplateParameters:
+        Query: 19
+        Actual:
+          LoadConfig:
+            Path: ../../../../phases/tpch/denormalized/Q19.yml
+            Key: TPCHDenormalizedQuery19Aggregation
+  - ActorFromTemplate:
+      TemplateName: ValidateTPCHQueryActorTemplate
+      TemplateParameters:
+        Query: 20
+        BatchSize: &q20BatchSize 186 # This query is expected to return more documents than the default batch size of 101.
+        Actual:
+          LoadConfig:
+            Path: ../../../../phases/tpch/denormalized/Q20.yml
+            Key: TPCHDenormalizedQuery20Aggregation
+            Parameters:
+              BatchSize: *q20BatchSize
+  - ActorFromTemplate:
+      TemplateName: ValidateTPCHQueryActorTemplate
+      TemplateParameters:
+        Query: 21
+        Actual:
+          LoadConfig:
+            Path: ../../../../phases/tpch/denormalized/Q21.yml
+            Key: TPCHDenormalizedQuery21Aggregation
+  - ActorFromTemplate:
+      TemplateName: ValidateTPCHQueryActorTemplate
+      TemplateParameters:
+        Query: 22
+        Actual:
+          LoadConfig:
+            Path: ../../../../phases/tpch/denormalized/Q22.yml
+            Key: TPCHDenormalizedQuery22Aggregation

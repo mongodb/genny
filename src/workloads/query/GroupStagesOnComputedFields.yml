@@ -6,8 +6,8 @@ Description: |
   that enables the execution of $addFields, $match, and $sort in SBE.
 
 Keywords:
-- aggregate
-- sbe
+  - aggregate
+  - sbe
 
 GlobalDefaults:
   Database: &Database test
@@ -20,163 +20,202 @@ MultipleGroupStagesOnComputedFields: &MultipleGroupStagesOnComputedFields
     Key: QueryTemplate
     Parameters:
       name: MultipleGroupStagesOnComputedFields
-      active: {^Parameter: {Name: "active", Default: [3]}}
-      nopInPhasesUpTo: &NopInPhasesUpTo {^Parameter: {Name: "nopInPhasesUpTo", Default: *MaxPhases}}
-      pipeline: [{$addFields:
-                          {"hourDiff": {$dateDiff: {"startDate": "$time", "endDate": {^Date: "2022-01-04"}, "unit": "hour"}}}},
-                          {$match: {"hourDiff": {$lte: 12}}},
-                          {$group:
-                            {"_id" :
-                              { "symbol" : "$symbol" ,
-                                "time": { "$dateTrunc" : {"date": "$time", "unit": "minute", "binSize" : 1}}
+      active: { ^Parameter: { Name: "active", Default: [3] } }
+      nopInPhasesUpTo:
+        &NopInPhasesUpTo {
+          ^Parameter: { Name: "nopInPhasesUpTo", Default: *MaxPhases },
+        }
+      pipeline:
+        [
+          {
+            $addFields:
+              {
+                "hourDiff":
+                  {
+                    $dateDiff:
+                      {
+                        "startDate": "$time",
+                        "endDate": { ^Date: "2022-01-04" },
+                        "unit": "hour",
+                      },
+                  },
+              },
+          },
+          { $match: { "hourDiff": { $lte: 12 } } },
+          {
+            $group:
+              {
+                "_id":
+                  {
+                    "symbol": "$symbol",
+                    "time":
+                      {
+                        "$dateTrunc":
+                          { "date": "$time", "unit": "minute", "binSize": 1 },
+                      },
+                  },
+                "open": { "$first": "$price" },
+                "close": { "$last": "$price" },
+              },
+          },
+          {
+            $addFields:
+              {
+                "diffPercentage":
+                  {
+                    $round:
+                      [
+                        {
+                          $multiply:
+                            [
+                              100,
+                              {
+                                $divide:
+                                  [{ $subtract: ["$close", "$open"] }, "$open"],
                               },
-                              "open" : {"$first" : "$price"},
-                              "close" : {"$last" : "$price"}}
-                          },
-                          {
-                              $addFields : {
-                                  "diffPercentage" : {$round : [{$multiply : [100, { $divide : [{$subtract : ["$close", "$open"]}, "$open"] }]}, 2]}
-                              }
-                          },
-                          {
-                            $group: {
-                                  "_id" : "$_id.time",
-                                  "topN": {
-                                      $topN: {
-                                          "output": ["$_id.symbol", "$diffPercentage", "$close"],
-                                          "sortBy" : { "diffPercentage" : -1 },
-                                          "n": 3
-                                      }
-                                  },
-                                  "bottomN": {
-                                      $bottomN: {
-                                          "output": ["$_id.symbol", "$diffPercentage", "$close"],
-                                          "sortBy" : { "diffPercentage" : -1 },
-                                          "n": 3
-                                      }
-                                  },
-                              }
-                          },
-                          {
-                              $sort : {
-                                  "_id" : -1
-                              }
-                          }]
+                            ],
+                        },
+                        2,
+                      ],
+                  },
+              },
+          },
+          {
+            $group:
+              {
+                "_id": "$_id.time",
+                "topN":
+                  {
+                    $topN:
+                      {
+                        "output": ["$_id.symbol", "$diffPercentage", "$close"],
+                        "sortBy": { "diffPercentage": -1 },
+                        "n": 3,
+                      },
+                  },
+                "bottomN":
+                  {
+                    $bottomN:
+                      {
+                        "output": ["$_id.symbol", "$diffPercentage", "$close"],
+                        "sortBy": { "diffPercentage": -1 },
+                        "n": 3,
+                      },
+                  },
+              },
+          },
+          { $sort: { "_id": -1 } },
+        ]
 
 GroupStageOnDateComputationAfterMatch: &GroupStageOnDateComputationAfterMatch
   LoadConfig:
-    <<: *loadConfig
+    !!merge <<: *loadConfig
     Parameters:
       name: GroupStageOnDateComputationAfterMatch
-      active: {^Parameter: {Name: "active", Default: [4]}}
+      active: { ^Parameter: { Name: "active", Default: [4] } }
       nopInPhasesUpTo: *NopInPhasesUpTo
-      pipeline: [{
-                    $match: {
-                            "symbol": "string50",
-                            "time": {
-                              $gte: {^Date: "2022-01-03"}
-                            }
-                    }
-                  },
-                  {
-                    $group: {
-                        "_id" : {
-                          $dateTrunc: {
-                            "date": "$time",
-                            "unit": "minute"
-                          }
-                        },
-                        "count" : {$sum: 1}
-                    }
-                  },
-                  {
-                    $sort : {
-                      "_id" : -1
-                    }
-                  }]
+      pipeline:
+        [
+          {
+            $match:
+              {
+                "symbol": "string50",
+                "time": { $gte: { ^Date: "2022-01-03" } },
+              },
+          },
+          {
+            $group:
+              {
+                "_id": { $dateTrunc: { "date": "$time", "unit": "minute" } },
+                "count": { $sum: 1 },
+              },
+          },
+          { $sort: { "_id": -1 } },
+        ]
 
 GroupStageAfterSortAndAddFields: &GroupStageAfterSortAndAddFields
   LoadConfig:
-    <<: *loadConfig
+    !!merge <<: *loadConfig
     Parameters:
       name: GroupStageAfterSortAndAddFields
-      active: {^Parameter: {Name: "active", Default: [5]}}
+      active: { ^Parameter: { Name: "active", Default: [5] } }
       nopInPhasesUpTo: *NopInPhasesUpTo
-      pipeline: [{$sort: {"time": 1}},
-                 {$addFields: {
-                    "t": {$dateTrunc: {
-                    date: "$time",
-                    unit: "second",
-                    binSize
-                  }}
-                }},
-                {$group: {
-                    _id: "$t",
-                    sample: {$first: "$$ROOT"}
-                  }}
-                ]
+      pipeline:
+        [
+          { $sort: { "time": 1 } },
+          {
+            $addFields:
+              {
+                "t":
+                  {
+                    $dateTrunc: { date: "$time", unit: "second", binSize: null },
+                  },
+              },
+          },
+          { $group: { _id: "$t", sample: { $first: "$$ROOT" } } },
+        ]
 
 Actors:
-# Clear any pre-existing collection state.
-- Name: ClearCollection
-  Type: CrudActor
-  Database: *Database
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
-        Collection: *Collection
-        Operations:
-        - OperationName: drop
+  # Clear any pre-existing collection state.
+  - Name: ClearCollection
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+          Collection: *Collection
+          Operations:
+            - OperationName: drop
 
-- Name: InsertData
-  LoadConfig:
-    Path: "../../phases/query/GroupStagesOnComputedFields.yml"
-    Key: InsertDataTemplate
-    Parameters:
-      active: [1]
-      nopInPhasesUpTo: *MaxPhases
+  - Name: InsertData
+    LoadConfig:
+      Path: "../../phases/query/GroupStagesOnComputedFields.yml"
+      Key: InsertDataTemplate
+      Parameters:
+        active: [1]
+        nopInPhasesUpTo: *MaxPhases
 
-# Phase 2: Ensure all data is synced to disk.
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
+  # Phase 2: Ensure all data is synced to disk.
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
 
-# Phase 3-5: Run queries.
-- *MultipleGroupStagesOnComputedFields
-- *GroupStageOnDateComputationAfterMatch
-- *GroupStageAfterSortAndAddFields
+  # Phase 3-5: Run queries.
+  - *MultipleGroupStagesOnComputedFields
+  - *GroupStageOnDateComputationAfterMatch
+  - *GroupStageAfterSortAndAddFields
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-      - standalone-classic-query-engine
-      - standalone-80-feature-flags
-      - standalone-all-feature-flags
-      - standalone-sbe
-      - replica
-      - replica-80-feature-flags
-      - replica-all-feature-flags
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
-      - v5.0
-      - v5.1
-      - v5.2
-      - v5.3
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone
+          - standalone-classic-query-engine
+          - standalone-80-feature-flags
+          - standalone-all-feature-flags
+          - standalone-sbe
+          - replica
+          - replica-80-feature-flags
+          - replica-all-feature-flags
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4
+          - v5.0
+          - v5.1
+          - v5.2
+          - v5.3

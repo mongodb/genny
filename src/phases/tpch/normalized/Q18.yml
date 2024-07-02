@@ -1,56 +1,111 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Run TPC-H query 18 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  Run TPC-H query 18 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema.
+  Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
-query18Quantity: &query18Quantity {^Parameter: {Name: "Query18Quantity", Default: 300}}
+batchSize: &batchSize { ^Parameter: { Name: "BatchSize", Default: 101 } }
+query18Quantity:
+  &query18Quantity { ^Parameter: { Name: "Query18Quantity", Default: 300 } }
 
 TPCHNormalizedQuery18Aggregation: &TPCHNormalizedQuery18Aggregation
   aggregate: orders
   pipeline:
     [
-      {$lookup: {from: "lineitem", let: {o_orderkey: "$o_orderkey"}, as: "lineitem", pipeline: [
-        {$match: {$expr: {$eq: ["$$o_orderkey", "$l_orderkey"]}}},
-        {$group: {_id: "$l_orderkey", "sum(l_quantity)": {$sum: "$l_quantity"}}},
-        {$match: {$expr: {$gt: ["$sum(l_quantity)", *query18Quantity]}}},
-        {$project: {_id: 0, o_orderkey: "$_id", "sum(l_quantity)": 1}}]}},
-      {$unwind: "$lineitem"},
-      {$lookup: {from: "customer", localField: "o_custkey", foreignField: "c_custkey", as: "customer"}},
-      {$unwind: "$customer"},
-      {$group: {_id: {c_name: "$customer.c_name", c_custkey: "$customer.c_custkey", o_orderkey: "$o_orderkey", o_orderdate: "$o_orderdate", o_totalprice: "$o_totalprice"}, "sum(l_quantity)": {$push: "$lineitem.sum(l_quantity)"}}},
-      {$unwind: "$sum(l_quantity)"},
-      {$project: {_id: 0, o_orderkey: "$_id.o_orderkey", c_custkey: "$_id.c_custkey", c_name: "$_id.c_name", o_orderdate: "$_id.o_orderdate", o_totalprice: "$_id.o_totalprice", "sum(l_quantity)": 1}},
-      {$sort: {o_totalprice: -1, o_orderdate: 1}},
-      {$limit: 100}
+      {
+        $lookup:
+          {
+            from: "lineitem",
+            let: { o_orderkey: "$o_orderkey" },
+            as: "lineitem",
+            pipeline:
+              [
+                { $match: { $expr: { $eq: ["$$o_orderkey", "$l_orderkey"] } } },
+                {
+                  $group:
+                    {
+                      _id: "$l_orderkey",
+                      "sum(l_quantity)": { $sum: "$l_quantity" },
+                    },
+                },
+                {
+                  $match:
+                    { $expr: { $gt: ["$sum(l_quantity)", *query18Quantity] } },
+                },
+                {
+                  $project:
+                    { _id: 0, o_orderkey: "$_id", "sum(l_quantity)": 1 },
+                },
+              ],
+          },
+      },
+      { $unwind: "$lineitem" },
+      {
+        $lookup:
+          {
+            from: "customer",
+            localField: "o_custkey",
+            foreignField: "c_custkey",
+            as: "customer",
+          },
+      },
+      { $unwind: "$customer" },
+      {
+        $group:
+          {
+            _id:
+              {
+                c_name: "$customer.c_name",
+                c_custkey: "$customer.c_custkey",
+                o_orderkey: "$o_orderkey",
+                o_orderdate: "$o_orderdate",
+                o_totalprice: "$o_totalprice",
+              },
+            "sum(l_quantity)": { $push: "$lineitem.sum(l_quantity)" },
+          },
+      },
+      { $unwind: "$sum(l_quantity)" },
+      {
+        $project:
+          {
+            _id: 0,
+            o_orderkey: "$_id.o_orderkey",
+            c_custkey: "$_id.c_custkey",
+            c_name: "$_id.c_name",
+            o_orderdate: "$_id.o_orderdate",
+            o_totalprice: "$_id.o_totalprice",
+            "sum(l_quantity)": 1,
+          },
+      },
+      { $sort: { o_totalprice: -1, o_orderdate: 1 } },
+      { $limit: 100 },
     ]
-  cursor: {batchSize: *batchSize}
+  cursor: { batchSize: *batchSize }
   allowDiskUse: true
 
 TPCHNormalizedQuery18Warmup:
-  Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
+  Repeat: &Repeat { ^Parameter: { Name: "Repeat", Default: 1 } }
   Database: &db tpch
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHNormalizedQuery18Aggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHNormalizedQuery18Aggregation
 
 TPCHNormalizedQuery18:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query18
-    OperationName: RunCommand
-    OperationCommand: *TPCHNormalizedQuery18Aggregation
+    - OperationMetricsName: Query18
+      OperationName: RunCommand
+      OperationCommand: *TPCHNormalizedQuery18Aggregation
 
 TPCHNormalizedQuery18Explain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query18
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHNormalizedQuery18Aggregation
-      verbosity:
-        executionStats
+    - OperationMetricsName: Query18
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHNormalizedQuery18Aggregation
+        verbosity: executionStats

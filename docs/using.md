@@ -380,6 +380,8 @@ Workloads can be run with the following Genny command:
 
 If your workload requires a MongoDB connection (most do), then you can pass it in with `-u`. See [Connecting to the Server](#orgd6b0450) for more details.
 
+If you'd like to have your results summarized locally in a JSON format, you can pass in the `-r` flag.
+
 
 <a id="orgec88ad4"></a>
 
@@ -389,7 +391,7 @@ Genny's primary output is time-series data. Every time an Actor performs an oper
 
 Genny outputs to `./build/WorkloadOutput`. When running Genny for the first time, you should see two outputs in that directory:
 
--   `CedarMetrics` - a directory full of FTDC files, where each file corresponds to a single time-series metric for a single operation. For more details about the format and contents of these FTDC files, see our tool-agnostic documentation [here](https://github.com/10gen/performance-tooling-docs/blob/main/getting_started/intrarun_data_generation.md). NOTE: this FTDC is different from the [MongoDB server Full Time Diagnostic Data Capture](https://www.mongodb.com/docs/manual/administration/analyzing-mongodb-performance/#full-time-diagnostic-data-capture).
+-   `CedarMetrics` - a directory full of FTDC files, where each file corresponds to a single time-series metric for a single operation. For more details about the format and contents of these FTDC files, see our tool-agnostic documentation [here](https://github.com/10gen/performance-tooling-docs/blob/main/getting_started/intrarun_data_generation.md). NOTE: this FTDC is different from the [MongoDB server Full Time Diagnostic Data Capture](https://www.mongodb.com/docs/manual/administration/analyzing-mongodb-performance/#full-time-diagnostic-data-capture). This file can also contain a JSON summary of these FTDC files if you pass in the `-r` flag when running the `workload` command.
 -   `workload` - a directory containing the preprocessed workload. Learn more about the preprocessor [here](#org2078b23).
 
 If you run Genny and the `CedarMetrics` directory already exists, it will be moved to `CedarMetrics-<current_time>` to avoid overwriting results. The preprocessed workload will be deposited into the `workload` directory, possibly overwriting the existing one. (Or you may end up with multiple workloads in the directory, if they have different names. This has no impact on execution.)
@@ -452,10 +454,16 @@ Try using `python test_result_summary.py --help` for more options.
 
 2.  Run the self-tests:
 
+    To run `self-test` it is required that the [Mothra repository](https://github.com/10gen/mothra/) exists at the root of the repository.
     ```bash
-	./run-genny lint-yaml  # Lint all YAML files
-	./run-genny cmake-test  # Run C++ Unit test - only necessary if editing core C++ code
-	./run-genny resmoke-test  # Run Actor integration tests - only necessary if adding/editing Actors
+    git clone git@github.com:10gen/mothra.git 
+    ```
+
+    ```bash
+    ./run-genny lint-yaml  # Lint all YAML files
+    ./run-genny self-test # Python unit tests
+    ./run-genny cmake-test  # Run C++ Unit test - only necessary if editing core C++ code
+    ./run-genny resmoke-test  # Run Actor integration tests - only necessary if adding/editing Actors
     ```
 
     Note the current [issue](#orgb084b49) running resmoke-test. Also, note that there is no schema-checking of the yaml.

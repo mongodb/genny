@@ -25,92 +25,86 @@ Description: |
     MiddleFieldpath should see a speedup that puts its performance in between "no associativity" and "full associativity".
     TailingFieldpath should speed up back to its performance in the "full associativity" case.
 
-
 GlobalDefaults:
   dbname: &db test
   batchSize: &batchSize 3000
   nop: &Nop {Nop: true}
   constArray: &constArray {^Array: {of: {^RandomInt: {min: -500, max: 500}}, number: 500}}
 
-
 Actors:
-- Name: InsertData
-  Type: Loader
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    Database: *db
+  - Name: InsertData
+    Type: Loader
     Threads: 1
-    CollectionCount: 1
-    DocumentCount: 10000
-    BatchSize: *batchSize
-    Document: {
-      _id: {^Inc: {}},
-      x: {^RandomInt: {min: -1000, max: 1000}},
-    }
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+    Phases:
+      - Repeat: 1
+        Database: *db
+        Threads: 1
+        CollectionCount: 1
+        DocumentCount: 10000
+        BatchSize: *batchSize
+        Document: {_id: {^Inc: {}}, x: {^RandomInt: {min: -1000, max: 1000}}}
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
 
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - Repeat: 1
-  - *Nop
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *db
+    Phases:
+      - *Nop
+      - Repeat: 1
+      - *Nop
+      - Repeat: 1
+      - *Nop
+      - Repeat: 1
+      - *Nop
+      - Repeat: 1
+      - *Nop
 
-- Name: RunMultiply
-  Type: CrudActor
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - LoadConfig:
-      Path: &multiplyPhase ../../phases/query/RunLargeArithmeticOp.yml
-      Key: Multiply
-      Parameters:
-        Name: AllConstants
-        Expression: {^Concat: {arrays: [*constArray, *constArray, [{^RandomInt: {min: -500, max: 500}}]]}}
-  - *Nop
-  - LoadConfig:
-      Path: *multiplyPhase
-      Key: Multiply
-      Parameters:
-        Name: StartingFieldpath
-        Expression: {^Concat: {arrays: [["$x"], *constArray, *constArray]}}
-  - *Nop
-  - LoadConfig:
-      Path: *multiplyPhase
-      Key: Multiply
-      Parameters:
-        Name: TailingFieldpath
-        Expression: {^Concat: {arrays: [*constArray, *constArray, ["$x"]]}}
-  - *Nop
-  - LoadConfig:
-      Path: *multiplyPhase
-      Key: Multiply
-      Parameters:
-        Name: MiddleFieldpath
-        Expression: {^Concat: {arrays: [*constArray, ["$x"], *constArray]}}
+  - Name: RunMultiply
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - LoadConfig:
+          Path: &multiplyPhase ../../phases/query/RunLargeArithmeticOp.yml
+          Key: Multiply
+          Parameters:
+            Name: AllConstants
+            Expression: {^Concat: {arrays: [*constArray, *constArray, [{^RandomInt: {min: -500, max: 500}}]]}}
+      - *Nop
+      - LoadConfig:
+          Path: *multiplyPhase
+          Key: Multiply
+          Parameters:
+            Name: StartingFieldpath
+            Expression: {^Concat: {arrays: [["$x"], *constArray, *constArray]}}
+      - *Nop
+      - LoadConfig:
+          Path: *multiplyPhase
+          Key: Multiply
+          Parameters:
+            Name: TailingFieldpath
+            Expression: {^Concat: {arrays: [*constArray, *constArray, ["$x"]]}}
+      - *Nop
+      - LoadConfig:
+          Path: *multiplyPhase
+          Key: Multiply
+          Parameters:
+            Name: MiddleFieldpath
+            Expression: {^Concat: {arrays: [*constArray, ["$x"], *constArray]}}
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica
-      - single-replica
-      - single-replica-classic-query-engine
-      - single-replica-sbe
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - single-replica-classic-query-engine
+          - single-replica-sbe

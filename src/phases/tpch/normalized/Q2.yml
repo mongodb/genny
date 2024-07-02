@@ -3,99 +3,135 @@ Owner: "@mongodb/product-query"
 Description: |
   Run TPC-H query 2 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema.
 
-batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
+batchSize: &batchSize { ^Parameter: { Name: "BatchSize", Default: 101 } }
 
-query2Size: &query2Size {^Parameter: {Name: "Query2Size", Default: 15}}
-query2Type: &query2Type {^Parameter: {Name: "Query2Type", Default: "^.*BRASS$"}}  # ^.*{type}$"
-query2Region: &query2Region {^Parameter: {Name: "Query2Region", Default: "EUROPE"}}
+query2Size: &query2Size { ^Parameter: { Name: "Query2Size", Default: 15 } }
+query2Type: &query2Type {
+  ^Parameter: { Name: "Query2Type", Default: "^.*BRASS$" },
+} # ^.*{type}$"
+query2Region:
+  &query2Region { ^Parameter: { Name: "Query2Region", Default: "EUROPE" } }
 
 TPCHNormalizedQuery2Aggregation: &TPCHNormalizedQuery2Aggregation
   aggregate: part
   pipeline:
     [
-      {$match: {$and: [
-        {p_type: {$regex: *query2Type, $options: "si"}},
-        {p_size: {$eq: *query2Size}}]}},
-      {$lookup: {
-        from: "partsupp",
-        localField: "p_partkey",
-        foreignField: "ps_partkey",
-        as: "partsupp"}},
-      {$unwind: "$partsupp"},
-      {$lookup: {
-        from: "supplier",
-        localField: "partsupp.ps_suppkey",
-        foreignField: "s_suppkey",
-        as: "supplier"}},
-      {$unwind: "$supplier"},
-      {$lookup: {
-        from: "nation",
-        localField: "supplier.s_nationkey",
-        foreignField: "n_nationkey",
-        as: "nation"}},
-      {$unwind: "$nation"},
-      {$lookup: {
-        from: "region",
-        localField: "nation.n_regionkey",
-        foreignField: "r_regionkey",
-        as: "region"}},
-      {$unwind: "$region"},
-      {$match: {"region.r_name": *query2Region}},
-      {$sort: {"partsupp.ps_supplycost": 1}},
-      {$group: {
-        _id: {
-          p_partkey: "$p_partkey",
-          p_mfgr: "$p_mfgr"},
-        supplier: {$first: {
-          s_acctbal: "$supplier.s_acctbal",
-          s_name: "$supplier.s_name",
-          s_address: "$supplier.s_address",
-          s_phone: "$supplier.s_phone",
-          s_comment: "$supplier.s_comment",
-          ps_supplycost: "$partsupp.ps_supplycost",
-          n_name: "$nation.n_name"}}}},
-      {$project: {
-        _id: 0,
-        s_acctbal: "$supplier.s_acctbal",
-        s_name: "$supplier.s_name",
-        n_name: "$supplier.n_name",
-        p_partkey: "$_id.p_partkey",
-        p_mfgr: "$_id.p_mfgr",
-        s_address: "$supplier.s_address",
-        s_phone: "$supplier.s_phone",
-        s_comment: "$supplier.s_comment"}},
-      {$sort: {s_acctbal: -1, n_name: 1, s_name: 1, p_partkey: 1}},
-      {$limit: 100}
+      {
+        $match:
+          {
+            $and:
+              [
+                { p_type: { $regex: *query2Type, $options: "si" } },
+                { p_size: { $eq: *query2Size } },
+              ],
+          },
+      },
+      {
+        $lookup:
+          {
+            from: "partsupp",
+            localField: "p_partkey",
+            foreignField: "ps_partkey",
+            as: "partsupp",
+          },
+      },
+      { $unwind: "$partsupp" },
+      {
+        $lookup:
+          {
+            from: "supplier",
+            localField: "partsupp.ps_suppkey",
+            foreignField: "s_suppkey",
+            as: "supplier",
+          },
+      },
+      { $unwind: "$supplier" },
+      {
+        $lookup:
+          {
+            from: "nation",
+            localField: "supplier.s_nationkey",
+            foreignField: "n_nationkey",
+            as: "nation",
+          },
+      },
+      { $unwind: "$nation" },
+      {
+        $lookup:
+          {
+            from: "region",
+            localField: "nation.n_regionkey",
+            foreignField: "r_regionkey",
+            as: "region",
+          },
+      },
+      { $unwind: "$region" },
+      { $match: { "region.r_name": *query2Region } },
+      { $sort: { "partsupp.ps_supplycost": 1 } },
+      {
+        $group:
+          {
+            _id: { p_partkey: "$p_partkey", p_mfgr: "$p_mfgr" },
+            supplier:
+              {
+                $first:
+                  {
+                    s_acctbal: "$supplier.s_acctbal",
+                    s_name: "$supplier.s_name",
+                    s_address: "$supplier.s_address",
+                    s_phone: "$supplier.s_phone",
+                    s_comment: "$supplier.s_comment",
+                    ps_supplycost: "$partsupp.ps_supplycost",
+                    n_name: "$nation.n_name",
+                  },
+              },
+          },
+      },
+      {
+        $project:
+          {
+            _id: 0,
+            s_acctbal: "$supplier.s_acctbal",
+            s_name: "$supplier.s_name",
+            n_name: "$supplier.n_name",
+            p_partkey: "$_id.p_partkey",
+            p_mfgr: "$_id.p_mfgr",
+            s_address: "$supplier.s_address",
+            s_phone: "$supplier.s_phone",
+            s_comment: "$supplier.s_comment",
+          },
+      },
+      { $sort: { s_acctbal: -1, n_name: 1, s_name: 1, p_partkey: 1 } },
+      { $limit: 100 },
     ]
-  cursor: {batchSize: *batchSize}
+  cursor: { batchSize: *batchSize }
   allowDiskUse: true
 
 TPCHNormalizedQuery2Warmup:
-  Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
+  Repeat: &Repeat { ^Parameter: { Name: "Repeat", Default: 1 } }
   Database: &db tpch
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHNormalizedQuery2Aggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHNormalizedQuery2Aggregation
 
 TPCHNormalizedQuery2:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query2
-    OperationName: RunCommand
-    OperationCommand: *TPCHNormalizedQuery2Aggregation
+    - OperationMetricsName: Query2
+      OperationName: RunCommand
+      OperationCommand: *TPCHNormalizedQuery2Aggregation
 
 TPCHNormalizedQuery2Explain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query2
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHNormalizedQuery2Aggregation
-      verbosity:
-        executionStats
+    - OperationMetricsName: Query2
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHNormalizedQuery2Aggregation
+        verbosity: executionStats
 
 ValidateTPCHNormalizedQuery2:
   LoadConfig:

@@ -3,23 +3,23 @@ Owner: "@mongodb/query"
 Description: >
   The workload tests the server under a "multi-plan storm" situation, by letting many threads execute a
   query, which triggers a multi-plan. The large number of indexes on the test collection lets the planner
-  generate numerous candidate plans. Normally, plans involving a sorter would quickly loose, 
+  generate numerous candidate plans. Normally, plans involving a sorter would quickly loose,
   but using a large "skip" attribute with the command delays the end of the best plan contest significantly.
-  This eventually makes the system run out-of-memory, due to each of the plans performing a sort on a 
+  This eventually makes the system run out-of-memory, due to each of the plans performing a sort on a
   large number of documents.
 
 Keywords:
-- memory stress
-- multi-planning
-- sort
-- skip
-- oom
-- out of memory
+  - memory stress
+  - multi-planning
+  - sort
+  - skip
+  - oom
+  - out of memory
 
 GlobalDefaults:
   MaxPhases: &MaxPhases 2
   # The amount of documents here is important, since trial-runs in the query planner "tournament"
-  # will only use ~30% of total document count increasing the number of total documents helps
+  # will only use ~30% of total document count increasing the number of total documents helps
   # reproduce the issue.
   TotalDocs: &TotalDocs 10000000
   # To avoid completing the sort-skip early, the number of skipped documents must be large enough,
@@ -40,84 +40,72 @@ Clients:
   Default:
     QueryOptions:
       maxPoolSize: 1100
-      socketTimeoutMS: 7_200_000  # = 2 hour
+      socketTimeoutMS: 7_200_000 # = 2 hour
       connectTimeoutMS: 7_200_000
 
 Actors:
-- Name: InsertData
-  Type: Loader
-  Threads: 100
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Database: &DB test
-        Blocking: None
-        MultipleThreadsPerCollection: true
-        CollectionCount: 1
-        DocumentCount: *TotalDocs
-        BatchSize: 1000
-        Document:
-          uniqueId: {^Inc: {start: 1}}
-          media: {^FastRandomString: {length: *DocMediaSize}}
-          hasDeducteeChanged: true
-          hasPanChanged: false
-          codes: {
-            ^Choose: {
-              from: [
-                {
-                  tdsReturnId: "ffffffffffffffffffffffff",
-                  tanId: "abcdefgh"
-                },
-                {
-                  tdsReturnId: {^FastRandomString: {length: 24}},
-                  tanId: {^FastRandomString: {length: 8}}
-                }
-              ],
-              weights: [*MatchingDocs, *RandomDocs]
+  - Name: InsertData
+    Type: Loader
+    Threads: 100
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Database: &DB test
+          Blocking: None
+          MultipleThreadsPerCollection: true
+          CollectionCount: 1
+          DocumentCount: *TotalDocs
+          BatchSize: 1000
+          Document:
+            uniqueId: {^Inc: {start: 1}}
+            media: {^FastRandomString: {length: *DocMediaSize}}
+            hasDeducteeChanged: true
+            hasPanChanged: false
+            codes: {
+              ^Choose: {
+                from: [
+                  {tdsReturnId: "ffffffffffffffffffffffff", tanId: "abcdefgh"},
+                  {tdsReturnId: {^FastRandomString: {length: 24}}, tanId: {^FastRandomString: {length: 8}}}
+                ],
+                weights: [*MatchingDocs, *RandomDocs]
+              }
             }
-          }
-        Indexes:
-          # 7 indexes will be considered during multi-planning.
-          # 5 indexes involve the sorter, consuming up to 500MB per query.
-          - keys: {codes.tdsReturnId: 1, _id: -1}
-          - keys: {codes.tanId: 1, _id: -1}
-          - keys: {uniqueId: 1}
-          - keys: {codes.tdsReturnId: 1, hasDeducteeChanged: 1}
-          - keys: {codes.tanId: 1, codes.tdsReturnId: 1}
-          - keys: {codes.tanId: 1, hasPanChanged: 1}
-          - keys: {codes.tdsReturnId: 1, codes.uniqueId: 1}
-          - keys: {codes.tanId: 1, uniqueId: 1}
+          Indexes:
+            # 7 indexes will be considered during multi-planning.
+            # 5 indexes involve the sorter, consuming up to 500MB per query.
+            - keys: {codes.tdsReturnId: 1, _id: -1}
+            - keys: {codes.tanId: 1, _id: -1}
+            - keys: {uniqueId: 1}
+            - keys: {codes.tdsReturnId: 1, hasDeducteeChanged: 1}
+            - keys: {codes.tanId: 1, codes.tdsReturnId: 1}
+            - keys: {codes.tanId: 1, hasPanChanged: 1}
+            - keys: {codes.tdsReturnId: 1, codes.uniqueId: 1}
+            - keys: {codes.tanId: 1, uniqueId: 1}
 
-- Name: MultiPlanStorm
-  Type: CrudActor
-  Database: *DB
-  Threads: 1000
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Collection: Collection0
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {
-              $and: [
-                {"codes.tdsReturnId": "ffffffffffffffffffffffff"},
-                {"codes.tanId": "abcdefgh"}
-              ]
-            }
-            Options:
-              Sort: '{"_id": {"$numberInt": "-1"}}'
-              Skip: *SkippedDocs
+  - Name: MultiPlanStorm
+    Type: CrudActor
+    Database: *DB
+    Threads: 1000
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Collection: Collection0
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: {$and: [{"codes.tdsReturnId": "ffffffffffffffffffffffff"}, {"codes.tanId": "abcdefgh"}]}
+                Options:
+                  Sort: '{"_id": {"$numberInt": "-1"}}'
+                  Skip: *SkippedDocs
 
 # The workload is expected to cause an OOM kill. Keep AutoRun disabled.
 # AutoRun:
 # - When:
 #     mongodb_setup:
 #       $eq:
-#       - single-replica
-
+#       - replica

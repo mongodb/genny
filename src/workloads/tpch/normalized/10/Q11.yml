@@ -9,11 +9,11 @@ Clients:
       socketTimeoutMS: -1
 
 Actors:
-- Name: TPCHNormalizedQuery11Explain
-  Type: RunCommand
-  Database: tpch
-  Phases:
-  - Nop: true
+  - Name: TPCHNormalizedQuery11Explain
+    Type: RunCommand
+    Database: tpch
+    Phases:
+      - Nop: true
 
 # TODO: PERF-2995 uncomment
 # - Name: TPCHNormalizedQuery11Explain

@@ -24,85 +24,84 @@ SortCmd: &SortCmd
       batchSize: *batchSize
 
 Actors:
-- Name: CreateTimeSeriesCollection
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    Database: *db
-    Operation:
-      OperationMetricsName: CreateTimeSeriesCollection
-      OperationName: RunCommand
-      OperationCommand:
-        {create: *coll, timeseries: {timeField: "t", metaField: "m"}}
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: 1
-    Database: test
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        drop: *coll
-
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-  - *Nop
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - *Nop
-
-- Name: InsertData
-  Type: Loader
-  Threads: 1
-  Phases:
-  - *Nop
-  - Repeat: 1
-    Database: *db
-    Collection: *coll
+  - Name: CreateTimeSeriesCollection
+    Type: RunCommand
     Threads: 1
-    CollectionCount: 1
-    DocumentCount: 10010000
-    BatchSize: *batchSize
-    Document:
-      t: {^Repeat: {count: 1000, fromGenerator: {^IncDate: {start: "2022-01-01", step: 36000}}}}
-      m: {^Cycle: {ofLength: 1000, fromGenerator: {^Inc: {start: 0}}}}
-  - *Nop
-  - *Nop
-  - *Nop
+    Phases:
+      - Repeat: 1
+        Database: *db
+        Operation:
+          OperationMetricsName: CreateTimeSeriesCollection
+          OperationName: RunCommand
+          OperationCommand: {create: *coll, timeseries: {timeField: "t", metaField: "m"}}
+      - *Nop
+      - *Nop
+      - *Nop
+      - Repeat: 1
+        Database: test
+        Operations:
+          - OperationName: RunCommand
+            OperationCommand:
+              drop: *coll
 
-- Name: Queries
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: 50
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
     Database: *db
-    Operations:
-    - OperationMetricsName: SortQuerySpillBlockingSort
-      OperationName: RunCommand
-      OperationCommand: *SortCmd
-  - *Nop
+    Phases:
+      - *Nop
+      - *Nop
+      - Repeat: 1
+      - *Nop
+      - *Nop
+
+  - Name: InsertData
+    Type: Loader
+    Threads: 1
+    Phases:
+      - *Nop
+      - Repeat: 1
+        Database: *db
+        Collection: *coll
+        Threads: 1
+        CollectionCount: 1
+        DocumentCount: 10010000
+        BatchSize: *batchSize
+        Document:
+          t: {^Repeat: {count: 1000, fromGenerator: {^IncDate: {start: "2022-01-01", step: 36000}}}}
+          m: {^Cycle: {ofLength: 1000, fromGenerator: {^Inc: {start: 0}}}}
+      - *Nop
+      - *Nop
+      - *Nop
+
+  - Name: Queries
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - Repeat: 50
+        Database: *db
+        Operations:
+          - OperationMetricsName: SortQuerySpillBlockingSort
+            OperationName: RunCommand
+            OperationCommand: *SortCmd
+      - *Nop
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica
-      - replica-80-feature-flags
-      - replica-all-feature-flags
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
-      - v5.0
-      - v5.1
-      - v5.2
-      - v5.3
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - replica-80-feature-flags
+          - replica-all-feature-flags
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4
+          - v5.0
+          - v5.1
+          - v5.2
+          - v5.3

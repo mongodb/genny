@@ -10,7 +10,6 @@ Description: |
   Each densify workload has a metric to cover possible codepaths through the densify stage, namely
   different bounds types and whether or not to generate documents along partitions.
 
-
   Since $densify is a new aggregation stage, there isn't a known "good" runtime for aggregations
   that include it. Rather than comparing against a baseline initially, workloads with different
   options that generate similar numbers of documents will be compared to ensure that there isn't an
@@ -49,247 +48,268 @@ GlobalDefaults:
   fieldName: &field "milliseconds"
   unitName: &unit "millisecond"
   index: &index
-    keys: {milliseconds: 1}
-    options: {name: "millisecond"}
+    keys: { milliseconds: 1 }
+    options: { name: "millisecond" }
   smallStepSize: &smallStep 3
   largeStepSize: &largeStep 8
-  explicitBounds: &bounds [
-    {^RandomDate: {min: "2021-01-01T00:00:02.000Z", max: "2021-01-01T00:00:10.000Z"}},
-    {^RandomDate: {min: "2021-01-01T00:00:10.000Z", max: "2021-01-01T00:00:20.000Z"}}
-  ]
-  nop: &Nop {Nop: true}
+  explicitBounds:
+    &bounds [
+      {
+        ^RandomDate:
+          { min: "2021-01-01T00:00:02.000Z", max: "2021-01-01T00:00:10.000Z" },
+      },
+      {
+        ^RandomDate:
+          { min: "2021-01-01T00:00:10.000Z", max: "2021-01-01T00:00:20.000Z" },
+      },
+    ]
+  nop: &Nop { Nop: true }
 
 Actors:
-- Name: InsertData
-  Type: Loader
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    Database: *db
+  - Name: InsertData
+    Type: Loader
     Threads: 1
-    CollectionCount: 1
-    DocumentCount: 10000
-    BatchSize: *limit
-    Document:
-      partitionKey: {^RandomInt: {min: 1, max: 100}}
-      # Test a subset of units that have different characteristics.
-      number: {^RandomInt: {min: 0, max: 20000}}  # Seperate codepath for numeric DensifyValues.
-      milliseconds: {^RandomDate: {min: "2021-01-01T00:00:00.000Z", max: "2021-01-01T00:00:20.000Z"}}  # Most basic date unit.
-      hours: {^RandomDate: {min: "2021-01-01", max: "2023-01-01"}}  # Date unit with constant number of milliseconds.
-      months: {^RandomDate: {min: "2021-01-01", max: "4000-01-01"}}  # Date unit with non-constant number of milliseconds.
-    # $densify stages always add a $sort on the field that is being densified, so this phase adds
-    # indexes on the date/number fields so that we aren't performing an in-memory sort.
-    Indexes:
-    - *index
-  - *Nop
-  - *Nop
+    Phases:
+      - Repeat: 1
+        Database: *db
+        Threads: 1
+        CollectionCount: 1
+        DocumentCount: 10000
+        BatchSize: *limit
+        Document:
+          partitionKey: { ^RandomInt: { min: 1, max: 100 } }
+          # Test a subset of units that have different characteristics.
+          number: { ^RandomInt: { min: 0, max: 20000 } } # Seperate codepath for numeric DensifyValues.
+          milliseconds: {
+            ^RandomDate:
+              {
+                min: "2021-01-01T00:00:00.000Z",
+                max: "2021-01-01T00:00:20.000Z",
+              },
+          } # Most basic date unit.
+          hours: { ^RandomDate: { min: "2021-01-01", max: "2023-01-01" } } # Date unit with constant number of milliseconds.
+          months: { ^RandomDate: { min: "2021-01-01", max: "4000-01-01" } } # Date unit with non-constant number of milliseconds.
+        # $densify stages always add a $sort on the field that is being densified, so this phase adds
+        # indexes on the date/number fields so that we aren't performing an in-memory sort.
+        Indexes:
+          - *index
+      - *Nop
+      - *Nop
 
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-  - *Nop
-  - Repeat: 1
-  - *Nop
-
-- Name: DensifyMilliseconds
-  Type: CrudActor
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - Repeat: 10
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
     Database: *db
-    Collection: Collection0
-    Operations:
-    - OperationMetricsName: FullSmallStep
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [{
-          $densify: {
-            field: *field,
-            range: {
-              bounds: "full",
-              step: *smallStep,
-              unit: *unit
-            }
-          }
-        }, {
-          $limit: *limit
-        }]
-        Options: 
-          BatchSize:  *limit
-    - OperationMetricsName: FullLargeStep
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [{
-          $densify: {
-            field: *field,
-            range: {
-              bounds: "full",
-              step: *largeStep,
-              unit: *unit
-            }
-          }
-        }, {
-          $limit: *limit
-        }]
-        Options: 
-          BatchSize:  *limit
-    - OperationMetricsName: FullByPartitionSmallStep
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [{
-          $densify: {
-            field: *field,
-            partitionByFields: ["partitionKey"],
-            range: {
-              bounds: "full",
-              step: *smallStep,
-              unit: *unit
-            }
-          }
-        }, {
-          $limit: *limit
-        }]
-        Options: 
-          BatchSize:  *limit
-    - OperationMetricsName: FullByPartitionLargeStep
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [{
-          $densify: {
-            field: *field,
-            partitionByFields: ["partitionKey"],
-            range: {
-              bounds: "full",
-              step: *largeStep,
-              unit: *unit
-            }
-          }
-        }, {
-          $limit: *limit
-        }]
-        Options: 
-          BatchSize:  *limit
-    - OperationMetricsName: PartitionedByPartitionSmallStep
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [{
-          $densify: {
-            field: *field,
-            partitionByFields: ["partitionKey"],
-            range: {
-              bounds: "partition",
-              unit: *unit,
-              step: *smallStep
-            }
-          }
-        }, {
-          $limit: *limit
-        }]
-        Options: 
-          BatchSize:  *limit
-    - OperationMetricsName: PartitionedByPartitionLargeStep
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [{
-          $densify: {
-            field: *field,
-            partitionByFields: ["partitionKey"],
-            range: {
-              bounds: "partition",
-              unit: *unit,
-              step: *largeStep
-            }
-          }
-        }, {
-          $limit: *limit
-        }]
-        Options: 
-          BatchSize:  *limit
-    - OperationMetricsName: ExplicitRangeSmallStep
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [{
-          $densify: {
-            field: *field,
-            range: {
-              step: *smallStep,
-              unit: *unit,
-              bounds: *bounds
-            }
-          }
-        }, {
-          $limit: *limit
-        }]
-        Options: 
-          BatchSize:  *limit
-    - OperationMetricsName: ExplicitRangeLargeStep
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [{
-          $densify: {
-            field: *field,
-            range: {
-              step: *largeStep,
-              unit: *unit,
-              bounds: *bounds
-            }
-          }
-        }, {
-          $limit: *limit
-        }]
-        Options: 
-          BatchSize:  *limit
-    - OperationMetricsName: ExplicitRangeByPartitionSmallStep
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [{
-          $densify: {
-            field: *field,
-            partitionByFields: ["partitionKey"],
-            range: {
-              step: *smallStep,
-              unit: *unit,
-              bounds: *bounds
-            }
-          }
-        }, {
-          $limit: *limit
-        }]
-        Options: 
-          BatchSize:  *limit
-    - OperationMetricsName: ExplicitRangeByPartitionLargeStep
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [{
-          $densify: {
-            field: *field,
-            partitionByFields: ["partitionKey"],
-            range: {
-              step: *largeStep,
-              unit: *unit,
-              bounds: *bounds
-            }
-          }
-        }, {
-          $limit: *limit
-        }]
-        Options: 
-          BatchSize:  *limit
+    Phases:
+      - *Nop
+      - Repeat: 1
+      - *Nop
+
+  - Name: DensifyMilliseconds
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - Repeat: 10
+        Database: *db
+        Collection: Collection0
+        Operations:
+          - OperationMetricsName: FullSmallStep
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                [
+                  {
+                    $densify:
+                      {
+                        field: *field,
+                        range:
+                          { bounds: "full", step: *smallStep, unit: *unit },
+                      },
+                  },
+                  { $limit: *limit },
+                ]
+              Options:
+                BatchSize: *limit
+          - OperationMetricsName: FullLargeStep
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                [
+                  {
+                    $densify:
+                      {
+                        field: *field,
+                        range:
+                          { bounds: "full", step: *largeStep, unit: *unit },
+                      },
+                  },
+                  { $limit: *limit },
+                ]
+              Options:
+                BatchSize: *limit
+          - OperationMetricsName: FullByPartitionSmallStep
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                [
+                  {
+                    $densify:
+                      {
+                        field: *field,
+                        partitionByFields: ["partitionKey"],
+                        range:
+                          { bounds: "full", step: *smallStep, unit: *unit },
+                      },
+                  },
+                  { $limit: *limit },
+                ]
+              Options:
+                BatchSize: *limit
+          - OperationMetricsName: FullByPartitionLargeStep
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                [
+                  {
+                    $densify:
+                      {
+                        field: *field,
+                        partitionByFields: ["partitionKey"],
+                        range:
+                          { bounds: "full", step: *largeStep, unit: *unit },
+                      },
+                  },
+                  { $limit: *limit },
+                ]
+              Options:
+                BatchSize: *limit
+          - OperationMetricsName: PartitionedByPartitionSmallStep
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                [
+                  {
+                    $densify:
+                      {
+                        field: *field,
+                        partitionByFields: ["partitionKey"],
+                        range:
+                          {
+                            bounds: "partition",
+                            unit: *unit,
+                            step: *smallStep,
+                          },
+                      },
+                  },
+                  { $limit: *limit },
+                ]
+              Options:
+                BatchSize: *limit
+          - OperationMetricsName: PartitionedByPartitionLargeStep
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                [
+                  {
+                    $densify:
+                      {
+                        field: *field,
+                        partitionByFields: ["partitionKey"],
+                        range:
+                          {
+                            bounds: "partition",
+                            unit: *unit,
+                            step: *largeStep,
+                          },
+                      },
+                  },
+                  { $limit: *limit },
+                ]
+              Options:
+                BatchSize: *limit
+          - OperationMetricsName: ExplicitRangeSmallStep
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                [
+                  {
+                    $densify:
+                      {
+                        field: *field,
+                        range:
+                          { step: *smallStep, unit: *unit, bounds: *bounds },
+                      },
+                  },
+                  { $limit: *limit },
+                ]
+              Options:
+                BatchSize: *limit
+          - OperationMetricsName: ExplicitRangeLargeStep
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                [
+                  {
+                    $densify:
+                      {
+                        field: *field,
+                        range:
+                          { step: *largeStep, unit: *unit, bounds: *bounds },
+                      },
+                  },
+                  { $limit: *limit },
+                ]
+              Options:
+                BatchSize: *limit
+          - OperationMetricsName: ExplicitRangeByPartitionSmallStep
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                [
+                  {
+                    $densify:
+                      {
+                        field: *field,
+                        partitionByFields: ["partitionKey"],
+                        range:
+                          { step: *smallStep, unit: *unit, bounds: *bounds },
+                      },
+                  },
+                  { $limit: *limit },
+                ]
+              Options:
+                BatchSize: *limit
+          - OperationMetricsName: ExplicitRangeByPartitionLargeStep
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                [
+                  {
+                    $densify:
+                      {
+                        field: *field,
+                        partitionByFields: ["partitionKey"],
+                        range:
+                          { step: *largeStep, unit: *unit, bounds: *bounds },
+                      },
+                  },
+                  { $limit: *limit },
+                ]
+              Options:
+                BatchSize: *limit
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica
-      - replica-80-feature-flags
-      - replica-all-feature-flags
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
-      - v5.0
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - replica-80-feature-flags
+          - replica-all-feature-flags
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4
+          - v5.0

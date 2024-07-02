@@ -1,0 +1,208 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+Keywords:
+  - query
+  - plan_cache
+  - array
+Description: |
+  This test was created to demonstrate a problem with the hit rate of the SBE plan cache.
+
+  It runs a query like {$match: {a: {$eq: [1]}}} where the number varies. The Classic plan
+  cache is able to reuse the same plan even as the parameter varies, but the SBE plan cache
+  treats each one separately, resulting in much more planning.
+
+GlobalDefaults:
+  dbname: &db test
+  # This name is not actually something we choose: the Loader actor chooses it.
+  coll: &coll Collection0
+
+  docCount: &docCount 1e4
+  maxPhase: &maxPhase 7
+  queryRepeats: &queryRepeats 100
+
+Actors:
+  - Name: Drop
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *maxPhase
+        PhaseConfig:
+          Repeat: 1
+          Database: *db
+          Operations:
+            - OperationName: RunCommand
+              OperationCommand:
+                drop: *coll
+            # Explicitly create the collection, to avoid a special case where empty collections
+            # give you an EOF plan.
+            - OperationName: RunCommand
+              OperationCommand:
+                create: *coll
+
+  - Name: CreateDataset
+    Type: Loader
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *maxPhase
+        PhaseConfig:
+          Threads: 1
+          Repeat: 1
+          Database: *db
+          CollectionCount: 1
+          DocumentCount: *docCount
+          BatchSize: 1000
+          Document: {
+            x00: {^Inc: {}},
+            x01: {^Inc: {}},
+            x02: {^Inc: {}},
+            x03: {^Inc: {}},
+            x04: {^Inc: {}},
+            x05: {^Inc: {}},
+            x06: {^Inc: {}},
+            x07: {^Inc: {}},
+          }
+          Indexes:
+            - keys: {x00: 1}
+            - keys: {x01: 1}
+            - keys: {x02: 1}
+            - keys: {x03: 1}
+            - keys: {x04: 1}
+            - keys: {x05: 1}
+            - keys: {x06: 1}
+            - keys: {x07: 1}
+
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *db
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *maxPhase
+        PhaseConfig:
+          Repeat: 1
+
+  - Name: MatchQuery02Indexes
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *maxPhase
+        PhaseConfig:
+          Repeat: *queryRepeats
+          Database: *db
+          Collection: *coll
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline: [
+                  {$match: {
+                    # The main predicate which we vary to show the problem with auto-parameterization.
+                    a: {$eq: [{^Inc: {}}]},
+
+                    # Other indexed but nonselective predicates which we include only to increase the cost of planning.
+                    # Multiplanning only happens if there are at least two indexed predicates.
+                    x00: {$gte: 0},
+                    x01: {$gte: 0},
+
+                  }},
+
+                  # Add a group stage to make the query eligible for SBE.
+                  {$group: {
+                    _id: null,
+
+                    # Include a non-count accumulator to avoid any kind of specialized plan for counting.
+                    avg: {$avg: "$x"},
+                  }},
+                ]
+
+  - Name: MatchQuery04Indexes
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [5]
+        NopInPhasesUpTo: *maxPhase
+        PhaseConfig:
+          Repeat: *queryRepeats
+          Database: *db
+          Collection: *coll
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline: [
+                  {$match: {
+                    # The main predicate which we vary to show the problem with auto-parameterization.
+                    a: {$eq: [{^Inc: {}}]},
+
+                    # Other indexed but nonselective predicates which we include only to increase the cost of planning.
+                    # Multiplanning only happens if there are at least two indexed predicates.
+                    x00: {$gte: 0},
+                    x01: {$gte: 0},
+                    x02: {$gte: 0},
+                    x03: {$gte: 0},
+
+                  }},
+
+                  # Add a group stage to make the query eligible for SBE.
+                  {$group: {
+                    _id: null,
+
+                    # Include a non-count accumulator to avoid any kind of specialized plan for counting.
+                    avg: {$avg: "$x"},
+                  }},
+                ]
+
+  - Name: MatchQuery08Indexes
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [7]
+        NopInPhasesUpTo: *maxPhase
+        PhaseConfig:
+          Repeat: *queryRepeats
+          Database: *db
+          Collection: *coll
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline: [
+                  {$match: {
+                    # The main predicate which we vary to show the problem with auto-parameterization.
+                    a: {$eq: [{^Inc: {}}]},
+
+                    # Other indexed but nonselective predicates which we include only to increase the cost of planning.
+                    # Multiplanning only happens if there are at least two indexed predicates.
+                    x00: {$gte: 0},
+                    x01: {$gte: 0},
+                    x02: {$gte: 0},
+                    x03: {$gte: 0},
+                    x04: {$gte: 0},
+                    x05: {$gte: 0},
+                    x06: {$gte: 0},
+                    x07: {$gte: 0},
+
+                  }},
+
+                  # Add a group stage to make the query eligible for SBE.
+                  {$group: {
+                    _id: null,
+
+                    # Include a non-count accumulator to avoid any kind of specialized plan for counting.
+                    avg: {$avg: "$x"},
+                  }},
+                ]
+
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+      branch_name:
+        $gte: v8.0

@@ -10,17 +10,9 @@ Multiply:
   Database: {^Parameter: {Name: "Database", Default: "test"}}
   Collection: {^Parameter: {Name: "Collection", Default: "Collection0"}}
   Operations:
-  - OperationMetricsName: {^Parameter: {Name: "Name", Default: "RunMultiply"}}
-    OperationName: aggregate
-    OperationCommand:
-      Pipeline: [
-        {
-          $group: {
-            _id: {
-              $multiply: {^Parameter: {Name: "Expression", Default: []}}
-            }
-          }
-        }
-      ]
-      Options: 
-        BatchSize:  {^Parameter: {Name: "BatchSize", Default: 3000}}
+    - OperationMetricsName: {^Parameter: {Name: "Name", Default: "RunMultiply"}}
+      OperationName: aggregate
+      OperationCommand:
+        Pipeline: [{$group: {_id: {$multiply: {^Parameter: {Name: "Expression", Default: []}}}}}]
+        Options:
+          BatchSize: {^Parameter: {Name: "BatchSize", Default: 3000}}

@@ -12,862 +12,818 @@ GlobalDefaults:
   MaxPhases: &MaxPhases 50
 
 ActorTemplates:
-- TemplateName: FindQueryTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: "unused"}}
+  - TemplateName: FindQueryTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: "unused"}}
+      Type: CrudActor
+      Database: *Database
+      Threads: 1
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "ActivePhase", Default: -1}}]
+          NopInPhasesUpTo: *MaxPhases
+          PhaseConfig:
+            Repeat: *Repeat
+            Collection: *Collection
+            Operations:
+              - OperationName: find
+                OperationCommand:
+                  Filter: {^Parameter: {Name: "Filter", Default: {invalid: "invalid"}}}
+
+  # Test wide $and predicates with inequality terms that can be simplified.
+  - TemplateName: SimplifiableConjunction
+    Config:
+      ActorFromTemplate:
+        TemplateName: FindQueryTemplate
+        TemplateParameters:
+          Name: {^Parameter: {Name: "Name", Default: "unused"}}
+          ActivePhase: {^Parameter: {Name: "ActivePhase", Default: -1}}
+          Filter: {
+            # Generate query of the form:
+            # {$and: [{arr: {$gt: 10}}, {arr: {$gt: 11}}, ..., {arr: {$gt: Width - 1}}]}
+            $and: {
+              ^Cycle: {
+                ofLength: 1,
+                fromGenerator: {
+                  ^Array: {
+                    of: {arr: {$gt: {^Inc: {start: 10, step: 1}}}},
+                    number: {^Parameter: {Name: "Width", Default: -1}}
+                  }
+                }
+              }
+            }
+          }
+
+  # Test wide $and of $or predicates with comparisons that can be simplified.
+  - TemplateName: SimplifiableCNF
+    Config:
+      ActorFromTemplate:
+        TemplateName: FindQueryTemplate
+        TemplateParameters:
+          Name: {^Parameter: {Name: "Name", Default: "unused"}}
+          ActivePhase: {^Parameter: {Name: "ActivePhase", Default: -1}}
+          Filter: {
+            # Generate query of the form:
+            # {$and: [
+            #   {$or: [{arr: {$gte: 10}}, {f1: {$gte: 10}}, {f2: {$lte: 1}}, {f3: {$lt: 1}}, {f4: {$gt: 10}}]},
+            #   {$or: [{arr: {$gte: 11}}, {f1: {$gte: 11}}, {f2: {$lte: 0}}, {f3: {$lt: 0}}, {f4: {$gt: 11}}]},
+            #   ...,
+            #   {$or: [
+            #     {arr: {$gte: Width - 1}},
+            #     {f1: {$gte: Width - 1}},
+            #     {f2: {$lte: 1 - Width}},
+            #     {f3: {$lt: 1 - Width}},
+            #     {f4: {$gt: Width - 1}}
+            #   ]}
+            # ]}
+            $and: {
+              ^Cycle: {
+                ofLength: 1,
+                fromGenerator: {
+                  ^Array: {
+                    of: {
+                      $or: [
+                        {arr: {$gte: {^Inc: {start: 10}}}},
+                        {f1: {$gte: {^Inc: {start: 10}}}},
+                        {f2: {$lte: {^Inc: {start: 1, step: -1}}}},
+                        {f3: {$lt: {^Inc: {start: 1, step: -1}}}},
+                        {f4: {$gt: {^Inc: {start: 10}}}}
+                      ]
+                    },
+                    number: {^Parameter: {Name: "Width", Default: -1}}}}}}}
+
+  # Test wide $or of $and predicates with comparisons that can be simplified.
+  - TemplateName: SimplifiableDNF
+    Config:
+      ActorFromTemplate:
+        TemplateName: FindQueryTemplate
+        TemplateParameters:
+          Name: {^Parameter: {Name: "Name", Default: "unused"}}
+          ActivePhase: {^Parameter: {Name: "ActivePhase", Default: -1}}
+          Filter: {
+            # Generate query of the form:
+            # {$or: [
+            #   {$and: [{arr: {$gte: 10}}, {f1: {$gte: 10}}, {f2: {$lte: 1}}, {f3: {$lt: 1}}, {f4: {$gt: 10}}]},
+            #   {$and: [{arr: {$gte: 11}}, {f1: {$gte: 11}}, {f2: {$lte: 0}}, {f3: {$lt: 0}}, {f4: {$gt: 11}}]},
+            #   ...,
+            #   {$and: [
+            #     {arr: {$gte: Width - 1}},
+            #     {f1: {$gte: Width - 1}},
+            #     {f2: {$lte: 1 - Width}},
+            #     {f3: {$lt: 1 - Width}},
+            #     {f4: {$gt: Width - 1}}
+            #   ]}
+            # ]}
+            $or: {
+              ^Cycle: {
+                ofLength: 1,
+                fromGenerator: {
+                  ^Array: {
+                    of: {
+                      $and: [
+                        {arr: {$gte: {^Inc: {start: 10}}}},
+                        {f1: {$gte: {^Inc: {start: 10}}}},
+                        {f2: {$lte: {^Inc: {start: 1, step: -1}}}},
+                        {f3: {$lt: {^Inc: {start: 1, step: -1}}}},
+                        {f4: {$gt: {^Inc: {start: 10}}}}
+                      ]
+                    },
+                    number: {^Parameter: {Name: "Width", Default: -1}}}
+                }
+              }
+            }
+          }
+
+  # Test $elemMatch with wide $and predicates with inequality terms that can be simplified.
+  - TemplateName: SimplifiableElemMatchConjunction
+    Config:
+      ActorFromTemplate:
+        TemplateName: FindQueryTemplate
+        TemplateParameters:
+          Name: {^Parameter: {Name: "Name", Default: "unused"}}
+          ActivePhase: {^Parameter: {Name: "ActivePhase", Default: -1}}
+          Filter: {
+            # Generate query of the form:
+            # {arr_of_objs: {$elemMatch: {
+            #     $and: [{arr: {$gt: 10}}, {arr: {$gt: 11}}, ..., {arr: {$gt: Width - 1}}]
+            # }}}
+            arr_of_objs: {
+              $elemMatch: {
+                $and: {
+                  ^Cycle: {
+                    ofLength: 1,
+                    fromGenerator: {
+                      ^Array: {
+                        of: {b: {$gt: {^Inc: {start: 10}}}},
+                        number: {^Parameter: {Name: "Width", Default: -1}}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+  # Test $elemMatch with wide $and of $or predicates with comparisons that can be simplified.
+  - TemplateName: SimplifiableElemMatchCNF
+    Config:
+      ActorFromTemplate:
+        TemplateName: FindQueryTemplate
+        TemplateParameters:
+          Name: {^Parameter: {Name: "Name", Default: "unused"}}
+          ActivePhase: {^Parameter: {Name: "ActivePhase", Default: -1}}
+          Filter: {
+            # Generate query of the form:
+            # {arr_of_objs: {$elemMatch: {$and: [
+            #   {$or: [{arr: {$gte: 10}}, {f1: {$gte: 10}}, {f2: {$lte: 1}}, {f3: {$lt: 1}}, {f4: {$gt: 10}}]},
+            #   {$or: [{arr: {$gte: 11}}, {f1: {$gte: 11}}, {f2: {$lte: 0}}, {f3: {$lt: 0}}, {f4: {$gt: 11}}]},
+            #   ...,
+            #   {$or: [
+            #     {arr: {$gte: Width - 1}},
+            #     {f1: {$gte: Width - 1}},
+            #     {f2: {$lte: 1 - Width}},
+            #     {f3: {$lt: 1 - Width}},
+            #     {f4: {$gt: Width - 1}}
+            #   ]}
+            # ]}}}
+            arr_of_objs: {
+              $elemMatch: {
+                $and: {
+                  ^Cycle: {
+                    ofLength: 1,
+                    fromGenerator: {
+                      ^Array: {
+                        of: {
+                          $or: [
+                            {b: {$eq: -1}},
+                            {c: {$eq: 0}},
+                            {nested: {f1: {$gte: {^Inc: {start: 10}}}}},
+                            {nested: {f2: {$lte: {^Inc: {start: 0, step: -1}}}}},
+                            {nested: {f3: {$lt: {^Inc: {start: 0, step: -1}}}}},
+                            {nested: {f4: {$gt: {^Inc: {start: 10}}}}}
+                          ]
+                        },
+                        number: {^Parameter: {Name: "Width", Default: -1}}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+  # Test $elemMatch with wide $or of $and predicates with comparisons that can be simplified.
+  - TemplateName: SimplifiableElemMatchDNF
+    Config:
+      ActorFromTemplate:
+        TemplateName: FindQueryTemplate
+        TemplateParameters:
+          Name: {^Parameter: {Name: "Name", Default: "unused"}}
+          ActivePhase: {^Parameter: {Name: "ActivePhase", Default: -1}}
+          Filter: {
+            # Generate query of the form:
+            # {arr_of_objs: {$elemMatch: {$or: [
+            #   {$and: [{arr: {$gte: 10}}, {f1: {$gte: 10}}, {f2: {$lte: 1}}, {f3: {$lt: 1}}, {f4: {$gt: 10}}]},
+            #   {$and: [{arr: {$gte: 11}}, {f1: {$gte: 11}}, {f2: {$lte: 0}}, {f3: {$lt: 0}}, {f4: {$gt: 11}}]},
+            #   ...,
+            #   {$and: [
+            #     {arr: {$gte: Width - 1}},
+            #     {f1: {$gte: Width - 1}},
+            #     {f2: {$lte: 1 - Width}},
+            #     {f3: {$lt: 1 - Width}},
+            #     {f4: {$gt: Width - 1}}
+            #   ]}
+            # ]}}}
+            arr_of_objs: {
+              $elemMatch: {
+                $or: {^Cycle: {
+                  ofLength: 1,
+                  fromGenerator: {^Array: {
+                    of: {$and: [
+                      {b: {$eq: -1}},
+                      {c: {$eq: 0}},
+                      {nested: {f1: {$gte: {^Inc: {start: 10}}}}},
+                      {nested: {f2: {$lte: {^Inc: {start: 0, step: -1}}}}},
+                      {nested: {f3: {$lt: {^Inc: {start: 0, step: -1}}}}},
+                      {nested: {f4: {$gt: {^Inc: {start: 10}}}}}
+                    ]},
+                    number: {^Parameter: {Name: "Width", Default: -1}}
+                  }}
+                }}
+              }
+            }
+          }
+
+Actors:
+  - Name: ClearCollection
     Type: CrudActor
     Database: *Database
     Threads: 1
     Phases:
       OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "ActivePhase", Default: -1}}]
+        Active: [0]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
-          Repeat: *Repeat
+          Repeat: 1
+          Threads: 1
           Collection: *Collection
           Operations:
-          - OperationName: find
-            OperationCommand:
-              Filter: {^Parameter: {Name: "Filter", Default: {invalid: "invalid"}}}
+            - OperationName: drop
 
-# Test wide $and predicates with inequality terms that can be simplified.
-- TemplateName: SimplifiableConjunction
-  Config:
-    ActorFromTemplate:
-      TemplateName: FindQueryTemplate
-      TemplateParameters:
-        Name: {^Parameter: {Name: "Name", Default: "unused"}}
-        ActivePhase: {^Parameter: {Name: "ActivePhase", Default: -1}}
-        Filter:
-          # Generate query of the form:
-          # {$and: [{arr: {$gt: 10}}, {arr: {$gt: 11}}, ..., {arr: {$gt: Width - 1}}]}
-          {$and:
-            {^Cycle: {
-              ofLength: 1,
-              fromGenerator:
-                {^Array: {of:
-                  {arr: {$gt: {^Inc: {start: 10, step: 1}}}},
-                  number: {^Parameter: {Name: "Width", Default: -1}}
-                }}
-            }}
-          }
-
-# Test wide $and of $or predicates with comparisons that can be simplified.
-- TemplateName: SimplifiableCNF
-  Config:
-    ActorFromTemplate:
-      TemplateName: FindQueryTemplate
-      TemplateParameters:
-        Name: {^Parameter: {Name: "Name", Default: "unused"}}
-        ActivePhase: {^Parameter: {Name: "ActivePhase", Default: -1}}
-        Filter:
-          # Generate query of the form:
-          # {$and: [
-          #   {$or: [{arr: {$gte: 10}}, {f1: {$gte: 10}}, {f2: {$lte: 1}}, {f3: {$lt: 1}}, {f4: {$gt: 10}}]},
-          #   {$or: [{arr: {$gte: 11}}, {f1: {$gte: 11}}, {f2: {$lte: 0}}, {f3: {$lt: 0}}, {f4: {$gt: 11}}]},
-          #   ...,
-          #   {$or: [
-          #     {arr: {$gte: Width - 1}},
-          #     {f1: {$gte: Width - 1}},
-          #     {f2: {$lte: 1 - Width}},
-          #     {f3: {$lt: 1 - Width}},
-          #     {f4: {$gt: Width - 1}}
-          #   ]}
-          # ]}
-          {$and:
-            {^Cycle: {
-              ofLength: 1,
-              fromGenerator:
-                {^Array: {of:
-                  {$or: [
-                    {arr: {$gte: {^Inc: {start: 10}}}},
-                    {f1: {$gte: {^Inc: {start: 10}}}},
-                    {f2: {$lte: {^Inc: {start: 1, step: -1}}}},
-                    {f3: {$lt: {^Inc: {start: 1, step: -1}}}},
-                    {f4: {$gt: {^Inc: {start: 10}}}}
-                  ]},
-                  number: {^Parameter: {Name: "Width", Default: -1}}
-                }}
-            }}
-          }
-
-# Test wide $or of $and predicates with comparisons that can be simplified.
-- TemplateName: SimplifiableDNF
-  Config:
-    ActorFromTemplate:
-      TemplateName: FindQueryTemplate
-      TemplateParameters:
-        Name: {^Parameter: {Name: "Name", Default: "unused"}}
-        ActivePhase: {^Parameter: {Name: "ActivePhase", Default: -1}}
-        Filter:
-          # Generate query of the form:
-          # {$or: [
-          #   {$and: [{arr: {$gte: 10}}, {f1: {$gte: 10}}, {f2: {$lte: 1}}, {f3: {$lt: 1}}, {f4: {$gt: 10}}]},
-          #   {$and: [{arr: {$gte: 11}}, {f1: {$gte: 11}}, {f2: {$lte: 0}}, {f3: {$lt: 0}}, {f4: {$gt: 11}}]},
-          #   ...,
-          #   {$and: [
-          #     {arr: {$gte: Width - 1}},
-          #     {f1: {$gte: Width - 1}},
-          #     {f2: {$lte: 1 - Width}},
-          #     {f3: {$lt: 1 - Width}},
-          #     {f4: {$gt: Width - 1}}
-          #   ]}
-          # ]}
-          {$or:
-            {^Cycle: {
-              ofLength: 1,
-              fromGenerator:
-                {^Array: {of:
-                  {$and: [
-                    {arr: {$gte: {^Inc: {start: 10}}}},
-                    {f1: {$gte: {^Inc: {start: 10}}}},
-                    {f2: {$lte: {^Inc: {start: 1, step: -1}}}},
-                    {f3: {$lt: {^Inc: {start: 1, step: -1}}}},
-                    {f4: {$gt: {^Inc: {start: 10}}}}
-                  ]},
-                  number: {^Parameter: {Name: "Width", Default: -1}}
-                }}
-            }}
-          }
-
-# Test $elemMatch with wide $and predicates with inequality terms that can be simplified.
-- TemplateName: SimplifiableElemMatchConjunction
-  Config:
-    ActorFromTemplate:
-      TemplateName: FindQueryTemplate
-      TemplateParameters:
-        Name: {^Parameter: {Name: "Name", Default: "unused"}}
-        ActivePhase: {^Parameter: {Name: "ActivePhase", Default: -1}}
-        Filter:
-          # Generate query of the form:
-          # {arr_of_objs: {$elemMatch: {
-          #     $and: [{arr: {$gt: 10}}, {arr: {$gt: 11}}, ..., {arr: {$gt: Width - 1}}]
-          # }}}
-          {arr_of_objs: {$elemMatch: {$and:
-            {^Cycle: {
-              ofLength: 1,
-              fromGenerator:
-                {^Array: {of:
-                  {b: {$gt: {^Inc: {start: 10}}}},
-                  number: {^Parameter: {Name: "Width", Default: -1}}
-                }}
-            }}
-          }}}
-
-# Test $elemMatch with wide $and of $or predicates with comparisons that can be simplified.
-- TemplateName: SimplifiableElemMatchCNF
-  Config:
-    ActorFromTemplate:
-      TemplateName: FindQueryTemplate
-      TemplateParameters:
-        Name: {^Parameter: {Name: "Name", Default: "unused"}}
-        ActivePhase: {^Parameter: {Name: "ActivePhase", Default: -1}}
-        Filter:
-          # Generate query of the form:
-          # {arr_of_objs: {$elemMatch: {$and: [
-          #   {$or: [{arr: {$gte: 10}}, {f1: {$gte: 10}}, {f2: {$lte: 1}}, {f3: {$lt: 1}}, {f4: {$gt: 10}}]},
-          #   {$or: [{arr: {$gte: 11}}, {f1: {$gte: 11}}, {f2: {$lte: 0}}, {f3: {$lt: 0}}, {f4: {$gt: 11}}]},
-          #   ...,
-          #   {$or: [
-          #     {arr: {$gte: Width - 1}},
-          #     {f1: {$gte: Width - 1}},
-          #     {f2: {$lte: 1 - Width}},
-          #     {f3: {$lt: 1 - Width}},
-          #     {f4: {$gt: Width - 1}}
-          #   ]}
-          # ]}}}
-          {arr_of_objs: {$elemMatch: {$and:
-            {^Cycle: {
-              ofLength: 1,
-              fromGenerator:
-                {^Array: {of:
-                  {$or: [
-                    {b: {$eq: -1}},
-                    {c: {$eq: 0}},
-                    {nested: {f1: {$gte: {^Inc: {start: 10}}}}},
-                    {nested: {f2: {$lte: {^Inc: {start: 0, step: -1}}}}},
-                    {nested: {f3: {$lt: {^Inc: {start: 0, step: -1}}}}},
-                    {nested: {f4: {$gt: {^Inc: {start: 10}}}}},
-                  ]},
-                  number: {^Parameter: {Name: "Width", Default: -1}}
-                }}
-            }}
-          }}}
-
-# Test $elemMatch with wide $or of $and predicates with comparisons that can be simplified.
-- TemplateName: SimplifiableElemMatchDNF
-  Config:
-    ActorFromTemplate:
-      TemplateName: FindQueryTemplate
-      TemplateParameters:
-        Name: {^Parameter: {Name: "Name", Default: "unused"}}
-        ActivePhase: {^Parameter: {Name: "ActivePhase", Default: -1}}
-        Filter:
-          # Generate query of the form:
-          # {arr_of_objs: {$elemMatch: {$or: [
-          #   {$and: [{arr: {$gte: 10}}, {f1: {$gte: 10}}, {f2: {$lte: 1}}, {f3: {$lt: 1}}, {f4: {$gt: 10}}]},
-          #   {$and: [{arr: {$gte: 11}}, {f1: {$gte: 11}}, {f2: {$lte: 0}}, {f3: {$lt: 0}}, {f4: {$gt: 11}}]},
-          #   ...,
-          #   {$and: [
-          #     {arr: {$gte: Width - 1}},
-          #     {f1: {$gte: Width - 1}},
-          #     {f2: {$lte: 1 - Width}},
-          #     {f3: {$lt: 1 - Width}},
-          #     {f4: {$gt: Width - 1}}
-          #   ]}
-          # ]}}}
-          {arr_of_objs: {$elemMatch: {$or:
-            {^Cycle: {
-              ofLength: 1,
-              fromGenerator:
-                {^Array: {of:
-                  {$and: [
-                    {b: {$eq: -1}},
-                    {c: {$eq: 0}},
-                    {nested: {f1: {$gte: {^Inc: {start: 10}}}}},
-                    {nested: {f2: {$lte: {^Inc: {start: 0, step: -1}}}}},
-                    {nested: {f3: {$lt: {^Inc: {start: 0, step: -1}}}}},
-                    {nested: {f4: {$gt: {^Inc: {start: 10}}}}},
-                  ]},
-                  number: {^Parameter: {Name: "Width", Default: -1}}
-                }}
-            }}
-          }}}
-
-Actors:
-- Name: ClearCollection
-  Type: CrudActor
-  Database: *Database
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
-        Collection: *Collection
-        Operations:
-        - OperationName: drop
-
-- Name: InsertData
-  Type: Loader
-  Threads: 4
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        MultipleThreadsPerCollection: true
-        CollectionCount: 1
-        DocumentCount: *DocumentCount
-        BatchSize: 1000
-        Document:
-          # None of these match any of the filters in this workload.
-          a: 1
-          arr: [0, 1]
-          b: {^Choose: {
-            from: [
-              null,
-              false,
-              &IntValue 10,
-              &DoubleValue 9.5,
-              &StringValue "abc",
-              &ObjectValue {a: 1},
-              &ArrayValue [*IntValue],
-              &ObjectIdValue {^ObjectId: "5fd7c984e0f8d74bdb04d3b4"},
-              &DateValue {^Date: "2015-01-01"},
-              &ConstantsOfDifferentTypes [
+  - Name: InsertData
+    Type: Loader
+    Threads: 4
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          MultipleThreadsPerCollection: true
+          CollectionCount: 1
+          DocumentCount: *DocumentCount
+          BatchSize: 1000
+          Document:
+            # None of these match any of the filters in this workload.
+            a: 1
+            arr: [0, 1]
+            b: {^Choose: {
+              from: [
                 null,
                 false,
-                *IntValue,
-                *DoubleValue,
-                *StringValue,
-                *ObjectValue,
-                *ArrayValue,
-                *ObjectIdValue,
-                *DateValue
-              ]
-            ],
-            deterministic: true
-          }}
-          f1: [1]
-          f2: [[1], 2]
-          f3: [[[1], 2], 3]
-          f4: [[[[1], 2], 3], 4]
-          arr_of_objs: [{^Repeat: {count: 10, fromGenerator: {
-            b: 0, c: 1, d: 2, nested: {
-              f1: [1], f2: [[1], 2], f3: [[[1], 2], 3], f4: [[[[1], 2], 3], 4]
-            }
-          }}}]
-          nested: [
-            {
-              arr: [0, 1],
-              f1: [1],
-              f2: [[1], 2],
-              f3: [[[1], 2], 3],
-              f4: [[[[1], 2], 3], 4],
-            }
-          ]
-
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
-
-- ActorFromTemplate:
-    TemplateName: SimplifiableConjunction
-    TemplateParameters:
-      Name: SimplifiableConjunction100Clauses
-      ActivePhase: 3
-      Width: 100
-
-- ActorFromTemplate:
-    TemplateName: SimplifiableConjunction
-    TemplateParameters:
-      Name: SimplifiableConjunction400Clauses
-      ActivePhase: 4
-      Width: 400
-
-- ActorFromTemplate:
-    TemplateName: SimplifiableConjunction
-    TemplateParameters:
-      Name: SimplifiedConjunction
-      ActivePhase: 5
-      # The above queries can be simplified to contain just 1 clause.
-      Width: 1
-
-- ActorFromTemplate:
-    TemplateName: SimplifiableCNF
-    TemplateParameters:
-      Name: SimplifiableCNF100Clauses
-      ActivePhase: 6
-      Width: 100
-
-- ActorFromTemplate:
-    TemplateName: SimplifiableCNF
-    TemplateParameters:
-      Name: SimplifiableCNF400Clauses
-      ActivePhase: 7
-      Width: 400
-
-- ActorFromTemplate:
-    TemplateName: SimplifiableCNF
-    TemplateParameters:
-      Name: SimplifiedCNF
-      ActivePhase: 8
-      # The above queries can be simplified to contain just 1 clause.
-      Width: 1
-
-- ActorFromTemplate:
-    TemplateName: SimplifiableDNF
-    TemplateParameters:
-      Name: SimplifiableDNF100Clauses
-      ActivePhase: 9
-      Width: 100
-
-- ActorFromTemplate:
-    TemplateName: SimplifiableDNF
-    TemplateParameters:
-      Name: SimplifiableDNF400Clauses
-      ActivePhase: 10
-      Width: 400
-
-- ActorFromTemplate:
-    TemplateName: SimplifiableDNF
-    TemplateParameters:
-      Name: SimplifiedDNF
-      ActivePhase: 11
-      # The above queries can be simplified to contain just 1 clause.
-      Width: 1
-
-- ActorFromTemplate:
-    TemplateName: SimplifiableElemMatchConjunction
-    TemplateParameters:
-      Name: SimplifiableElemMatchConjunction100Clauses
-      ActivePhase: 12
-      Width: 100
-
-- ActorFromTemplate:
-    TemplateName: SimplifiableElemMatchConjunction
-    TemplateParameters:
-      Name: SimplifiableElemMatchConjunction400Clauses
-      ActivePhase: 13
-      Width: 400
-
-- ActorFromTemplate:
-    TemplateName: SimplifiableElemMatchConjunction
-    TemplateParameters:
-      Name: SimplifiedElemMatchConjunction
-      ActivePhase: 14
-      # The above queries can be simplified to contain just 1 clause.
-      Width: 1
-
-- ActorFromTemplate:
-    TemplateName: SimplifiableElemMatchCNF
-    TemplateParameters:
-      Name: SimplifiableElemMatchCNF100Clauses
-      ActivePhase: 15
-      Width: 100
-
-- ActorFromTemplate:
-    TemplateName: SimplifiableElemMatchCNF
-    TemplateParameters:
-      Name: SimplifiableElemMatchCNF400Clauses
-      ActivePhase: 16
-      Width: 400
-
-- ActorFromTemplate:
-    TemplateName: SimplifiableElemMatchCNF
-    TemplateParameters:
-      Name: SimplifiedElemMatchCNF
-      ActivePhase: 17
-      # The above queries can be simplified to contain just 1 clause.
-      Width: 1
-
-- ActorFromTemplate:
-    TemplateName: SimplifiableElemMatchDNF
-    TemplateParameters:
-      Name: SimplifiableElemMatchDNF100Clauses
-      ActivePhase: 18
-      Width: 100
-
-- ActorFromTemplate:
-    TemplateName: SimplifiableElemMatchDNF
-    TemplateParameters:
-      Name: SimplifiableElemMatchDNF400Clauses
-      ActivePhase: 19
-      Width: 400
-
-- ActorFromTemplate:
-    TemplateName: SimplifiableElemMatchDNF
-    TemplateParameters:
-      Name: SimplifiedElemMatchDNF
-      ActivePhase: 20
-      # The above queries can be simplified to contain just 1 clause.
-      Width: 1
-
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: TypeBracketedLt
-      ActivePhase: 21
-      Filter:
-        {
-          # YAML doesn't support duplicate keys so the object generator is required here as 
-          # we want to construct a query of the form: {b: {$lt: 10, $lt: "abc", ...}}.
-          b: &TypeBracketedLtQueryFilter {^Object: {
-            withNEntries: 9,
-            havingKeys: "$lt",
-            andValues: {^Choose: {
-              from: *ConstantsOfDifferentTypes,
+                &IntValue 10,
+                &DoubleValue 9.5,
+                &StringValue "abc",
+                &ObjectValue {a: 1},
+                &ArrayValue [*IntValue],
+                &ObjectIdValue {^ObjectId: "5fd7c984e0f8d74bdb04d3b4"},
+                &DateValue {^Date: "2015-01-01"},
+                &ConstantsOfDifferentTypes [null, false, *IntValue, *DoubleValue, *StringValue, *ObjectValue, *ArrayValue, *ObjectIdValue, *DateValue]
+              ],
               deterministic: true
-            }},
-            duplicatedKeys: insert
-          }}
+            }}
+            f1: [1]
+            f2: [[1], 2]
+            f3: [[[1], 2], 3]
+            f4: [[[[1], 2], 3], 4]
+            arr_of_objs: [{^Repeat: {count: 10, fromGenerator: {b: 0, c: 1, d: 2, nested: {f1: [1], f2: [[1], 2], f3: [[[1], 2], 3], f4: [[[[1], 2], 3], 4]}}}}]
+            nested: [{arr: [0, 1], f1: [1], f2: [[1], 2], f3: [[[1], 2], 3], f4: [[[[1], 2], 3], 4]}]
+
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+
+  - ActorFromTemplate:
+      TemplateName: SimplifiableConjunction
+      TemplateParameters:
+        Name: SimplifiableConjunction100Clauses
+        ActivePhase: 3
+        Width: 100
+
+  - ActorFromTemplate:
+      TemplateName: SimplifiableConjunction
+      TemplateParameters:
+        Name: SimplifiableConjunction400Clauses
+        ActivePhase: 4
+        Width: 400
+
+  - ActorFromTemplate:
+      TemplateName: SimplifiableConjunction
+      TemplateParameters:
+        Name: SimplifiedConjunction
+        ActivePhase: 5
+        # The above queries can be simplified to contain just 1 clause.
+        Width: 1
+
+  - ActorFromTemplate:
+      TemplateName: SimplifiableCNF
+      TemplateParameters:
+        Name: SimplifiableCNF100Clauses
+        ActivePhase: 6
+        Width: 100
+
+  - ActorFromTemplate:
+      TemplateName: SimplifiableCNF
+      TemplateParameters:
+        Name: SimplifiableCNF400Clauses
+        ActivePhase: 7
+        Width: 400
+
+  - ActorFromTemplate:
+      TemplateName: SimplifiableCNF
+      TemplateParameters:
+        Name: SimplifiedCNF
+        ActivePhase: 8
+        # The above queries can be simplified to contain just 1 clause.
+        Width: 1
+
+  - ActorFromTemplate:
+      TemplateName: SimplifiableDNF
+      TemplateParameters:
+        Name: SimplifiableDNF100Clauses
+        ActivePhase: 9
+        Width: 100
+
+  - ActorFromTemplate:
+      TemplateName: SimplifiableDNF
+      TemplateParameters:
+        Name: SimplifiableDNF400Clauses
+        ActivePhase: 10
+        Width: 400
+
+  - ActorFromTemplate:
+      TemplateName: SimplifiableDNF
+      TemplateParameters:
+        Name: SimplifiedDNF
+        ActivePhase: 11
+        # The above queries can be simplified to contain just 1 clause.
+        Width: 1
+
+  - ActorFromTemplate:
+      TemplateName: SimplifiableElemMatchConjunction
+      TemplateParameters:
+        Name: SimplifiableElemMatchConjunction100Clauses
+        ActivePhase: 12
+        Width: 100
+
+  - ActorFromTemplate:
+      TemplateName: SimplifiableElemMatchConjunction
+      TemplateParameters:
+        Name: SimplifiableElemMatchConjunction400Clauses
+        ActivePhase: 13
+        Width: 400
+
+  - ActorFromTemplate:
+      TemplateName: SimplifiableElemMatchConjunction
+      TemplateParameters:
+        Name: SimplifiedElemMatchConjunction
+        ActivePhase: 14
+        # The above queries can be simplified to contain just 1 clause.
+        Width: 1
+
+  - ActorFromTemplate:
+      TemplateName: SimplifiableElemMatchCNF
+      TemplateParameters:
+        Name: SimplifiableElemMatchCNF100Clauses
+        ActivePhase: 15
+        Width: 100
+
+  - ActorFromTemplate:
+      TemplateName: SimplifiableElemMatchCNF
+      TemplateParameters:
+        Name: SimplifiableElemMatchCNF400Clauses
+        ActivePhase: 16
+        Width: 400
+
+  - ActorFromTemplate:
+      TemplateName: SimplifiableElemMatchCNF
+      TemplateParameters:
+        Name: SimplifiedElemMatchCNF
+        ActivePhase: 17
+        # The above queries can be simplified to contain just 1 clause.
+        Width: 1
+
+  - ActorFromTemplate:
+      TemplateName: SimplifiableElemMatchDNF
+      TemplateParameters:
+        Name: SimplifiableElemMatchDNF100Clauses
+        ActivePhase: 18
+        Width: 100
+
+  - ActorFromTemplate:
+      TemplateName: SimplifiableElemMatchDNF
+      TemplateParameters:
+        Name: SimplifiableElemMatchDNF400Clauses
+        ActivePhase: 19
+        Width: 400
+
+  - ActorFromTemplate:
+      TemplateName: SimplifiableElemMatchDNF
+      TemplateParameters:
+        Name: SimplifiedElemMatchDNF
+        ActivePhase: 20
+        # The above queries can be simplified to contain just 1 clause.
+        Width: 1
+
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: TypeBracketedLt
+        ActivePhase: 21
+        Filter: {
+          # YAML doesn't support duplicate keys so the object generator is required here as
+          # we want to construct a query of the form: {b: {$lt: 10, $lt: "abc", ...}}.
+          b: &TypeBracketedLtQueryFilter {
+            ^Object: {
+              withNEntries: 9,
+              havingKeys: "$lt",
+              andValues: {^Choose: {
+                from: *ConstantsOfDifferentTypes,
+                deterministic: true
+              }},
+              duplicatedKeys: insert
+            }
+          }
         }
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: TypeBracketedGt
-      ActivePhase: 22
-      Filter:
-        {
-          # YAML doesn't support duplicate keys so the object generator is required here as 
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: TypeBracketedGt
+        ActivePhase: 22
+        Filter: {
+          # YAML doesn't support duplicate keys so the object generator is required here as
           # we want to construct a query of the form: {b: {$gt: 10, $gt: "abc", ...}}.
           b: &TypeBracketedGtQueryFilter {^Object: {
             withNEntries: 9,
             havingKeys: "$gt",
-            andValues: {^Choose: {
-              from: *ConstantsOfDifferentTypes,
-              deterministic: true
-            }},
+            andValues: {^Choose: {from: *ConstantsOfDifferentTypes, deterministic: true}},
             duplicatedKeys: insert
           }}
         }
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: TypeBracketedLte
-      ActivePhase: 23
-      Filter:
-        {
-          # YAML doesn't support duplicate keys so the object generator is required here as 
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: TypeBracketedLte
+        ActivePhase: 23
+        Filter: {
+          # YAML doesn't support duplicate keys so the object generator is required here as
           # we want to construct a query of the form: {b: {$lte: 10, $lte: "abc", ...}}.
           b: &TypeBracketedLteQueryFilter {^Object: {
             withNEntries: 9,
             havingKeys: "$lte",
-            andValues: {^Choose: {
-              # Pick constants that are not present in the collection as we don't want to match
-              # any documents.
-              from: &NonMatchingConstantsOfDifferentTypes [
-                null,
-                true,
-                1,
-                1.5,
-                "dfg",
-                {b: 2},
-                [1],
-                {^ObjectId: "3fd7c884e0f8d74cdb04d3b4"},
-                {^Date: "2023-02-03"}
-              ],
-              deterministic: true
-            }},
+            andValues: {
+              ^Choose: {
+                # Pick constants that are not present in the collection as we don't want to match
+                # any documents.
+                from: &NonMatchingConstantsOfDifferentTypes [
+                  null,
+                  true,
+                  1,
+                  1.5,
+                  "dfg",
+                  {b: 2},
+                  [1],
+                  {^ObjectId: "3fd7c884e0f8d74cdb04d3b4"},
+                  {^Date: "2023-02-03"}
+                ],
+                deterministic: true
+              }
+            },
             duplicatedKeys: insert
           }}
         }
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: TypeBracketedGte
-      ActivePhase: 24
-      Filter:
-        {
-          # YAML doesn't support duplicate keys so the object generator is required here as 
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: TypeBracketedGte
+        ActivePhase: 24
+        Filter: {
+          # YAML doesn't support duplicate keys so the object generator is required here as
           # we want to construct a query of the form: {b: {$gte: 10, $gte: "abc", ...}}.
           b: &TypeBracketedGteQueryFilter {^Object: {
             withNEntries: 9,
             havingKeys: "$gte",
-            andValues: {^Choose: {
-              from: *NonMatchingConstantsOfDifferentTypes,
-              deterministic: true
-            }},
+            andValues: {^Choose: {from: *NonMatchingConstantsOfDifferentTypes, deterministic: true}},
             duplicatedKeys: insert
           }}
         }
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: TypeBracketedMixed
-      ActivePhase: 25
-      Filter:
-        {
-          # YAML doesn't support duplicate keys so the object generator is required here as 
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: TypeBracketedMixed
+        ActivePhase: 25
+        Filter: {
+          # YAML doesn't support duplicate keys so the object generator is required here as
           # we want to construct a query of the form: {b: {$gt: 10, $lt: "abc", ...}}.
           b: &TypeBracketedMixedQueryFilter {^Object: {
             withNEntries: 9,
             havingKeys: {^Choose: {from: ["$gt", "$lt", "$gte", "$lte"]}},
-            andValues: {^Choose: {
-              from: *NonMatchingConstantsOfDifferentTypes,
-              deterministic: true
-            }},
+            andValues: {^Choose: {from: *NonMatchingConstantsOfDifferentTypes, deterministic: true}},
             duplicatedKeys: insert
           }}
         }
 
-# Note that due to array semantics, only the $elemMatch versions of the type bracketed queries
-# can be reduced to an empty query.
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchTypeBracketedLt
-      ActivePhase: 26
-      Filter:
-        {b: {$elemMatch: *TypeBracketedLtQueryFilter}}
+  # Note that due to array semantics, only the $elemMatch versions of the type bracketed queries
+  # can be reduced to an empty query.
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchTypeBracketedLt
+        ActivePhase: 26
+        Filter: {b: {$elemMatch: *TypeBracketedLtQueryFilter}}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchTypeBracketedGt
-      ActivePhase: 27
-      Filter:
-        {b: {$elemMatch: *TypeBracketedGtQueryFilter}}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchTypeBracketedGt
+        ActivePhase: 27
+        Filter: {b: {$elemMatch: *TypeBracketedGtQueryFilter}}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchTypeBracketedLte
-      ActivePhase: 28
-      Filter:
-        {b: {$elemMatch: *TypeBracketedLteQueryFilter}}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchTypeBracketedLte
+        ActivePhase: 28
+        Filter: {b: {$elemMatch: *TypeBracketedLteQueryFilter}}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchTypeBracketedGte
-      ActivePhase: 29
-      Filter:
-        {b: {$elemMatch: *TypeBracketedGteQueryFilter}}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchTypeBracketedGte
+        ActivePhase: 29
+        Filter: {b: {$elemMatch: *TypeBracketedGteQueryFilter}}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchTypeBracketedMixed
-      ActivePhase: 30
-      Filter:
-        {b: {$elemMatch: *TypeBracketedMixedQueryFilter}}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchTypeBracketedMixed
+        ActivePhase: 30
+        Filter: {b: {$elemMatch: *TypeBracketedMixedQueryFilter}}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: LargeInWithDuplicates
-      ActivePhase: 31
-      Filter:
-        {f1: &LargeInWithDuplicates {$in: {^Array: {
-          of: {^RandomInt: {min: 5, max: 55}},
-          number: 1000,
-        }}}}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: LargeInWithDuplicates
+        ActivePhase: 31
+        Filter: {f1: &LargeInWithDuplicates {$in: {^Array: {of: {^RandomInt: {min: 5, max: 55}}, number: 1000}}}}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: VeryLargeInWithDuplicates
-      ActivePhase: 32
-      Filter:
-        {f1: &VeryLargeInWithDuplicates {$in: {^Array: {
-          of: {^RandomInt: {min: 5, max: 55}},
-          number: 10000,
-        }}}}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: VeryLargeInWithDuplicates
+        ActivePhase: 32
+        Filter: {f1: &VeryLargeInWithDuplicates {$in: {^Array: {of: {^RandomInt: {min: 5, max: 55}}, number: 10000}}}}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: LargeOrOfSamePathEqualities
-      ActivePhase: 33
-      Filter:
-        # This can be reduced to {f1: {$in: [...]}}.
-        &LargeOrOfSamePathEqualities {$or: {^Array: {
-          of: {f1: {^RandomInt: {min: 5, max: 1_000_000_000}}},
-          number: 1000,
-        }}}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: LargeOrOfSamePathEqualities
+        ActivePhase: 33
+        Filter: &LargeOrOfSamePathEqualities {
+          # This can be reduced to {f1: {$in: [...]}}.
+          $or: {^Array: {of: {f1: {^RandomInt: {min: 5, max: 1_000_000_000}}}, number: 1000}}}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: LargeOrOfSamePathEqualitiesWithDuplicates
-      ActivePhase: 34
-      Filter:
-        # This can be reduced to {f1: {$in: [...]}}, where the $in-list contains at most 50 elements.
-        &LargeOrOfSamePathEqualitiesWithDuplicates {$or: {^Array: {
-          of: {f1: {^RandomInt: {min: 5, max: 55}}},
-          number: 1000,
-        }}}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: LargeOrOfSamePathEqualitiesWithDuplicates
+        ActivePhase: 34
+        Filter: &LargeOrOfSamePathEqualitiesWithDuplicates {
+          # This can be reduced to {f1: {$in: [...]}}, where the $in-list contains at most 50 elements.
+          $or: {^Array: {of: {f1: {^RandomInt: {min: 5, max: 55}}}, number: 1000}}}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: LargeMixedInAndOrWithDuplicates
-      ActivePhase: 35
-      Filter:
-        # Produces an $or that is a mix of $eq and $in on the same path. It can be reduced to {f1: {$in: [...]}},
-        # where the $in-list contains at most 50 elements.
-        &LargeMixedInAndOrWithDuplicates {$or: {^Array: {
-          of: {f1: {^Choose: {
-            from: [
-              {^RandomInt: {min: 5, max: 55}},
-              {$in: {^Array: {of: {^RandomInt: {min: 5, max: 55}}, number: 10}}}
-            ],
-            # Pick ten equalities per one $in because each $in contains ten elements.
-            weights: [10, 1]
-          }}},
-          number: 1000,
-        }}}
-
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: EqAndVeryLargeRedundantIn
-      ActivePhase: 36
-      Filter:
-        # Note that due to array semantics, the $in can be optimized away only in the $elemMatch
-        # version of this query.
-        &EqAndVeryLargeRedundantIn {$and: [
-          {f1: -1},
-          {f1: {$in: {^Array: {
-            of: {^RandomInt: {min: 5, max: 1_000_000_000}},
-            number: 10000,
-          }}}},
-        ]}
-
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: SimplifiableCNFWithRedundantIn
-      ActivePhase: 37
-      Filter:
-        # Produces a query similar to the other CNF queries, but adds an $in that is redundant because
-        # of other predicates in the query.
-        &SimplifiableCNFWithRedundantIn {$and:
-          {^Cycle: {
-            ofLength: 1,
-            fromGenerator:
-              {^Array: {of:
-                {$or: [
-                  {arr: {$gte: {^Inc: {start: 10}}}},
-                  {f1: {$gte: {^Inc: {start: 10}}}},
-                  {f2: {$lte: {^Inc: {start: 1, step: -1}}}},
-                  {f3: {$lt: {^Inc: {start: 1, step: -1}}}},
-                  {f4: {$gt: {^Inc: {start: 10}}}},
-                  # Values in the $in-list are always greater than the lower bound for f1 defined above.
-                  {f1: {$in: {^Array: {of: {^RandomInt: {min: {^Inc: {start: 10}}, max: 1_000_000_000}}, number: 100}}}}
-                ]},
-                number: 100
-              }}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: LargeMixedInAndOrWithDuplicates
+        ActivePhase: 35
+        Filter: &LargeMixedInAndOrWithDuplicates {
+          # Produces an $or that is a mix of $eq and $in on the same path. It can be reduced to {f1: {$in: [...]}},
+          # where the $in-list contains at most 50 elements.
+          $or: {^Array: {
+            of: {f1: {^Choose: {
+              from: [{^RandomInt: {min: 5, max: 55}}, {$in: {^Array: {of: {^RandomInt: {min: 5, max: 55}}, number: 10}}}],
+              # Pick ten equalities per one $in because each $in contains ten elements.
+              weights: [10, 1]
+            }}},
+            number: 1000
           }}
         }
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: SimplifiableDNFWithRedundantIn
-      ActivePhase: 38
-      Filter:
-        # Produces a query similar to the other DNF queries, but adds an $in that is redundant because
-        # of other predicates in the query.
-        &SimplifiableDNFWithRedundantIn {$or:
-          {^Cycle: {
-            ofLength: 1,
-            fromGenerator:
-              {^Array: {of:
-                {$and: [
-                  {arr: {$gte: {^Inc: {start: 10}}}},
-                  {f1: {$gte: {^Inc: {start: 10}}}},
-                  {f2: {$lte: {^Inc: {start: 1, step: -1}}}},
-                  {f3: {$lt: {^Inc: {start: 1, step: -1}}}},
-                  {f4: {$gt: {^Inc: {start: 10}}}},
-                  # Values in the $in-list are always less than the lower bound for f1 defined above.
-                  {f1: {$in: {^Array: {of: {^RandomInt: {min: -1_000_000_000, max: 0}}, number: 1000}}}}
-                ]},
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: EqAndVeryLargeRedundantIn
+        ActivePhase: 36
+        Filter: &EqAndVeryLargeRedundantIn {
+          # Note that due to array semantics, the $in can be optimized away only in the $elemMatch
+          # version of this query.
+          $and: [{f1: -1}, {f1: {$in: {^Array: {of: {^RandomInt: {min: 5, max: 1_000_000_000}}, number: 10000}}}}]}
+
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: SimplifiableCNFWithRedundantIn
+        ActivePhase: 37
+        Filter: &SimplifiableCNFWithRedundantIn {
+          # Produces a query similar to the other CNF queries, but adds an $in that is redundant because
+          # of other predicates in the query.
+          $and: {^Cycle: {ofLength: 1, fromGenerator: {^Array: {
+            of: {
+              $or: [
+                {arr: {$gte: {^Inc: {start: 10}}}},
+                {f1: {$gte: {^Inc: {start: 10}}}},
+                {f2: {$lte: {^Inc: {start: 1, step: -1}}}},
+                {f3: {$lt: {^Inc: {start: 1, step: -1}}}},
+                {f4: {$gt: {^Inc: {start: 10}}}},
+                # Values in the $in-list are always greater than the lower bound for f1 defined above.
+                {f1: {$in: {^Array: {of: {^RandomInt: {min: {^Inc: {start: 10}}, max: 1_000_000_000}}, number: 100}}}}
+              ]
+            },
+            number: 100
+          }}}}
+        }
+
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: SimplifiableDNFWithRedundantIn
+        ActivePhase: 38
+        Filter: &SimplifiableDNFWithRedundantIn {
+          # Produces a query similar to the other DNF queries, but adds an $in that is redundant because
+          # of other predicates in the query.
+          $or: {
+            ^Cycle: {
+              ofLength: 1,
+              fromGenerator: {^Array: {
+                of: {
+                  $and: [
+                    {arr: {$gte: {^Inc: {start: 10}}}},
+                    {f1: {$gte: {^Inc: {start: 10}}}},
+                    {f2: {$lte: {^Inc: {start: 1, step: -1}}}},
+                    {f3: {$lt: {^Inc: {start: 1, step: -1}}}},
+                    {f4: {$gt: {^Inc: {start: 10}}}},
+                    # Values in the $in-list are always less than the lower bound for f1 defined above.
+                    {f1: {$in: {^Array: {of: {^RandomInt: {min: -1_000_000_000, max: 0}}, number: 1000}}}}
+                  ]
+                },
                 number: 10
               }}
-          }}
+            }
+          }
         }
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: SimplifiableCNFWithInContainingDuplicates
-      ActivePhase: 39
-      Filter:
-        &SimplifiableCNFWithInContainingDuplicates {$and:
-          {^Cycle: {
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: SimplifiableCNFWithInContainingDuplicates
+        ActivePhase: 39
+        Filter: &SimplifiableCNFWithInContainingDuplicates {
+          $and: {
+            ^Cycle: {
+              ofLength: 1,
+              fromGenerator: {
+                ^Array: {
+                  of: {
+                    $or: [
+                      {arr: {$gte: {^Inc: {start: 10}}}},
+                      {f2: {$lte: {^Inc: {start: 1, step: -1}}}},
+                      {f3: {$lt: {^Inc: {start: 1, step: -1}}}},
+                      {f4: {$gt: {^Inc: {start: 10}}}},
+                      {f1: {$in: {^Array: {of: {^RandomInt: {min: 10, max: 20}}, number: 1000}}}}
+                    ]
+                  },
+                  number: 10
+                }
+              }
+            }
+          }
+        }
+
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: SimplifiableDNFWithInContainingDuplicates
+        ActivePhase: 40
+        Filter: &SimplifiableDNFWithInContainingDuplicates {
+          $or: {^Cycle: {
             ofLength: 1,
-            fromGenerator:
-              {^Array: {of:
-                {$or: [
-                  {arr: {$gte: {^Inc: {start: 10}}}},
-                  {f2: {$lte: {^Inc: {start: 1, step: -1}}}},
-                  {f3: {$lt: {^Inc: {start: 1, step: -1}}}},
-                  {f4: {$gt: {^Inc: {start: 10}}}},
-                  {f1: {$in: {^Array: {of: {^RandomInt: {min: 10, max: 20}}, number: 1000}}}}
-                ]},
+            fromGenerator: {
+              ^Array: {
+                of: {
+                  $and: [
+                    {arr: {$gte: {^Inc: {start: 10}}}},
+                    {f2: {$lte: {^Inc: {start: 1, step: -1}}}},
+                    {f3: {$lt: {^Inc: {start: 1, step: -1}}}},
+                    {f4: {$gt: {^Inc: {start: 10}}}},
+                    {f1: {$in: {^Array: {of: {^RandomInt: {min: 10, max: 20}}, number: 1000}}}}
+                  ]
+                },
                 number: 10
-              }}
+              }
+            }
           }}
         }
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: SimplifiableDNFWithInContainingDuplicates
-      ActivePhase: 40
-      Filter:
-        &SimplifiableDNFWithInContainingDuplicates {$or:
-          {^Cycle: {
-            ofLength: 1,
-            fromGenerator:
-              {^Array: {of:
-                {$and: [
-                  {arr: {$gte: {^Inc: {start: 10}}}},
-                  {f2: {$lte: {^Inc: {start: 1, step: -1}}}},
-                  {f3: {$lt: {^Inc: {start: 1, step: -1}}}},
-                  {f4: {$gt: {^Inc: {start: 10}}}},
-                  {f1: {$in: {^Array: {of: {^RandomInt: {min: 10, max: 20}}, number: 1000}}}}
-                ]},
-                number: 10
-              }}
-          }}
-        }
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchLargeInWithDuplicates
+        ActivePhase: 41
+        Filter: {nested: {$elemMatch: *LargeInWithDuplicates}}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchLargeInWithDuplicates
-      ActivePhase: 41
-      Filter:
-        {nested: {$elemMatch: *LargeInWithDuplicates}}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchVeryLargeInWithDuplicates
+        ActivePhase: 42
+        Filter: {nested: {$elemMatch: *VeryLargeInWithDuplicates}}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchVeryLargeInWithDuplicates
-      ActivePhase: 42
-      Filter:
-        {nested: {$elemMatch: *VeryLargeInWithDuplicates}}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchLargeOrOfSamePathEqualities
+        ActivePhase: 43
+        Filter: {nested: {$elemMatch: *LargeOrOfSamePathEqualities}}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchLargeOrOfSamePathEqualities
-      ActivePhase: 43
-      Filter:
-        {nested: {$elemMatch: *LargeOrOfSamePathEqualities}}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchLargeOrOfSamePathEqualitiesWithDuplicates
+        ActivePhase: 44
+        Filter: {nested: {$elemMatch: *LargeOrOfSamePathEqualitiesWithDuplicates}}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchLargeOrOfSamePathEqualitiesWithDuplicates
-      ActivePhase: 44
-      Filter:
-        {nested: {$elemMatch: *LargeOrOfSamePathEqualitiesWithDuplicates}}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchLargeMixedInAndOrWithDuplicates
+        ActivePhase: 45
+        Filter: {nested: {$elemMatch: *LargeMixedInAndOrWithDuplicates}}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchLargeMixedInAndOrWithDuplicates
-      ActivePhase: 45
-      Filter:
-        {nested: {$elemMatch: *LargeMixedInAndOrWithDuplicates}}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchEqAndVeryLargeRedundantIn
+        ActivePhase: 46
+        Filter: {nested: {$elemMatch: *EqAndVeryLargeRedundantIn}}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchEqAndVeryLargeRedundantIn
-      ActivePhase: 46
-      Filter:
-        {nested: {$elemMatch: *EqAndVeryLargeRedundantIn}}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchSimplifiableCNFWithRedundantIn
+        ActivePhase: 47
+        Filter: {nested: {$elemMatch: *SimplifiableCNFWithRedundantIn}}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchSimplifiableCNFWithRedundantIn
-      ActivePhase: 47
-      Filter:
-        {nested: {$elemMatch: *SimplifiableCNFWithRedundantIn}}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchSimplifiableDNFWithRedundantIn
+        ActivePhase: 48
+        Filter: {nested: {$elemMatch: *SimplifiableDNFWithRedundantIn}}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchSimplifiableDNFWithRedundantIn
-      ActivePhase: 48
-      Filter:
-        {nested: {$elemMatch: *SimplifiableDNFWithRedundantIn}}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchSimplifiableCNFWithInContainingDuplicates
+        ActivePhase: 49
+        Filter: {nested: {$elemMatch: *SimplifiableCNFWithInContainingDuplicates}}
 
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchSimplifiableCNFWithInContainingDuplicates
-      ActivePhase: 49
-      Filter:
-        {nested: {$elemMatch: *SimplifiableCNFWithInContainingDuplicates}}
-
-- ActorFromTemplate:
-    TemplateName: FindQueryTemplate
-    TemplateParameters:
-      Name: ElemMatchSimplifiableDNFWithInContainingDuplicates
-      ActivePhase: 50
-      Filter:
-        {nested: {$elemMatch: *SimplifiableDNFWithInContainingDuplicates}}
+  - ActorFromTemplate:
+      TemplateName: FindQueryTemplate
+      TemplateParameters:
+        Name: ElemMatchSimplifiableDNFWithInContainingDuplicates
+        ActivePhase: 50
+        Filter: {nested: {$elemMatch: *SimplifiableDNFWithInContainingDuplicates}}

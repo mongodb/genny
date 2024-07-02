@@ -134,6 +134,32 @@ def translate(
     subprocess.run(args, check=True)
 
 
+# Calculate rollups from all FTDC outputs.
+def calculate_rollups(output_dir: str, workspace_root: str, genny_repo_root: str) -> None:
+    curator = _find_curator(workspace_root, genny_repo_root)
+    if not curator:
+        raise OSError("Could not find Curator.")
+    for root, dirs, files in os.walk(output_dir):
+        for file in files:
+            if file.endswith(".ftdc"):
+                ftdc_file_name = os.path.join(root, file)
+                rollup_file_name = ftdc_file_name.replace(".ftdc", ".json")
+                SLOG.info(
+                    "Creating perf rollup from FTDC file.",
+                    ftdc_file=ftdc_file_name,
+                    output=rollup_file_name,
+                )
+                args = [
+                    curator,
+                    "calculate-rollups",
+                    "--inputFile",
+                    ftdc_file_name,
+                    "--outputFile",
+                    rollup_file_name,
+                ]
+                subprocess.run(args, stderr=subprocess.STDOUT, text=True)
+
+
 @contextmanager
 def poplar_grpc(cleanup_metrics: bool, workspace_root: str, genny_repo_root: str):
     args = _get_poplar_args(workspace_root=workspace_root, genny_repo_root=genny_repo_root)
@@ -244,12 +270,7 @@ class CuratorDownloader(Downloader):
     # These build IDs are from the Curator Evergreen task.
     # https://evergreen.mongodb.com/waterfall/curator
 
-    CURATOR_VERSION = "3df28d2514d4c4de7c903d027e43f3ee48bf8ec1"
-    ARM_CURATOR_VERSION = "965d53845fd1987ddbf04a937ff625f3c243dee3"
-
-    SPECIAL_CURATOR_VERSIONS = {
-        "arm": ARM_CURATOR_VERSION,
-    }
+    CURATOR_VERSION = "fa0dfec710dfbe2fb47c15d5800e978717f23614"
 
     DISTRO_MAPPING = {
         "archlinux": "linux-amd64",
@@ -295,11 +316,7 @@ class CuratorDownloader(Downloader):
         )
 
     def _get_url(self):
-        # Check if we need a special curator version for the distro. Otherwise use the default
-        # CURATOR_VERSION
-        version = CuratorDownloader.SPECIAL_CURATOR_VERSIONS.get(
-            self._curator_distro, CuratorDownloader.CURATOR_VERSION
-        )
+        version = CuratorDownloader.CURATOR_VERSION
         return (
             "https://s3.amazonaws.com/boxes.10gen.com/build/curator/"
             "curator-dist-{distro}-{build}.tar.gz".format(

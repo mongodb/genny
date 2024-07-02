@@ -1,0 +1,466 @@
+SchemaVersion: 2018-07-01
+Owner: Server Security
+Description: |
+  QE Range Release Criteria Experiment
+Keywords:
+  - Queryable Encryption
+
+GlobalDefaults:
+  MyDatabase: &encrypted_db genny_release_criteria
+  MyCollection: &encrypted_coll my_coll
+  NopAlias: &nop { Nop: true }
+
+  StateTransitions: &transitions
+    - To: Query
+      Weight: 1
+      SleepBefore: { ^TimeSpec: { value: 0, unit: seconds } }
+    - To: Update
+      Weight: 0
+      SleepBefore: { ^TimeSpec: { value: 0, unit: seconds } }
+
+Encryption:
+  UseCryptSharedLib: true
+  CryptSharedLibPath: /data/workdir/mongocrypt/lib/mongo_crypt_v1.so
+  EncryptedCollections:
+    - Database: *encrypted_db
+      Collection: *encrypted_coll
+      EncryptionType: queryable
+
+      QueryableEncryptedFields:
+        tm_retail_tx:
+          {
+            type: "long",
+            queries:
+              [
+                {
+                  queryType: "range",
+                  min: 0,
+                  max: 1000000000000,
+                  contention: 4,
+                  sparsity: 2,
+                  trimFactor: 8,
+                },
+              ],
+          }
+        age_hospitals:
+          {
+            type: "int",
+            queries:
+              [
+                {
+                  queryType: "range",
+                  min: 0,
+                  max: 55000,
+                  contention: 8,
+                  sparsity: 2,
+                  trimFactor: 6,
+                },
+              ],
+          }
+        bnk_bal:
+          {
+            type: "decimal",
+            queries:
+              [
+                {
+                  queryType: "range",
+                  min: 0,
+                  max: 1000000,
+                  precision: 2,
+                  contention: 8,
+                  sparsity: 2,
+                  trimFactor: 6,
+                },
+              ],
+          }
+Clients:
+  EncryptedPool:
+    QueryOptions:
+      maxPoolSize: 400
+
+    EncryptionOptions:
+      KeyVaultDatabase: "keyvault"
+      KeyVaultCollection: "datakeys"
+      EncryptedCollections:
+        - genny_release_criteria.my_coll
+
+ActorTemplates:
+  - TemplateName: InsertTemplate
+    Config:
+      Name: { ^Parameter: { Name: "Name", Default: "unused" } }
+      Type: CrudActor
+      Threads: 1
+      Database: *encrypted_db
+      ClientName: EncryptedPool
+      Phases:
+        - Repeat: 6250
+          Collection: *encrypted_coll
+          MetricsName: "load"
+          Operations:
+            - OperationName: insertOne
+              OperationMetricsName: inserts
+              OperationCommand:
+                Document:
+                  tm_retail_tx:
+                    {
+                      ^ConvertToInt:
+                        {
+                          from:
+                            {
+                              ^ChooseFromDataset:
+                                {
+                                  "path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_timestamps.txt",
+                                  "sequential": true,
+                                  "startFromLine":
+                                    &StartLine {
+                                      ^Parameter:
+                                        { Name: "StartLine", Default: -1 },
+                                    },
+                                },
+                            },
+                        },
+                    }
+                  age_hospitals:
+                    {
+                      ^ConvertToInt32:
+                        {
+                          from:
+                            {
+                              ^ChooseFromDataset:
+                                {
+                                  "path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_ages.txt",
+                                  "sequential": true,
+                                  "startFromLine": *StartLine,
+                                },
+                            },
+                        },
+                    }
+                  bnk_bal:
+                    {
+                      ^ConvertToDecimal:
+                        {
+                          from:
+                            {
+                              ^ChooseFromDataset:
+                                {
+                                  "path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt",
+                                  "sequential": true,
+                                  "startFromLine": *StartLine,
+                                },
+                            },
+                        },
+                    }
+
+        - *nop
+
+  - TemplateName: FSMTemplate
+    Config:
+      Name: { ^Parameter: { Name: "Name", Default: "unused" } }
+      Type: CrudActor
+      Threads: 1
+      Database: *encrypted_db
+      ClientName: EncryptedPool
+
+      Phases:
+        - *nop
+        - Repeat: 6250
+          Collection: *encrypted_coll
+          MetricsName: "FSM"
+          InitialStates:
+            - State: Query
+              Weight: 1
+            - State: Update
+              Weight: 0
+          States:
+            - Name: Query
+              Operations:
+                - OperationName: find
+                  OperationMetricsName: range_query
+                  OperationCommand:
+                    Filter:
+                      {
+                        bnk_bal:
+                          {
+                            $gte:
+                              {
+                                ^ConvertToDecimal:
+                                  {
+                                    from:
+                                      {
+                                        ^ChooseFromDataset:
+                                          {
+                                            "path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_min.txt",
+                                            "sequential": true,
+                                            "startFromLine": *StartLine,
+                                          },
+                                      },
+                                  },
+                              },
+                            $lte:
+                              {
+                                ^ConvertToDecimal:
+                                  {
+                                    from:
+                                      {
+                                        ^ChooseFromDataset:
+                                          {
+                                            "path": "./src/genny/src/workloads/contrib/qe_range_testing/queries/rc_balance_t3_max.txt",
+                                            "sequential": true,
+                                            "startFromLine": *StartLine,
+                                          },
+                                      },
+                                  },
+                              },
+                          },
+                      }
+              Transitions: *transitions
+            - Name: Update
+              Operations:
+                - OperationName: updateOne
+                  OperationMetricsName: update
+                  OperationCommand:
+                    Filter:
+                      {
+                        bnk_bal:
+                          {
+                            ^ConvertToDecimal:
+                              {
+                                from:
+                                  {
+                                    ^ChooseFromDataset:
+                                      {
+                                        "path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances_up.txt",
+                                      },
+                                  },
+                              },
+                          },
+                      }
+                    Update:
+                      {
+                        $set:
+                          {
+                            bnk_bal:
+                              {
+                                ^ConvertToDecimal:
+                                  {
+                                    from:
+                                      {
+                                        ^ChooseFromDataset:
+                                          {
+                                            "path": "./src/genny/src/workloads/contrib/qe_range_testing/data/rc_balances.txt",
+                                          },
+                                      },
+                                  },
+                              },
+                          },
+                      }
+              Transitions: *transitions
+Actors:
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: InsertActor_Thread0
+        StartLine: 0
+
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: InsertActor_Thread1
+        StartLine: 6250
+
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: InsertActor_Thread2
+        StartLine: 12500
+
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: InsertActor_Thread3
+        StartLine: 18750
+
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: InsertActor_Thread4
+        StartLine: 25000
+
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: InsertActor_Thread5
+        StartLine: 31250
+
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: InsertActor_Thread6
+        StartLine: 37500
+
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: InsertActor_Thread7
+        StartLine: 43750
+
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: InsertActor_Thread8
+        StartLine: 50000
+
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: InsertActor_Thread9
+        StartLine: 56250
+
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: InsertActor_Thread10
+        StartLine: 62500
+
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: InsertActor_Thread11
+        StartLine: 68750
+
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: InsertActor_Thread12
+        StartLine: 75000
+
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: InsertActor_Thread13
+        StartLine: 81250
+
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: InsertActor_Thread14
+        StartLine: 87500
+
+  - ActorFromTemplate:
+      TemplateName: InsertTemplate
+      TemplateParameters:
+        Name: InsertActor_Thread15
+        StartLine: 93750
+
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread0
+        StartLine: 0
+
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread1
+        StartLine: 6250
+
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread2
+        StartLine: 12500
+
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread3
+        StartLine: 18750
+
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread4
+        StartLine: 25000
+
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread5
+        StartLine: 31250
+
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread6
+        StartLine: 37500
+
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread7
+        StartLine: 43750
+
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread8
+        StartLine: 50000
+
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread9
+        StartLine: 56250
+
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread10
+        StartLine: 62500
+
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread11
+        StartLine: 68750
+
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread12
+        StartLine: 75000
+
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread13
+        StartLine: 81250
+
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread14
+        StartLine: 87500
+
+  - ActorFromTemplate:
+      TemplateName: FSMTemplate
+      TemplateParameters:
+        Name: FSMActor_Thread15
+        StartLine: 93750
+
+  - Name: LoggingActor0
+    Type: LoggingActor
+    Threads: 1
+    Phases:
+      - Phase: 0..1
+        LogEvery: 5 minutes
+        Blocking: None
+
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - single-replica-fle
+          - shard-lite-fle
+      branch_name:
+        $gte: v8.0

@@ -66,6 +66,7 @@ def dry_run_workload(
         genny_repo_root=genny_repo_root,
         workspace_root=workspace_root,
         cleanup_metrics=True,
+        should_calculate_rollups=False,
     )
 
 

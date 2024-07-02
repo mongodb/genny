@@ -12,267 +12,311 @@ GlobalDefaults:
   MaxPhases: &MaxPhases 11
 
 Actors:
-# Clear any pre-existing collection state.
-- Name: ClearCollection
-  Type: CrudActor
-  Database: *Database
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
-        Collection: *Collection
-        Operations:
-        - OperationName: drop
+  # Clear any pre-existing collection state.
+  - Name: ClearCollection
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+          Collection: *Collection
+          Operations:
+            - OperationName: drop
 
-- Name: InsertData
-  Type: Loader
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        CollectionCount: 1
-        Threads: 1
-        # Choose a sufficiently small document count to keep from spilling to disk.
-        DocumentCount: 100000
-        BatchSize: &batchSize 100000
-        Document:
-          t: {^RandomDate: {min: "2020-01-01", max: "2021-01-01"}}
-          x: {^RandomDouble: {distribution: normal, mean: 0, sigma: 3}}
-          y: {^RandomDouble: {distribution: normal, mean: 1, sigma: 3}}
-          z: {^RandomString: {length: 1000}}  # Unused field
+  - Name: InsertData
+    Type: Loader
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          CollectionCount: 1
+          Threads: 1
+          # Choose a sufficiently small document count to keep from spilling to disk.
+          DocumentCount: 100000
+          BatchSize: &batchSize 100000
+          Document:
+            t: { ^RandomDate: { min: "2020-01-01", max: "2021-01-01" } }
+            x: { ^RandomDouble: { distribution: normal, mean: 0, sigma: 3 } }
+            y: { ^RandomDouble: { distribution: normal, mean: 1, sigma: 3 } }
+            z: { ^RandomString: { length: 1000 } } # Unused field
 
-- Name: CreateIndex
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        Operations:
-        - OperationName: RunCommand
-          OperationCommand:
-            createIndexes: *Collection
-            indexes: [{key: {t: 1}, name: "t"}]
+  - Name: CreateIndex
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          Operations:
+            - OperationName: RunCommand
+              OperationCommand:
+                createIndexes: *Collection
+                indexes: [{ key: { t: 1 }, name: "t" }]
 
-- TopCumulative:
-  LoadConfig: &loadConfig
-    Path: "../../phases/query/AggregateExpressions.yml"
-    Key: ExpressionTemplate
-    Parameters:
-      name: TopCumulative
-      active: [3]
-      operationMetricsName: TopCumulative
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{
-            $setWindowFields: {
-              sortBy: {t: 1},
-              output: {
-                top: {
-                  $top: {sortBy: {time: 1}, output: "$x"},
-                  window: {documents: ["unbounded", "current"]}
-                }
-              }
-            }
-          }]
+  - TopCumulative:
+    LoadConfig: &loadConfig
+      Path: "../../phases/query/AggregateExpressions.yml"
+      Key: ExpressionTemplate
+      Parameters:
+        name: TopCumulative
+        active: [3]
+        operationMetricsName: TopCumulative
+        nopInPhasesUpTo: *MaxPhases
+        Pipeline:
+          [
+            {
+              $setWindowFields:
+                {
+                  sortBy: { t: 1 },
+                  output:
+                    {
+                      top:
+                        {
+                          $top: { sortBy: { time: 1 }, output: "$x" },
+                          window: { documents: ["unbounded", "current"] },
+                        },
+                    },
+                },
+            },
+          ]
 
-- BottomCumulative:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: BottomCumulative
-      active: [4]
-      operationMetricsName: BottomCumulative
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{
-            $setWindowFields: {
-              sortBy: {t: 1},
-              output: {
-                bottom: {
-                  $bottom: {sortBy: {time: 1}, output: "$x"},
-                  window: {documents: ["unbounded", "current"]}
-                }
-              }
-            }
-          }]
+  - BottomCumulative:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: BottomCumulative
+        active: [4]
+        operationMetricsName: BottomCumulative
+        nopInPhasesUpTo: *MaxPhases
+        Pipeline:
+          [
+            {
+              $setWindowFields:
+                {
+                  sortBy: { t: 1 },
+                  output:
+                    {
+                      bottom:
+                        {
+                          $bottom: { sortBy: { time: 1 }, output: "$x" },
+                          window: { documents: ["unbounded", "current"] },
+                        },
+                    },
+                },
+            },
+          ]
 
-- MaxNCumulative:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: MaxNCumulative
-      active: [5]
-      operationMetricsName: MaxNCumulative
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{
-            $setWindowFields: {
-              sortBy: {t: 1},
-              output: {
-                maxN: {
-                  $maxN: {input: "$x", n: 4},
-                  window: {documents: ["unbounded", "current"]}
-                }
-              }
-            }
-          }]
+  - MaxNCumulative:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: MaxNCumulative
+        active: [5]
+        operationMetricsName: MaxNCumulative
+        nopInPhasesUpTo: *MaxPhases
+        Pipeline:
+          [
+            {
+              $setWindowFields:
+                {
+                  sortBy: { t: 1 },
+                  output:
+                    {
+                      maxN:
+                        {
+                          $maxN: { input: "$x", n: 4 },
+                          window: { documents: ["unbounded", "current"] },
+                        },
+                    },
+                },
+            },
+          ]
 
-- MinNCumulative:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: MinNCumulative
-      active: [6]
-      operationMetricsName: MinNCumulative
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{
-            $setWindowFields: {
-              sortBy: {t: 1},
-              output: {
-                minN: {
-                  $minN: {input: "$x", n: 4},
-                  window: {documents: ["unbounded", "current"]}
-                }
-              }
-            }
-          }]
+  - MinNCumulative:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: MinNCumulative
+        active: [6]
+        operationMetricsName: MinNCumulative
+        nopInPhasesUpTo: *MaxPhases
+        Pipeline:
+          [
+            {
+              $setWindowFields:
+                {
+                  sortBy: { t: 1 },
+                  output:
+                    {
+                      minN:
+                        {
+                          $minN: { input: "$x", n: 4 },
+                          window: { documents: ["unbounded", "current"] },
+                        },
+                    },
+                },
+            },
+          ]
 
-- TopNCumulative:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: TopNCumulative
-      active: [7]
-      operationMetricsName: TopNCumulative
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{
-            $setWindowFields: {
-              sortBy: {t: 1},
-              output: {
-                topN: {
-                  $topN: {sortBy: {time: 1}, output: "$x", n: 4},
-                  window: {documents: ["unbounded", "current"]}
-                }
-              }
-            }
-          }]
+  - TopNCumulative:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: TopNCumulative
+        active: [7]
+        operationMetricsName: TopNCumulative
+        nopInPhasesUpTo: *MaxPhases
+        Pipeline:
+          [
+            {
+              $setWindowFields:
+                {
+                  sortBy: { t: 1 },
+                  output:
+                    {
+                      topN:
+                        {
+                          $topN: { sortBy: { time: 1 }, output: "$x", n: 4 },
+                          window: { documents: ["unbounded", "current"] },
+                        },
+                    },
+                },
+            },
+          ]
 
-- BottomNCumulative:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: BottomNCumulative
-      active: [8]
-      operationMetricsName: BottomNCumulative
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{
-            $setWindowFields: {
-              sortBy: {t: 1},
-              output: {
-                bottomN: {
-                  $bottomN: {sortBy: {time: 1}, output: "$x", n: 4},
-                  window: {documents: ["unbounded", "current"]}
-                }
-              }
-            }
-          }]
+  - BottomNCumulative:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: BottomNCumulative
+        active: [8]
+        operationMetricsName: BottomNCumulative
+        nopInPhasesUpTo: *MaxPhases
+        Pipeline:
+          [
+            {
+              $setWindowFields:
+                {
+                  sortBy: { t: 1 },
+                  output:
+                    {
+                      bottomN:
+                        {
+                          $bottomN: { sortBy: { time: 1 }, output: "$x", n: 4 },
+                          window: { documents: ["unbounded", "current"] },
+                        },
+                    },
+                },
+            },
+          ]
 
-- FirstNCumulative:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: FirstNCumulative
-      active: [9]
-      operationMetricsName: FirstNCumulative
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{
-            $setWindowFields: {
-              sortBy: {t: 1},
-              output: {
-                firstN: {
-                  $firstN: {input: "$x", n: 4},
-                  window: {documents: ["unbounded", "current"]}
-                }
-              }
-            }
-          }]
+  - FirstNCumulative:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: FirstNCumulative
+        active: [9]
+        operationMetricsName: FirstNCumulative
+        nopInPhasesUpTo: *MaxPhases
+        Pipeline:
+          [
+            {
+              $setWindowFields:
+                {
+                  sortBy: { t: 1 },
+                  output:
+                    {
+                      firstN:
+                        {
+                          $firstN: { input: "$x", n: 4 },
+                          window: { documents: ["unbounded", "current"] },
+                        },
+                    },
+                },
+            },
+          ]
 
-- LastNCumulative:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: LastNCumulative
-      active: [10]
-      operationMetricsName: LastNCumulative
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{
-            $setWindowFields: {
-              sortBy: {t: 1},
-              output: {
-                lastN: {
-                  $lastN: {input: "$x", n: 4},
-                  window: {documents: ["unbounded", "current"]}
-                }
-              }
-            }
-          }]
+  - LastNCumulative:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: LastNCumulative
+        active: [10]
+        operationMetricsName: LastNCumulative
+        nopInPhasesUpTo: *MaxPhases
+        Pipeline:
+          [
+            {
+              $setWindowFields:
+                {
+                  sortBy: { t: 1 },
+                  output:
+                    {
+                      lastN:
+                        {
+                          $lastN: { input: "$x", n: 4 },
+                          window: { documents: ["unbounded", "current"] },
+                        },
+                    },
+                },
+            },
+          ]
 
-- DerivativeCumulative:
-  LoadConfig:
-    <<: *loadConfig
-    Parameters:
-      name: DerivativeCumulative
-      active: [11]
-      operationMetricsName: DerivativeCumulative
-      nopInPhasesUpTo: *MaxPhases
-      Pipeline:
-          [{
-            $setWindowFields: {
-              sortBy: {t: 1},
-              output: {
-                derivative: {
-                  $derivative: {input: "$x", unit: "second"},
-                  window: {documents: ["unbounded", "current"]}
-                }
-              }
-            }
-          }]
+  - DerivativeCumulative:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: DerivativeCumulative
+        active: [11]
+        operationMetricsName: DerivativeCumulative
+        nopInPhasesUpTo: *MaxPhases
+        Pipeline:
+          [
+            {
+              $setWindowFields:
+                {
+                  sortBy: { t: 1 },
+                  output:
+                    {
+                      derivative:
+                        {
+                          $derivative: { input: "$x", unit: "second" },
+                          window: { documents: ["unbounded", "current"] },
+                        },
+                    },
+                },
+            },
+          ]
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-      - standalone-80-feature-flags
-      - standalone-all-feature-flags
-      - standalone-classic-query-engine
-      - standalone-sbe
-      - replica
-      - replica-80-feature-flags
-      - replica-all-feature-flags
-      - shard-lite
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
-      - v5.0
-      - v5.1
-      - v5.2
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone
+          - standalone-80-feature-flags
+          - standalone-all-feature-flags
+          - standalone-classic-query-engine
+          - standalone-sbe
+          - replica
+          - replica-80-feature-flags
+          - replica-all-feature-flags
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4
+          - v5.0
+          - v5.1
+          - v5.2

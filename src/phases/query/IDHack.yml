@@ -13,15 +13,15 @@ IDHackObjectIdTemplate:
       Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
       NopInPhasesUpTo: {^Parameter: {Name: "NopInPhasesUpTo", Default: 99}}
       PhaseConfig:
-          # Our testing suggested the first ~20 seconds of this actor shows a lot of noise before
-          # stabilizing - 100s should gather sufficient post-noise data.
+        # Our testing suggested the first ~20 seconds of this actor shows a lot of noise before
+        # stabilizing - 100s should gather sufficient post-noise data.
         Duration: 100 seconds
         Database: {^Parameter: {Name: "Database", Default: test}}
         Collection: {^Parameter: {Name: "Collection", Default: Collection0}}
         Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {_id: {^ObjectId: {^FormatString: {"format": "%07d%s", "withArgs": [{^RandomInt: {min: 0, max: 9999999}}, "bbbbbbbbbbbbbbbbb"]}}}}
+          - OperationName: find
+            OperationCommand:
+              Filter: {_id: {^ObjectId: {^FormatString: {"format": "%07d%s", "withArgs": [{^RandomInt: {min: 0, max: 9999999}}, "bbbbbbbbbbbbbbbbb"]}}}}
 
 # Runs IDHack find queries, matching an _id of type int.
 IDHackIntIdTemplate:
@@ -33,15 +33,14 @@ IDHackIntIdTemplate:
       Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
       NopInPhasesUpTo: {^Parameter: {Name: "NopInPhasesUpTo", Default: 99}}
       PhaseConfig:
-          # Our testing suggested the first ~20 seconds of this actor shows a lot of noise before
-          # stabilizing - 100s should gather sufficient post-noise data.
+        # Our testing suggested the first ~20 seconds of this actor shows a lot of noise before
+        # stabilizing - 100s should gather sufficient post-noise data.
         Duration: 100 seconds
         Database: {^Parameter: {Name: "Database", Default: test}}
         Collection: {^Parameter: {Name: "Collection", Default: Collection0}}
         Operations:
-        - OperationName: find
-          OperationCommand:
-            {Filter: {_id: {^RandomInt: {min: 0, max: 9999999}}}}
+          - OperationName: find
+            OperationCommand: {Filter: {_id: {^RandomInt: {min: 0, max: 9999999}}}}
 
 # Runs IDHack aggregation queries, matching an _id of type int.
 IDHackIntIdAggTemplate:
@@ -53,14 +52,14 @@ IDHackIntIdAggTemplate:
       Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: {unused: "please specify in which phases this actor should be active."}}}]
       NopInPhasesUpTo: {^Parameter: {Name: "NopInPhasesUpTo", Default: 99}}
       PhaseConfig:
-          # 100 seconds to match the find query timeline.
+        # 100 seconds to match the find query timeline.
         Duration: 100 seconds
         Database: {^Parameter: {Name: "Database", Default: test}}
         Collection: {^Parameter: {Name: "Collection", Default: Collection0}}
         Operations:
-        - OperationName: aggregate
-          OperationCommand:
-            Pipeline: [{$match: {_id: {^RandomInt: {min: 0, max: 9999999}}}}]
+          - OperationName: aggregate
+            OperationCommand:
+              Pipeline: [{$match: {_id: {^RandomInt: {min: 0, max: 9999999}}}}]
 
 # Prepopulates the collection with documents that have an objectID.
 LoadObjectIdTemplate:

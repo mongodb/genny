@@ -10,10 +10,10 @@ Clients:
       socketTimeoutMS: -1
 
 Actors:
-- Name: TPCHDenormalizedBiggestOrdersExplain
-  Type: RunCommand
-  Database: tpch
-  Phases:
-  - LoadConfig:
-      Path: ../../../../phases/tpch/denormalized/BiggestOrders.yml
-      Key: TPCHDenormalizedBiggestOrdersExplain
+  - Name: TPCHDenormalizedBiggestOrdersExplain
+    Type: RunCommand
+    Database: tpch
+    Phases:
+      - LoadConfig:
+          Path: ../../../../phases/tpch/denormalized/BiggestOrders.yml
+          Key: TPCHDenormalizedBiggestOrdersExplain

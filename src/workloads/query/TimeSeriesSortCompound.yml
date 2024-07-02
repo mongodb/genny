@@ -17,92 +17,119 @@ GlobalDefaults:
   nop: &Nop {Nop: true}
 
 Actors:
-- Name: CreateTimeSeriesCollection
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    Database: *db
-    Operation:
-      OperationMetricsName: CreateTimeSeriesCollection
-      OperationName: RunCommand
-      OperationCommand:
-        {create: *coll, timeseries: {timeField: "t", metaField: "m"}}
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: 1
-    Database: test
-    Operations:
-    - OperationName: RunCommand
-      OperationCommand:
-        drop: *coll
-
-- Name: InsertData
-  Type: Loader
-  Threads: 1
-  Phases:
-  - *Nop
-  - Repeat: 1
-    Database: *db
-    Collection: *coll
+  - Name: CreateTimeSeriesCollection
+    Type: RunCommand
     Threads: 1
-    CollectionCount: 1
-    DocumentCount: 10010000
-    BatchSize: *batchSize
-    Document:
-      t: {^Repeat: {count: 1000, fromGenerator: {^IncDate: {start: "2022-01-01", step: 36000}}}}
-      m: {^Cycle: {ofLength: 1000, fromGenerator: {^Inc: {start: 0}}}}
-  - *Nop
-  - *Nop
-  - *Nop
+    Phases:
+      - Repeat: 1
+        Database: *db
+        Operation:
+          OperationMetricsName: CreateTimeSeriesCollection
+          OperationName: RunCommand
+          OperationCommand: {create: *coll, timeseries: {timeField: "t", metaField: "m"}}
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - Repeat: 1
+        Database: test
+        Operations:
+          - OperationName: RunCommand
+            OperationCommand:
+              drop: *coll
 
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-  - *Nop
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - *Nop
+  # This index is created by default on versions 7.0.0+, but we must create this index for the
+  # aggregation to run on versions 6.X.X correctly.
+  - Name: IndexCollection
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      - *Nop
+      - Repeat: 1
+        Database: *db
+        Operations:
+          - OperationMetricsName: CreateDefaultTimeseriesIndex
+            OperationName: RunCommand
+            OperationCommand:
+              createIndexes: *coll
+              indexes:
+                - key: {m: 1, t: 1}
+                  name: "m_1_t_1"
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
 
-- Name: Queries
-  Type: CrudActor
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - Repeat: 50
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
     Database: *db
-    Collection: *coll
-    Operations:
-    - OperationMetricsName: SortCompound
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [
-          {$sort: {m: 1, t: 1}},
-          {$_internalInhibitOptimization: {}},
-          {$skip: 1e10},
-        ]
-        Hint: {m: 1, t: 1}
-  - *Nop
+    Phases:
+      - *Nop
+      - *Nop
+      - Repeat: 1 # phase 2
+      - *Nop
+      - Repeat: 1 # phase 4
+      - *Nop
+      - *Nop
+
+  - Name: InsertData
+    Type: Loader
+    Threads: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - Repeat: 1
+        Database: *db
+        Collection: *coll
+        Threads: 1
+        CollectionCount: 1
+        DocumentCount: 10010000
+        BatchSize: *batchSize
+        Document:
+          t: {^Repeat: {count: 1000, fromGenerator: {^IncDate: {start: "2022-01-01", step: 36000}}}}
+          m: {^Cycle: {ofLength: 1000, fromGenerator: {^Inc: {start: 0}}}}
+      - *Nop
+      - *Nop
+      - *Nop
+
+  - Name: Queries
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - Repeat: 50
+        Database: *db
+        Collection: *coll
+        Operations:
+          - OperationMetricsName: SortCompound
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline: [{$sort: {m: 1, t: 1}}, {$_internalInhibitOptimization: {}}, {$skip: 1e10}]
+              Options:
+                Hint: "m_1_t_1"
+      - *Nop
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica
-      - replica-80-feature-flags
-      - replica-all-feature-flags
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
-      - v5.0
-      - v5.1
-      - v5.2
-      - v5.3
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - replica-80-feature-flags
+          - replica-all-feature-flags
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4
+          - v5.0
+          - v5.1
+          - v5.2
+          - v5.3

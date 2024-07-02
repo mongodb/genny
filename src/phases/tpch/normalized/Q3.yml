@@ -1,57 +1,122 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-query"
 Description: |
-  Run TPC-H query 3 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
+  Run TPC-H query 3 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema.
+  Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
+batchSize: &batchSize { ^Parameter: { Name: "BatchSize", Default: 101 } }
 
-query3Segment: &query3Segment {^Parameter: {Name: "Query3Segment", Default: "BUILDING"}}
-query3Date: &query3Date {^Parameter: {Name: "Query3Date", Default: "1995-03-15"}}
+query3Segment:
+  &query3Segment { ^Parameter: { Name: "Query3Segment", Default: "BUILDING" } }
+query3Date:
+  &query3Date { ^Parameter: { Name: "Query3Date", Default: "1995-03-15" } }
 
 TPCHNormalizedQuery3Aggregation: &TPCHNormalizedQuery3Aggregation
   aggregate: customer
   pipeline:
     [
-      {$match: {$expr: {$eq: ["$c_mktsegment", *query3Segment]}}},
-      {$lookup: {from: "orders", localField: "c_custkey", foreignField: "o_custkey", as: "orders", pipeline: [
-        {$match: {$expr: {$lt: ["$o_orderdate", {^Date: *query3Date}]}}},
-        {$project: {o_orderdate: 1, o_shippriority: 1, o_orderkey: 1}}]}},
-      {$unwind: "$orders"},
-      {$lookup: {from: "lineitem", localField: "orders.o_orderkey", foreignField: "l_orderkey", as: "lineitem", pipeline: [
-        {$match: {$expr: {$gt: ["$l_shipdate", {^Date: *query3Date}]}}}]}},
-      {$unwind: "$lineitem"},
-      {$group: {_id: { l_orderkey: "$lineitem.l_orderkey", o_orderdate: "$orders.o_orderdate", o_shippriority: "$orders.o_shippriority"}, revenue: {$sum: {$multiply: ["$lineitem.l_extendedprice", {$subtract: [1, "$lineitem.l_discount"]}]}}}},
-      {$project: {_id: 0, l_orderkey: "$_id.l_orderkey", o_orderdate: "$_id.o_orderdate", o_shippriority: "$_id.o_shippriority", revenue: 1}},
-      {$sort: {revenue: -1, o_orderdate: 1}},
-      {$limit: 10}
+      { $match: { $expr: { $eq: ["$c_mktsegment", *query3Segment] } } },
+      {
+        $lookup:
+          {
+            from: "orders",
+            localField: "c_custkey",
+            foreignField: "o_custkey",
+            as: "orders",
+            pipeline:
+              [
+                {
+                  $match:
+                    {
+                      $expr: { $lt: ["$o_orderdate", { ^Date: *query3Date }] },
+                    },
+                },
+                {
+                  $project:
+                    { o_orderdate: 1, o_shippriority: 1, o_orderkey: 1 },
+                },
+              ],
+          },
+      },
+      { $unwind: "$orders" },
+      {
+        $lookup:
+          {
+            from: "lineitem",
+            localField: "orders.o_orderkey",
+            foreignField: "l_orderkey",
+            as: "lineitem",
+            pipeline:
+              [
+                {
+                  $match:
+                    { $expr: { $gt: ["$l_shipdate", { ^Date: *query3Date }] } },
+                },
+              ],
+          },
+      },
+      { $unwind: "$lineitem" },
+      {
+        $group:
+          {
+            _id:
+              {
+                l_orderkey: "$lineitem.l_orderkey",
+                o_orderdate: "$orders.o_orderdate",
+                o_shippriority: "$orders.o_shippriority",
+              },
+            revenue:
+              {
+                $sum:
+                  {
+                    $multiply:
+                      [
+                        "$lineitem.l_extendedprice",
+                        { $subtract: [1, "$lineitem.l_discount"] },
+                      ],
+                  },
+              },
+          },
+      },
+      {
+        $project:
+          {
+            _id: 0,
+            l_orderkey: "$_id.l_orderkey",
+            o_orderdate: "$_id.o_orderdate",
+            o_shippriority: "$_id.o_shippriority",
+            revenue: 1,
+          },
+      },
+      { $sort: { revenue: -1, o_orderdate: 1 } },
+      { $limit: 10 },
     ]
-  cursor: {batchSize: *batchSize}
+  cursor: { batchSize: *batchSize }
   allowDiskUse: true
 
 TPCHNormalizedQuery3Warmup:
-  Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
+  Repeat: &Repeat { ^Parameter: { Name: "Repeat", Default: 1 } }
   Database: &db tpch
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHNormalizedQuery3Aggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHNormalizedQuery3Aggregation
 
 TPCHNormalizedQuery3:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query3
-    OperationName: RunCommand
-    OperationCommand: *TPCHNormalizedQuery3Aggregation
+    - OperationMetricsName: Query3
+      OperationName: RunCommand
+      OperationCommand: *TPCHNormalizedQuery3Aggregation
 
 TPCHNormalizedQuery3Explain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query3
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHNormalizedQuery3Aggregation
-      verbosity:
-        executionStats
+    - OperationMetricsName: Query3
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHNormalizedQuery3Aggregation
+        verbosity: executionStats

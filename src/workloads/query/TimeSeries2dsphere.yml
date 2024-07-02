@@ -16,7 +16,7 @@ GlobalDefaults:
   dbname: &db test
   fieldName: &field "numeric"
   index: &index
-    keys: {location: '2dsphere'}
+    keys: { location: "2dsphere" }
 
   # Data distribution constants.
   # To insert more efficiently, pick a big-ish batch size.
@@ -54,125 +54,158 @@ GlobalDefaults:
   distPerDoc: &distPerDoc 0.0027
 
   # Other abbreviations.
-  nop: &Nop {Nop: true}
-
+  nop: &Nop { Nop: true }
 
 Actors:
-- Name: CreateTimeSeriesCollection
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - Repeat: 1
-    Database: *db
-    Operation:
-      OperationMetricsName: CreateTimeSeriesCollection
-      OperationName: RunCommand
-      OperationCommand:
-        # We have to call the collection 'Collection0' because that's the name that Loader
-        # chooses implicitly.
-        {create: &coll Collection0, timeseries: {timeField: "timestamp", metaField: "meta"}}
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-
-- Name: InsertData
-  Type: Loader
-  Threads: 1
-  Phases:
-  - *Nop
-  - Repeat: 1
-    Database: *db
+  - Name: CreateTimeSeriesCollection
+    Type: RunCommand
     Threads: 1
-    CollectionCount: 1
-    DocumentCount: *documentCount
-    BatchSize: *insertBatchSize
-    Document:
-      timestamp: {^IncDate: {start: "2022-01-01", step: *docIntervalMillis}}
-      location: {^TwoDWalk: {
-        docsPerSeries: *docsPerSeries,
-        minX: *minX,
-        maxX: *maxX,
-        minY: *minY,
-        maxY: *maxY,
-        distPerDoc: *distPerDoc,
-      }}
-    Indexes:
-    - *index
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+    Phases:
+      - Repeat: 1
+        Database: *db
+        Operation:
+          OperationMetricsName: CreateTimeSeriesCollection
+          OperationName: RunCommand
+          OperationCommand: {
+            # We have to call the collection 'Collection0' because that's the name that Loader
+            # chooses implicitly.
+            create: &coll Collection0,
+            timeseries: { timeField: "timestamp", metaField: "meta" },
+          }
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
 
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-  - *Nop
-  - *Nop
-  - Repeat: 1
-  - *Nop
-  - Repeat: 1
-  - *Nop
+  - Name: InsertData
+    Type: Loader
+    Threads: 1
+    Phases:
+      - *Nop
+      - Repeat: 1
+        Database: *db
+        Threads: 1
+        CollectionCount: 1
+        DocumentCount: *documentCount
+        BatchSize: *insertBatchSize
+        Document:
+          timestamp:
+            { ^IncDate: { start: "2022-01-01", step: *docIntervalMillis } }
+          location:
+            {
+              ^TwoDWalk:
+                {
+                  docsPerSeries: *docsPerSeries,
+                  minX: *minX,
+                  maxX: *maxX,
+                  minY: *minY,
+                  maxY: *maxY,
+                  distPerDoc: *distPerDoc,
+                },
+            }
+        Indexes:
+          - *index
+      - *Nop
+      - *Nop
+      - *Nop
+      - *Nop
 
-- Name: GeoQueries
-  Type: CrudActor
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - Duration: 30 seconds
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
     Database: *db
-    Collection: Collection0
-    Operations:
-    - OperationMetricsName: GeoWithinQuery
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [
-          {$match: {location: {$geoWithin: {$centerSphere: [[
-            {^RandomDouble: { min: *minX, max: *maxX }},
-            {^RandomDouble: { min: *minY, max: *maxY }},
-          ], 0.001]}}}},
-          {$skip: 1e5},
-        ]
-  - *Nop
-  - Duration: 30 seconds
-    Database: *db
-    Collection: Collection0
-    Operations:
-    - OperationMetricsName: GeoNearQuery
-      OperationName: aggregate
-      OperationCommand:
-        Pipeline: [
-          {$geoNear: {
-            key: 'location',
-            near: [
-              {^RandomDouble: { min: *minX, max: *maxX }},
-              {^RandomDouble: { min: *minY, max: *maxY }},
-            ],
-            spherical: true,
-            distanceField: 'd',
-            maxDistance: 0.001,
-          }},
-          {$skip: 1e5},
-        ]
+    Phases:
+      - *Nop
+      - *Nop
+      - Repeat: 1
+      - *Nop
+      - Repeat: 1
+      - *Nop
+
+  - Name: GeoQueries
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - Duration: 30 seconds
+        Database: *db
+        Collection: Collection0
+        Operations:
+          - OperationMetricsName: GeoWithinQuery
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                [
+                  {
+                    $match:
+                      {
+                        location:
+                          {
+                            $geoWithin:
+                              {
+                                $centerSphere:
+                                  [
+                                    [
+                                      {
+                                        ^RandomDouble:
+                                          { min: *minX, max: *maxX },
+                                      },
+                                      {
+                                        ^RandomDouble:
+                                          { min: *minY, max: *maxY },
+                                      },
+                                    ],
+                                    0.001,
+                                  ],
+                              },
+                          },
+                      },
+                  },
+                  { $skip: 1e5 },
+                ]
+      - *Nop
+      - Duration: 30 seconds
+        Database: *db
+        Collection: Collection0
+        Operations:
+          - OperationMetricsName: GeoNearQuery
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                [
+                  {
+                    $geoNear:
+                      {
+                        key: "location",
+                        near:
+                          [
+                            { ^RandomDouble: { min: *minX, max: *maxX } },
+                            { ^RandomDouble: { min: *minY, max: *maxY } },
+                          ],
+                        spherical: true,
+                        distanceField: "d",
+                        maxDistance: 0.001,
+                      },
+                  },
+                  { $skip: 1e5 },
+                ]
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica
-      - replica-80-feature-flags
-      - replica-all-feature-flags
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
-      - v5.0
-      - v5.1
-      - v5.2
-      - v5.3
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - replica-80-feature-flags
+          - replica-all-feature-flags
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4
+          - v5.0
+          - v5.1
+          - v5.2
+          - v5.3

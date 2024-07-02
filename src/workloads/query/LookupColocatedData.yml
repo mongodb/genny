@@ -24,352 +24,341 @@ GlobalDefaults:
   NumPhases: &NumPhases 23
 
 ActorTemplates:
-# Template for populating the sharded and unsharded collections. 
-- TemplateName: LoadDocuments
-  Config:
-    Name: LoadUnshardedInitialData
-    Type: CrudActor
-    Database: *Database
-    Threads: 1
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        NopInPhasesUpTo: *NumPhases
-        PhaseConfig:
-          Repeat: *NumLocalDocs
-          Threads: 1
-          Collection: {^Parameter: {Name: "Coll", Default: "localColl"}}
-          Operations:
-          - OperationName: insertOne
-            OperationCommand:
-              Document:
-                # Set a large enough max so there are probably no duplicate keys.
-                *LocalShardKey: {^RandomInt: {min: 1, max: 20000}}
-                str: {^RandomString: {length: 100}}
-                smallInt: {^RandomInt: {min: 1, max: 10}}
-                mediumInt: {^RandomInt: {min: 1, max: 100}}
+  # Template for populating the sharded and unsharded collections.
+  - TemplateName: LoadDocuments
+    Config:
+      Name: LoadUnshardedInitialData
+      Type: CrudActor
+      Database: *Database
+      Threads: 1
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          NopInPhasesUpTo: *NumPhases
+          PhaseConfig:
+            Repeat: *NumLocalDocs
+            Threads: 1
+            Collection: {^Parameter: {Name: "Coll", Default: "localColl"}}
+            Operations:
+              - OperationName: insertOne
+                OperationCommand:
+                  Document:
+                    # Set a large enough max so there are probably no duplicate keys.
+                    *LocalShardKey: {^RandomInt: {min: 1, max: 20000}}
+                    str: {^RandomString: {length: 100}}
+                    smallInt: {^RandomInt: {min: 1, max: 10}}
+                    mediumInt: {^RandomInt: {min: 1, max: 100}}
 
-# Template for running a $lookup using local/foreign field syntax. Note that the local and foreign
-# collections are the same. This is how we can easily enforce that the local and foreign data
-# will always be co-located.
-- TemplateName: SelfLookupLocalFieldForeignField
-  Config:
-    Name: RunLookup
-    Type: CrudActor
-    Threads: 1
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        NopInPhasesUpTo: *NumPhases
-        PhaseConfig:
-          Repeat: 10
-          Database: *Database
-          Collection: {^Parameter: {Name: "Coll", Default: "localColl"}}
-          Operations:
-          - OperationMetricsName: {^Parameter: {Name: "MetricsName", Default: "Lookup"}}
-            OperationName: aggregate
-            OperationCommand:
-              Pipeline:
-                [
-                  {$lookup: {
-                    from: {^Parameter: {Name: "Coll", Default: "localColl"}},
-                    localField: "localField",
-                    foreignField: "localField",
-                    as: "joined"
-                  }},
-                  {$limit:  {^Parameter: {Name: "Limit", Default: 101}}}
-                ]
-              Options:
-                BatchSize: {^Parameter: {Name: "Limit", Default: 101}}
-                AllowDiskUse: true
+  # Template for running a $lookup using local/foreign field syntax. Note that the local and foreign
+  # collections are the same. This is how we can easily enforce that the local and foreign data
+  # will always be co-located.
+  - TemplateName: SelfLookupLocalFieldForeignField
+    Config:
+      Name: RunLookup
+      Type: CrudActor
+      Threads: 1
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          NopInPhasesUpTo: *NumPhases
+          PhaseConfig:
+            Repeat: 10
+            Database: *Database
+            Collection: {^Parameter: {Name: "Coll", Default: "localColl"}}
+            Operations:
+              - OperationMetricsName: {^Parameter: {Name: "MetricsName", Default: "Lookup"}}
+                OperationName: aggregate
+                OperationCommand:
+                  Pipeline: [
+                    {$lookup: {
+                      from: {^Parameter: {Name: "Coll", Default: "localColl"}},
+                      localField: "localField",
+                      foreignField: "localField",
+                      as: "joined"}},
+                    {$limit: {^Parameter: {Name: "Limit", Default: 101}}}
+                  ]
+                  Options:
+                    BatchSize: {^Parameter: {Name: "Limit", Default: 101}}
+                    AllowDiskUse: true
 
-# Template for running a $lookup using let/pipeline (aka "expressive") syntax. For the reason
-# mentioned above, the local and foreign collections are the same.
-- TemplateName: SelfLookupLetPipeline
-  Config:
-    Name: RunLookup
-    Type: CrudActor
-    Threads: 1
-    Phases:
-      OnlyActiveInPhases:
-        Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-        NopInPhasesUpTo: *NumPhases
-        PhaseConfig:
-          Repeat: 10
-          Database: *Database
-          Collection: {^Parameter: {Name: "Coll", Default: "localColl"}}
-          Operations:
-          - OperationMetricsName: {^Parameter: {Name: "MetricsName", Default: "Lookup"}}
-            OperationName: aggregate
-            OperationCommand:
-              Pipeline:
-                [
-                  {$lookup: {
-                    from: {^Parameter: {Name: "Coll", Default: "localColl"}},
-                    let: {local_field: "$localField"},
-                    pipeline: [
-                      {$match: 
-                        {
-                          $expr: {$eq: ['$localField','$$local_field']}
-                        }
-                      }
-                    ],
-                    as: "joined"
-                  }},
-                  {$limit:  {^Parameter: {Name: "Limit", Default: 101}}}
-                ]
-              Options:
-                BatchSize: {^Parameter: {Name: "Limit", Default: 101}}
-                AllowDiskUse: true
+  # Template for running a $lookup using let/pipeline (aka "expressive") syntax. For the reason
+  # mentioned above, the local and foreign collections are the same.
+  - TemplateName: SelfLookupLetPipeline
+    Config:
+      Name: RunLookup
+      Type: CrudActor
+      Threads: 1
+      Phases:
+        OnlyActiveInPhases:
+          Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
+          NopInPhasesUpTo: *NumPhases
+          PhaseConfig:
+            Repeat: 10
+            Database: *Database
+            Collection: {^Parameter: {Name: "Coll", Default: "localColl"}}
+            Operations:
+              - OperationMetricsName: {^Parameter: {Name: "MetricsName", Default: "Lookup"}}
+                OperationName: aggregate
+                OperationCommand:
+                  Pipeline: [
+                    {$lookup: {
+                      from: {^Parameter: {Name: "Coll", Default: "localColl"}},
+                      let: {local_field: "$localField"},
+                      pipeline: [{$match: {$expr: {$eq: ['$localField', '$$local_field']}}}],
+                      as: "joined"}},
+                    {$limit: {^Parameter: {Name: "Limit", Default: 101}}}
+                  ]
+                  Options:
+                    BatchSize: {^Parameter: {Name: "Limit", Default: 101}}
+                    AllowDiskUse: true
 
 Actors:
-- Name: CreateShardedCollections
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: admin
-        Operations:
-        - OperationMetricsName: EnableSharding
-          OperationName: AdminCommand
-          OperationCommand:
-            enableSharding: *Database
-        # This collection will have data distributed evenly across the shards.
-        - OperationMetricsName: ShardLocalCollection
-          OperationName: AdminCommand
-          OperationCommand:
-            shardCollection: test.ShardedLocal
-            key: {*LocalShardKey: hashed}
-        # Here we use 1 chunk. This ensures that all the data for this coll is on one shard.
-        - OperationMetricsName: ShardLocalCollectionAllOnOneShard
-          OperationName: AdminCommand
-          OperationCommand:
-            shardCollection: test.ShardedLocalAllOnOneShard
-            key: {*LocalShardKey: 1}
-        # Disable the balancer so that it can't skew results while the $lookups are running.
-        - OperationMetricsName: DisableBalancer
-          OperationName: AdminCommand
-          OperationCommand:
-            balancerStop: 1
+  - Name: CreateShardedCollections
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: admin
+          Operations:
+            - OperationMetricsName: EnableSharding
+              OperationName: AdminCommand
+              OperationCommand:
+                enableSharding: *Database
+            # This collection will have data distributed evenly across the shards.
+            - OperationMetricsName: ShardLocalCollection
+              OperationName: AdminCommand
+              OperationCommand:
+                shardCollection: test.ShardedLocal
+                key: {*LocalShardKey: hashed}
+            # Here we use 1 chunk. This ensures that all the data for this coll is on one shard.
+            - OperationMetricsName: ShardLocalCollectionAllOnOneShard
+              OperationName: AdminCommand
+              OperationCommand:
+                shardCollection: test.ShardedLocalAllOnOneShard
+                key: {*LocalShardKey: 1}
+            # Disable the balancer so that it can't skew results while the $lookups are running.
+            - OperationMetricsName: DisableBalancer
+              OperationName: AdminCommand
+              OperationCommand:
+                balancerStop: 1
 
-# On the sharded collections, an index wil automatically be created to support the shard key. Here
-# we create an equivalent index on the unsharded collection.
-- Name: CreateIndex
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        Operations:
-        - OperationName: RunCommand
-          OperationCommand:
-            createIndexes: *UnshardedLocal
-            indexes:
-            - key: {*LocalShardKey: 1}
-              name: localShardKey_1
+  # On the sharded collections, an index wil automatically be created to support the shard key. Here
+  # we create an equivalent index on the unsharded collection.
+  - Name: CreateIndex
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          Operations:
+            - OperationName: RunCommand
+              OperationCommand:
+                createIndexes: *UnshardedLocal
+                indexes:
+                  - key: {*LocalShardKey: 1}
+                    name: localShardKey_1
 
-- ActorFromTemplate:
-    TemplateName: LoadDocuments
-    TemplateParameters:
-      OnlyActiveInPhase: 2
-      Coll: *UnshardedLocal
+  - ActorFromTemplate:
+      TemplateName: LoadDocuments
+      TemplateParameters:
+        OnlyActiveInPhase: 2
+        Coll: *UnshardedLocal
 
-- ActorFromTemplate:
-    TemplateName: LoadDocuments
-    TemplateParameters:
-      OnlyActiveInPhase: 3
-      Coll: *ShardedLocal
+  - ActorFromTemplate:
+      TemplateName: LoadDocuments
+      TemplateParameters:
+        OnlyActiveInPhase: 3
+        Coll: *ShardedLocal
 
-- ActorFromTemplate:
-    TemplateName: LoadDocuments
-    TemplateParameters:
-      OnlyActiveInPhase: 4
-      Coll: *ShardedLocalAllOnOneShard
+  - ActorFromTemplate:
+      TemplateName: LoadDocuments
+      TemplateParameters:
+        OnlyActiveInPhase: 4
+        Coll: *ShardedLocalAllOnOneShard
 
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [5]
-      NopInPhasesUpTo: *NumPhases
-      PhaseConfig:
-        Repeat: 1
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [5]
+        NopInPhasesUpTo: *NumPhases
+        PhaseConfig:
+          Repeat: 1
 
-#
-# Unsharded
-#
-- ActorFromTemplate:
-    TemplateName: SelfLookupLocalFieldForeignField
-    TemplateParameters:
-      OnlyActiveInPhase: 6
-      MetricsName: UnshardedLocalFieldForeignField1k
-      Coll: *UnshardedLocal
-      Limit: *Limit1k
+  #
+  # Unsharded
+  #
+  - ActorFromTemplate:
+      TemplateName: SelfLookupLocalFieldForeignField
+      TemplateParameters:
+        OnlyActiveInPhase: 6
+        MetricsName: UnshardedLocalFieldForeignField1k
+        Coll: *UnshardedLocal
+        Limit: *Limit1k
 
-- ActorFromTemplate:
-    TemplateName: SelfLookupLocalFieldForeignField
-    TemplateParameters:
-      OnlyActiveInPhase: 7
-      MetricsName: UnshardedLocalFieldForeignField5k
-      Coll: *UnshardedLocal
-      Limit: *Limit5k
+  - ActorFromTemplate:
+      TemplateName: SelfLookupLocalFieldForeignField
+      TemplateParameters:
+        OnlyActiveInPhase: 7
+        MetricsName: UnshardedLocalFieldForeignField5k
+        Coll: *UnshardedLocal
+        Limit: *Limit5k
 
-- ActorFromTemplate:
-    TemplateName: SelfLookupLocalFieldForeignField
-    TemplateParameters:
-      OnlyActiveInPhase: 8
-      MetricsName: UnshardedLocalFieldForeignField15k
-      Coll: *UnshardedLocal
-      Limit: *Limit15k
+  - ActorFromTemplate:
+      TemplateName: SelfLookupLocalFieldForeignField
+      TemplateParameters:
+        OnlyActiveInPhase: 8
+        MetricsName: UnshardedLocalFieldForeignField15k
+        Coll: *UnshardedLocal
+        Limit: *Limit15k
 
-- ActorFromTemplate:
-    TemplateName: SelfLookupLetPipeline
-    TemplateParameters:
-      OnlyActiveInPhase: 9
-      MetricsName: UnshardedLetPipeline1k
-      Coll: *UnshardedLocal
-      Limit: *Limit1k
+  - ActorFromTemplate:
+      TemplateName: SelfLookupLetPipeline
+      TemplateParameters:
+        OnlyActiveInPhase: 9
+        MetricsName: UnshardedLetPipeline1k
+        Coll: *UnshardedLocal
+        Limit: *Limit1k
 
-- ActorFromTemplate:
-    TemplateName: SelfLookupLetPipeline
-    TemplateParameters:
-      OnlyActiveInPhase: 10
-      MetricsName: UnshardedLetPipeline5k
-      Coll: *UnshardedLocal
-      Limit: *Limit5k
+  - ActorFromTemplate:
+      TemplateName: SelfLookupLetPipeline
+      TemplateParameters:
+        OnlyActiveInPhase: 10
+        MetricsName: UnshardedLetPipeline5k
+        Coll: *UnshardedLocal
+        Limit: *Limit5k
 
-- ActorFromTemplate:
-    TemplateName: SelfLookupLetPipeline
-    TemplateParameters:
-      OnlyActiveInPhase: 11
-      MetricsName: UnshardedLetPipeline15k
-      Coll: *UnshardedLocal
-      Limit: *Limit15k
+  - ActorFromTemplate:
+      TemplateName: SelfLookupLetPipeline
+      TemplateParameters:
+        OnlyActiveInPhase: 11
+        MetricsName: UnshardedLetPipeline15k
+        Coll: *UnshardedLocal
+        Limit: *Limit15k
 
-#
-# Sharded, distributed
-#
-- ActorFromTemplate:
-    TemplateName: SelfLookupLocalFieldForeignField
-    TemplateParameters:
-      OnlyActiveInPhase: 12
-      MetricsName: ShardedLocalFieldForeignField1k
-      Coll: *ShardedLocal
-      Limit: *Limit1k
+  #
+  # Sharded, distributed
+  #
+  - ActorFromTemplate:
+      TemplateName: SelfLookupLocalFieldForeignField
+      TemplateParameters:
+        OnlyActiveInPhase: 12
+        MetricsName: ShardedLocalFieldForeignField1k
+        Coll: *ShardedLocal
+        Limit: *Limit1k
 
-- ActorFromTemplate:
-    TemplateName: SelfLookupLocalFieldForeignField
-    TemplateParameters:
-      OnlyActiveInPhase: 13
-      MetricsName: ShardedLocalFieldForeignField5k
-      Coll: *ShardedLocal
-      Limit: *Limit5k
+  - ActorFromTemplate:
+      TemplateName: SelfLookupLocalFieldForeignField
+      TemplateParameters:
+        OnlyActiveInPhase: 13
+        MetricsName: ShardedLocalFieldForeignField5k
+        Coll: *ShardedLocal
+        Limit: *Limit5k
 
-- ActorFromTemplate:
-    TemplateName: SelfLookupLocalFieldForeignField
-    TemplateParameters:
-      OnlyActiveInPhase: 14
-      MetricsName: ShardedLocalFieldForeignField15k
-      Coll: *ShardedLocal
-      Limit: *Limit15k
+  - ActorFromTemplate:
+      TemplateName: SelfLookupLocalFieldForeignField
+      TemplateParameters:
+        OnlyActiveInPhase: 14
+        MetricsName: ShardedLocalFieldForeignField15k
+        Coll: *ShardedLocal
+        Limit: *Limit15k
 
-- ActorFromTemplate:
-    TemplateName: SelfLookupLetPipeline
-    TemplateParameters:
-      OnlyActiveInPhase: 15
-      MetricsName: ShardedLetPipeline1k
-      Coll: *ShardedLocal
-      Limit: *Limit1k
+  - ActorFromTemplate:
+      TemplateName: SelfLookupLetPipeline
+      TemplateParameters:
+        OnlyActiveInPhase: 15
+        MetricsName: ShardedLetPipeline1k
+        Coll: *ShardedLocal
+        Limit: *Limit1k
 
-- ActorFromTemplate:
-    TemplateName: SelfLookupLetPipeline
-    TemplateParameters:
-      OnlyActiveInPhase: 16
-      MetricsName: ShardedLetPipeline5k
-      Coll: *ShardedLocal
-      Limit: *Limit5k
+  - ActorFromTemplate:
+      TemplateName: SelfLookupLetPipeline
+      TemplateParameters:
+        OnlyActiveInPhase: 16
+        MetricsName: ShardedLetPipeline5k
+        Coll: *ShardedLocal
+        Limit: *Limit5k
 
-- ActorFromTemplate:
-    TemplateName: SelfLookupLetPipeline
-    TemplateParameters:
-      OnlyActiveInPhase: 17
-      MetricsName: ShardedLetPipeline15k
-      Coll: *ShardedLocal
-      Limit: *Limit15k
+  - ActorFromTemplate:
+      TemplateName: SelfLookupLetPipeline
+      TemplateParameters:
+        OnlyActiveInPhase: 17
+        MetricsName: ShardedLetPipeline15k
+        Coll: *ShardedLocal
+        Limit: *Limit15k
 
-#
-# Sharded, all on same shard
-#
-- ActorFromTemplate:
-    TemplateName: SelfLookupLocalFieldForeignField
-    TemplateParameters:
-      OnlyActiveInPhase: 18
-      MetricsName: ShardedAllOnOneShardLocalFieldForeignField1k
-      Coll: *ShardedLocalAllOnOneShard
-      Limit: *Limit1k
+  #
+  # Sharded, all on same shard
+  #
+  - ActorFromTemplate:
+      TemplateName: SelfLookupLocalFieldForeignField
+      TemplateParameters:
+        OnlyActiveInPhase: 18
+        MetricsName: ShardedAllOnOneShardLocalFieldForeignField1k
+        Coll: *ShardedLocalAllOnOneShard
+        Limit: *Limit1k
 
-- ActorFromTemplate:
-    TemplateName: SelfLookupLocalFieldForeignField
-    TemplateParameters:
-      OnlyActiveInPhase: 19
-      MetricsName: ShardedAllOnOneShardLocalFieldForeignField5k
-      Coll: *ShardedLocalAllOnOneShard
-      Limit: *Limit5k
+  - ActorFromTemplate:
+      TemplateName: SelfLookupLocalFieldForeignField
+      TemplateParameters:
+        OnlyActiveInPhase: 19
+        MetricsName: ShardedAllOnOneShardLocalFieldForeignField5k
+        Coll: *ShardedLocalAllOnOneShard
+        Limit: *Limit5k
 
-- ActorFromTemplate:
-    TemplateName: SelfLookupLocalFieldForeignField
-    TemplateParameters:
-      OnlyActiveInPhase: 20
-      MetricsName: ShardedAllOnOneShardLocalFieldForeignField15k
-      Coll: *ShardedLocalAllOnOneShard
-      Limit: *Limit15k
+  - ActorFromTemplate:
+      TemplateName: SelfLookupLocalFieldForeignField
+      TemplateParameters:
+        OnlyActiveInPhase: 20
+        MetricsName: ShardedAllOnOneShardLocalFieldForeignField15k
+        Coll: *ShardedLocalAllOnOneShard
+        Limit: *Limit15k
 
-- ActorFromTemplate:
-    TemplateName: SelfLookupLetPipeline
-    TemplateParameters:
-      OnlyActiveInPhase: 21
-      MetricsName: ShardedAllOnOneShardLetPipeline1k
-      Coll: *ShardedLocalAllOnOneShard
-      Limit: *Limit1k
+  - ActorFromTemplate:
+      TemplateName: SelfLookupLetPipeline
+      TemplateParameters:
+        OnlyActiveInPhase: 21
+        MetricsName: ShardedAllOnOneShardLetPipeline1k
+        Coll: *ShardedLocalAllOnOneShard
+        Limit: *Limit1k
 
-- ActorFromTemplate:
-    TemplateName: SelfLookupLetPipeline
-    TemplateParameters:
-      OnlyActiveInPhase: 22
-      MetricsName: ShardedAllOnOneShardLetPipeline5k
-      Coll: *ShardedLocalAllOnOneShard
-      Limit: *Limit5k
+  - ActorFromTemplate:
+      TemplateName: SelfLookupLetPipeline
+      TemplateParameters:
+        OnlyActiveInPhase: 22
+        MetricsName: ShardedAllOnOneShardLetPipeline5k
+        Coll: *ShardedLocalAllOnOneShard
+        Limit: *Limit5k
 
-- ActorFromTemplate:
-    TemplateName: SelfLookupLetPipeline
-    TemplateParameters:
-      OnlyActiveInPhase: 23
-      MetricsName: ShardedAllOnOneShardLetPipeline15k
-      Coll: *ShardedLocalAllOnOneShard
-      Limit: *Limit15k
+  - ActorFromTemplate:
+      TemplateName: SelfLookupLetPipeline
+      TemplateParameters:
+        OnlyActiveInPhase: 23
+        MetricsName: ShardedAllOnOneShardLetPipeline15k
+        Coll: *ShardedLocalAllOnOneShard
+        Limit: *Limit15k
 
 AutoRun:
-- When:
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
-      - v5.0
-    mongodb_setup:
-      $eq:
-      - shard
-      - shard-80-feature-flags
-      - shard-lite
-      - shard-lite-80-feature-flags
-      - shard-lite-all-feature-flags
+  - When:
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4
+          - v5.0
+      mongodb_setup:
+        $eq:
+          - shard
+          - shard-80-feature-flags
+          - shard-all-feature-flags
+          - shard-lite-80-feature-flags

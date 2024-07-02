@@ -14,6 +14,21 @@ High level explanation of changes
 ### Patch Testing Results
 
 <!---
+Linting YAML files
+
+If you update/add any YAML files under the workload and/or resmoke directory or
+the evergreen file, please lint them first: src/lamplib/src/genny/tasks/
+
+cd <genny_repo_root>        # replace `<genny_repo_root>` with the actual directory
+./run-genny -v lint-yaml --format
+
+Note: it will report 'invalid config: no such rule: "anchors"' if the yamllint
+in the genny venv is too old. To fix this issue, please `rm -r genny_venv` and
+then re-run the aforementioned lint command.
+
+--->
+
+<!---
 If applicable, link a patch test showing code changes running
 successfully
 --->

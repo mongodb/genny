@@ -6,93 +6,86 @@ Description: |
 CreateIndex:
   Repeat: 1
   Database: &db test
-  Operations:
-  - OperationName: RunCommand
+  Operation:
+    OperationName: RunCommand
     OperationMetricsName: CreateIndex
     OperationCommand:
-      createIndexes: {^Parameter: {Name: "Collection", Default: "Collection0"}}
+      createIndexes: &coll { ^Parameter: { Name: "Collection", Default: "Collection0" } }
       indexes:
-      - {key: {^Parameter: {Name: "IndexPattern", Default: {}}}, name: {^Parameter: {Name: "IndexName", Default: ""}}}
+        - key: { ^Parameter: { Name: "IndexPattern", Default: {} } }
+          name: { ^Parameter: { Name: "IndexName", Default: "" } }
+
+#
+# Queries defined here assumes that the actor is 'CrudActor'.
+#
 
 RunLastPointQuery:
-  Repeat: 10
+  Repeat: { ^Parameter: { Name: "Repeat", Default: "10" } }
   Database: *db
+  Collection: *coll
   Operations:
-  - OperationMetricsName: RunLastPointQuery
-    OperationName: RunCommand
-    OperationCommand:
-      aggregate: &coll {^Parameter: {Name: "IndexPattern", Default: "Collection0"}}
-      pipeline:
-        [
-          &sortStage {$sort: &sortPattern {^Parameter: {Name: "SortPattern", Default: {}}}},
-          &groupStage {$group: {^Parameter: {Name: "GroupPattern", Default: {}}}}
-        ]
-      cursor: &batchSize {batchSize: {^Parameter: {Name: "BatchSize", Default: 100}}}
-      # In cases when we cannot optimize for a covered index sort, allow for external sorting.
-      allowDiskUse: true
-  # This predicate should select 90% of documents.
-  - OperationMetricsName: RunLastPointQueryWithLargePredicate
-    OperationName: RunCommand
-    OperationCommand:
-      aggregate: *coll
-      pipeline:
-        [
-          {$match: {"metadata.sensorId": {$gt: 10}}},
-          *sortStage,
-          *groupStage
-        ]
-      cursor: *batchSize
-      # In cases when we cannot optimize for a covered index sort, allow for external sorting.
-      allowDiskUse: true
-  # This predicate should select 10% of documents.
-  - OperationMetricsName: RunLastPointQueryWithSmallPredicate
-    OperationName: RunCommand
-    OperationCommand:
-      aggregate: *coll
-      pipeline:
-        [
-          {$match: {"metadata.sensorId": {$lt: 10}}},
-          *sortStage,
-          *groupStage
-        ]
-      cursor: *batchSize
-      # In cases when we cannot optimize for a covered index sort, allow for external sorting.
-      allowDiskUse: true
-  # Test the lastpoint optimization with $top or $bottom.
-  - OperationMetricsName: RunLastPointQueryWithTopOrBottom
-    OperationName: RunCommand
-    OperationCommand:
-      aggregate: *coll
-      pipeline:
-        [
-          {$group: {
-            _id: "$metadata.sensorId",
-            mostRecent: {^Parameter: {Name: "GroupPatternTopOrBottom", Default: {}}}
-          }}
-        ]
-      cursor: *batchSize
-      # In cases when we cannot optimize for a covered index sort, allow for external sorting.
-      allowDiskUse: true
+    - OperationMetricsName: RunLastPointQuery
+      OperationName: aggregate
+      OperationCommand:
+        Pipeline:
+          [
+            &sortStage { $sort: &sortPattern { ^Parameter: { Name: "SortPattern", Default: {} } } },
+            &groupStage { $group: { ^Parameter: { Name: "GroupPattern", Default: {} } } },
+          ]
+    # This predicate should select 90% of documents.
+    - OperationMetricsName: RunLastPointQueryWithLargePredicate
+      OperationName: aggregate
+      OperationCommand:
+        Pipeline:
+          [
+            { $match: { "metadata.sensorId": { $gt: 10 } } },
+            *sortStage,
+            *groupStage,
+          ]
+    # This predicate should select 10% of documents.
+    - OperationMetricsName: RunLastPointQueryWithSmallPredicate
+      OperationName: aggregate
+      OperationCommand:
+        Pipeline:
+          [
+            { $match: { "metadata.sensorId": { $lt: 10 } } },
+            *sortStage,
+            *groupStage,
+          ]
+    # Test the lastpoint optimization with $top or $bottom.
+    - OperationMetricsName: RunLastPointQueryWithTopOrBottom
+      OperationName: aggregate
+      OperationCommand:
+        Pipeline:
+          [
+            {
+              $group:
+                {
+                  _id: "$metadata.sensorId",
+                  mostRecent: { ^Parameter: { Name: "GroupPatternTopOrBottom", Default: {} } }
+                },
+            },
+          ]
 
 DropIndex:
   Repeat: 1
   Database: *db
-  Operations:
-  - OperationMetricsName: DropIndex
+  Operation:
+    OperationMetricsName: DropIndex
     OperationName: RunCommand
     OperationCommand:
-      dropIndexes: {^Parameter: {Name: "Collection", Default: "Collection0"}}
-      index: {^Parameter: {Name: "IndexName", Default: ""}}
+      dropIndexes: { ^Parameter: { Name: "Collection", Default: "Collection0" } }
+      index: { ^Parameter: { Name: "IndexName", Default: "" } }
 
 QuiesceActor:
-  Name: {^Parameter: {Name: "Name", Default: "QuiesceActor"}}
+  Name: { ^Parameter: { Name: "Name", Default: "QuiesceActor" } }
   Type: QuiesceActor
   Threads: 1
-  Database: {^Parameter: {Name: "Database", Default: admin}}
+  Database: { ^Parameter: { Name: "Database", Default: admin } }
   Phases:
     OnlyActiveInPhases:
-      Active: {^Parameter: {Name: "Active", Default: [2, 5, 8, 11, 14, 17, 18, 21]}}
-      NopInPhasesUpTo: {^Parameter: {Name: "MaxPhases", Default: 23}}
+      Active: { ^Parameter: { Name: "Active", Default: [3, 6, 9, 12, 15, 18, 21, 24] } }
+      NopInPhasesUpTo: { ^Parameter: { Name: "MaxPhases", Default: -1 } }
       PhaseConfig:
         SleepBefore: 1 seconds
         SleepAfter: 1 seconds

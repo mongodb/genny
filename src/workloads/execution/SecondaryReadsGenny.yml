@@ -1,51 +1,50 @@
 SchemaVersion: 2018-07-01
 Owner: Replication
 Description: |
- Test performance of secondary reads while applying oplogs
+  Test performance of secondary reads while applying oplogs
 
- ### Setup
+  ### Setup
 
- This workload runs only in a replica set with EXACTLY 3 NODES.
- To use it in a replica set with a different number of nodes, adapt the
- *number_of_nodes parameter (needs to be >1).
+  This workload runs only in a replica set with EXACTLY 3 NODES.
+  To use it in a replica set with a different number of nodes, adapt the
+  *number_of_nodes parameter (needs to be >1).
 
- ### Test
+  ### Test
 
- On an empty replica set, the workload performs the following actions:
- - Setup stage:
-    - Inserted *initial_nb_docs* documents into both the primary and the
-      secondaries. This should be done before any writes and reads.
- - Actual test stage:
-    - *nWriters* background writers doing infinite writes on the primary which
-      will replicate these writes to secondaries.
-    - 1/16/32 readers doing queries on a specified seconary. Each query has
-      *batch_size* numbers of documents and only reads documents inserted in the
-      setup stage in order to have more constant behavior all the time.
-    - Finally, a query with WriteConcern 3 is used to measure the replication lag
- - Cleanup stage:
-   - Drop the collection to reset the db SortPattern:
- The test cycles through these stages for 1, 16, and 32 reader threads.
+  On an empty replica set, the workload performs the following actions:
+  - Setup stage:
+     - Inserted *initial_nb_docs* documents into both the primary and the
+       secondaries. This should be done before any writes and reads.
+  - Actual test stage:
+     - *nWriters* background writers doing infinite writes on the primary which
+       will replicate these writes to secondaries.
+     - 1/16/32 readers doing queries on a specified seconary. Each query has
+       *batch_size* numbers of documents and only reads documents inserted in the
+       setup stage in order to have more constant behavior all the time.
+     - Finally, a query with WriteConcern 3 is used to measure the replication lag
+  - Cleanup stage:
+    - Drop the collection to reset the db SortPattern:
+  The test cycles through these stages for 1, 16, and 32 reader threads.
 
- ### Phases
+  ### Phases
 
- - 0: LoadInitialData
- - 1: Quiesce (fsync, etc)
- - 2: WritesOnPrimary (16 Threads) + ReadsOnSecondary (1 Thread)
- - 3: ReplicationLag (measure replication lag via write with w:3)
- - 4: CleanUp (drop collection)
- - 5: LoadInitialData
- - 6: Quiesce
- - 7: WritesOnPrimary (16 Threads) + ReadsOnSecondary (16 Threads)
- - 8: ReplicationLag
- - 9: CleanUp
- - 10: LoadInitialData
- - 11: Quiesce
- - 12: WritesOnPrimary (16 Threads) + ReadsOnSecondary (32 Threads)
- - 13: Replication lag
-
+  - 0: LoadInitialData
+  - 1: Quiesce (fsync, etc)
+  - 2: WritesOnPrimary (16 Threads) + ReadsOnSecondary (1 Thread)
+  - 3: ReplicationLag (measure replication lag via write with w:3)
+  - 4: CleanUp (drop collection)
+  - 5: LoadInitialData
+  - 6: Quiesce
+  - 7: WritesOnPrimary (16 Threads) + ReadsOnSecondary (16 Threads)
+  - 8: ReplicationLag
+  - 9: CleanUp
+  - 10: LoadInitialData
+  - 11: Quiesce
+  - 12: WritesOnPrimary (16 Threads) + ReadsOnSecondary (32 Threads)
+  - 13: Replication lag
 
 Initial_nb_docs: &initial_nb_docs 10000
-DocumentSize: &document_size 459  # Target document size of 500 and Object.bsonsize({_id: ObjectId(), x: 0, str: "x"}) + 1 = 41
+DocumentSize: &document_size 459 # Target document size of 500 and Object.bsonsize({_id: ObjectId(), x: 0, str: "x"}) + 1 = 41
 ReadLimit: &read_limit 100
 MaxIdForFinds: &max_id_for_finds 9900
 TestDurationInSecs: &phase_duration 180 seconds
@@ -61,189 +60,187 @@ Clients:
     URI: mongodb://username:password@md1:27017/admin?ssl=true&tlsAllowInvalidHostnames=true
 
 ActorTemplates:
-- TemplateName: WritesOnPrimaryTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: WritesOnPrimary}}
-    Type: CrudActor
-    Threads: *writer_threads
-    Database: *db
+  - TemplateName: WritesOnPrimaryTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: WritesOnPrimary}}
+      Type: CrudActor
+      Threads: *writer_threads
+      Database: *db
+      Phases:
+        OnlyActiveInPhases:
+          Active: {^Parameter: {Name: "ActivePhases", Default: [-1]}}
+          NopInPhasesUpTo: *max_phase
+          PhaseConfig:
+            Duration: *phase_duration
+            Collection: Collection0
+            Operations:
+              - OperationName: insertOne
+                OperationCommand:
+                  Document:
+                    x: {^RandomInt: {min: *initial_nb_docs, max: 1000000000}}
+                    s: {^RandomString: {length: *document_size}}
+
+  - TemplateName: ReadsOnSecondaryTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: ReadsOnSecondary}}
+      Type: CrudActor
+      Threads: {^Parameter: {Name: "Threads", Default: -1}}
+      ClientName: Secondary
+      Database: *db
+      Phases:
+        OnlyActiveInPhases:
+          Active: {^Parameter: {Name: "ActivePhases", Default: [-1]}}
+          NopInPhasesUpTo: *max_phase
+          PhaseConfig:
+            Duration: *phase_duration
+            Collection: Collection0
+            Operations:
+              - OperationName: find
+                OperationCommand:
+                  Filter: {x: {$gte: {^RandomInt: {min: 0, max: *max_id_for_finds}}}}
+                  Options:
+                    Limit: *read_limit
+                    BatchSize: 200
+                    ReadPreference:
+                      ReadMode: secondaryPreferred
+
+  - TemplateName: ReplicationLagTemplate
+    Config:
+      Name: {^Parameter: {Name: "Name", Default: ReplicationLag}}
+      Type: CrudActor
+      Threads: 1
+      Database: *db
+      Phases:
+        OnlyActiveInPhases:
+          Active: {^Parameter: {Name: "ActivePhases", Default: [-1]}}
+          NopInPhasesUpTo: *max_phase
+          PhaseConfig:
+            Repeat: 1
+            Collection: Collection0
+            Operations:
+              - OperationName: insertOne
+                OperationCommand:
+                  Document: {s: 1}
+                  OperationOptions:
+                    WriteConcern:
+                      Level: *number_of_nodes
+                      Journal: true
+
+Actors:
+  - Name: LoadInitialData
+    Type: Loader
+    Threads: 1
     Phases:
       OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "ActivePhases", Default: [-1]}}
+        Active: [0, 5, 10]
         NopInPhasesUpTo: *max_phase
         PhaseConfig:
-          Duration: *phase_duration
-          Collection: Collection0
-          Operations:
-          - OperationName: insertOne
-            OperationCommand:
-              Document:
-                x: {^RandomInt: {min: *initial_nb_docs, max: 1000000000}}
-                s: {^RandomString: {length: *document_size}}
+          Repeat: 1
+          Database: *db
+          Threads: 1
+          CollectionCount: 1
+          DocumentCount: *initial_nb_docs
+          BatchSize: *initial_nb_docs
+          Document:
+            x: {^Inc: {}}
+            s: {^RandomString: {length: *document_size}}
+          Indexes:
+            - keys: {x: 1}
 
-- TemplateName: ReadsOnSecondaryTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: ReadsOnSecondary}}
-    Type: CrudActor
-    Threads: {^Parameter: {Name: "Threads", Default: -1}}
-    ClientName: Secondary
-    Database: *db
-    Phases:
-      OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "ActivePhases", Default: [-1]}}
-        NopInPhasesUpTo: *max_phase
-        PhaseConfig:
-          Duration: *phase_duration
-          Collection: Collection0
-          Operations:
-          - OperationName: find
-            OperationCommand:
-              Filter: { x: {$gte: {^RandomInt: {min: 0, max: *max_id_for_finds}}}}
-              Options:
-                Limit: *read_limit
-                BatchSize: 200
-                ReadPreference:
-                  ReadMode: secondaryPreferred
-
-- TemplateName: ReplicationLagTemplate
-  Config:
-    Name: {^Parameter: {Name: "Name", Default: ReplicationLag}}
-    Type: CrudActor
+  - Name: Quiesce
+    Type: QuiesceActor
     Threads: 1
     Database: *db
     Phases:
       OnlyActiveInPhases:
-        Active: {^Parameter: {Name: "ActivePhases", Default: [-1]}}
+        Active: [1, 6, 11]
         NopInPhasesUpTo: *max_phase
         PhaseConfig:
           Repeat: 1
-          Collection: Collection0
+
+  - Name: CleanUp
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4, 9]
+        NopInPhasesUpTo: *max_phase
+        PhaseConfig:
+          Repeat: 1
+          Database: *db
           Operations:
-          - OperationName: insertOne
-            OperationCommand:
-              Document: {s: 1}
-              OperationOptions:
-                WriteConcern:
-                  Level: *number_of_nodes
-                  Journal: true
+            - OperationName: RunCommand
+              OperationCommand:
+                drop: Collection0
 
+  - ActorFromTemplate:
+      TemplateName: WritesOnPrimaryTemplate
+      TemplateParameters:
+        Name: 1T-WritesOnPrimary
+        ActivePhases: [2]
 
-Actors:
-- Name: LoadInitialData
-  Type: Loader
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0, 5, 10]
-      NopInPhasesUpTo: *max_phase
-      PhaseConfig:
-        Repeat: 1
-        Database: *db
+  - ActorFromTemplate:
+      TemplateName: WritesOnPrimaryTemplate
+      TemplateParameters:
+        Name: 16T-WritesOnPrimary
+        ActivePhases: [7]
+
+  - ActorFromTemplate:
+      TemplateName: WritesOnPrimaryTemplate
+      TemplateParameters:
+        Name: 32T-WritesOnPrimary
+        ActivePhases: [12]
+
+  - ActorFromTemplate:
+      TemplateName: ReadsOnSecondaryTemplate
+      TemplateParameters:
+        Name: 1T-ReadsOnSecondary
+        ActivePhases: [2]
         Threads: 1
-        CollectionCount: 1
-        DocumentCount: *initial_nb_docs
-        BatchSize: *initial_nb_docs
-        Document:
-          x: {^Inc: {}}
-          s: {^RandomString: {length: *document_size}}
-        Indexes:
-        - keys: {x: 1}
 
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *db
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1, 6, 11]
-      NopInPhasesUpTo: *max_phase
-      PhaseConfig:
-        Repeat: 1
+  - ActorFromTemplate:
+      TemplateName: ReadsOnSecondaryTemplate
+      TemplateParameters:
+        Name: 16T-ReadsOnSecondary
+        ActivePhases: [7]
+        Threads: 16
 
-- Name: CleanUp
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [4, 9]
-      NopInPhasesUpTo: *max_phase
-      PhaseConfig:
-        Repeat: 1
-        Database: *db
-        Operations:
-        - OperationName: RunCommand
-          OperationCommand:
-            drop: Collection0
+  - ActorFromTemplate:
+      TemplateName: ReadsOnSecondaryTemplate
+      TemplateParameters:
+        Name: 32T-ReadsOnSecondary
+        ActivePhases: [12]
+        Threads: 32
 
-- ActorFromTemplate:
-    TemplateName: WritesOnPrimaryTemplate
-    TemplateParameters:
-      Name: 1T-WritesOnPrimary
-      ActivePhases: [2]
+  - ActorFromTemplate:
+      TemplateName: ReplicationLagTemplate
+      TemplateParameters:
+        Name: 1T-ReplicationLag
+        ActivePhases: [3]
 
-- ActorFromTemplate:
-    TemplateName: WritesOnPrimaryTemplate
-    TemplateParameters:
-      Name: 16T-WritesOnPrimary
-      ActivePhases: [7]
+  - ActorFromTemplate:
+      TemplateName: ReplicationLagTemplate
+      TemplateParameters:
+        Name: 16T-ReplicationLag
+        ActivePhases: [8]
 
-- ActorFromTemplate:
-    TemplateName: WritesOnPrimaryTemplate
-    TemplateParameters:
-      Name: 32T-WritesOnPrimary
-      ActivePhases: [12]
-
-- ActorFromTemplate:
-    TemplateName: ReadsOnSecondaryTemplate
-    TemplateParameters:
-      Name: 1T-ReadsOnSecondary
-      ActivePhases: [2]
-      Threads: 1
-
-- ActorFromTemplate:
-    TemplateName: ReadsOnSecondaryTemplate
-    TemplateParameters:
-      Name: 16T-ReadsOnSecondary
-      ActivePhases: [7]
-      Threads: 16
-
-- ActorFromTemplate:
-    TemplateName: ReadsOnSecondaryTemplate
-    TemplateParameters:
-      Name: 32T-ReadsOnSecondary
-      ActivePhases: [12]
-      Threads: 32
-
-- ActorFromTemplate:
-    TemplateName: ReplicationLagTemplate
-    TemplateParameters:
-      Name: 1T-ReplicationLag
-      ActivePhases: [3]
-
-- ActorFromTemplate:
-    TemplateName: ReplicationLagTemplate
-    TemplateParameters:
-      Name: 16T-ReplicationLag
-      ActivePhases: [8]
-
-- ActorFromTemplate:
-    TemplateName: ReplicationLagTemplate
-    TemplateParameters:
-      Name: 36T-ReplicationLag
-      ActivePhases: [13]
-
+  - ActorFromTemplate:
+      TemplateName: ReplicationLagTemplate
+      TemplateParameters:
+        Name: 36T-ReplicationLag
+        ActivePhases: [13]
 
 # This workload runs only in a replica set with EXACTLY 3 NODES.
 # To use it in a replica set with a different number of nodes, adapt the
 # *number_of_nodes parameter (needs to be >1).
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - replica
-      - replica-80-feature-flags
-      - replica-all-feature-flags
-      - atlas-like-replica
-    branch_name:
-      $neq:
-      - v4.0
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - replica-80-feature-flags
+          - replica-all-feature-flags
+          - atlas-like-replica
+      branch_name:
+        $neq:
+          - v4.0

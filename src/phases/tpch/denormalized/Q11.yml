@@ -4,52 +4,82 @@ Description: |
   Run TPC-H query 11 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
-query11Nation: &query11Nation {^Parameter: {Name: "Query11Nation", Default: "GERMANY"}}
-query11Fraction: &query11Fraction {^Parameter: {Name: "Query11Fraction", Default: 0.0001}}
+batchSize: &batchSize { ^Parameter: { Name: "BatchSize", Default: 101 } }
+query11Nation:
+  &query11Nation { ^Parameter: { Name: "Query11Nation", Default: "GERMANY" } }
+query11Fraction:
+  &query11Fraction { ^Parameter: { Name: "Query11Fraction", Default: 0.0001 } }
 
 TPCHDenormalizedQuery11Aggregation: &TPCHDenormalizedQuery11Aggregation
   aggregate: partsupp
   pipeline:
     [
-      {$lookup: {from: "supplier", localField: "ps_suppkey", foreignField: "s_suppkey", as: "supplier", pipeline: [{$match: {"nation.n_name": *query11Nation}}]}},
-      {$unwind: "$supplier"},
-      {$addFields: {total_cost: {$multiply: ["$ps_supplycost", "$ps_availqty"]}}},
-      {$group: {_id: "$ps_partkey", value: {$sum: "$total_cost"}}},
-      {$group: {_id: 0, groups: {$push: {ps_partkey: "$_id", value: "$value"}}, total_cost: {$sum: "$value"}}},
-      {$addFields: {threshold: {$multiply: ["$total_cost", *query11Fraction]}}},
-      {$unwind: "$groups"},
-      {$project: {ps_partkey: "$groups.ps_partkey", value: "$groups.value", threshold: 1}},
-      {$match: {$expr: {$gt: ["$value", "$threshold"]}}},
-      {$project: {_id: 0, ps_partkey: 1, value: 1}},
-      {$sort: {value: -1}}
+      {
+        $lookup:
+          {
+            from: "supplier",
+            localField: "ps_suppkey",
+            foreignField: "s_suppkey",
+            as: "supplier",
+            pipeline: [{ $match: { "nation.n_name": *query11Nation } }],
+          },
+      },
+      { $unwind: "$supplier" },
+      {
+        $addFields:
+          { total_cost: { $multiply: ["$ps_supplycost", "$ps_availqty"] } },
+      },
+      { $group: { _id: "$ps_partkey", value: { $sum: "$total_cost" } } },
+      {
+        $group:
+          {
+            _id: 0,
+            groups: { $push: { ps_partkey: "$_id", value: "$value" } },
+            total_cost: { $sum: "$value" },
+          },
+      },
+      {
+        $addFields:
+          { threshold: { $multiply: ["$total_cost", *query11Fraction] } },
+      },
+      { $unwind: "$groups" },
+      {
+        $project:
+          {
+            ps_partkey: "$groups.ps_partkey",
+            value: "$groups.value",
+            threshold: 1,
+          },
+      },
+      { $match: { $expr: { $gt: ["$value", "$threshold"] } } },
+      { $project: { _id: 0, ps_partkey: 1, value: 1 } },
+      { $sort: { value: -1 } },
     ]
-  cursor: {batchSize: *batchSize}
+  cursor: { batchSize: *batchSize }
   allowDiskUse: true
 
 TPCHDenormalizedQuery11Warmup:
-  Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
+  Repeat: &Repeat { ^Parameter: { Name: "Repeat", Default: 1 } }
   Database: &db tpch
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedQuery11Aggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedQuery11Aggregation
 
 TPCHDenormalizedQuery11:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query11
-    OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedQuery11Aggregation
+    - OperationMetricsName: Query11
+      OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedQuery11Aggregation
 
 TPCHDenormalizedQuery11Explain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query11
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHDenormalizedQuery11Aggregation
-      verbosity:
-        executionStats
+    - OperationMetricsName: Query11
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHDenormalizedQuery11Aggregation
+        verbosity: executionStats

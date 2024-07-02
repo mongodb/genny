@@ -7,17 +7,17 @@ Description: |
 
   To achieve this, many threads are spawned to run an unfiltered find on a collection.
   The number and size of documents in that collection are tuned such, that the mongos is able
-  to exhaust cursors on shards when pre-filling its buffers [<16MB per shard]. As a result, 
+  to exhaust cursors on shards when pre-filling its buffers [<16MB per shard]. As a result,
   memory pressure on the shards remains low, while it's kept large on the mongos.
 
 Keywords:
-- scale
-- memory stress
-- cursor storm
-- mongos
-- fail
-- oom
-- out of memory
+  - scale
+  - memory stress
+  - cursor storm
+  - mongos
+  - fail
+  - oom
+  - out of memory
 
 GlobalDefaults:
   DBName: &DBName test
@@ -44,99 +44,99 @@ Clients:
     QueryOptions:
       socketTimeoutMS: -1
       maxPoolSize: 255
-    
+
 Actors:
-# Drop database to get rid of stale data. Useful when running locally multiple times.
-- Name: Setup
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *DBName
-        Operations:
-        - OperationName: RunCommand
-          OperationCommand: {dropDatabase: 1}
+  # Drop database to get rid of stale data. Useful when running locally multiple times.
+  - Name: Setup
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *DBName
+          Operations:
+            - OperationName: RunCommand
+              OperationCommand: {dropDatabase: 1}
 
-# Create collection.
-- Name: CreateCollection
-  Type: RunCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *DBName
-        Operations:
-        - OperationName: RunCommand
-          OperationCommand:
-            # Loader default collection name.
-            create: Collection0
+  # Create collection.
+  - Name: CreateCollection
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *DBName
+          Operations:
+            - OperationName: RunCommand
+              OperationCommand:
+                # Loader default collection name.
+                create: Collection0
 
-# Enable sharding & shard collection.
-- Name: ShardCollection
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: admin
-        OnlyRunInInstance: sharded
-        Operations:
-        - OperationMetricsName: EnableSharding
-          OperationName: AdminCommand
-          OperationCommand:
-            enableSharding: *DBName
-        - OperationMetricsName: ShardCollection
-          OperationName: AdminCommand
-          OperationCommand:
-            shardCollection: *Namespace
-            key: {_id: hashed}
+  # Enable sharding & shard collection.
+  - Name: ShardCollection
+    Type: AdminCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: admin
+          OnlyRunInInstance: sharded
+          Operations:
+            - OperationMetricsName: EnableSharding
+              OperationName: AdminCommand
+              OperationCommand:
+                enableSharding: *DBName
+            - OperationMetricsName: ShardCollection
+              OperationName: AdminCommand
+              OperationCommand:
+                shardCollection: *Namespace
+                key: {_id: hashed}
 
-# Load *TotalNumberOfDocuments documents of around 168KB each.
-- Name: LoadDocuments
-  Type: Loader
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        CollectionCount: 1
-        Database: *DBName
-        Repeat: 1
-        MultipleThreadsPerCollection: true
-        DocumentCount: *TotalNumberOfDocuments
-        BatchSize: 500
-        Document:
-          # Fill 168 KB.
-          a: {^FastRandomString: {length: *DocSize}}
+  # Load *TotalNumberOfDocuments documents of around 168KB each.
+  - Name: LoadDocuments
+    Type: Loader
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          CollectionCount: 1
+          Database: *DBName
+          Repeat: 1
+          MultipleThreadsPerCollection: true
+          DocumentCount: *TotalNumberOfDocuments
+          BatchSize: 500
+          Document:
+            # Fill 168 KB.
+            a: {^FastRandomString: {length: *DocSize}}
 
-# Spawn many threads to test the routers capacity to handle memory pressure.
-- Name: FindMany
-  Type: RunCommand
-  Threads: *TestThreads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [4]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *TestRepeat
-        Database: *DBName
-        Operations:
-        - OperationMetricsName: FindMany
-          OperationName: RunCommand
-          OperationCommand:
-            # Collection0 is the default collection name used by the Loader.
-            find: Collection0
+  # Spawn many threads to test the routers capacity to handle memory pressure.
+  - Name: FindMany
+    Type: RunCommand
+    Threads: *TestThreads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *TestRepeat
+          Database: *DBName
+          Operations:
+            - OperationMetricsName: FindMany
+              OperationName: RunCommand
+              OperationCommand:
+                # Collection0 is the default collection name used by the Loader.
+                find: Collection0
 
 # Commented out because this should not be regularly scheduled, as the task is expected to fail.
 # Uncomment the lines below (and possibly change the build variant) to run the workload.
@@ -144,4 +144,4 @@ Actors:
 # - When:
 #     mongodb_setup:
 #       $eq:
-#       - shard-lite
+#       - shard

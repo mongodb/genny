@@ -4,49 +4,148 @@ Description: |
   Run TPC-H query 14 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
   documents remain, which ensures that the query executes in its entirety.
 
-batchSize: &batchSize {^Parameter: {Name: "BatchSize", Default: 101}}
-query14Date: &query14Date {^Parameter: {Name: "Query14Date", Default: "1995-09-01"}}
+batchSize: &batchSize { ^Parameter: { Name: "BatchSize", Default: 101 } }
+query14Date:
+  &query14Date { ^Parameter: { Name: "Query14Date", Default: "1995-09-01" } }
 
 TPCHDenormalizedQuery14Aggregation: &TPCHDenormalizedQuery14Aggregation
   aggregate: customer
   pipeline:
     [
-      {$unwind: "$orders"},
-      {$addFields: {lineitem: "$orders.lineitem", "orders.lineitem": "$$REMOVE"}},
-      {$unwind: "$lineitem"},
-      {$match: {$and: [
-        {$expr: {$gte: ["$lineitem.l_shipdate", {^Date: *query14Date}]}},
-        {$expr: {$lt: ["$lineitem.l_shipdate", {$dateAdd: {startDate: {^Date: *query14Date}, unit: "month", amount: 1}}]}}]}},
-      {$lookup: {from: "part", localField: "lineitem.l_partkey", foreignField: "p_partkey", as: "part"}},
-      {$unwind: "$part"},
-      {$group: {_id: {}, promo_price_total: {$sum: {$cond: {if: {$cond: {if: {$regexMatch: {input: "$part.p_type", regex: "^PROMO.*$", options: "si"}}, then: 1, else: 0}}, then: {$multiply: ["$lineitem.l_extendedprice", {$subtract: [1, "$lineitem.l_discount"]}]}, else: 0}}}, price_total: {$sum: {$multiply: ["$lineitem.l_extendedprice", {$subtract: [1, "$lineitem.l_discount"]}]}}}}, {$project: {_id: 0, promo_revenue: {$multiply: [100.0, {$divide: ["$promo_price_total", "$price_total"]}]}}}
+      { $unwind: "$orders" },
+      {
+        $addFields:
+          { lineitem: "$orders.lineitem", "orders.lineitem": "$$REMOVE" },
+      },
+      { $unwind: "$lineitem" },
+      {
+        $match:
+          {
+            $and:
+              [
+                {
+                  $expr:
+                    { $gte: ["$lineitem.l_shipdate", { ^Date: *query14Date }] },
+                },
+                {
+                  $expr:
+                    {
+                      $lt:
+                        [
+                          "$lineitem.l_shipdate",
+                          {
+                            $dateAdd:
+                              {
+                                startDate: { ^Date: *query14Date },
+                                unit: "month",
+                                amount: 1,
+                              },
+                          },
+                        ],
+                    },
+                },
+              ],
+          },
+      },
+      {
+        $lookup:
+          {
+            from: "part",
+            localField: "lineitem.l_partkey",
+            foreignField: "p_partkey",
+            as: "part",
+          },
+      },
+      { $unwind: "$part" },
+      {
+        $group:
+          {
+            _id: {},
+            promo_price_total:
+              {
+                $sum:
+                  {
+                    $cond:
+                      {
+                        if:
+                          {
+                            $cond:
+                              {
+                                if:
+                                  {
+                                    $regexMatch:
+                                      {
+                                        input: "$part.p_type",
+                                        regex: "^PROMO.*$",
+                                        options: "si",
+                                      },
+                                  },
+                                then: 1,
+                                else: 0,
+                              },
+                          },
+                        then:
+                          {
+                            $multiply:
+                              [
+                                "$lineitem.l_extendedprice",
+                                { $subtract: [1, "$lineitem.l_discount"] },
+                              ],
+                          },
+                        else: 0,
+                      },
+                  },
+              },
+            price_total:
+              {
+                $sum:
+                  {
+                    $multiply:
+                      [
+                        "$lineitem.l_extendedprice",
+                        { $subtract: [1, "$lineitem.l_discount"] },
+                      ],
+                  },
+              },
+          },
+      },
+      {
+        $project:
+          {
+            _id: 0,
+            promo_revenue:
+              {
+                $multiply:
+                  [100.0, { $divide: ["$promo_price_total", "$price_total"] }],
+              },
+          },
+      },
     ]
-  cursor: {batchSize: *batchSize}
+  cursor: { batchSize: *batchSize }
   allowDiskUse: true
 
 TPCHDenormalizedQuery14Warmup:
-  Repeat: &Repeat {^Parameter: {Name: "Repeat", Default: 1}}
+  Repeat: &Repeat { ^Parameter: { Name: "Repeat", Default: 1 } }
   Database: &db tpch
   Operations:
-  - OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedQuery14Aggregation
+    - OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedQuery14Aggregation
 
 TPCHDenormalizedQuery14:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query14
-    OperationName: RunCommand
-    OperationCommand: *TPCHDenormalizedQuery14Aggregation
+    - OperationMetricsName: Query14
+      OperationName: RunCommand
+      OperationCommand: *TPCHDenormalizedQuery14Aggregation
 
 TPCHDenormalizedQuery14Explain:
   Repeat: *Repeat
   Database: *db
   Operations:
-  - OperationMetricsName: Query14
-    OperationName: RunCommand
-    OperationLogsResult: true
-    OperationCommand:
-      explain: *TPCHDenormalizedQuery14Aggregation
-      verbosity:
-        executionStats
+    - OperationMetricsName: Query14
+      OperationName: RunCommand
+      OperationLogsResult: true
+      OperationCommand:
+        explain: *TPCHDenormalizedQuery14Aggregation
+        verbosity: executionStats

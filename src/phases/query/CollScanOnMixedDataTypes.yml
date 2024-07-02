@@ -4,272 +4,275 @@ Description: |
   This workload runs collscan queries on various data types.
 
 GlobalDefaults:
-  Database: &Database {^Parameter: {Name: Database, Default: unused}}
-  DocumentCount: &DocumentCount {^Parameter: {Name: DocumentCount, Default: -1}}
-  Repeat: &Repeat {^Parameter: {Name: Repeat, Default: -1}}
+  Database: &Database { ^Parameter: { Name: Database, Default: unused } }
+  DocumentCount:
+    &DocumentCount { ^Parameter: { Name: DocumentCount, Default: -1 } }
+  Repeat: &Repeat { ^Parameter: { Name: Repeat, Default: -1 } }
   Collection: &Collection Collection0
   MaxPhases: &MaxPhases 12
 
   # Generates a random numerical string of 16 characters.
-  RandomShortStringValue: &RandomShortStringValue {^FastRandomString: {
-    length: 16, alphabet: "0123456789"
-  }}
+  RandomShortStringValue:
+    &RandomShortStringValue {
+      ^FastRandomString: { length: 16, alphabet: "0123456789" },
+    }
 
   # Generates a random numerical string of 200 characters.
-  RandomMediumStringValue: &RandomMediumStringValue {^FastRandomString: {
-    length: 200, alphabet: "0123456789"
-  }}
+  RandomMediumStringValue:
+    &RandomMediumStringValue {
+      ^FastRandomString: { length: 200, alphabet: "0123456789" },
+    }
 
   # Generates a random numerical string of 50-250 characters.
-  RandomLongStringValue: &RandomLongStringValue {^FastRandomString: {
-    length: 1000, alphabet: "0123456789"
-  }}
+  RandomLongStringValue:
+    &RandomLongStringValue {
+      ^FastRandomString: { length: 1000, alphabet: "0123456789" },
+    }
 
-  RandomDateValue: &RandomDateValue {^RandomDate: {
-    min: "2021-01-01T00:00:02.000Z", max: "2054-01-01T00:00:10.000Z"
-  }}
+  RandomDateValue:
+    &RandomDateValue {
+      ^RandomDate:
+        { min: "2021-01-01T00:00:02.000Z", max: "2054-01-01T00:00:10.000Z" },
+    }
 
-  RandomIntValue: &RandomIntValue {^RandomInt: {
-    min: 0, max: 20
-  }}
+  RandomIntValue: &RandomIntValue { ^RandomInt: { min: 0, max: 20 } }
 
-  RandomDoubleValue: &RandomDoubleValue {^RandomDouble: {
-    min: 0, max: 10000
-  }}
+  RandomDoubleValue:
+    &RandomDoubleValue { ^RandomDouble: { min: 0, max: 10000 } }
 
-  RandomDecimalValue: &RandomDecimalValue {^ConvertToDecimal: {
-    from: *RandomDoubleValue
-  }}
-  
-  RandomArrayValue: &RandomArrayValue [
-    {^Array: {of: [[*RandomIntValue]], number: *RandomIntValue}}
-  ]
+  RandomDecimalValue:
+    &RandomDecimalValue { ^ConvertToDecimal: { from: *RandomDoubleValue } }
 
-  RandomObjectId: &RandomObjectId {^ObjectId: {
-    ^RandomString: {length: 24, alphabet: "0123456789ABCDEF"
-  }}}
+  RandomArrayValue:
+    &RandomArrayValue [
+      { ^Array: { of: [[*RandomIntValue]], number: *RandomIntValue } },
+    ]
 
+  RandomObjectId:
+    &RandomObjectId {
+      ^ObjectId:
+        { ^RandomString: { length: 24, alphabet: "0123456789ABCDEF" } },
+    }
 
 Actors:
-- Name: ClearCollection
-  Type: CrudActor
-  Database: *Database
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
-        Collection: *Collection
-        Operations:
-        - OperationName: drop
+  - Name: ClearCollection
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+          Collection: *Collection
+          Operations:
+            - OperationName: drop
 
-- Name: InsertData
-  Type: Loader
-  Threads: 4
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        MultipleThreadsPerCollection: true
-        CollectionCount: 1
-        DocumentCount: *DocumentCount
-        BatchSize: 1000
-        Document: {
-          numInt: *RandomIntValue,
-          numDouble: *RandomDoubleValue,
-          numDecimal: *RandomDecimalValue,
-          strS: *RandomShortStringValue,
-          strM: *RandomMediumStringValue,
-          strL: *RandomLongStringValue,
-          arr: *RandomArrayValue,
-          date: *RandomDateValue,
-          objID: *RandomObjectId,
-          obj: {
-            nested: {
+  - Name: InsertData
+    Type: Loader
+    Threads: 4
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          MultipleThreadsPerCollection: true
+          CollectionCount: 1
+          DocumentCount: *DocumentCount
+          BatchSize: 1000
+          Document:
+            {
+              numInt: *RandomIntValue,
+              numDouble: *RandomDoubleValue,
+              numDecimal: *RandomDecimalValue,
+              strS: *RandomShortStringValue,
               strM: *RandomMediumStringValue,
-            }
-          }
-        }
-
-- Name: Quiesce
-  Type: QuiesceActor
-  Threads: 1
-  Database: *Database
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: 1
-
-- Name: CollScanQueryOnInt
-  Type: CrudActor
-  Database: *Database
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: { "numInt": {$gte: 0} }
-
-- Name: CollScanQueryOnDouble
-  Type: CrudActor
-  Database: *Database
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [4]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: { "numDouble": 4987.1234 }
-
-- Name: CollScanQueryOnDecimal
-  Type: CrudActor
-  Database: *Database
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [5]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: { "numDecimal": {$lt: Decimal128("10000.0001")} }
-
-- Name: CollScanQueryOnShortString
-  Type: CrudActor
-  Database: *Database
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [6]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: { "strS": *RandomShortStringValue }
-
-- Name: CollScanQueryOnMediumString
-  Type: CrudActor
-  Database: *Database
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [7]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: { "strM": *RandomMediumStringValue }
-
-- Name: CollScanQueryOnLongString
-  Type: CrudActor
-  Database: *Database
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [8]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: { "strL": *RandomLongStringValue }
-
-- Name: CollScanQueryOnDate
-  Type: CrudActor
-  Database: *Database
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [9]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {
-              "date": {
-                $gte: {^Date: "2021-01-01T00:00:02.000"},
-                $lte: {^Date: "2054-01-01T00:00:10.000"}
-              },
+              strL: *RandomLongStringValue,
+              arr: *RandomArrayValue,
+              date: *RandomDateValue,
+              objID: *RandomObjectId,
+              obj: { nested: { strM: *RandomMediumStringValue } },
             }
 
-- Name: CollScanQueryOnArray
-  Type: CrudActor
-  Database: *Database
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [10]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: { "arr": { $elemMatch: { $gte: 0, $lt: 20 } } }
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *Database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
 
-- Name: CollScanQueryOnNestedObject
-  Type: CrudActor
-  Database: *Database
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [11]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: { "obj.nested.strM": *RandomMediumStringValue }
+  - Name: CollScanQueryOnInt
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "numInt": { $gte: 0 } }
 
-- Name: CollScanQueryOnObjectId
-  Type: CrudActor
-  Database: *Database
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [12]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: { "objID": *RandomObjectId }
+  - Name: CollScanQueryOnDouble
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "numDouble": 4987.1234 }
+
+  - Name: CollScanQueryOnDecimal
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [5]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "numDecimal": { $lt: Decimal128("10000.0001") } }
+
+  - Name: CollScanQueryOnShortString
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [6]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "strS": *RandomShortStringValue }
+
+  - Name: CollScanQueryOnMediumString
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [7]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "strM": *RandomMediumStringValue }
+
+  - Name: CollScanQueryOnLongString
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [8]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "strL": *RandomLongStringValue }
+
+  - Name: CollScanQueryOnDate
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [9]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter:
+                  {
+                    "date":
+                      {
+                        $gte: { ^Date: "2021-01-01T00:00:02.000" },
+                        $lte: { ^Date: "2054-01-01T00:00:10.000" },
+                      },
+                  }
+
+  - Name: CollScanQueryOnArray
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [10]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "arr": { $elemMatch: { $gte: 0, $lt: 20 } } }
+
+  - Name: CollScanQueryOnNestedObject
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [11]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "obj.nested.strM": *RandomMediumStringValue }
+
+  - Name: CollScanQueryOnObjectId
+    Type: CrudActor
+    Database: *Database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [12]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "objID": *RandomObjectId }

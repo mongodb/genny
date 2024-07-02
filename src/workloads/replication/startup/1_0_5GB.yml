@@ -23,10 +23,10 @@ Description: |
   ```
 
 Keywords:
-- startup
-- collections
-- indexes
-- defaultWC
+  - startup
+  - collections
+  - indexes
+  - defaultWC
 
 Clients:
   Default:
@@ -39,27 +39,27 @@ GlobalDefaults:
   - CollectionCount: &collectionCount 5
 
 Actors:
-- LoadInitialData:
-  LoadConfig:
-    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
-    Key: InsertDataTemplate
-    Parameters:
-      active: [0]
-      nopInPhasesUpTo: *max_phase
-      database: *database
-      collectionCount: 5
-      approxDocumentSize: 10000  # 10kB.
-      documentCount: 100000  # for an approximate total of ~1GB.
+  - LoadInitialData:
+    LoadConfig:
+      Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+      Key: InsertDataTemplate
+      Parameters:
+        active: [0]
+        nopInPhasesUpTo: *max_phase
+        database: *database
+        collectionCount: 5
+        approxDocumentSize: 10000 # 10kB.
+        documentCount: 100000 # for an approximate total of ~1GB.
 
-# By default, the write concern (WC) is set to 'majority,' and enabling 'disableSnapshotting'
-# failpoint, leading to the blocking of majority writes.
-# As many upcoming workloads in 'replication/startup,' activate the 'disableSnapshotting' failpoint,
-# it is prudent to modify the default WC to 'local.' This adjustment will ensure the success of
-# write operations in those scenarios.
-- SetDefaultWCToLocal:
-  LoadConfig:
-    Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
-    Key: SetDefaultWCToLocalTemplate
-    Parameters:
-      active: [1]
-      nopInPhasesUpTo: *max_phase
+  # By default, the write concern (WC) is set to 'majority,' and enabling 'disableSnapshotting'
+  # failpoint, leading to the blocking of majority writes.
+  # As many upcoming workloads in 'replication/startup,' activate the 'disableSnapshotting' failpoint,
+  # it is prudent to modify the default WC to 'local.' This adjustment will ensure the success of
+  # write operations in those scenarios.
+  - SetDefaultWCToLocal:
+    LoadConfig:
+      Path: "../../../phases/replication/startup/StartupPhasesTemplate.yml"
+      Key: SetDefaultWCToLocalTemplate
+      Parameters:
+        active: [1]
+        nopInPhasesUpTo: *max_phase

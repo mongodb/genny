@@ -5,7 +5,6 @@ Description: |
   a document in the collection.
   Each workload name consists of several parts: '{SyntaxType}{PredicateType}'.
   'SyntaxType' can be:
-    - 'AggregationExpression' means expressions which can be used inside $expr
     - 'MatchExpression' means operators of the find command match predicate language
   'PredicateType' can be:
     - 'NestedArray' means query which targets data that recursively nests arrays
@@ -16,11 +15,11 @@ Description: |
   document
 
 Keywords:
-- Loader
-- CrudActor
-- QuiesceActor
-- insert
-- find
+  - Loader
+  - CrudActor
+  - QuiesceActor
+  - insert
+  - find
 
 GlobalDefaults:
   Database: &Database test
@@ -28,255 +27,212 @@ GlobalDefaults:
   DocumentCount: &DocumentCount 1e6
   Repeat: &Repeat 50
   Threads: &Threads 1
-  MaxPhases: &MaxPhases 13
+  MaxPhases: &MaxPhases 8
 
 Actors:
-# Clear any pre-existing collection state.
-- Name: ClearCollection
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Threads: *Threads
-        Collection: *Collection
-        Operations:
-        - OperationName: drop
+  # Clear any pre-existing collection state.
+  - Name: ClearCollection
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: *Threads
+          Collection: *Collection
+          Operations:
+            - OperationName: drop
 
-# Insert and query documents which have the following features:
-# - 3 levels of nested arrays across 3 path components.
-# - 3 levels of nested arrays across 6 path components.
-# - 2 levels of nested arrays, each of length 10. This is intended to stress test array traversal.
-# The documents are of the following schema: ('...' denotes repeating 3 times).
-#  { n1: [ { b: [ { c: [ 1,2,3 ] }, ... ] }, ... ],
-#    n2: { b: [ { c: { d: [ { e: { f: [ 1,2,3 ] } }, ... ] } }, ... ] }
-#    n3: [ { b: [1, ..., 10] }, ..., { b: [ 91,..., 100 ] } ] } }
-- Name: InsertNestedArrayData
-  Type: Loader
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: 1
-        Database: *Database
-        Threads: *Threads
-        CollectionCount: 1
-        DocumentCount: *DocumentCount
-        BatchSize: 1000
-        Document:
-          n1: [
-            {^Repeat: {count: 3, fromGenerator: {b: [
-              {^Repeat: {count: 3, fromGenerator: {c: [1, 2, 3]}}}]}}}]
-          n2: { b: [
-            { ^Repeat: { count: 3, fromGenerator: {c: {d: [
-              { ^Repeat: { count: 3, fromGenerator: {e: {f: [1, 2, 3]}}}}]}}}}]}
-          n3: [
-            {b: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] },
-            {b: [11, 12, 13, 14, 15, 16, 17, 18, 19, 20] },
-            {b: [21, 22, 23, 24, 25, 26, 27, 28, 29, 30] },
-            {b: [31, 32, 33, 34, 35, 36, 37, 38, 39, 40] },
-            {b: [41, 42, 43, 44, 45, 46, 47, 48, 49, 50] },
-            {b: [51, 52, 53, 54, 55, 56, 57, 58, 59, 60] },
-            {b: [61, 62, 63, 64, 65, 66, 67, 68, 69, 70] },
-            {b: [71, 72, 73, 74, 75, 76, 77, 78, 79, 80] },
-            {b: [81, 82, 83, 84, 85, 86, 87, 88, 89, 90] },
-            {b: [91, 92, 93, 94, 95, 96, 97, 98, 99, 100] }]
+  # Insert and query documents which have the following features:
+  # - 3 levels of nested arrays across 3 path components.
+  # - 3 levels of nested arrays across 6 path components.
+  # - 2 levels of nested arrays, each of length 10. This is intended to stress test array traversal.
+  # The documents are of the following schema: ('...' denotes repeating 3 times).
+  #  { n1: [ { b: [ { c: [ 1,2,3 ] }, ... ] }, ... ],
+  #    n2: { b: [ { c: { d: [ { e: { f: [ 1,2,3 ] } }, ... ] } }, ... ] }
+  #    n3: [ { b: [1, ..., 10] }, ..., { b: [ 91,..., 100 ] } ] } }
+  - Name: InsertNestedArrayData
+    Type: Loader
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *Database
+          Threads: *Threads
+          CollectionCount: 1
+          DocumentCount: *DocumentCount
+          BatchSize: 1000
+          Document:
+            n1:
+              [
+                {
+                  ^Repeat:
+                    {
+                      count: 3,
+                      fromGenerator:
+                        {
+                          b:
+                            [
+                              {
+                                ^Repeat:
+                                  { count: 3, fromGenerator: { c: [1, 2, 3] } },
+                              },
+                            ],
+                        },
+                    },
+                },
+              ]
+            n2:
+              {
+                b:
+                  [
+                    {
+                      ^Repeat:
+                        {
+                          count: 3,
+                          fromGenerator:
+                            {
+                              c:
+                                {
+                                  d:
+                                    [
+                                      {
+                                        ^Repeat:
+                                          {
+                                            count: 3,
+                                            fromGenerator:
+                                              { e: { f: [1, 2, 3] } },
+                                          },
+                                      },
+                                    ],
+                                },
+                            },
+                        },
+                    },
+                  ],
+              }
+            n3:
+              [
+                { b: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] },
+                { b: [11, 12, 13, 14, 15, 16, 17, 18, 19, 20] },
+                { b: [21, 22, 23, 24, 25, 26, 27, 28, 29, 30] },
+                { b: [31, 32, 33, 34, 35, 36, 37, 38, 39, 40] },
+                { b: [41, 42, 43, 44, 45, 46, 47, 48, 49, 50] },
+                { b: [51, 52, 53, 54, 55, 56, 57, 58, 59, 60] },
+                { b: [61, 62, 63, 64, 65, 66, 67, 68, 69, 70] },
+                { b: [71, 72, 73, 74, 75, 76, 77, 78, 79, 80] },
+                { b: [81, 82, 83, 84, 85, 86, 87, 88, 89, 90] },
+                { b: [91, 92, 93, 94, 95, 96, 97, 98, 99, 100] },
+              ]
 
-- Name: QuiesceNestedArrayData
-  Type: QuiesceActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [2]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Threads: *Threads
-        Repeat: 1
+  - Name: QuiesceNestedArrayData
+    Type: QuiesceActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Threads: *Threads
+          Repeat: 1
 
-- Name: AggregationExpressionNestedArray
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [3]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {$expr: {$eq: ["$n1.b.c", 0]}}
+  - Name: MatchExpressionNestedArray
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "n1.b.c": 0 }
 
-- Name: MatchExpressionNestedArray
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [4]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {"n1.b.c": 0}
+  - Name: MatchExpressionDeeplyNestedArray
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "n2.b.c.d.e.f": 0 }
 
-- Name: AggregationExpressionDeeplyNestedArray
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [5]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {$expr: {$eq: ["$n2.b.c.d.e.f", 0]}}
+  - Name: MatchExpressionNestedArrayMissingPathSuffix
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [5]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "n1.b.z": 0 }
 
-- Name: MatchExpressionDeeplyNestedArray
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [6]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {"n2.b.c.d.e.f": 0}
+  - Name: MatchExpressionDeeplyNestedArrayMissingPathSuffix
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [6]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "n2.b.c.d.e.z": 0 }
 
-# Set of queries which query a nested field which does not exist in any array element sub-object.
-- Name: AggregationExpressionNestedArrayMissingPathSuffix
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [7]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {$expr: {$eq: ["$n1.b.z", 0]}}
-
-- Name: MatchExpressionNestedArrayMissingPathSuffix
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [8]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {"n1.b.z": 0}
-
-- Name: AggregationExpressionDeeplyNestedArrayMissingPathSuffix
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [9]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {$expr: {$eq: ["$n2.b.c.d.e.z", 0]}}
-
-- Name: MatchExpressionDeeplyNestedArrayMissingPathSuffix
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [10]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {"n2.b.c.d.e.z": 0}
-
-- Name: AggregationExpressionArrayStressTest
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [11]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {$expr: {$eq: ["$n3.b", 0]}}
-
-- Name: MatchExpressionArrayStressTest
-  Type: CrudActor
-  Database: *Database
-  Threads: *Threads
-  Phases:
-    OnlyActiveInPhases:
-      Active: [12]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Repeat: *Repeat
-        Collection: *Collection
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: {"n3.b": 0}
+  - Name: MatchExpressionArrayStressTest
+    Type: CrudActor
+    Database: *Database
+    Threads: *Threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [7]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: *Repeat
+          Collection: *Collection
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: { "n3.b": 0 }
 
 AutoRun:
-- When:
-    mongodb_setup:
-      $eq:
-      - standalone
-      - standalone-80-feature-flags
-      - standalone-all-feature-flags
-      - standalone-classic-query-engine
-      - standalone-heuristic-bonsai
-      - standalone-query-stats
-      - standalone-sampling-bonsai
-      - standalone-sbe
-      - replica
-    branch_name:
-      $neq:
-      - v4.0
-      - v4.2
-      - v4.4
-      - v5.0
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - standalone-sbe
+          - standalone-classic-query-engine
+      branch_name:
+        $neq:
+          - v4.0
+          - v4.2
+          - v4.4
+          - v5.0

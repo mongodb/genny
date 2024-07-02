@@ -9,18 +9,18 @@ Description: >
   killed.
 
 Keywords:
-- CrudActor
-- indexes
-- Loader
-- memory
-- planning
-- scale
-- stress
+  - CrudActor
+  - indexes
+  - Loader
+  - memory
+  - planning
+  - scale
+  - stress
 
 GlobalDefaults:
   MaxPhases: &MaxPhases 2
   # The amount of documents here is important. Since trial-runs in the query planner "tournament"
-  # will only use ~30% of total document count, increasing the number of total documents helps
+  # will only use ~30% of total document count, increasing the number of total documents helps
   # reproduce the issue sooner.
   NumDocuments: &NumDocuments 30000000
   PerfTagDocs: &PerfTagDocs 300
@@ -33,71 +33,69 @@ Clients:
   Default:
     QueryOptions:
       maxPoolSize: 1100
-      socketTimeoutMS: 7_200_000  # = 2 hour
+      socketTimeoutMS: 7_200_000 # = 2 hour
       connectTimeoutMS: 7_200_000
 
 Actors:
 
-# Phases:
-# 1. Insert documents.
-# 2. Generate multi-plan storm.
+  # Phases:
+  # 1. Insert documents.
+  # 2. Generate multi-plan storm.
 
-- Name: InsertData
-  Type: Loader
-  Threads: 10
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Database: &DB test
-        Blocking: None
-        MultipleThreadsPerCollection: true
-        CollectionCount: 1  # Collection name will be Collection0, this is not configurable.
-        DocumentCount: *NumDocuments
-        BatchSize: 1000
-        Document:
-          SpaceId: 5
-          Type: 6
-          Tags:
-            - {^Choose: {from: ['perf', {^FastRandomString: {length: 7}}], weights: [*PerfTagDocs, *RandomTagDocs]}}
-        Indexes:
-          - keys: { SpaceId: 1 }
-          - keys: { Type: 1 }
-          - keys: { Tags: 1 }
-          - keys: { SpaceId: 1, Type: 1 }
-          - keys: { SpaceId: 1, Tags: 1 }
-          - keys: { Type: 1, Tags: 1 }
-          - keys: { SpaceId: 1, Type: 1, Tags: 1 }
+  - Name: InsertData
+    Type: Loader
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Database: &DB test
+          Blocking: None
+          MultipleThreadsPerCollection: true
+          CollectionCount: 1 # Collection name will be Collection0, this is not configurable.
+          DocumentCount: *NumDocuments
+          BatchSize: 1000
+          Document:
+            SpaceId: 5
+            Type: 6
+            Tags:
+              - {^Choose: {from: ['perf', {^FastRandomString: {length: 7}}], weights: [*PerfTagDocs, *RandomTagDocs]}}
+          Indexes:
+            - keys: {SpaceId: 1}
+            - keys: {Type: 1}
+            - keys: {Tags: 1}
+            - keys: {SpaceId: 1, Type: 1}
+            - keys: {SpaceId: 1, Tags: 1}
+            - keys: {Type: 1, Tags: 1}
+            - keys: {SpaceId: 1, Type: 1, Tags: 1}
 
-- Name: MultiPlanStorm
-  Type: CrudActor
-  Database: *DB
-  Threads: 1000
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Duration: 30 minutes
-        Collection: Collection0
-        Operations:
-        - OperationName: find
-          OperationCommand:
-            Filter: { $and:
-              [
-              { SpaceId: { $eq: 5 } },
-              { Type: { $eq: 6 } },
-              { Tags: { $regex: "/erf$/", $options: "i"}},
-              { Tags: { $regex: "/^per$/", $options: "i"}},
-              { Tags: { $regex: "/^perf$/", $options: "i"}},
-              ]
-            }
+  - Name: MultiPlanStorm
+    Type: CrudActor
+    Database: *DB
+    Threads: 1000
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Duration: 30 minutes
+          Collection: Collection0
+          Operations:
+            - OperationName: find
+              OperationCommand:
+                Filter: {$and: [
+                  {SpaceId: {$eq: 5}},
+                  {Type: {$eq: 6}},
+                  {Tags: {$regex: "/erf$/", $options: "i"}},
+                  {Tags: {$regex: "/^per$/", $options: "i"}},
+                  {Tags: {$regex: "/^perf$/", $options: "i"}}
+                ]}
 
 # The workload is expected to cause an OOM kill. Keep AutoRun disabled.
 # AutoRun:
 # - When:
 #     mongodb_setup:
 #       $eq:
-#       - single-replica
+#       - replica
 

@@ -8,13 +8,13 @@ Description: |
   from the query subsystem.
 
 Keywords:
-- CrudActor
-- Loader
-- memory
-- scale
-- stress
-- updateOne
-- WriteConflict
+  - CrudActor
+  - Loader
+  - memory
+  - scale
+  - stress
+  - updateOne
+  - WriteConflict
 
 GlobalDefaults:
   MaxPhases: &MaxPhases 2
@@ -26,53 +26,53 @@ Clients:
 
 Actors:
 
-# Phases:
-# 1. Insert a single document close to the 16MiB limit.
-# 2. Use 10k threads attempting to update the same document.
+  # Phases:
+  # 1. Insert a single document close to the 16MiB limit.
+  # 2. Use 10k threads attempting to update the same document.
 
-- Name: InsertData
-  Type: Loader
-  Threads: 1
-  Phases:
-    OnlyActiveInPhases:
-      Active: [0]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Database: &DB test
-        Repeat: 1
-        Threads: 1
-        CollectionCount: 1  # Collection name will be Collection0, this is not configurable.
-        DocumentCount: 1
-        BatchSize: 1
-        Document:
-          _id: 0
-          data: {^FastRandomString: {length: 16000000}}
-          a: 0
+  - Name: InsertData
+    Type: Loader
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Database: &DB test
+          Repeat: 1
+          Threads: 1
+          CollectionCount: 1 # Collection name will be Collection0, this is not configurable.
+          DocumentCount: 1
+          BatchSize: 1
+          Document:
+            _id: 0
+            data: {^FastRandomString: {length: 16000000}}
+            a: 0
 
-- Name: PerformUpdates
-  Type: CrudActor
-  Database: *DB
-  Threads: 10000
-  Phases:
-    OnlyActiveInPhases:
-      Active: [1]
-      NopInPhasesUpTo: *MaxPhases
-      PhaseConfig:
-        Duration: 10 minutes
-        Collection: Collection0
-        Operations:
-        - OperationName: updateOne
-          OperationCommand:
-            Filter: {_id: 0 }
-            Update: {$set: {a: { ^RandomInt: { min: 0, max: 10000000 }}}}
-            Options:
-              WriteConcern:
-              Level: majority
+  - Name: PerformUpdates
+    Type: CrudActor
+    Database: *DB
+    Threads: 10000
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Duration: 10 minutes
+          Collection: Collection0
+          Operations:
+            - OperationName: updateOne
+              OperationCommand:
+                Filter: {_id: 0}
+                Update: {$set: {a: {^RandomInt: {min: 0, max: 10000000}}}}
+                Options:
+                  WriteConcern:
+                  Level: majority
 
 # The workload is expected to cause an OOM kill. Keep AutoRun disabled.
 # AutoRun:
 # - When:
 #     mongodb_setup:
 #       $eq:
-#       - single-replica
+#       - replica
 
