@@ -217,5 +217,4 @@ AutoRun:
           - replica
           - atlas-like-replica.2022-10
       branch_name:
-        # TODO PERF-5539 Change the version to v6.0
-        $gte: v7.0
+        $gte: v6.0
