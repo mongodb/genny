@@ -155,6 +155,7 @@ AutoRun:
   - When:
       mongodb_setup:
         $eq:
+          - single-replica-all-feature-flags
           - standalone
           - standalone-80-feature-flags
           - standalone-all-feature-flags

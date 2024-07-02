@@ -404,6 +404,7 @@ AutoRun:
   - When:
       mongodb_setup:
         $eq:
+          - single-replica-all-feature-flags
           - standalone-sbe
           - standalone-80-feature-flags # At time of writing this will enable PM-3591.
           - standalone-all-feature-flags # At time of writing this will enable PM-3591.
