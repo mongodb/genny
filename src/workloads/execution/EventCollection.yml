@@ -1,0 +1,71 @@
+SchemaVersion: 2018-07-01
+Owner: Storage Execution
+Description: |
+  Inserts many documents into an event collection.
+
+GlobalDefaults:
+  Collection: &Collection Collection0
+  Database: &db test
+
+Actors:
+  - Name: CreateEventCollection
+    Type: RunCommand
+    Phases:
+      - Repeat: 1
+        Database: *db
+        Operation:
+          OperationName: RunCommand
+          OperationCommand:
+            drop: *Collection
+      - Repeat: 1
+        Database: *db
+        Operation:
+          OperationName: RunCommand
+          OperationCommand:
+            create: *Collection
+            clusteredIndex:
+              { key: { _id: 1 }, unique: true, autoAssign: "timestamp" }
+      - &Nop { Nop: true }
+  - Name: Insert
+    Type: Loader
+    Database: *db
+    Threads: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - Repeat: 1
+        Database: *db
+        Threads: 1
+        CollectionCount: 1
+        DocumentCount: 1000000
+        BatchSize: 1000
+        Document:
+          loc2d:
+            &loc2d [
+              { ^RandomInt: { min: -180, max: 180 } },
+              { ^RandomInt: { min: -180, max: 180 } },
+            ]
+          loc2dSphere:
+            &loc2dSphere [
+              { ^RandomInt: { min: -180, max: 180 } },
+              { ^RandomInt: { min: -90, max: 90 } },
+            ]
+          point:
+            &point {
+              type: Point,
+              coordinates:
+                [
+                  { ^RandomInt: { min: -180, max: 180 } },
+                  { ^RandomInt: { min: -90, max: 90 } },
+                ],
+            }
+          randomString: &randomString { ^RandomString: { length: 16 } }
+          randomInt:
+            &randomInt { ^RandomInt: { min: -10000000, max: 10000000 } }
+          attributes:
+            &attributes {
+              color: *randomString,
+              size: *randomString,
+              inside: { bookmark: *randomInt, postitnote: *randomInt },
+              outside: { dustcover: *randomString },
+            }
