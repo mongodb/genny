@@ -110,4 +110,5 @@ AutoRun:
           - standalone-classic-query-engine
           - standalone-sbe
           - replica
+          - replica-all-feature-flags
 

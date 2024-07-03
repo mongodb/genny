@@ -98,4 +98,5 @@ AutoRun:
           - standalone-all-feature-flags
           - standalone
           - replica
+          - replica-all-feature-flags
           - atlas-like-replica.2022-10
