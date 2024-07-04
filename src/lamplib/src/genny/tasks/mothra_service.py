@@ -33,7 +33,7 @@ class MothraService:
         mothra_dir = os.path.join(self.genny_repo_root, "mothra")
         if not os.path.exists(mothra_dir):
             raise FileNotFoundError(
-                "Mothra repository does not exist on your system. Please clone the repository in src/ using: git clone git@github.com:10gen/mothra.git"
+                "Mothra repository does not exist on your system. Please clone the repository in src/ using: git clone https://github.com/10gen/mothra.git"
             )
 
         teams = []
