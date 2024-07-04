@@ -231,7 +231,6 @@ tasks:
 
 task_groups:
   - &a_compile_and_test
-
     name: tg_compile_and_test
     max_hosts: 1
     teardown_task:
@@ -292,7 +291,6 @@ task_groups:
 ##                ⚡️ Functions ⚡️
 
 functions:
-
   f_fetch_source:
     - command: manifest.load
     - command: git.get_project
@@ -498,11 +496,13 @@ functions:
 
 modules:
   - name: mongo
-    repo: git@github.com:mongodb/mongo.git
+    owner: 10gen
+    repo: mongo
     # This prefix is relative to the path in git.get_project
     # I.e., src/genny/../../src = ./src
     prefix: ../../src
     branch: master
   - name: mothra
-    repo: git@github.com:10gen/mothra.git
+    owner: 10gen
+    repo: mothra
     branch: main

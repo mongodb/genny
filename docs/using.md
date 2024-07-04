@@ -456,7 +456,7 @@ Try using `python test_result_summary.py --help` for more options.
 
     To run `self-test` it is required that the [Mothra repository](https://github.com/10gen/mothra/) exists at the root of the repository.
     ```bash
-    git clone git@github.com:10gen/mothra.git 
+    git clone https://github.com/10gen/mothra.git
     ```
 
     ```bash
