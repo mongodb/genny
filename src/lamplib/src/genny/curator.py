@@ -134,6 +134,32 @@ def translate(
     subprocess.run(args, check=True)
 
 
+# Calculate rollups from all FTDC outputs.
+def calculate_rollups(output_dir: str, workspace_root: str, genny_repo_root: str) -> None:
+    curator = _find_curator(workspace_root, genny_repo_root)
+    if not curator:
+        raise OSError("Could not find Curator.")
+    for root, dirs, files in os.walk(output_dir):
+        for file in files:
+            if file.endswith(".ftdc"):
+                ftdc_file_name = os.path.join(root, file)
+                rollup_file_name = ftdc_file_name.replace(".ftdc", ".json")
+                SLOG.info(
+                    "Creating perf rollup from FTDC file.",
+                    ftdc_file=ftdc_file_name,
+                    output=rollup_file_name,
+                )
+                args = [
+                    curator,
+                    "calculate-rollups",
+                    "--inputFile",
+                    ftdc_file_name,
+                    "--outputFile",
+                    rollup_file_name,
+                ]
+                subprocess.run(args, stderr=subprocess.STDOUT, text=True)
+
+
 @contextmanager
 def poplar_grpc(cleanup_metrics: bool, workspace_root: str, genny_repo_root: str):
     args = _get_poplar_args(workspace_root=workspace_root, genny_repo_root=genny_repo_root)
@@ -244,7 +270,7 @@ class CuratorDownloader(Downloader):
     # These build IDs are from the Curator Evergreen task.
     # https://evergreen.mongodb.com/waterfall/curator
 
-    CURATOR_VERSION = "a1293258b30e04ea503e6b91b6b1628789e90093"
+    CURATOR_VERSION = "fa0dfec710dfbe2fb47c15d5800e978717f23614"
 
     DISTRO_MAPPING = {
         "archlinux": "linux-amd64",

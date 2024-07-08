@@ -1,17 +1,24 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  The goal of this test is to exercise multiplanning. We run the same query 7 times, each one with a
-  different selectivity value that we are comparing against x1, calcuated based on the number of
-  documents we want the query to match. This will help us measure the overhead of throwing out the
-  result set gathered during multi-planning when the result set exceeds 101 documents.  Unlike many
-  of the other multiplanner/ workloads, we only test with 2 indexes here, because 2 indexes is a
-  worst case for throwing away results. Having more indexes increases planning time, but not query
-  execution time, so having more indexes makes the *relative* cost of throwing away results smaller.
+  The goal of this test is to measure the overhead of "throwing out" the initial results returned by
+  multiplanning.
 
-  We expect classic to have better latency and throughput than SBE on this workload,
-  and we expect the combination of classic planner + SBE execution (PM-3591) to perform about
-  as well as classic.
+  When a query runs with Classic multiplanner + Classic execution, then when multiplanning finishes
+  the query can resume running and reuse the partial results it gathered during multiplanning. By
+  contrast when running with SBE execution, the query has
+  to start over--unless it already finished during multiplanning. This means SBE has a
+  discontinuity in performance as the size of the result set grows: when it crosses from 100 to
+  102 documents, it has to recompute those first ~100 documents.
+
+  To measure this, we run the same query 7 times, each one with a different selectivity value.
+  For example, in phase 'MultiplannerWith50ExpectedResults' we choose a selectivity of
+  '50 / collectionSize' to make the query return (approximately) 50 documents.
+
+  Unlike many of the other multiplanner/ workloads, we only test with 2 indexes here, because
+  2 indexes is a worst case for throwing away results. Having more indexes increases planning
+  time, but not query execution time, so having more indexes makes the *relative* cost of
+  throwing away results smaller.
 
 GlobalDefaults:
   dbname: &db test

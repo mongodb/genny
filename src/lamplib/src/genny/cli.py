@@ -367,6 +367,14 @@ def benchmark_test(ctx: click.Context) -> None:
     help=("Run with every phase of every actor having repeat: 1."),
 )
 @click.option(
+    "-r",
+    "--calculate-rollups",
+    required=False,
+    default=False,
+    is_flag=True,
+    help=("Whether to automatically calculate rollups from all created FTDC files. "),
+)
+@click.option(
     "-b",
     "--debug",
     required=False,
@@ -387,6 +395,7 @@ def workload(
     override: str,
     dry_run: bool,
     smoke_test: bool,
+    calculate_rollups: bool,
     debug: bool,
 ):
     from genny.tasks import genny_runner
@@ -405,6 +414,7 @@ def workload(
         workspace_root=ctx.obj["WORKSPACE_ROOT"],
         cleanup_metrics=True,
         hang=debug,
+        should_calculate_rollups=calculate_rollups,
     )
 
 
@@ -584,7 +594,7 @@ def self_test(ctx: click.Context):
 def lint_yaml(ctx: click.Context, lint_format: bool):
     from genny.tasks.yaml_linter import YamlLinter
 
-    YamlLinter().lint(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"], lint_format=lint_format)
+    YamlLinter(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"]).lint(lint_format=lint_format)
 
 
 @cli.command(name="generate-docs", help="Generate documentation for all workloads.")
@@ -592,7 +602,7 @@ def lint_yaml(ctx: click.Context, lint_format: bool):
 def generate_docs(ctx: click.Context):
     from genny.tasks.documentation_generator import DocumentationGenerator
 
-    DocumentationGenerator().generate(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"])
+    DocumentationGenerator(genny_repo_root=ctx.obj["GENNY_REPO_ROOT"]).generate()
 
 
 @cli.command(

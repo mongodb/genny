@@ -3,13 +3,7 @@ Owner: "@mongodb/query"
 Description: |
   The goal of this test is to exercise multiplanning with multikey indexes. We create many indexes and
   run a query that makes all of them eligible, so we get as many competing plans as possible. Because
-  an IXSCAN of a multikey index has to deduplicate RIDs, a lot of space will be used. The classic
-  multi-planner will behave more optimally than the SBE multiplanner because it will cut off execution
-  when the one good plan reaches the end.
-
-  We expect classic to have better latency and throughput than SBE on this workload,
-  and we expect the combination of classic planner + SBE execution (PM-3591) to perform about
-  as well as classic.
+  an IXSCAN of a multikey index has to deduplicate RIDs, a lot of space will be used.
 
 GlobalDefaults:
   dbname: &db test

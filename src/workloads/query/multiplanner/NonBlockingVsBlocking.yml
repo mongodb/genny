@@ -1,16 +1,19 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  The goal of this test is to exercise multiplanning. If the selectivity value is small enough (less
-  than 0.5), the optimal plan is to employ a blocking plan by scanning a segment of empty data and
-  conducting a blocking-sort operation, whereas the other plans' index provides the right sort
-  order, but requires a full scan, and every document is rejected after the FETCH stage. Because the
-  SBE multiplanner can't round-robin, it has a heuristic "try nonblocking plans first".  This
-  scenario is a worst case for that heuristic, because we'll try the best plan last. Otherwise, an
-  IXSCAN and FETCH non-blocking plan will be used.
+  The goal of this test is to exercise multiplanning when both blocking and non-blocking plans are
+  available.
 
-  We expect classic to have better latency and throughput than SBE on this workload, and we expect
-  the combination of classic planner + SBE execution (PM-3591) to perform about as well as classic.
+  If the selectivity value is small enough (less than 0.5), the optimal plan is to scan a narrow
+  range of an index and then blocking sort. An alternative, suboptimal query plan does a full scan
+  of an index that provides the right sort order, and requires fetching each document before running
+  a very selective residual predicate: this means each getNext() has to scan many index entries
+  (1/selectivity on average).
+
+  This case shows that it's important for the multiplanner to round-robin the execution of the candidate
+  plans. Historically (in an alternative multiplanner based on SBE execution) we have tried a simpler
+  strategy that runs the candidates sequentially, starting with the nonblocking plans--this heuristic
+  does not work, because a nonblocking plan can still do an unbounded amount of work per getNext().
 
 GlobalDefaults:
   dbname: &db test

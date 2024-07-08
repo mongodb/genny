@@ -235,7 +235,7 @@ def _setup_resmoke(
     if not os.path.exists(mongo_repo_path):
         SLOG.info("Mongo repo doesn't exist. Checking it out.", mongo_repo_path=mongo_repo_path)
         cmd_runner.run_command(
-            cmd=["git", "clone", "git@github.com:mongodb/mongo.git", mongo_repo_path],
+            cmd=["git", "clone", "https://github.com/mongodb/mongo.git", mongo_repo_path],
             cwd=workspace_root,
             check=True,
             capture=False,

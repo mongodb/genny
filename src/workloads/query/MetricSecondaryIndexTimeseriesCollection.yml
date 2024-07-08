@@ -93,7 +93,6 @@ AutoRun:
           - replica
           - replica-80-feature-flags
           - replica-all-feature-flags
-          - replica-query-stats-rate-limit
       branch_name:
         $neq:
           - v4.0
