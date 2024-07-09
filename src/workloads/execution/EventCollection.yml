@@ -3,6 +3,11 @@ Owner: Storage Execution
 Description: |
   Insert documents into an event collection.
 
+Keywords:
+  - event
+  - RunCommand
+  - Loader
+
 GlobalDefaults:
   Collection: &Collection Collection0
   Database: &db test
