@@ -12,6 +12,8 @@ GlobalDefaults:
   Collection: &Collection Collection0
   Database: &db test
   MaxPhases: &MaxPhases 4
+  DocumentCount: &DocumentCount 1000000
+  BatchSize: &BatchSize 1000
 
 Actors:
   - Name: CreateEventCollection
@@ -24,7 +26,6 @@ Actors:
         PhaseConfig:
           Repeat: 1
           Database: *db
-          Threads: 1
           Operation:
             OperationName: RunCommand
             OperationCommand:
@@ -43,8 +44,8 @@ Actors:
           Database: *db
           Threads: 1
           CollectionCount: 1
-          DocumentCount: 1000000
-          BatchSize: 1000
+          DocumentCount: *DocumentCount
+          BatchSize: *BatchSize
           Document:
             randomString: &randomString { ^RandomString: { length: 16 } }
             randomInt:
@@ -68,8 +69,8 @@ Actors:
           Database: *db
           MultipleThreadsPerCollection: true
           CollectionCount: 1
-          DocumentCount: 1000000
-          BatchSize: 1000
+          DocumentCount: *DocumentCount
+          BatchSize: *BatchSize
           Document:
             randomString: *randomString
             randomInt: *randomInt
@@ -86,8 +87,8 @@ Actors:
           Database: *db
           MultipleThreadsPerCollection: true
           CollectionCount: 1
-          DocumentCount: 1000000
-          BatchSize: 1000
+          DocumentCount: *DocumentCount
+          BatchSize: *BatchSize
           Document:
             randomString: *randomString
             randomInt: *randomInt
@@ -104,8 +105,8 @@ Actors:
           Database: *db
           MultipleThreadsPerCollection: true
           CollectionCount: 1
-          DocumentCount: 1000000
-          BatchSize: 1000
+          DocumentCount: *DocumentCount
+          BatchSize: *BatchSize
           Document:
             randomString: *randomString
             randomInt: *randomInt
