@@ -195,3 +195,97 @@ def generate_all_data(dirpath, n_docs, n_queries):
     print(n_docs)
     generate_rc_all_inserts(dirpath, n_docs)
     generate_rc_all_queries(dirpath, n_queries)
+
+compact1_smallspace_file = 'data/compact_zipfsmall.txt'
+compact1_largespace_file = 'data/compact_zipflarge.txt'
+compact2_smallsupport_file = 'data/compact_small_support.txt'
+compact2_freqone_file = 'data/compact_contiguous_freq_one.txt'
+compact2_smallsupport_queries_pattern = 'queries/compact_small_support_{}.txt'
+compact2_freqone_queries_pattern = 'queries/compact_contiguous_freq_one_{}.txt'
+
+def generate_compact1_inserts(basedir, n_docs):
+    # ZipfOverSmallSpace
+    freqlist1 = get_zipf_freqlist(n_docs, 200, 1.1)
+    data1 = []
+    for i in range(200):
+        data1 += [i] * freqlist1[i]
+    assert len(data1) == n_docs
+    random.shuffle(data1)
+
+    # ZipfOverLargeSpace
+    freqlist2 = get_zipf_freqlist(n_docs, 10000, 1.1)
+    data2 = []
+    for i in range(10000):
+        data2 += [i * 0.01] * freqlist2[i]
+    assert len(data2) == n_docs
+    random.shuffle(data2)
+
+    with open(basedir + compact1_smallspace_file, "w") as f:
+        f.write("\n".join([str(z) for z in data1]))
+
+    with open(basedir + compact1_largespace_file, "w") as f:
+        f.write("\n".join([str(round(z, 2)) for z in data2]))
+
+def generate_compact2_inserts(basedir, n_docs):
+    # OneFieldSmallSupport
+    ub = 2 ** 31 - 1
+    n_ub_docs = int(math.floor(n_docs * 0.99))
+    n_other_docs = n_docs - n_ub_docs
+    data1 = [ub] * n_ub_docs
+    data1 += [random.randint(0, ub - 1) for _ in range(n_other_docs)]
+    random.shuffle(data1)
+
+    # ContiguousValuesFreqOne (only int field)
+    data2 = list(range(1, n_docs + 1))
+    random.shuffle(data2)
+
+    with open(basedir + compact2_smallsupport_file, "w") as f:
+        f.write("\n".join([str(z) for z in data1]))
+
+    with open(basedir + compact2_freqone_file, "w") as f:
+        f.write("\n".join([str(z) for z in data2]))
+
+def generate_compact2_queries(basedir, n_queries):
+    # OneFieldSmallSupport
+    ub = 2 ** 31 - 1
+    max_size = 2 ** 21 - 1
+    queries1 = []
+    for i in range(n_queries):
+        mn = random.randint(0, ub - max_size)
+        sz = random.randint(1, max_size)
+        mx = mn + sz - 1
+        queries1.append((mn, mx))
+
+    # ContiguousValuesFreqOne
+    queries2 = []
+    for i in range(n_queries):
+        mn = random.randint(200000, 2 ** 31 - 1)
+        mx = random.randint(mn, 2 ** 31 - 1)
+        queries2.append((mn, mx))
+
+    with open(basedir + compact2_smallsupport_queries_pattern.format('min'), "w") as f:
+        f.write("\n".join([str(mn) for (mn, mx) in queries1]))
+    with open(basedir + compact2_smallsupport_queries_pattern.format('max'), "w") as f:
+        f.write("\n".join([str(mx) for (mn, mx) in queries1]))
+
+    with open(basedir + compact2_freqone_queries_pattern.format('min'), "w") as f:
+        f.write("\n".join([str(mn) for (mn, mx) in queries2]))
+    with open(basedir + compact2_freqone_queries_pattern.format('max'), "w") as f:
+        f.write("\n".join([str(mx) for (mn, mx) in queries2]))
+
+def generate_compact1_data(dirpath, n_docs):
+    random.seed(42)
+    try:
+        os.makedirs(dirpath + '/data')
+    except:
+        pass
+    generate_compact1_inserts(dirpath, n_docs)
+
+def generate_compact2_data(dirpath, n_docs, n_queries):
+    random.seed(42)
+    try:
+        os.makedirs(dirpath + '/data')
+    except:
+        pass
+    generate_compact2_inserts(dirpath, n_docs)
+    generate_compact2_queries(dirpath, n_queries)

@@ -1,0 +1,459 @@
+SchemaVersion: 2018-07-01
+Owner: Server Security
+Description: |
+  QE Range Cleanup/Compact Experiment
+Keywords:
+- Queryable Encryption
+
+GlobalDefaults:
+  MyDatabase: &encrypted_db genny_release_criteria
+  MyCollection: &encrypted_coll my_coll
+  NopAlias: &nop {Nop: true}
+  MaxPhases: &MaxPhases 3
+Encryption:
+  
+  UseCryptSharedLib: true
+  CryptSharedLibPath: /data/workdir/mongocrypt/lib/mongo_crypt_v1.so 
+  EncryptedCollections:
+  - Database: *encrypted_db
+    Collection: *encrypted_coll
+    EncryptionType: queryable
+
+    QueryableEncryptedFields:
+      field1: { type: "int", queries: [{queryType: "range", min: -2147483648, max: 2147483647, contention: 8, sparsity: 2, trimFactor: 6}] }
+Clients:
+  EncryptedPool:
+    QueryOptions:
+      maxPoolSize: 400
+    EncryptionOptions:
+      KeyVaultDatabase: "keyvault"
+      KeyVaultCollection: "datakeys"
+      EncryptedCollections:
+      - genny_release_criteria.my_coll
+
+ActorTemplates:
+- TemplateName: InsertTemplate
+  Config: 
+    Name: {^Parameter: {Name: "Name", Default: "unused"}}
+    Type: CrudActor
+    Threads: 1
+    Database: *encrypted_db
+    ClientName: EncryptedPool
+    Phases: 
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: Phase, Default: {unused: ...}}}]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 6250
+          MetricsName: "load"
+          Collection: *encrypted_coll
+          Operations:
+          - OperationName: insertOne
+            OperationMetricsName: insert
+            OperationCommand:
+              Document:
+                field1: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing//data/compact_contiguous_freq_one.txt", "sequential": true, "startFromLine": &StartLine {^Parameter: {Name: "StartLine", Default: -1}}}}}}
+
+- TemplateName: QueryTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: "unused"}}
+    Type: CrudActor
+    Threads: 1
+    Database: *encrypted_db
+    ClientName: EncryptedPool
+    Phases:
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: Phase, Default: {unused: ...}}}]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 6250
+          MetricsName: "query"
+          Collection: *encrypted_coll
+          Operations:
+          - OperationName: find
+            OperationMetricsName: query
+            OperationCommand:
+              Filter: { field1: {
+                  $gte: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing//queries/compact_contiguous_freq_one_min.txt", "sequential": true, "startFromLine": *StartLine}}}},
+                  $lte: {^ConvertToInt32: {from: {^ChooseFromDataset:{"path": "./src/genny/src/workloads/contrib/qe_range_testing//queries/compact_contiguous_freq_one_max.txt", "sequential": true, "startFromLine": *StartLine}}}}
+                }
+              }
+
+Actors: 
+  
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread0
+        StartLine: 0
+        Phase: 0
+    
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread1
+        StartLine: 6250
+        Phase: 0
+    
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread2
+        StartLine: 12500
+        Phase: 0
+    
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread3
+        StartLine: 18750
+        Phase: 0
+    
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread4
+        StartLine: 25000
+        Phase: 0
+    
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread5
+        StartLine: 31250
+        Phase: 0
+    
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread6
+        StartLine: 37500
+        Phase: 0
+    
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread7
+        StartLine: 43750
+        Phase: 0
+    
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread8
+        StartLine: 50000
+        Phase: 0
+    
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread9
+        StartLine: 56250
+        Phase: 0
+    
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread10
+        StartLine: 62500
+        Phase: 0
+    
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread11
+        StartLine: 68750
+        Phase: 0
+    
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread12
+        StartLine: 75000
+        Phase: 0
+    
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread13
+        StartLine: 81250
+        Phase: 0
+    
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread14
+        StartLine: 87500
+        Phase: 0
+    
+  - ActorFromTemplate: 
+      TemplateName: InsertTemplate
+      TemplateParameters: 
+        Name: InsertActor_Thread15
+        StartLine: 93750
+        Phase: 0
+    
+
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: BeforeCompact_QueryActor_Thread0
+        StartLine: 0
+        Phase: 1
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: BeforeCompact_QueryActor_Thread1
+        StartLine: 6250
+        Phase: 1
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: BeforeCompact_QueryActor_Thread2
+        StartLine: 12500
+        Phase: 1
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: BeforeCompact_QueryActor_Thread3
+        StartLine: 18750
+        Phase: 1
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: BeforeCompact_QueryActor_Thread4
+        StartLine: 25000
+        Phase: 1
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: BeforeCompact_QueryActor_Thread5
+        StartLine: 31250
+        Phase: 1
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: BeforeCompact_QueryActor_Thread6
+        StartLine: 37500
+        Phase: 1
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: BeforeCompact_QueryActor_Thread7
+        StartLine: 43750
+        Phase: 1
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: BeforeCompact_QueryActor_Thread8
+        StartLine: 50000
+        Phase: 1
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: BeforeCompact_QueryActor_Thread9
+        StartLine: 56250
+        Phase: 1
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: BeforeCompact_QueryActor_Thread10
+        StartLine: 62500
+        Phase: 1
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: BeforeCompact_QueryActor_Thread11
+        StartLine: 68750
+        Phase: 1
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: BeforeCompact_QueryActor_Thread12
+        StartLine: 75000
+        Phase: 1
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: BeforeCompact_QueryActor_Thread13
+        StartLine: 81250
+        Phase: 1
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: BeforeCompact_QueryActor_Thread14
+        StartLine: 87500
+        Phase: 1
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: BeforeCompact_QueryActor_Thread15
+        StartLine: 93750
+        Phase: 1
+
+
+  - Name: CompactCleanupActor
+    Type: RunCommand
+    Threads: 1
+    ClientName: EncryptedPool
+    Phases: 
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *encrypted_db
+          Operations:
+          - OperationMetricsName: compact
+            OperationName: RunCommand 
+            OperationCommand:
+              compactStructuredEncryptionData: *encrypted_coll 
+              anchorPaddingFactor: 1.0 
+
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: AfterCompact_QueryActor_Thread0
+        StartLine: 0
+        Phase: 3
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: AfterCompact_QueryActor_Thread1
+        StartLine: 6250
+        Phase: 3
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: AfterCompact_QueryActor_Thread2
+        StartLine: 12500
+        Phase: 3
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: AfterCompact_QueryActor_Thread3
+        StartLine: 18750
+        Phase: 3
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: AfterCompact_QueryActor_Thread4
+        StartLine: 25000
+        Phase: 3
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: AfterCompact_QueryActor_Thread5
+        StartLine: 31250
+        Phase: 3
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: AfterCompact_QueryActor_Thread6
+        StartLine: 37500
+        Phase: 3
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: AfterCompact_QueryActor_Thread7
+        StartLine: 43750
+        Phase: 3
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: AfterCompact_QueryActor_Thread8
+        StartLine: 50000
+        Phase: 3
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: AfterCompact_QueryActor_Thread9
+        StartLine: 56250
+        Phase: 3
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: AfterCompact_QueryActor_Thread10
+        StartLine: 62500
+        Phase: 3
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: AfterCompact_QueryActor_Thread11
+        StartLine: 68750
+        Phase: 3
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: AfterCompact_QueryActor_Thread12
+        StartLine: 75000
+        Phase: 3
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: AfterCompact_QueryActor_Thread13
+        StartLine: 81250
+        Phase: 3
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: AfterCompact_QueryActor_Thread14
+        StartLine: 87500
+        Phase: 3
+
+  - ActorFromTemplate:
+      TemplateName: QueryTemplate
+      TemplateParameters:
+        Name: AfterCompact_QueryActor_Thread15
+        StartLine: 93750
+        Phase: 3
+
+       
+
+  - Name: LoggingActor0
+    Type: LoggingActor
+    Threads: 1
+    Phases:
+      - Phase: 0..3
+        LogEvery: 5 minutes
+        Blocking: None
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - single-replica-fle
+      - shard-lite-fle
+    branch_name:
+      $gte: v8.0
