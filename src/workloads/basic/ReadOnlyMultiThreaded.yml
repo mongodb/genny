@@ -3,14 +3,22 @@ Owner: Product Performance
 Description: |
   Runs a multi-threaded, read-only workload comprising of `findOne` commands that all target the 
   same document. The workload inserts a single document and then spawns multiple worker threads to 
-  retrieve it.
+  retrieve it. The primary objective of this benchmark is to produce stable results that would help 
+  with identifying regressions introduced by individual commits, and not necessarily measuring the 
+  end-to-end database performance. Therefore, look for the average throughput and latency of running
+  `findOne` commands reported by this benchmark.
+Keywords:
+  - findOne
+  - MultiThreaded
+  - stable
+  - autoReverter
 
 GlobalDefaults:
   Nop: &Nop {Nop: true}
   Database: &Database test
   Collection: &Collection test
   PaddingLength: &PaddingLength 64 # bytes
-  WarmUpPeriod: &WarmUpPeriod 30 seconds
+  WarmUpPeriod: &WarmUpPeriod 30 seconds # Warm up connections before running `findOne` operations.
   RunPeriod: &RunPeriod 5 minutes
   Threads: &Threads 64
 
