@@ -7,6 +7,29 @@ We parse the `keywords`, `owner`, `description`, and the workload name from each
 If you want to update the documentation please update the workload's respective yaml file, run `./run-genny generate-docs`, and commit the changes.
 
 
+## [ReadOnlyMultiThreaded](https://www.github.com/mongodb/genny/blob/master/src/workloads/basic/ReadOnlyMultiThreaded.yml)
+### Owner 
+Product Performance 
+
+
+### Support Channel
+[#performance](https://mongodb.enterprise.slack.com/archives/C0V3KSB52)
+
+
+### Description
+Runs a multi-threaded, read-only workload comprising of `findOne` commands that all target the
+same document. The workload inserts a single document and then spawns multiple worker threads to
+retrieve it. The primary objective of this benchmark is to produce stable results that would help
+with identifying regressions introduced by individual commits, and not necessarily measuring the
+end-to-end database performance. Therefore, look for the average throughput and latency of running
+`findOne` commands reported by this benchmark.
+
+  
+
+### Keywords
+findOne, MultiThreaded, stable, autoReverter 
+
+
 ## [ChangeEventApplication](https://www.github.com/mongodb/genny/blob/master/src/workloads/c2c/ChangeEventApplication.yml)
 ### Owner 
 Product Performance 

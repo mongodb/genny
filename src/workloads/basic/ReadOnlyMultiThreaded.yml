@@ -1,0 +1,100 @@
+SchemaVersion: 2018-07-01
+Owner: Product Performance
+Description: |
+  Runs a multi-threaded, read-only workload comprising of `findOne` commands that all target the
+  same document. The workload inserts a single document and then spawns multiple worker threads to
+  retrieve it. The primary objective of this benchmark is to produce stable results that would help
+  with identifying regressions introduced by individual commits, and not necessarily measuring the
+  end-to-end database performance. Therefore, look for the average throughput and latency of running
+  `findOne` commands reported by this benchmark.
+Keywords:
+  - findOne
+  - MultiThreaded
+  - stable
+  - autoReverter
+
+GlobalDefaults:
+  Nop: &Nop {Nop: true}
+  Database: &Database test
+  Collection: &Collection test
+  PaddingLength: &PaddingLength 64 # bytes
+  WarmUpPeriod: &WarmUpPeriod 30 seconds # Warm up connections before running `findOne` operations.
+  RunPeriod: &RunPeriod 5 minutes
+  Threads: &Threads 64
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 500
+
+Actors:
+  - Name: CRUDOps
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      - Repeat: 1
+        Database: *Database
+        Collection: *Collection
+        Operations:
+          - OperationName: drop
+      - Repeat: 1 # only 1 document is needed for this workload
+        Database: *Database
+        Collection: *Collection
+        Operations:
+          - OperationName: insertOne
+            OperationCommand:
+              Document:
+                _id: 1
+                padding: {^FastRandomString: {length: *PaddingLength}}
+      - *Nop
+      - *Nop
+  - Name: RunCommand
+    Type: RunCommand
+    Threads: *Threads
+    Phases:
+      - *Nop
+      - *Nop
+      - Duration: *WarmUpPeriod
+        Database: *Database
+        Collection: *Collection
+        Operations:
+          - OperationMetricsName: hello
+            OperationName: RunCommand
+            OperationIsQuiet: true
+            OperationCommand:
+              hello: 1
+      - *Nop
+  - Name: MTCrudOps
+    Type: CrudActor
+    Threads: *Threads
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - Duration: *RunPeriod
+        Database: *Database
+        Collection: *Collection
+        Operations:
+          - OperationName: findOne
+            OperationCommand:
+              Filter: {_id: 1}
+
+  # Guard against timeout for no output.
+  - Name: LoggingActor
+    Type: LoggingActor
+    Threads: 1
+    Phases:
+      - *Nop
+      - *Nop
+      - *Nop
+      - LogEvery: 2 minutes
+        Blocking: None
+
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone
+          - replica
+          - replica.2024-05
+          - shard-single
