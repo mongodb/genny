@@ -96,4 +96,5 @@ AutoRun:
         $eq:
           - standalone
           - replica
+          - replica.2024-05
           - shard-single
