@@ -92,5 +92,6 @@ AutoRun:
           - shard-all-feature-flags
           - shard-lite-80-feature-flags
       branch_name:
-        $neq:
-          - v4.0
+        # Version prior to 6.0 are affected by SERVER-87143 that would cause routers
+        # to return WouldChangeOwningShard to the driver.
+        $gte: v6.0
