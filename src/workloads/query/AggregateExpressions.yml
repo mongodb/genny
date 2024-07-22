@@ -78,29 +78,28 @@ Actors:
             preDeterminedString:
               { ^Choose: { from: ["one", "two", "three"], weights: [1, 1, 1] } }
             array:
-              &array [{ ^Repeat: { count: 10, fromGenerator: { b: 0, c: 0 } } }]
+              &array [{ ^Array: { number: 10, of: { b: {^RandomInt: { min: 0, max: 10 }}, c: {^RandomInt: {min: 0, max: 10 }}}} }]
             array2: *array
             array3:
               [
                 {
-                  ^Cycle:
+                  ^Array:
                     {
-                      ofLength: 10,
-                      fromGenerator:
-                        {
+                      number: 10,
+                      of: {
                           k: { ^RandomString: { length: 16 } },
                           v: { ^RandomString: { length: 16 } },
-                        },
+                      }
                     },
                 },
               ]
             array4:
               [
                 {
-                  ^Cycle:
+                  ^Array:
                     {
-                      ofLength: 10,
-                      fromGenerator:
+                      number: 10,
+                      of:
                         [
                           { ^RandomString: { length: 16 } },
                           { ^RandomString: { length: 16 } },
@@ -153,7 +152,7 @@ Actors:
                 array: *array,
               }
 
-  # Phase 2: Ensure all data is synced to disk.
+  # # Phase 2: Ensure all data is synced to disk.
   - Name: Quiesce
     Type: QuiesceActor
     Threads: 1
@@ -166,7 +165,7 @@ Actors:
           Repeat: 1
           Threads: 1
 
-  # Phase 3-N: Run aggregate expression benchmarks
+  # # Phase 3-N: Run aggregate expression benchmarks
   - ExpressionAbs:
     LoadConfig: &loadConfig
       Path: "../../phases/query/AggregateExpressions.yml"
@@ -253,7 +252,7 @@ Actors:
           [
             {
               $project:
-                { concatArrays: { $concatArrays: ["$array1", "$array2"] } },
+                { concatArrays: { $concatArrays: ["$array", "$array2"] } },
             },
           ]
 
@@ -1471,8 +1470,4 @@ AutoRun:
           - standalone-classic-query-engine
           - standalone-sbe
       branch_name:
-        $neq:
-          - v4.0
-          - v4.2
-          - v4.4
-          - v5.0
+        $gte: v6.0
