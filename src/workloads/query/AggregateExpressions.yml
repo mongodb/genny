@@ -87,8 +87,13 @@ Actors:
                     {
                       number: 10,
                       of: {
-                          k: { ^RandomString: { length: 16 } },
-                          v: { ^RandomString: { length: 16 } },
+                          ^Cycle: {
+                          ofLength: 10,
+                          fromGenerator: {
+                            k: { ^RandomString: { length: 16 } },
+                            v: { ^RandomString: { length: 16 } },
+                          }
+                        }
                       }
                     },
                 },
@@ -99,11 +104,16 @@ Actors:
                   ^Array:
                     {
                       number: 10,
-                      of:
-                        [
-                          { ^RandomString: { length: 16 } },
-                          { ^RandomString: { length: 16 } },
-                        ],
+                      of: {
+                        ^Cycle: {
+                          ofLength: 10,
+                          fromGenerator:
+                            [
+                              { ^RandomString: { length: 16 } },
+                              { ^RandomString: { length: 16 } },
+                            ],
+                        }
+                      }
                     },
                 },
               ]
@@ -152,7 +162,7 @@ Actors:
                 array: *array,
               }
 
-  # # Phase 2: Ensure all data is synced to disk.
+  # Phase 2: Ensure all data is synced to disk.
   - Name: Quiesce
     Type: QuiesceActor
     Threads: 1
@@ -165,7 +175,7 @@ Actors:
           Repeat: 1
           Threads: 1
 
-  # # Phase 3-N: Run aggregate expression benchmarks
+  # Phase 3-N: Run aggregate expression benchmarks
   - ExpressionAbs:
     LoadConfig: &loadConfig
       Path: "../../phases/query/AggregateExpressions.yml"
