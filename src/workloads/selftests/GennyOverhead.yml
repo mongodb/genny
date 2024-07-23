@@ -70,6 +70,6 @@ Actors:
 AutoRun:
   - When:
       mongodb_setup:
-        $eq: 
+        $eq:
           - standalone
           - replica
