@@ -87,7 +87,7 @@ Actors:
                     {
                       number: 10,
                       of: {
-                          ^Cycle: {
+                        ^Cycle: {
                           ofLength: 10,
                           fromGenerator: {
                             k: { ^RandomString: { length: 16 } },
