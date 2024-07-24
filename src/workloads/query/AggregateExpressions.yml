@@ -78,7 +78,7 @@ Actors:
             preDeterminedString:
               { ^Choose: { from: ["one", "two", "three"], weights: [1, 1, 1] } }
             array:
-              &array [{ ^Array: { number: 10, of: { b: {^RandomInt: { min: 0, max: 10 }}, c: {^RandomInt: {min: 0, max: 10 }}}} }]
+              &array { ^Array: { number: 10, of: { b: {^RandomInt: { min: 0, max: 10 }}, c: {^RandomInt: {min: 0, max: 10 }}}} }
             array2: *array
             array3:
               {
