@@ -81,42 +81,38 @@ Actors:
               &array [{ ^Array: { number: 10, of: { b: {^RandomInt: { min: 0, max: 10 }}, c: {^RandomInt: {min: 0, max: 10 }}}} }]
             array2: *array
             array3:
-              [
-                {
-                  ^Array:
-                    {
-                      number: 10,
-                      of: {
-                        ^Cycle: {
-                          ofLength: 10,
-                          fromGenerator: {
-                            k: { ^RandomString: { length: 16 } },
-                            v: { ^RandomString: { length: 16 } },
-                          }
+              {
+                ^Array:
+                  {
+                    number: 10,
+                    of: {
+                      ^Cycle: {
+                        ofLength: 10,
+                        fromGenerator: {
+                          k: { ^RandomString: { length: 16 } },
+                          v: { ^RandomString: { length: 16 } },
                         }
                       }
-                    },
-                },
-              ]
+                    }
+                  },
+              }
             array4:
-              [
-                {
-                  ^Array:
-                    {
-                      number: 10,
-                      of: {
-                        ^Cycle: {
-                          ofLength: 10,
-                          fromGenerator:
-                            [
-                              { ^RandomString: { length: 16 } },
-                              { ^RandomString: { length: 16 } },
-                            ],
-                        }
+              {
+                ^Array:
+                  {
+                    number: 10,
+                    of: {
+                      ^Cycle: {
+                        ofLength: 10,
+                        fromGenerator:
+                          [
+                            { ^RandomString: { length: 16 } },
+                            { ^RandomString: { length: 16 } },
+                          ],
                       }
-                    },
-                },
-              ]
+                    }
+                  },
+              }
             nestedObj: { int: *integer, array: *array }
             double:
               &double {
