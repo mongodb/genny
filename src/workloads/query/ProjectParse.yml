@@ -130,6 +130,40 @@ Actors:
                       },
                   },
                 ]
+      - Repeat: 5
+        Collection: *coll
+        Operations:
+          - OperationMetricsName: ProjectWithFilterParseLarge
+            OperationName: aggregate
+            OperationCommand:
+              Pipeline:
+                - $project:
+                    _id: true
+                    filterField:
+                      $filter:
+                        input:
+                          ^FixedGeneratedValue:
+                            fromGenerator:
+                              ^Array:
+                                of:
+                                  key:
+                                    ^FormatString:
+                                      format: KEY%05d
+                                      withArgs:
+                                      - ^Inc:
+                                          start: 0
+                                  val:
+                                    ^FormatString:
+                                      format: VAL%05d
+                                      withArgs:
+                                      - ^Inc:
+                                          start: 0
+                                number: 100000
+                        as: item
+                        cond:
+                          $eq:
+                          - $$item.key
+                          - $_id.filterField
 
 AutoRun:
   - When:
