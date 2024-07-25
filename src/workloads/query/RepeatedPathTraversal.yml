@@ -22,6 +22,8 @@ AutoRun:
           - standalone-heuristic-bonsai
           - standalone-sampling-bonsai
           - standalone-sbe
+          - replica
+          - replica-all-feature-flags
       branch_name:
         $neq:
           - v4.0
