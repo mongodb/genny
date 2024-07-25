@@ -78,36 +78,41 @@ Actors:
             preDeterminedString:
               { ^Choose: { from: ["one", "two", "three"], weights: [1, 1, 1] } }
             array:
-              &array [{ ^Repeat: { count: 10, fromGenerator: { b: 0, c: 0 } } }]
+              &array { ^Array: { number: 10, of: { b: {^RandomInt: { min: 0, max: 10 }}, c: {^RandomInt: {min: 0, max: 10 }}}} }
             array2: *array
             array3:
-              [
-                {
-                  ^Cycle:
-                    {
-                      ofLength: 10,
-                      fromGenerator:
-                        {
+              {
+                ^Array:
+                  {
+                    number: 10,
+                    of: {
+                      ^Cycle: {
+                        ofLength: 10,
+                        fromGenerator: {
                           k: { ^RandomString: { length: 16 } },
                           v: { ^RandomString: { length: 16 } },
-                        },
-                    },
-                },
-              ]
+                        }
+                      }
+                    }
+                  },
+              }
             array4:
-              [
-                {
-                  ^Cycle:
-                    {
-                      ofLength: 10,
-                      fromGenerator:
-                        [
-                          { ^RandomString: { length: 16 } },
-                          { ^RandomString: { length: 16 } },
-                        ],
-                    },
-                },
-              ]
+              {
+                ^Array:
+                  {
+                    number: 10,
+                    of: {
+                      ^Cycle: {
+                        ofLength: 10,
+                        fromGenerator:
+                          [
+                            { ^RandomString: { length: 16 } },
+                            { ^RandomString: { length: 16 } },
+                          ],
+                      }
+                    }
+                  },
+              }
             nestedObj: { int: *integer, array: *array }
             double:
               &double {
@@ -253,7 +258,7 @@ Actors:
           [
             {
               $project:
-                { concatArrays: { $concatArrays: ["$array1", "$array2"] } },
+                { concatArrays: { $concatArrays: ["$array", "$array2"] } },
             },
           ]
 
@@ -1471,8 +1476,4 @@ AutoRun:
           - standalone-classic-query-engine
           - standalone-sbe
       branch_name:
-        $neq:
-          - v4.0
-          - v4.2
-          - v4.4
-          - v5.0
+        $gte: v6.0
