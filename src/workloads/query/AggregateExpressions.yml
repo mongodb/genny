@@ -21,7 +21,7 @@ GlobalDefaults:
   DocumentCount: &DocumentCount 1e6
   Repeat: &Repeat 10
   Threads: &Threads 1
-  MaxPhases: &MaxPhases 99
+  MaxPhases: &MaxPhases 108
 
 Clients:
   Default:
@@ -1465,6 +1465,87 @@ Actors:
         active: [99]
         operationMetricsName: AggExpressionTrunc
         Pipeline: [{ $project: { trunc: { $trunc: ["$double", 1] } } }]
+
+  - ExpressionMapArray:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionMapArray
+        active: [100]
+        operationMetricsName: AggExpressionMapArray
+        Pipeline: [{ $project: { map: { $map: {input: "$array", in: {$add: ["$$this.b", 1]}}}}}]
+
+  - ExpressionFilterArray:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionFilterArray
+        active: [101]
+        operationMetricsName: AggExpressionFilterArray
+        Pipeline: [{ $project: { filter: { $filter: {input: "$array", cond: {$eq: ["$$this.b", 0]}}}}}]
+
+  - ExpressionReduceArray:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionReduceArray
+        active: [102]
+        operationMetricsName: AggExpressionReduceArray
+        Pipeline: [{ $project: { reduce: { $reduce: {input: "$array", initialValue: 0, in: {$add: ["$$value", "$$this.b"]}}}}}]
+
+  - ExpressionMapIndicesArray:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionMapIndicesArray
+        active: [103]
+        operationMetricsName: AggExpressionMapIndicesArray
+        Pipeline: [{ $project: { map: { $map: {input: "$array", in: {$add: ["$$this.b", "$$IDX"]}}}}}]
+
+  - ExpressionMapIndicesArraySlow:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionMapIndicesArraySlow
+        active: [104]
+        operationMetricsName: AggExpressionMapIndicesArraySlow
+        Pipeline: [{ $project: { map: {$map: {input: {$range: [0, {$size: "$array"}]}, as: "i", in: {$add: [ {$getField: {field: "b", input: {$arrayElemAt: ["$array", "$$i"]}} }, "$$i"]}}}}}]
+  
+  - ExpressionFilterIndicesArray:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionFilterIndicesArray
+        active: [105]
+        operationMetricsName: AggExpressionFilterIndicesArray
+        Pipeline: [{$project: {filter: {$filter: {input: "$array", cond: {$eq: [{$getField: {field: "b", input: "$$this"}}, "$$IDX"]}}}}}]
+
+  - ExpressionFilterIndicesArraySlow:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionFilterIndicesArraySlow
+        active: [106]
+        operationMetricsName: AggExpressionFilterIndicesArraySlow
+        Pipeline: [{$project: {filter: {$filter: {input: {$range: [0, {$size: "$array"}]}, as: "i", cond: {$eq: [{$getField: {field: "b", input: {$arrayElemAt: ["$array", "$$i"]}}}, "$$i"]}}}}}]
+
+  - ExpressionReduceIndicesArray:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionReduceIndicesArray
+        active: [107]
+        operationMetricsName: AggExpressionReduceIndicesArray
+        Pipeline: [{$project: {reduce: {$reduce: {input: "$array", initialValue: 0, in: {$add: ["$$value", {$getField: {field: "b", input: "$$this"}}, "$$IDX"]}}}}}]
+
+  - ExpressionReduceIndicesArraySlow:
+    LoadConfig:
+      !!merge <<: *loadConfig
+      Parameters:
+        name: ExpressionReduceIndicesArraySlow
+        active: [108]
+        operationMetricsName: AggExpressionReduceIndicesArraySlow
+        Pipeline: [{$project: {reduce: {$reduce: {input: {$range: [0, {$size: "$array"}]}, initialValue: 0, in: {$add: ["$$value", {$getField: {field: "b", input: {$arrayElemAt: ["$array", "$$this"]}}}, "$$this"]}}}}}]
 
 AutoRun:
   - When:
