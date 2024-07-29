@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: Storage Execution
 Description: |
-  Insert documents into an event collection.
+  Insert documents into an event collection with an increasing number of threads.
 
 Keywords:
   - event
@@ -11,8 +11,8 @@ Keywords:
 GlobalDefaults:
   Collection: &Collection Collection0
   Database: &db test
-  MaxPhases: &MaxPhases 4
-  DocumentCount: &DocumentCount 1000000
+  MaxPhases: &MaxPhases 5
+  DocumentCount: &DocumentCount 10000000
   BatchSize: &BatchSize 1000
 
 Actors:
@@ -99,6 +99,24 @@ Actors:
     Phases:
       OnlyActiveInPhases:
         Active: [4]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *db
+          MultipleThreadsPerCollection: true
+          CollectionCount: 1
+          DocumentCount: *DocumentCount
+          BatchSize: *BatchSize
+          Document:
+            randomString: *randomString
+            randomInt: *randomInt
+            attributes: *attributes
+  - Name: InsertWith32Threads
+    Type: Loader
+    Threads: 32
+    Phases:
+      OnlyActiveInPhases:
+        Active: [5]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           Repeat: 1
