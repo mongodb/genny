@@ -109,10 +109,12 @@ Actors:
         Threads: {^Parameter: {Name: "ReadingThreads", Default: 5000}}
         ActivePhases: [1]
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica
-          - replica-80-feature-flags
-          - replica-all-feature-flags
+# The workload pushes the system to it's limits and is expected to fail a portion of the time.
+# To prevent noise, disable this from AutoRun. Uncomment the lines below to run the workload.
+# AutoRun:
+#   - When:
+#       mongodb_setup:
+#         $eq:
+#           - replica
+#           - replica-80-feature-flags
+#           - replica-all-feature-flags
