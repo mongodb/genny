@@ -11,14 +11,14 @@ Keywords:
 GlobalDefaults:
   Collection: &Collection Collection0
   Database: &db test
-  MaxPhases: &MaxPhases 8
+  MaxPhases: &MaxPhases 20
   DocumentCount: &DocumentCount 3000000
   BatchSize: &BatchSize 1000
 
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 128
+      maxPoolSize: 130
 
 Actors:
   - Name: CreateEventCollection
@@ -26,7 +26,7 @@ Actors:
     Threads: 1
     Phases:
       OnlyActiveInPhases:
-        Active: [0]
+        Active: [0, 3, 6, 9, 12, 15, 18]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           Repeat: 1
@@ -37,6 +37,20 @@ Actors:
               create: *Collection
               clusteredIndex:
                 { key: { _id: 1 }, unique: true, autoAssign: "timestamp" }
+  - Name: DropCollection
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2, 5, 8, 11, 14, 17, 20]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *db
+          Operation:
+            OperationName: RunCommand
+            OperationCommand:
+              drop: *Collection
   - Name: InsertWith1Thread
     Type: Loader
     Threads: 1
@@ -67,7 +81,7 @@ Actors:
     Threads: 2
     Phases:
       OnlyActiveInPhases:
-        Active: [2]
+        Active: [4]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           Repeat: 1
@@ -85,7 +99,7 @@ Actors:
     Threads: 4
     Phases:
       OnlyActiveInPhases:
-        Active: [3]
+        Active: [7]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           Repeat: 1
@@ -103,7 +117,7 @@ Actors:
     Threads: 8
     Phases:
       OnlyActiveInPhases:
-        Active: [4]
+        Active: [10]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           Repeat: 1
@@ -121,7 +135,7 @@ Actors:
     Threads: 16
     Phases:
       OnlyActiveInPhases:
-        Active: [5]
+        Active: [13]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           Repeat: 1
@@ -139,7 +153,7 @@ Actors:
     Threads: 32
     Phases:
       OnlyActiveInPhases:
-        Active: [6]
+        Active: [16]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           Repeat: 1
@@ -157,7 +171,7 @@ Actors:
     Threads: 64
     Phases:
       OnlyActiveInPhases:
-        Active: [7]
+        Active: [19]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           Repeat: 1
