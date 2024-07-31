@@ -137,15 +137,15 @@ Actors:
     Database: admin
     Phases:
       - &nop {Nop: true}
-      - Repeat: 1
       - *nop
-      - Repeat: 1
       - *nop
-      - Repeat: 1
       - *nop
-      - Repeat: 1
       - *nop
-      - Repeat: 1
+      - *nop
+      - *nop
+      - *nop
+      - *nop
+      - *nop
       - *nop
 
   # Update Actors
