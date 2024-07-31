@@ -11,9 +11,14 @@ Keywords:
 GlobalDefaults:
   Collection: &Collection Collection0
   Database: &db test
-  MaxPhases: &MaxPhases 5
-  DocumentCount: &DocumentCount 10000000
+  MaxPhases: &MaxPhases 8
+  DocumentCount: &DocumentCount 3000000
   BatchSize: &BatchSize 1000
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 128
 
 Actors:
   - Name: CreateEventCollection
@@ -47,7 +52,7 @@ Actors:
           DocumentCount: *DocumentCount
           BatchSize: *BatchSize
           Document:
-            randomString: &randomString { ^RandomString: { length: 16 } }
+            randomString: &randomString { ^RandomString: { length: 200 } }
             randomInt:
               &randomInt { ^RandomInt: { min: -10000000, max: 10000000 } }
             attributes:
@@ -57,12 +62,30 @@ Actors:
                 inside: { bookmark: *randomInt, postitnote: *randomInt },
                 outside: { dustcover: *randomString },
               }
+  - Name: InsertWith2Threads
+    Type: Loader
+    Threads: 2
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *db
+          MultipleThreadsPerCollection: true
+          CollectionCount: 1
+          DocumentCount: *DocumentCount
+          BatchSize: *BatchSize
+          Document:
+            randomString: *randomString
+            randomInt: *randomInt
+            attributes: *attributes
   - Name: InsertWith4Threads
     Type: Loader
     Threads: 4
     Phases:
       OnlyActiveInPhases:
-        Active: [2]
+        Active: [3]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           Repeat: 1
@@ -80,7 +103,7 @@ Actors:
     Threads: 8
     Phases:
       OnlyActiveInPhases:
-        Active: [3]
+        Active: [4]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           Repeat: 1
@@ -98,7 +121,7 @@ Actors:
     Threads: 16
     Phases:
       OnlyActiveInPhases:
-        Active: [4]
+        Active: [5]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           Repeat: 1
@@ -116,7 +139,25 @@ Actors:
     Threads: 32
     Phases:
       OnlyActiveInPhases:
-        Active: [5]
+        Active: [6]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *db
+          MultipleThreadsPerCollection: true
+          CollectionCount: 1
+          DocumentCount: *DocumentCount
+          BatchSize: *BatchSize
+          Document:
+            randomString: *randomString
+            randomInt: *randomInt
+            attributes: *attributes
+  - Name: InsertWith64Threads
+    Type: Loader
+    Threads: 64
+    Phases:
+      OnlyActiveInPhases:
+        Active: [7]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           Repeat: 1
