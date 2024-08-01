@@ -54,7 +54,7 @@ ActorTemplates:
       Phases:
         OnlyActiveInPhases:
           Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-          NopInPhasesUpTo: 6
+          NopInPhasesUpTo: 5
           PhaseConfig:
             LoadConfig:
               Path: ../../phases/scale/MixPhases.yml
@@ -70,7 +70,7 @@ ActorTemplates:
       Phases:
         OnlyActiveInPhases:
           Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-          NopInPhasesUpTo: 6
+          NopInPhasesUpTo: 5
           PhaseConfig:
             LoadConfig:
               Path: ../../phases/scale/MixPhases.yml
@@ -86,7 +86,7 @@ ActorTemplates:
       Phases:
         OnlyActiveInPhases:
           Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-          NopInPhasesUpTo: 6
+          NopInPhasesUpTo: 5
           PhaseConfig:
             LoadConfig:
               Path: ../../phases/scale/MixPhases.yml
@@ -102,7 +102,7 @@ ActorTemplates:
       Phases:
         OnlyActiveInPhases:
           Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-          NopInPhasesUpTo: 6
+          NopInPhasesUpTo: 5
           PhaseConfig:
             LoadConfig:
               Path: ../../phases/scale/MixPhases.yml
@@ -128,7 +128,7 @@ Actors:
         Indexes:
           - keys: {id: 1}
           - keys: {a: 1}
-      - Phase: 1..6
+      - Phase: 1..5
         Nop: true
 
   # Update Actors
