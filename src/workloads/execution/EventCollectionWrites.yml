@@ -1,0 +1,186 @@
+SchemaVersion: 2018-07-01
+Owner: Storage Execution
+Description: |
+  Insert documents into an event collection with an increasing number of threads.
+
+Keywords:
+  - event
+  - RunCommand
+  - Loader
+
+GlobalDefaults:
+  Collection: &Collection Collection0
+  Database: &db test
+  MaxPhases: &MaxPhases 20
+  DocumentCount: &DocumentCount 3000000
+  BatchSize: &BatchSize 1000
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 130
+
+Actors:
+  - Name: CreateEventCollection
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0, 3, 6, 9, 12, 15, 18]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *db
+          Operation:
+            OperationName: RunCommand
+            OperationCommand:
+              create: *Collection
+              clusteredIndex:
+                { key: { _id: 1 }, unique: true, autoAssign: "timestamp" }
+  - Name: DropCollection
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2, 5, 8, 11, 14, 17, 20]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *db
+          Operation:
+            OperationName: RunCommand
+            OperationCommand:
+              drop: *Collection
+  - Name: InsertWith1Thread
+    Type: Loader
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *db
+          Threads: 1
+          CollectionCount: 1
+          DocumentCount: *DocumentCount
+          BatchSize: *BatchSize
+          Document:
+            randomString: &randomString { ^RandomString: { length: 200 } }
+            randomInt:
+              &randomInt { ^RandomInt: { min: -10000000, max: 10000000 } }
+            attributes:
+              &attributes {
+                color: *randomString,
+                size: *randomString,
+                inside: { bookmark: *randomInt, postitnote: *randomInt },
+                outside: { dustcover: *randomString },
+              }
+  - Name: InsertWith2Threads
+    Type: Loader
+    Threads: 2
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *db
+          MultipleThreadsPerCollection: true
+          CollectionCount: 1
+          DocumentCount: *DocumentCount
+          BatchSize: *BatchSize
+          Document:
+            randomString: *randomString
+            randomInt: *randomInt
+            attributes: *attributes
+  - Name: InsertWith4Threads
+    Type: Loader
+    Threads: 4
+    Phases:
+      OnlyActiveInPhases:
+        Active: [7]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *db
+          MultipleThreadsPerCollection: true
+          CollectionCount: 1
+          DocumentCount: *DocumentCount
+          BatchSize: *BatchSize
+          Document:
+            randomString: *randomString
+            randomInt: *randomInt
+            attributes: *attributes
+  - Name: InsertWith8Threads
+    Type: Loader
+    Threads: 8
+    Phases:
+      OnlyActiveInPhases:
+        Active: [10]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *db
+          MultipleThreadsPerCollection: true
+          CollectionCount: 1
+          DocumentCount: *DocumentCount
+          BatchSize: *BatchSize
+          Document:
+            randomString: *randomString
+            randomInt: *randomInt
+            attributes: *attributes
+  - Name: InsertWith16Threads
+    Type: Loader
+    Threads: 16
+    Phases:
+      OnlyActiveInPhases:
+        Active: [13]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *db
+          MultipleThreadsPerCollection: true
+          CollectionCount: 1
+          DocumentCount: *DocumentCount
+          BatchSize: *BatchSize
+          Document:
+            randomString: *randomString
+            randomInt: *randomInt
+            attributes: *attributes
+  - Name: InsertWith32Threads
+    Type: Loader
+    Threads: 32
+    Phases:
+      OnlyActiveInPhases:
+        Active: [16]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *db
+          MultipleThreadsPerCollection: true
+          CollectionCount: 1
+          DocumentCount: *DocumentCount
+          BatchSize: *BatchSize
+          Document:
+            randomString: *randomString
+            randomInt: *randomInt
+            attributes: *attributes
+  - Name: InsertWith64Threads
+    Type: Loader
+    Threads: 64
+    Phases:
+      OnlyActiveInPhases:
+        Active: [19]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *db
+          MultipleThreadsPerCollection: true
+          CollectionCount: 1
+          DocumentCount: *DocumentCount
+          BatchSize: *BatchSize
+          Document:
+            randomString: *randomString
+            randomInt: *randomInt
+            attributes: *attributes
