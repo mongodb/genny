@@ -34,6 +34,7 @@ Actors:
       - *Nop
       - *Nop
       - *Nop
+      - *Nop
 
   - Name: Quiesce
     Type: QuiesceActor
@@ -42,6 +43,7 @@ Actors:
     Phases:
       - *Nop
       - Repeat: 1
+      - *Nop
       - *Nop
       - *Nop
       - *Nop
