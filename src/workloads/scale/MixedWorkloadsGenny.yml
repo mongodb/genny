@@ -167,9 +167,7 @@ Actors:
         Threads: 128
         OnlyActiveInPhase: 5
 
-  #
-  ## Remove Actors
-  #
+  # Remove Actors
   - ActorFromTemplate:
       TemplateName: RemoveTemplate
       TemplateParameters:
@@ -205,8 +203,7 @@ Actors:
         Threads: 128
         OnlyActiveInPhase: 5
 
-  ## Insert Actors
-  #
+  # Insert Actors
   - ActorFromTemplate:
       TemplateName: InsertTemplate
       TemplateParameters:
@@ -242,8 +239,7 @@ Actors:
         Threads: 128
         OnlyActiveInPhase: 5
 
-  ## Find Actors
-
+  # Find Actors
   - ActorFromTemplate:
       TemplateName: FindTemplate
       TemplateParameters:
