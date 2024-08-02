@@ -54,7 +54,7 @@ ActorTemplates:
       Phases:
         OnlyActiveInPhases:
           Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-          NopInPhasesUpTo: 10
+          NopInPhasesUpTo: 5
           PhaseConfig:
             LoadConfig:
               Path: ../../phases/scale/MixPhases.yml
@@ -70,7 +70,7 @@ ActorTemplates:
       Phases:
         OnlyActiveInPhases:
           Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-          NopInPhasesUpTo: 10
+          NopInPhasesUpTo: 5
           PhaseConfig:
             LoadConfig:
               Path: ../../phases/scale/MixPhases.yml
@@ -86,7 +86,7 @@ ActorTemplates:
       Phases:
         OnlyActiveInPhases:
           Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-          NopInPhasesUpTo: 10
+          NopInPhasesUpTo: 5
           PhaseConfig:
             LoadConfig:
               Path: ../../phases/scale/MixPhases.yml
@@ -102,7 +102,7 @@ ActorTemplates:
       Phases:
         OnlyActiveInPhases:
           Active: [{^Parameter: {Name: "OnlyActiveInPhase", Default: 1}}]
-          NopInPhasesUpTo: 10
+          NopInPhasesUpTo: 5
           PhaseConfig:
             LoadConfig:
               Path: ../../phases/scale/MixPhases.yml
@@ -128,25 +128,8 @@ Actors:
         Indexes:
           - keys: {id: 1}
           - keys: {a: 1}
-      - Phase: 1..10
+      - Phase: 1..5
         Nop: true
-
-  - Name: QuiesceBetweenLevels
-    Type: QuiesceActor
-    Threads: 1
-    Database: admin
-    Phases:
-      - &nop {Nop: true}
-      - Repeat: 1
-      - *nop
-      - Repeat: 1
-      - *nop
-      - Repeat: 1
-      - *nop
-      - Repeat: 1
-      - *nop
-      - Repeat: 1
-      - *nop
 
   # Update Actors
   - ActorFromTemplate:
@@ -154,147 +137,143 @@ Actors:
       TemplateParameters:
         Name: Update_1
         Threads: 1
-        OnlyActiveInPhase: 2
+        OnlyActiveInPhase: 1
 
   - ActorFromTemplate:
       TemplateName: UpdateTemplate
       TemplateParameters:
         Name: Update_16
         Threads: 16
-        OnlyActiveInPhase: 4
+        OnlyActiveInPhase: 2
 
   - ActorFromTemplate:
       TemplateName: UpdateTemplate
       TemplateParameters:
         Name: Update_32
         Threads: 32
-        OnlyActiveInPhase: 6
+        OnlyActiveInPhase: 3
 
   - ActorFromTemplate:
       TemplateName: UpdateTemplate
       TemplateParameters:
         Name: Update_64
         Threads: 64
-        OnlyActiveInPhase: 8
+        OnlyActiveInPhase: 4
 
   - ActorFromTemplate:
       TemplateName: UpdateTemplate
       TemplateParameters:
         Name: Update_128
         Threads: 128
-        OnlyActiveInPhase: 10
+        OnlyActiveInPhase: 5
 
-  #
-  ## Remove Actors
-  #
+  # Remove Actors
   - ActorFromTemplate:
       TemplateName: RemoveTemplate
       TemplateParameters:
         Name: Remove_1
         Threads: 1
-        OnlyActiveInPhase: 2
+        OnlyActiveInPhase: 1
 
   - ActorFromTemplate:
       TemplateName: RemoveTemplate
       TemplateParameters:
         Name: Remove_16
         Threads: 16
-        OnlyActiveInPhase: 4
+        OnlyActiveInPhase: 2
 
   - ActorFromTemplate:
       TemplateName: RemoveTemplate
       TemplateParameters:
         Name: Remove_32
         Threads: 32
-        OnlyActiveInPhase: 6
+        OnlyActiveInPhase: 3
 
   - ActorFromTemplate:
       TemplateName: RemoveTemplate
       TemplateParameters:
         Name: Remove_64
         Threads: 64
-        OnlyActiveInPhase: 8
+        OnlyActiveInPhase: 4
 
   - ActorFromTemplate:
       TemplateName: RemoveTemplate
       TemplateParameters:
         Name: Remove_128
         Threads: 128
-        OnlyActiveInPhase: 10
+        OnlyActiveInPhase: 5
 
-  ## Insert Actors
-  #
+  # Insert Actors
   - ActorFromTemplate:
       TemplateName: InsertTemplate
       TemplateParameters:
         Name: Insert_1
         Threads: 1
-        OnlyActiveInPhase: 2
+        OnlyActiveInPhase: 1
 
   - ActorFromTemplate:
       TemplateName: InsertTemplate
       TemplateParameters:
         Name: Insert_16
         Threads: 16
-        OnlyActiveInPhase: 4
+        OnlyActiveInPhase: 2
 
   - ActorFromTemplate:
       TemplateName: InsertTemplate
       TemplateParameters:
         Name: Insert_32
         Threads: 32
-        OnlyActiveInPhase: 6
+        OnlyActiveInPhase: 3
 
   - ActorFromTemplate:
       TemplateName: InsertTemplate
       TemplateParameters:
         Name: Insert_64
         Threads: 64
-        OnlyActiveInPhase: 8
+        OnlyActiveInPhase: 4
 
   - ActorFromTemplate:
       TemplateName: InsertTemplate
       TemplateParameters:
         Name: Insert_128
         Threads: 128
-        OnlyActiveInPhase: 10
+        OnlyActiveInPhase: 5
 
-  ## Find Actors
-
+  # Find Actors
   - ActorFromTemplate:
       TemplateName: FindTemplate
       TemplateParameters:
         Name: Find_1
         Threads: 1
-        OnlyActiveInPhase: 2
+        OnlyActiveInPhase: 1
 
   - ActorFromTemplate:
       TemplateName: FindTemplate
       TemplateParameters:
         Name: Find_16
         Threads: 16
-        OnlyActiveInPhase: 4
+        OnlyActiveInPhase: 2
 
   - ActorFromTemplate:
       TemplateName: FindTemplate
       TemplateParameters:
         Name: Find_32
         Threads: 32
-        OnlyActiveInPhase: 6
+        OnlyActiveInPhase: 3
 
   - ActorFromTemplate:
       TemplateName: FindTemplate
       TemplateParameters:
         Name: Find_64
         Threads: 64
-        OnlyActiveInPhase: 8
+        OnlyActiveInPhase: 4
 
   - ActorFromTemplate:
       TemplateName: FindTemplate
       TemplateParameters:
         Name: Find_128
         Threads: 128
-        OnlyActiveInPhase: 10
+        OnlyActiveInPhase: 5
 
 AutoRun:
   - When:
