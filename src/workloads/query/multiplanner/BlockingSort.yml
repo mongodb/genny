@@ -395,11 +395,10 @@ AutoRun:
   - When:
       mongodb_setup:
         $eq:
-          - single-replica
-          - single-replica-all-feature-flags
-          - single-replica-sbe
-          - single-replica-classic-query-engine
-          - standalone-80-feature-flags # At time of writing this will enable PM-3591.
+          - replica
           - replica-all-feature-flags
+          - replica-query-engine-sbe
+          - replica-query-engine-classic
+          - standalone-80-feature-flags # At time of writing this will enable PM-3591.
       branch_name:
         $gte: v7.3
