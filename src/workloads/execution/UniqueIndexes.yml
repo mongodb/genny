@@ -1,0 +1,214 @@
+SchemaVersion: 2018-07-01
+Owner: Storage Execution
+Description: |
+  This workload tests concurrent insert/update/delete performance with unique indexes,
+  a v2 unique index on 'a' and a v1 unique index on 'b'. The documents being inserted have
+  duplicate keys across threads, and the uniqueness of indexes allows only one insertion
+  to succeed. It first performs the operations with 8 threads, then 32, up to 128.
+
+Keywords:
+- insert
+- update
+- delete
+- unique indexes
+
+string_length: &string_length 10
+max_phases: &max_phases 9
+db: &db test
+coll: &coll test
+iterations: &iterations 12800
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 1000
+
+ActorTemplates:
+- TemplateName: UniqueIndexesInsertTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: ""}}
+    Type: CrudActor
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Database: *db
+    Phases:
+      OnlyActiveInPhases:
+        Active: {^Parameter: {Name: "ActivePhases", Default: []}}
+        NopInPhasesUpTo: *max_phases
+        PhaseConfig:
+          Collection: *coll
+          Repeat: *iterations
+          ThrowOnFailure: false
+          Operations:
+          - &InsertOp
+            OperationName: insertMany
+            OperationCommand:
+              Documents:
+                # Documents with duplicate keys are being inserted concurrently
+                # by the threads, and only one of them will succeed.
+              - a: {^Inc: {start: 0}}
+                b: {^FastRandomString: {length: *string_length}}
+              - a: {^FastRandomString: {length: *string_length}}
+                b: {^Inc: {start: 0}}
+
+- TemplateName: UniqueIndexesUpdateTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: ""}}
+    Type: CrudActor
+    Threads: {^Parameter: {Name: "Threads", Default: 1}}
+    Database: *db
+    Phases:
+      OnlyActiveInPhases:
+        Active: {^Parameter: {Name: "ActivePhases", Default: []}}
+        NopInPhasesUpTo: *max_phases
+        PhaseConfig:
+          Collection: *coll
+          Repeat: *iterations
+          Operations:
+          - &UpdateOpA
+            OperationName: updateOne
+            OperationCommand:
+              Filter: { a: {^Inc: {start: 0}} }
+              Update: { $set: { b: {^Inc: {start: *iterations}} } }
+          - &UpdateOpB
+            OperationName: updateOne
+            OperationCommand:
+              Filter: { b: {^Inc: {start: 0}} }
+              Update: { $set: { a: {^Inc: {start: *iterations}} } }
+
+- TemplateName: UniqueIndexesDeleteTemplate
+  Config:
+    Name: {^Parameter: {Name: "Name", Default: ""}}
+    Type: CrudActor
+    Threads: &threads {^Parameter: {Name: "Threads", Default: 1}}
+    Database: *db
+    Phases:
+      OnlyActiveInPhases:
+        Active: {^Parameter: {Name: "ActivePhases", Default: []}}
+        NopInPhasesUpTo: *max_phases
+        PhaseConfig:
+          Collection: *coll
+          Repeat: {^NumExpr: {
+            withExpression: "iterations / threads",
+            andValues: {iterations: *iterations, threads: *threads}}}
+          Operations:
+          - &DeleteOpA
+            OperationName: deleteOne
+            OperationCommand:
+              Filter: { a: {^Inc: {start: 0, multiplier: 1, step: *threads}} }
+          - &DeleteOpB
+            OperationName: deleteOne
+            OperationCommand:
+              Filter: { b: {^Inc: {start: 0, multiplier: 1, step: *threads}} }
+
+Actors:
+- Name: Setup
+  Type: RunCommand
+  Threads: 1
+  Phases:
+    OnlyActiveInPhases:
+      Active: [0]
+      NopInPhasesUpTo: *max_phases
+      PhaseConfig:
+        Repeat: 1
+        Database: *db
+        Collection: *coll
+        Operations:
+        - OperationName: RunCommand
+          OperationCommand: {dropDatabase: 1}
+        - OperationName: RunCommand
+          OperationCommand:
+            createIndexes: *coll
+            indexes:
+            - key: {a: 1}
+              name: a
+              unique: true
+            - key: {b: 1}
+              name: b
+              unique: true
+              v: 1
+
+- ActorFromTemplate:
+    TemplateName: UniqueIndexesInsertTemplate
+    TemplateParameters:
+      Name: Insert8Threads
+      Threads: 8
+      ActivePhases: [1]
+
+- ActorFromTemplate:
+    TemplateName: UniqueIndexesUpdateTemplate
+    TemplateParameters:
+      Name: Update8Threads
+      Threads: 8
+      ActivePhases: [2]
+
+- ActorFromTemplate:
+    TemplateName: UniqueIndexesDeleteTemplate
+    TemplateParameters:
+      Name: Delete8Threads
+      Threads: 8
+      ActivePhases: [3]
+
+- ActorFromTemplate:
+    TemplateName: UniqueIndexesInsertTemplate
+    TemplateParameters:
+      Name: Insert32Threads
+      Threads: 32
+      ActivePhases: [4]
+
+- ActorFromTemplate:
+    TemplateName: UniqueIndexesUpdateTemplate
+    TemplateParameters:
+      Name: Update32Threads
+      Threads: 32
+      ActivePhases: [5]
+
+- ActorFromTemplate:
+    TemplateName: UniqueIndexesDeleteTemplate
+    TemplateParameters:
+      Name: Delete32Threads
+      Threads: 32
+      ActivePhases: [6]
+
+- ActorFromTemplate:
+    TemplateName: UniqueIndexesInsertTemplate
+    TemplateParameters:
+      Name: Insert128Threads
+      Threads: 128
+      ActivePhases: [7]
+
+- ActorFromTemplate:
+    TemplateName: UniqueIndexesUpdateTemplate
+    TemplateParameters:
+      Name: Update128Threads
+      Threads: 128
+      ActivePhases: [8]
+
+- ActorFromTemplate:
+    TemplateName: UniqueIndexesDeleteTemplate
+    TemplateParameters:
+      Name: Delete128Threads
+      Threads: 128
+      ActivePhases: [9]
+
+AutoRun:
+- When:
+    mongodb_setup:
+      $eq:
+      - standalone
+      - standalone-80-feature-flags
+      - standalone-all-feature-flags
+      - standalone-query-stats
+      - replica
+      - replica-80-feature-flags
+      - replica-all-feature-flags
+      - replica-query-stats-rate-limit
+      - atlas-like-replica.2022-10
+      - atlas-like-replica.2023-09
+      - atlas-like-replica-query-stats.2023-09
+      - shard
+      - shard-80-feature-flags
+      - shard-lite-80-feature-flags
+      - shard-lite-all-feature-flags
+      - shard-query-stats
+    branch_name:
+      $gte:  v7.0
