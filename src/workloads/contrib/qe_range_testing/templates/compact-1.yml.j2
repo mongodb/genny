@@ -39,17 +39,19 @@ ActorTemplates:
     Database: *encrypted_db
     ClientName: EncryptedPool
     Phases: 
-    - Repeat: {{ document_count // insert_threads }}
-      Collection: *encrypted_coll
-      MetricsName: "load"
-      Operations:
-      - OperationName: insertOne
-        OperationMetricsName: insert
-        OperationCommand:
-          Document:
-            field1: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "{{ insert_file }}", "sequential": true, "startFromLine": &StartLine {^Parameter: {Name: "StartLine", Default: -1}}}}}}
-    - *nop
-    - *nop
+      OnlyActiveInPhases:
+        Active: [{^Parameter: {Name: Phase, Default: {unused: ...}}}]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: {{ document_count // insert_threads }}
+          Collection: *encrypted_coll
+          MetricsName: "load"
+          Operations:
+          - OperationName: insertOne
+            OperationMetricsName: insert
+            OperationCommand:
+              Document:
+                field1: {^ConvertToDecimal: {from: {^ChooseFromDataset:{"path": "{{ insert_file }}", "sequential": true, "startFromLine": &StartLine {^Parameter: {Name: "StartLine", Default: -1}}}}}}
 
 
 
@@ -60,6 +62,7 @@ Actors:
       TemplateParameters: 
         Name: InsertActor_Thread{{ t }}
         StartLine: {{t * document_count // insert_threads}}
+        Phase: 0
     {% endfor %}
 
 {% if test_op != '' %}
@@ -68,18 +71,27 @@ Actors:
     Threads: 1
     ClientName: EncryptedPool
     Phases: 
-    - *nop
-    - Repeat: 1
-      Database: *encrypted_db
-      Operations:
-      - OperationMetricsName: {{ test_op }}
-        OperationName: RunCommand 
-        OperationCommand:
-          {{ test_op }}StructuredEncryptionData: *encrypted_coll {% if test_op == 'compact' %}
-          anchorPaddingFactor: 1.0 {% endif %}
-    - *nop
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *MaxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *encrypted_db
+          Operations:
+          - OperationMetricsName: {{ test_op }}
+            OperationName: RunCommand 
+            OperationCommand:
+              {{ test_op }}StructuredEncryptionData: *encrypted_coll {% if test_op == 'compact' %}
+              anchorPaddingFactor: 1.0 {% endif %}
 
 {% endif %}
+
+  - Name: ReportDBSizeActor
+    Type: RunCommand
+    Threads: 1
+    ClientName: EncryptedPool
+    Phases:
+
 
   - Name: Quiesce
     Type: QuiesceActor
