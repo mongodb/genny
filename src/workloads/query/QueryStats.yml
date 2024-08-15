@@ -24,7 +24,7 @@ Clients:
 
 GlobalDefaults:
   CacheSizeMb: &CacheSizeMb 300
-  HmacParameters: &HmacParameters {transformIdentifiers: {algorithm: "hmac-sha-256", hmacKey: {^BinDataSensitive: {numBytes: 32}}}}
+  HmacParameters: &HmacParameters {}
   MaxPhase: &MaxPhase 69
   RateLimitHz: &RateLimitHz 100
 

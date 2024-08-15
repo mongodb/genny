@@ -245,6 +245,4 @@ QueryStatsActor:
             aggregate: 1
             pipeline:
             - $queryStats: *QueryStatsParameters
-              # The purpose of $count is to ensure we've exhausted the cursor/ data stream and looked at each partition.
-            - $count: "numDocuments"
             cursor: {}
