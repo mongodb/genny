@@ -176,7 +176,7 @@ class ToolchainDownloader(Downloader):
     #
 
     TOOLCHAIN_BUILD_ID = (
-        "e5a0c94080f72e00a20ba8fd6ca6a3082e0873a6_24_05_30_06_59_47"
+        "patch_e5a0c94080f72e00a20ba8fd6ca6a3082e0873a6_66be486227900e00073aece6_24_08_15_18_26_44"
     )
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
 
