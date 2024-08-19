@@ -20,7 +20,7 @@ Description: |
     every workload execution.
   FindCommandActor (requires MaxPhase, Phase, CacheSizeMb, Payload; optional Suffix)
     runs find commands to generate query stats.
-  AggregateActor (requires MaxPhase, Phase, CacheSizeMb; optional Suffix, QueryStatsParameters)
+  AggregateActor (requires MaxPhase, Phase, CacheSizeMb; optional Suffix, QueryStatsParameters, Limit)
     runs $queryStats.
 
 GlobalDefaults:
@@ -70,6 +70,9 @@ GlobalDefaults:
 
   # (integer; default 1) the number of concurrently-running $queryStats threads.
   Threads: &Threads {^Parameter: {Name: Threads, Default: 1}}
+
+  # (integer; default 100) limit for the queryStats stage
+  Limit: &Limit {^Parameter: {Name: Limit, Default: 100}}
 
   # Syntactic sugar.
   CacheSize: &CacheSize {^PreprocessorFormatString: {format: "%dMB", withArgs: [*CacheSizeMb]}}
@@ -245,4 +248,6 @@ QueryStatsActor:
             aggregate: 1
             pipeline:
             - $queryStats: *QueryStatsParameters
+            - $sort: {"metrics.totalExecMicros.max": -1}
+            - $limit: *Limit
             cursor: {}
