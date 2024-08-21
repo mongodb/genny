@@ -12,7 +12,7 @@ GlobalDefaults:
   Collection: &Collection Collection0
   Database: &db test
   MaxPhases: &MaxPhases 30
-  DocumentCount: &DocumentCount 7000000
+  DocumentCount: &DocumentCount 25000000
   BatchSize: &BatchSize 1000
 
 Clients:
@@ -52,103 +52,6 @@ Actors:
             OperationName: RunCommand
             OperationCommand:
               drop: *Collection
-  - Name: InsertWith1Thread
-    Type: Loader
-    Threads: 1
-    Phases:
-      OnlyActiveInPhases:
-        Active: [1]
-        NopInPhasesUpTo: *MaxPhases
-        PhaseConfig:
-          Repeat: 1
-          Database: *db
-          Threads: 1
-          CollectionCount: 1
-          DocumentCount: *DocumentCount
-          BatchSize: *BatchSize
-          Document:
-            randomString: &randomString { ^RandomString: { length: 200 } }
-            randomInt:
-              &randomInt { ^RandomInt: { min: -10000000, max: 10000000 } }
-            attributes:
-              &attributes {
-                color: *randomString,
-                size: *randomString,
-                inside: { bookmark: *randomInt, postitnote: *randomInt },
-                outside: { dustcover: *randomString },
-              }
-  - Name: InsertWith2Threads
-    Type: Loader
-    Threads: 2
-    Phases:
-      OnlyActiveInPhases:
-        Active: [4]
-        NopInPhasesUpTo: *MaxPhases
-        PhaseConfig:
-          Repeat: 1
-          Database: *db
-          MultipleThreadsPerCollection: true
-          CollectionCount: 1
-          DocumentCount: *DocumentCount
-          BatchSize: *BatchSize
-          Document:
-            randomString: *randomString
-            randomInt: *randomInt
-            attributes: *attributes
-  - Name: InsertWith4Threads
-    Type: Loader
-    Threads: 4
-    Phases:
-      OnlyActiveInPhases:
-        Active: [7]
-        NopInPhasesUpTo: *MaxPhases
-        PhaseConfig:
-          Repeat: 1
-          Database: *db
-          MultipleThreadsPerCollection: true
-          CollectionCount: 1
-          DocumentCount: *DocumentCount
-          BatchSize: *BatchSize
-          Document:
-            randomString: *randomString
-            randomInt: *randomInt
-            attributes: *attributes
-  - Name: InsertWith8Threads
-    Type: Loader
-    Threads: 8
-    Phases:
-      OnlyActiveInPhases:
-        Active: [10]
-        NopInPhasesUpTo: *MaxPhases
-        PhaseConfig:
-          Repeat: 1
-          Database: *db
-          MultipleThreadsPerCollection: true
-          CollectionCount: 1
-          DocumentCount: *DocumentCount
-          BatchSize: *BatchSize
-          Document:
-            randomString: *randomString
-            randomInt: *randomInt
-            attributes: *attributes
-  - Name: InsertWith16Threads
-    Type: Loader
-    Threads: 16
-    Phases:
-      OnlyActiveInPhases:
-        Active: [13]
-        NopInPhasesUpTo: *MaxPhases
-        PhaseConfig:
-          Repeat: 1
-          Database: *db
-          MultipleThreadsPerCollection: true
-          CollectionCount: 1
-          DocumentCount: *DocumentCount
-          BatchSize: *BatchSize
-          Document:
-            randomString: *randomString
-            randomInt: *randomInt
-            attributes: *attributes
   - Name: InsertWith32Threads
     Type: Loader
     Threads: 32
@@ -164,24 +67,13 @@ Actors:
           DocumentCount: *DocumentCount
           BatchSize: *BatchSize
           Document:
-            randomString: *randomString
-            randomInt: *randomInt
-            attributes: *attributes
-  - Name: InsertWith64Threads
-    Type: Loader
-    Threads: 64
-    Phases:
-      OnlyActiveInPhases:
-        Active: [19]
-        NopInPhasesUpTo: *MaxPhases
-        PhaseConfig:
-          Repeat: 1
-          Database: *db
-          MultipleThreadsPerCollection: true
-          CollectionCount: 1
-          DocumentCount: *DocumentCount
-          BatchSize: *BatchSize
-          Document:
-            randomString: *randomString
-            randomInt: *randomInt
-            attributes: *attributes
+            randomString: &randomString { ^RandomString: { length: 200 } }
+            randomInt:
+              &randomInt { ^RandomInt: { min: -10000000, max: 10000000 } }
+            attributes:
+              &attributes {
+                color: *randomString,
+                size: *randomString,
+                inside: { bookmark: *randomInt, postitnote: *randomInt },
+                outside: { dustcover: *randomString },
+              }
