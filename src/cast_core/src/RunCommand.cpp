@@ -15,6 +15,7 @@
 #include <cast_core/actors/RunCommand.hpp>
 
 #include <chrono>
+#include <mongocxx/client_session.hpp>
 #include <thread>
 
 #include <boost/throw_exception.hpp>
@@ -160,7 +161,7 @@ public:
                                                    options);
     };
 
-    void run() {
+    void run(mongocxx::client_session& session) {
         auto command = _commandExpr();
         auto view = command.view();
 
@@ -178,7 +179,7 @@ public:
                 if (_options.awaitStepdown) {
                     runThenAwaitStepdown(_database, view);
                 } else {
-                    auto commandResult = _database.run_command(view);
+                    auto commandResult = session.client().database(_databaseName).run_command(view);
 
                     // Extract the cursor and first batch
                     if (commandResult.find("cursor") != commandResult.cend()) {
@@ -196,7 +197,9 @@ public:
 
                             // Run the getMore command
                             bsoncxx::document::value get_more_result =
-                                _database.run_command(get_more_cmd.view());
+                                session.client()
+                                    .database(_databaseName)
+                                    .run_command(get_more_cmd.view());
                             bsoncxx::document::view get_more_view = get_more_result.view();
 
                             // Extract the next batch
@@ -398,7 +401,8 @@ void actor::RunCommand::run() {
         for (auto&& _ : config) {
             for (auto&& op : config->operations) {
                 try {
-                    op->run();
+                    auto session = _client->start_session();
+                    op->run(session);
                 } catch (const boost::exception& ex) {
                     if (config->throwOnFailure) {
                         throw;
