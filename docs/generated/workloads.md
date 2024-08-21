@@ -3395,6 +3395,40 @@ The phases are:
 
 
 
+## [NonSearchHybridScoring](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/NonSearchHybridScoring.yml)
+### Owner 
+@mongodb/query 
+
+
+
+### Description
+This test is designed to test a hybrid scoring like use-case, but without using any atlas search
+features, since (at the time of this writing) they are complex to set up in our test
+infrastructure.
+
+Our made up scenario to mimic this use case will be as follows:
+- Our collection will have documents which mimic businesses such as restraunts.
+- Our query will request certain restaurants near a point, and want to rank them in a fused order
+  based on both their distance from the point and their average rating. (Preferring the first
+  result to be one that is reasonably close with the highest reviews).
+
+The phases are:
+0. Create collection
+1. Insert data + create indexes
+2. Quiesce
+3. Rank Fusion style pipeline style #1
+4. Quiesce
+5. Rank Fusion style pipeline style #2
+6. Quiesce
+7. Rank Fusion style pipeline style #3
+
+We use a couple different styles of expressing the same pipeline since they all get the job done,
+but currently perform differently. In the long run, it would be good to track performance of all
+of them in case a user typed it a certain way and doesn't realize some performance gains that
+another version of the syntax uses.
+
+
+
 ## [OneMDocCollection_LargeDocIntId](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/OneMDocCollection_LargeDocIntId.yml)
 ### Owner 
 @mongodb/query 
