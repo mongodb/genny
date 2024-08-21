@@ -71,9 +71,6 @@ GlobalDefaults:
   # (integer; default 1) the number of concurrently-running $queryStats threads.
   Threads: &Threads {^Parameter: {Name: Threads, Default: 1}}
 
-  # (integer; default 100) limit for the queryStats stage
-  Limit: &Limit {^Parameter: {Name: Limit, Default: 100}}
-
   # Syntactic sugar.
   CacheSize: &CacheSize {^PreprocessorFormatString: {format: "%dMB", withArgs: [*CacheSizeMb]}}
   FormattedSuffix: &FormattedSuffix
@@ -248,5 +245,4 @@ QueryStatsActor:
             aggregate: 1
             pipeline:
             - $queryStats: *QueryStatsParameters
-            - $limit: *Limit
             cursor: {}
