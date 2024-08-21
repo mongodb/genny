@@ -77,3 +77,19 @@ Actors:
                 inside: { bookmark: *randomInt, postitnote: *randomInt },
                 outside: { dustcover: *randomString },
               }
+
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - standalone
+          - standalone-80-feature-flags
+          - standalone-all-feature-flags
+          - replica
+          - replica-80-feature-flags
+          - replica-all-feature-flags
+          - atlas-like-replica.2022-10
+          - shard
+          - shard-80-feature-flags
+          - shard-all-feature-flags
+          - shard-lite-80-feature-flags
