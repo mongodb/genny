@@ -248,7 +248,5 @@ QueryStatsActor:
             aggregate: 1
             pipeline:
             - $queryStats: *QueryStatsParameters
-            - $sort: {"metrics.totalExecMicros.max": -1}
             - $limit: *Limit
             cursor: {}
-            allowDiskUse: true
