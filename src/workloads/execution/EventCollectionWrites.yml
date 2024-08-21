@@ -11,8 +11,8 @@ Keywords:
 GlobalDefaults:
   Collection: &Collection Collection0
   Database: &db test
-  MaxPhases: &MaxPhases 20
-  DocumentCount: &DocumentCount 3000000
+  MaxPhases: &MaxPhases 30
+  DocumentCount: &DocumentCount 7000000
   BatchSize: &BatchSize 1000
 
 Clients:
@@ -37,6 +37,7 @@ Actors:
               create: *Collection
               clusteredIndex:
                 { key: { _id: 1 }, unique: true, autoAssign: "timestamp" }
+              expireAfterSeconds: 60
   - Name: DropCollection
     Type: RunCommand
     Threads: 1
