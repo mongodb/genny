@@ -24,13 +24,13 @@ Clients:
 GlobalDefaults:
   CacheSizeMb: &CacheSizeMb 300
   HmacParameters: &HmacParameters {}
-  MaxPhase: &MaxPhase 89
+  MaxPhase: &MaxPhase 109
   RateLimitHz: &RateLimitHz 100
 
   FixedPayload: &FixedPayload
     ^Object:
       withNEntries: 175
-      havingKeys: {^RandomString: {length: 350}}
+      havingKeys: {^RandomString: {length: 10}}
       andValues: {$exists: false}
       duplicatedKeys: skip
   RandomPayload: &RandomPayload
