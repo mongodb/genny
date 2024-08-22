@@ -191,7 +191,6 @@ public:
                         int64_t cursor_id = cursor_view["id"].get_int64().value;
 
                         while (cursor_id != 0) {
-                            BOOST_LOG_TRIVIAL(info) << "GILLOG running getMore: ";
                             bsoncxx::builder::stream::document get_more_cmd{};
                             get_more_cmd << "getMore" << cursor_id << "collection"
                                          << "$cmd.aggregate";
