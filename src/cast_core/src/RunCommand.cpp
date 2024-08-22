@@ -179,7 +179,8 @@ public:
                 if (_options.awaitStepdown) {
                     runThenAwaitStepdown(_database, view);
                 } else {
-                    auto commandResult = session.client().database(_databaseName).run_command(view);
+                    auto commandResult =
+                        session.client().database(_databaseName).run_command(session, view);
 
                     // Extract the cursor and first batch
                     if (commandResult.find("cursor") != commandResult.cend()) {
@@ -199,7 +200,7 @@ public:
                             bsoncxx::document::value get_more_result =
                                 session.client()
                                     .database(_databaseName)
-                                    .run_command(get_more_cmd.view());
+                                    .run_command(session, get_more_cmd.view());
                             bsoncxx::document::view get_more_view = get_more_result.view();
 
                             // Extract the next batch
