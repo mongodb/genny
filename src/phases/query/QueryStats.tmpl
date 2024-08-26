@@ -178,13 +178,7 @@ PrepopulateActor:
       Active: *Phases
       NopInPhasesUpTo: *MaxPhase
       PhaseConfig:
-        Repeat:
-          ^NumExpr:
-            # 320B per query shape * 32 threads = 10KB for each Repeat.
-            # So, this creates ~1MB of query shape data with a Repeat value of 100.
-            withExpression: "mb * 100"
-            andValues:
-              mb: *CacheSizeMb
+        Repeat: 1000
         Collection: *Collection
         Operations:
           ^FlattenOnce:
@@ -248,5 +242,4 @@ QueryStatsActor:
             aggregate: 1
             pipeline:
             - $queryStats: *QueryStatsParameters
-            - $limit: *Limit
             cursor: {}
