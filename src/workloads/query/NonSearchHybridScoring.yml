@@ -6,7 +6,7 @@ Description: |
   infrastructure.
 
   Our made up scenario to mimic this use case will be as follows:
-  - Our collection will have documents which mimic businesses such as restraunts.
+  - Our collection will have documents which mimic businesses such as restaurants.
   - Our query will request certain restaurants near a point, and want to rank them in a fused order
     based on both their distance from the point and their average rating. (Preferring the first
     result to be one that is reasonably close with the highest reviews).
@@ -495,4 +495,4 @@ AutoRun:
           - replica-query-stats-rate-limit
           - atlas-like-replica.2022-10
       branch_name:
-        $gte: v4.4
+        $gte: v8.0
