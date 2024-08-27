@@ -26,6 +26,13 @@ Description: |
   of them in case a user typed it a certain way and doesn't realize some performance gains that
   another version of the syntax uses.
 
+Keywords:
+  - unionWith
+  - aggregate
+  - geoNear
+  - sbe
+  - group
+
 GlobalDefaults:
   # Schema constants.
   dbName: &dbName non_search_hybrid_scoring
