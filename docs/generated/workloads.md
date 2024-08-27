@@ -3427,6 +3427,10 @@ but currently perform differently. In the long run, it would be good to track pe
 of them in case a user typed it a certain way and doesn't realize some performance gains that
 another version of the syntax uses.
 
+  
+
+### Keywords
+unionWith, aggregate, geoNear, sbe, group 
 
 
 ## [OneMDocCollection_LargeDocIntId](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/OneMDocCollection_LargeDocIntId.yml)
