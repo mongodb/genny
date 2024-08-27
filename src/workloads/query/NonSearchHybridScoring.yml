@@ -174,63 +174,57 @@ Actors:
     Type: Loader
     Threads: 8
     Phases:
-      - *Nop
-      - Repeat: 1
-        Database: *dbName
-        MultipleThreadsPerCollection: true
-        CollectionCount: 1
-        DocumentCount: *documentCount
-        BatchSize: *insertBatchSize
-        Document:
-          location:
-            {
-              ^TwoDWalk:
-                {
-                  docsPerSeries: *docsPerGeoCluster,
-                  minX: *minX,
-                  maxX: *maxX,
-                  minY: *minY,
-                  maxY: *maxY,
-                  distPerDoc: *distPerDoc,
-                },
-            }
-          avgRating: { ^RandomDouble: { min: 1, max: 5 } }
-          businessType:
-            {
-              ^FormatString:
-                {
-                  format: "type_%d",
-                  withArgs:
-                    [{ ^RandomInt: { min: 0, max: *numBusinessTypes } }],
-                },
-            }
-          smallerPayloadData:
-            { ^FastRandomString: { length: 5, alphabet: "0123456789" } }
-          largerPayloadData:
-            { ^FastRandomString: { length: 90, alphabet: "0123456789" } }
-        Indexes:
-          - *geoIndex
-          - *ratingIndex
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *dbName
+          MultipleThreadsPerCollection: true
+          CollectionCount: 1
+          DocumentCount: *documentCount
+          BatchSize: *insertBatchSize
+          Document:
+            location:
+              {
+                ^TwoDWalk:
+                  {
+                    docsPerSeries: *docsPerGeoCluster,
+                    minX: *minX,
+                    maxX: *maxX,
+                    minY: *minY,
+                    maxY: *maxY,
+                    distPerDoc: *distPerDoc,
+                  },
+              }
+            avgRating: { ^RandomDouble: { min: 1, max: 5 } }
+            businessType:
+              {
+                ^FormatString:
+                  {
+                    format: "type_%d",
+                    withArgs:
+                      [{ ^RandomInt: { min: 0, max: *numBusinessTypes } }],
+                  },
+              }
+            smallerPayloadData:
+              { ^FastRandomString: { length: 5, alphabet: "0123456789" } }
+            largerPayloadData:
+              { ^FastRandomString: { length: 90, alphabet: "0123456789" } }
+          Indexes:
+            - *geoIndex
+            - *ratingIndex
 
   - Name: Quiesce
     Type: QuiesceActor
     Threads: 1
     Database: *dbName
     Phases:
-      - *Nop
-      - *Nop
-      - Repeat: 1
-      - *Nop
-      - Repeat: 1
-      - *Nop
-      - Repeat: 1
-      - *Nop
+      OnlyActiveInPhases:
+        Active: [2, 4, 6]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
 
   # This query is the style we have originally found as a recommendation for how to perform hybrid
   # search. Notably, it:
@@ -240,79 +234,76 @@ Actors:
     Type: CrudActor
     Threads: 1
     Phases:
-      - *Nop
-      - *Nop
-      - *Nop
-      - Duration: 30 seconds
-        Database: *dbName
-        Collection: *collName
-        Operations:
-          - OperationMetricsName: RankFusionUsingArrayIndexRanking
-            OperationName: aggregate
-            OperationCommand:
-              Pipeline: [
-                *geoNearStage,
-                { $limit: *limitPerInputStream },
-                # Documents output from geoNear are implicitly sorted by distance.
-                { $group: { _id: null, docs: { $push: "$$ROOT" } } },
-                {
-                  $unwind:
-                    { path: "$docs", includeArrayIndex: "geoDistRank" },
-                },
-                # RRF: 1 divided by rank + vector search rank constant.
-                {
-                  $set:
-                    {
-                      geoRankScore:
-                        {
-                          $divide:
-                            [1.0, { $add: ["$geoDistRank", *rankConstant] }],
-                        },
-                    },
-                },
-                *postUnwindProjectSpec,
-                { $unionWith: { coll: *collName, pipeline: [
-                  *matchStage,
-                  { $sort: { avgRating: -1, _id: 1 } },
-                  {
-                    $group: { _id: null, docs: { $push: "$$ROOT" } },
-                  },
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Duration: 30 seconds
+          Database: *dbName
+          Collection: *collName
+          Operations:
+            - OperationMetricsName: RankFusionUsingArrayIndexRanking
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline: [
+                  *geoNearStage,
+                  { $limit: *limitPerInputStream },
+                  # Documents output from geoNear are implicitly sorted by distance.
+                  { $group: { _id: null, docs: { $push: "$$ROOT" } } },
                   {
                     $unwind:
-                      {
-                        path: "$docs",
-                        includeArrayIndex: "ratingRank",
-                      },
+                      { path: "$docs", includeArrayIndex: "geoDistRank" },
                   },
-                  # RRF: 1 divided by rank + rank constant.
+                  # RRF: 1 divided by rank + vector search rank constant.
                   {
                     $set:
                       {
-                        ratingRankScore:
+                        geoRankScore:
                           {
                             $divide:
-                              [
-                                1.0,
-                                {
-                                  $add:
-                                    ["$ratingRank", *rankConstant],
-                                },
-                              ],
+                              [1.0, { $add: ["$geoDistRank", *rankConstant] }],
                           },
                       },
                   },
                   *postUnwindProjectSpec,
-                ] } },
-                *groupById,
-                *sumScores,
-                { $sort: { score: -1, _id: 1 } },
-                { $limit: *limitPerInputStream },
-                *finalProject,
-              ]
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
+                  { $unionWith: { coll: *collName, pipeline: [
+                    *matchStage,
+                    { $sort: { avgRating: -1, _id: 1 } },
+                    {
+                      $group: { _id: null, docs: { $push: "$$ROOT" } },
+                    },
+                    {
+                      $unwind:
+                        {
+                          path: "$docs",
+                          includeArrayIndex: "ratingRank",
+                        },
+                    },
+                    # RRF: 1 divided by rank + rank constant.
+                    {
+                      $set:
+                        {
+                          ratingRankScore:
+                            {
+                              $divide:
+                                [
+                                  1.0,
+                                  {
+                                    $add:
+                                      ["$ratingRank", *rankConstant],
+                                  },
+                                ],
+                            },
+                        },
+                    },
+                    *postUnwindProjectSpec,
+                  ] } },
+                  *groupById,
+                  *sumScores,
+                  { $sort: { score: -1, _id: 1 } },
+                  { $limit: *limitPerInputStream },
+                  *finalProject,
+                ]
 
   # This query improves (at least at the time of this writing) the performance slightly by using
   # $setWindowFields to compute the rank, rather than the grouping method above.
@@ -320,75 +311,72 @@ Actors:
     Type: CrudActor
     Threads: 1
     Phases:
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - Duration: 30 seconds
-        Database: *dbName
-        Collection: *collName
-        Operations:
-          - OperationMetricsName: RankFusionUsingWindowFunctionRank
-            OperationName: aggregate
-            OperationCommand:
-              Pipeline: [
-                *geoNearStage,
-                { $limit: *limitPerInputStream },
-                # Documents output from geoNear are implicitly sorted by distance.
-                {
-                  $setWindowFields:
-                    {
-                      sortBy: { geoDist: 1 },
-                      output: { geoDistRank: { $rank: {} } },
-                    },
-                },
-                # RRF: 1 divided by rank + vector search rank constant.
-                {
-                  $set:
-                    {
-                      geoRankScore:
-                        {
-                          $divide:
-                            [1.0, { $add: ["$geoDistRank", *rankConstant] }],
-                        },
-                    },
-                },
-                { $unionWith: { coll: *collName, pipeline: [
-                  *matchStage,
+      OnlyActiveInPhases:
+        Active: [5]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Duration: 30 seconds
+          Database: *dbName
+          Collection: *collName
+          Operations:
+            - OperationMetricsName: RankFusionUsingWindowFunctionRank
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline: [
+                  *geoNearStage,
+                  { $limit: *limitPerInputStream },
+                  # Documents output from geoNear are implicitly sorted by distance.
                   {
                     $setWindowFields:
                       {
-                        sortBy: { avgRating: -1 },
-                        output: { ratingRank: { $rank: {} } },
+                        sortBy: { geoDist: 1 },
+                        output: { geoDistRank: { $rank: {} } },
                       },
                   },
-                  # RRF: 1 divided by rank + rank constant.
+                  # RRF: 1 divided by rank + vector search rank constant.
                   {
                     $set:
                       {
-                        ratingRankScore:
+                        geoRankScore:
                           {
                             $divide:
-                              [
-                                1.0,
-                                {
-                                  $add:
-                                    ["$ratingRank", *rankConstant],
-                                },
-                              ],
+                              [1.0, { $add: ["$geoDistRank", *rankConstant] }],
                           },
                       },
                   },
-                ] } },
-                *groupById,
-                *sumScores,
-                { $sort: { score: -1, _id: 1 } },
-                { $limit: *limitPerInputStream },
-                *finalProject,
-              ]
-      - *Nop
-      - *Nop
+                  { $unionWith: { coll: *collName, pipeline: [
+                    *matchStage,
+                    {
+                      $setWindowFields:
+                        {
+                          sortBy: { avgRating: -1 },
+                          output: { ratingRank: { $rank: {} } },
+                        },
+                    },
+                    # RRF: 1 divided by rank + rank constant.
+                    {
+                      $set:
+                        {
+                          ratingRankScore:
+                            {
+                              $divide:
+                                [
+                                  1.0,
+                                  {
+                                    $add:
+                                      ["$ratingRank", *rankConstant],
+                                  },
+                                ],
+                            },
+                        },
+                    },
+                  ] } },
+                  *groupById,
+                  *sumScores,
+                  { $sort: { score: -1, _id: 1 } },
+                  { $limit: *limitPerInputStream },
+                  *finalProject,
+                ]
 
   # This query further impoves (again, when first tested) by eliminating the projections which
   # enumarate and consequently re-materialize each field in the output documents, instead nesting the
@@ -398,88 +386,85 @@ Actors:
     Type: CrudActor
     Threads: 1
     Phases:
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - Duration: 30 seconds
-        Database: *dbName
-        Collection: *collName
-        Operations:
-          - OperationMetricsName: RankFusionBestRecommended
-            OperationName: aggregate
-            OperationCommand:
-              Pipeline: [
-                *geoNearStage,
-                {
-                  $replaceWith:
-                    { orig: "$$ROOT", geoDist: { $meta: "geoNearDistance" } },
-                },
-                { $limit: *limitPerInputStream },
-                # Documents output from geoNear are implicitly sorted by distance.
-                {
-                  $setWindowFields:
-                    {
-                      sortBy: { geoDist: 1 },
-                      output: { geoDistRank: { $rank: {} } },
-                    },
-                },
-                # RRF: 1 divided by rank + vector search rank constant.
-                {
-                  $set:
-                    {
-                      geoRankScore:
-                        {
-                          $divide:
-                            [1.0, { $add: ["$geoDistRank", *rankConstant] }],
-                        },
-                    },
-                },
-                { $unionWith: { coll: *collName, pipeline: [
-                  *matchStage,
-                  { $replaceWith: { orig: "$$ROOT" } },
+      OnlyActiveInPhases:
+        Active: [7]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Duration: 30 seconds
+          Database: *dbName
+          Collection: *collName
+          Operations:
+            - OperationMetricsName: RankFusionBestRecommended
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline: [
+                  *geoNearStage,
+                  {
+                    $replaceWith:
+                      { orig: "$$ROOT", geoDist: { $meta: "geoNearDistance" } },
+                  },
+                  { $limit: *limitPerInputStream },
+                  # Documents output from geoNear are implicitly sorted by distance.
                   {
                     $setWindowFields:
                       {
-                        sortBy: { avgRating: -1 },
-                        output: { ratingRank: { $rank: {} } },
+                        sortBy: { geoDist: 1 },
+                        output: { geoDistRank: { $rank: {} } },
                       },
                   },
-                  # RRF: 1 divided by rank + rank constant.
+                  # RRF: 1 divided by rank + vector search rank constant.
                   {
                     $set:
                       {
-                        ratingRankScore:
+                        geoRankScore:
                           {
                             $divide:
-                              [
-                                1.0,
-                                {
-                                  $add:
-                                    ["$ratingRank", *rankConstant],
-                                },
-                              ],
+                              [1.0, { $add: ["$geoDistRank", *rankConstant] }],
                           },
                       },
                   },
-                ] } },
-                {
-                  $group:
+                  { $unionWith: { coll: *collName, pipeline: [
+                    *matchStage,
+                    { $replaceWith: { orig: "$$ROOT" } },
                     {
-                      _id: "$_id",
-                      fullDoc: { $first: "$orig" },
-                      ratingRankScore: { $max: "$ratingRankScore" },
-                      geoRankScore: { $max: "$geoRankScore" },
+                      $setWindowFields:
+                        {
+                          sortBy: { avgRating: -1 },
+                          output: { ratingRank: { $rank: {} } },
+                        },
                     },
-                },
-                *sumScores,
-                { $sort: { score: -1, _id: 1 } },
-                { $limit: *limitPerInputStream },
-                { $replaceWith: "$fullDoc" },
-              ]
+                    # RRF: 1 divided by rank + rank constant.
+                    {
+                      $set:
+                        {
+                          ratingRankScore:
+                            {
+                              $divide:
+                                [
+                                  1.0,
+                                  {
+                                    $add:
+                                      ["$ratingRank", *rankConstant],
+                                  },
+                                ],
+                            },
+                        },
+                    },
+                  ] } },
+                  {
+                    $group:
+                      {
+                        _id: "$_id",
+                        fullDoc: { $first: "$orig" },
+                        ratingRankScore: { $max: "$ratingRankScore" },
+                        geoRankScore: { $max: "$geoRankScore" },
+                      },
+                  },
+                  *sumScores,
+                  { $sort: { score: -1, _id: 1 } },
+                  { $limit: *limitPerInputStream },
+                  { $replaceWith: "$fullDoc" },
+                ]
 
 AutoRun:
   - When:
