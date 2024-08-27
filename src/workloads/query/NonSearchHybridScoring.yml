@@ -57,7 +57,7 @@ GlobalDefaults:
 
   documentCount: &documentCount 1000000
 
-  maxPhases: &maxPhases 7
+  maxPhases: &maxPhases 9
 
   # Since we have a relatively small amount of data, we don't want to use an area that's too
   # big (such as the entire Earth, or a whole continent). That would make the data very
@@ -102,9 +102,9 @@ GlobalDefaults:
           largerPayloadData: "$docs.largerPayloadData",
           avgRating: "$docs.avgRating",
           geoDistRank: 1,
-          geoRankScore: 1,
+          geoScore: 1,
           ratingRank: 1,
-          ratingRankScore: 1,
+          ratingScore: 1,
         },
     }
   groupById:
@@ -112,8 +112,8 @@ GlobalDefaults:
       $group:
         {
           _id: "$_id",
-          ratingRankScore: { $max: "$ratingRankScore" },
-          geoRankScore: { $max: "$geoRankScore" },
+          ratingScore: { $max: "$ratingScore" },
+          geoScore: { $max: "$geoScore" },
           businessType: { $first: "$businessType" },
           location: { $first: "$location" },
           avgRating: { $first: "$avgRating" },
@@ -130,8 +130,8 @@ GlobalDefaults:
             {
               $add:
                 [
-                  { $ifNull: ["$ratingRankScore", 0] },
-                  { $ifNull: ["$geoRankScore", 0] },
+                  { $ifNull: ["$ratingScore", 0] },
+                  { $ifNull: ["$geoScore", 0] },
                 ],
             },
         },
@@ -146,8 +146,8 @@ GlobalDefaults:
           avgRating: 1,
           geoDist: 1,
           smallerPayloadData: 1,
-          ratingRankScore: 1,
-          geoRankScore: 1,
+          ratingScore: 1,
+          geoScore: 1,
           score: 1,
         },
     }
@@ -221,7 +221,7 @@ Actors:
     Database: *dbName
     Phases:
       OnlyActiveInPhases:
-        Active: [2, 4, 6]
+        Active: [2, 4, 6, 8]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: 1
@@ -258,7 +258,7 @@ Actors:
                   {
                     $set:
                       {
-                        geoRankScore:
+                        geoScore:
                           {
                             $divide:
                               [1.0, { $add: ["$geoDistRank", *rankConstant] }],
@@ -283,7 +283,7 @@ Actors:
                     {
                       $set:
                         {
-                          ratingRankScore:
+                          ratingScore:
                             {
                               $divide:
                                 [
@@ -337,7 +337,7 @@ Actors:
                   {
                     $set:
                       {
-                        geoRankScore:
+                        geoScore:
                           {
                             $divide:
                               [1.0, { $add: ["$geoDistRank", *rankConstant] }],
@@ -357,7 +357,7 @@ Actors:
                     {
                       $set:
                         {
-                          ratingRankScore:
+                          ratingScore:
                             {
                               $divide:
                                 [
@@ -416,7 +416,7 @@ Actors:
                   {
                     $set:
                       {
-                        geoRankScore:
+                        geoScore:
                           {
                             $divide:
                               [1.0, { $add: ["$geoDistRank", *rankConstant] }],
@@ -437,7 +437,7 @@ Actors:
                     {
                       $set:
                         {
-                          ratingRankScore:
+                          ratingScore:
                             {
                               $divide:
                                 [
@@ -456,14 +456,67 @@ Actors:
                       {
                         _id: "$_id",
                         fullDoc: { $first: "$orig" },
-                        ratingRankScore: { $max: "$ratingRankScore" },
-                        geoRankScore: { $max: "$geoRankScore" },
+                        ratingScore: { $max: "$ratingScore" },
+                        geoScore: { $max: "$geoScore" },
                       },
                   },
                   *sumScores,
                   { $sort: { score: -1, _id: 1 } },
                   { $limit: *limitPerInputStream },
                   { $replaceWith: "$fullDoc" },
+                ]
+
+  # A score fusion example, inspired from an example we were using to help
+  # customers craft their own score fusion pipelines with a sigmoid expression
+  # to normalize the scores to the same domain.
+  - Name: ScoreFusionUsingSigmoid
+    Type: CrudActor
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [9]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Duration: 30 seconds
+          Database: *dbName
+          Collection: *collName
+          Operations:
+            - OperationMetricsName: RankFusionUsingArrayIndexRanking
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline: [
+                  *geoNearStage,
+                  { $limit: *limitPerInputStream },
+                  # sigmoid function to normalize the scores.
+                  {
+                    $set: {geoScore: {
+                      $divide: [1, {$sum: [1, {$exp: {$multiply: [-1, "$geoDist"]}}]}]
+                    }}
+                  },
+                  # Now, two things:
+                  # (a) A weight multiplier to bias the geo results over the ratings results.
+                  # (b) Inverting the score, since a smaller geo distance is better.
+                  {
+                    $set: {
+                      geoScore: {$multiply: [1.2, {$subtract: [1, "$geoScore"]}]}
+                    }
+                  },
+                  { $unionWith: { coll: *collName, pipeline: [
+                    *matchStage,
+                    # Another sigmoid to normalize the rating score. No weight term here - baseline of 1.
+                    {
+                      $set: {
+                        ratingScore: {
+                          $divide: [1, {$sum: [1, {$exp: {$multiply: [-1, "$avgRating"]}}]}]
+                        }
+                      }
+                    },
+                  ] } },
+                  *groupById,
+                  *sumScores,
+                  { $sort: { score: -1, _id: 1 } },
+                  { $limit: *limitPerInputStream },
+                  *finalProject,
                 ]
 
 AutoRun:
