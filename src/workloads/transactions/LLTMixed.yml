@@ -608,7 +608,7 @@ AutoRun:
           - replica
           - replica-80-feature-flags
           - replica-all-feature-flags
-          - single-replica-classic-query-engine
+          - query-engine-classic
           - single-replica-sbe
       branch_name:
         $neq:
