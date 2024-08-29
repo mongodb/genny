@@ -104,11 +104,8 @@ AutoRun:
   - When:
       mongodb_setup:
         $eq:
-          - standalone
-          - standalone-80-feature-flags
-          - standalone-all-feature-flags
-          - query-engine-classic
-          - standalone-sbe
+          - replica-query-engine-classic
+          - replica-query-engine-sbe
           - replica
           - replica-all-feature-flags
 
