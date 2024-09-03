@@ -488,7 +488,7 @@ Actors:
           Database: *dbName
           Collection: *collName
           Operations:
-            - OperationMetricsName: RankFusionUsingArrayIndexRanking
+            - OperationMetricsName: ScoreFusionUsingSigmoid
               OperationName: aggregate
               OperationCommand:
                 Pipeline: [
