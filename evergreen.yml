@@ -533,7 +533,8 @@ functions:
 
             if [ $exitCode -ne 0 ]; then
               echo -e '\033[31mThe auto-generated genny task files are not up to date!\033[0m'
-              echo -e '\033[31mThis typically happens if you are adding a new genny test, update the AutoRun section of a test, or someone added a new variant in DSI and did not regenerate the files.\033[0m'
+              echo -e '\033[31mThis typically happens if you are adding a new genny test,\033[0m'
+              echo -e '\033[31mupdate the AutoRun section of a test, or someone added a new variant in DSI and did not regenerate the files.\033[0m'
               echo -e '\033[31mTo resolve this issue, please run ./run-genny auto-tasks-local and commit the new files in the evergreen folder.\033[0m'
               exit 1
             fi
