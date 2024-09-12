@@ -877,7 +877,7 @@ class AutoTasksTests(BaseTestClass):
             "os.path.exists", return_value=False
         ) as exists_mock:
             config = Configuration()
-            ConfigWriter.write_config(execution=5, config=config, output_file="fakefile123")
+            ConfigWriter.write_config(execution=5, config=config, output_file="fakefile123", file_format=ConfigWriter.FileFormat.JSON)
 
 
 def test_dry_run_all_tasks():
