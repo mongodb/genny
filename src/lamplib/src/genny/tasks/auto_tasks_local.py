@@ -58,10 +58,8 @@ def get_builds(branch_name: str):
 def fix_auto_workload_path(command: CommandDefinition):
     if command._vars[WORKLOAD_PATH_KEY].startswith("src"):
         command._vars[WORKLOAD_PATH_KEY] = "src/genny/" + command._vars[WORKLOAD_PATH_KEY]
-    if command._vars[WORKLOAD_PATH_KEY].startswith("tmp-private-workloads"):
-        command._vars[WORKLOAD_PATH_KEY] = command._vars[WORKLOAD_PATH_KEY].replace(
-            "tmp-private-workloads", "src/PrivateWorkloads"
-        )
+    if command._vars[WORKLOAD_PATH_KEY].startswith("PrivateWorkloads"):
+        command._vars[WORKLOAD_PATH_KEY] = "src/" + command._vars[WORKLOAD_PATH_KEY]
 
 
 def main(workspace_root: str, running_in_evergreen: bool) -> None:

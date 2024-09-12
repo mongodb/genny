@@ -1020,7 +1020,7 @@ tasks:
       timeout_secs: 86400
   - func: f_run_dsi_workload
     vars:
-      auto_workload_path: PrivateWorkloads/src/workloads/customer_representative/DeviceMonitoring.yml
+      auto_workload_path: src/PrivateWorkloads/src/workloads/customer_representative/DeviceMonitoring.yml
       test_control: device_monitoring
   name: device_monitoring
   priority: 5
@@ -1031,7 +1031,7 @@ tasks:
       timeout_secs: 86400
   - func: f_run_dsi_workload
     vars:
-      auto_workload_path: PrivateWorkloads/src/workloads/customer_representative/coinbase/timeseries/GroupDateTrunc.yml
+      auto_workload_path: src/PrivateWorkloads/src/workloads/customer_representative/coinbase/timeseries/GroupDateTrunc.yml
       test_control: coinbase_timeseries_group_date_trunc
   name: coinbase_timeseries_group_date_trunc
   priority: 5
@@ -1042,7 +1042,7 @@ tasks:
       timeout_secs: 86400
   - func: f_run_dsi_workload
     vars:
-      auto_workload_path: PrivateWorkloads/src/workloads/customer_representative/coinbase/timeseries/GroupDateTruncMemoryLimit.yml
+      auto_workload_path: src/PrivateWorkloads/src/workloads/customer_representative/coinbase/timeseries/GroupDateTruncMemoryLimit.yml
       test_control: coinbase_timeseries_group_date_trunc_memory_limit
   name: coinbase_timeseries_group_date_trunc_memory_limit
   priority: 5
@@ -1053,7 +1053,7 @@ tasks:
       timeout_secs: 86400
   - func: f_run_dsi_workload
     vars:
-      auto_workload_path: PrivateWorkloads/src/workloads/customer_representative/coinbase/timeseries/GroupDateTruncSort.yml
+      auto_workload_path: src/PrivateWorkloads/src/workloads/customer_representative/coinbase/timeseries/GroupDateTruncSort.yml
       test_control: coinbase_timeseries_group_date_trunc_sort
   name: coinbase_timeseries_group_date_trunc_sort
   priority: 5
@@ -1064,7 +1064,7 @@ tasks:
       timeout_secs: 86400
   - func: f_run_dsi_workload
     vars:
-      auto_workload_path: PrivateWorkloads/src/workloads/customer_representative/coinbase/timeseries/Match.yml
+      auto_workload_path: src/PrivateWorkloads/src/workloads/customer_representative/coinbase/timeseries/Match.yml
       test_control: coinbase_timeseries_match
   name: coinbase_timeseries_match
   priority: 5
@@ -1075,7 +1075,7 @@ tasks:
       timeout_secs: 86400
   - func: f_run_dsi_workload
     vars:
-      auto_workload_path: PrivateWorkloads/src/workloads/customer_representative/coinbase/timeseries/MatchCount.yml
+      auto_workload_path: src/PrivateWorkloads/src/workloads/customer_representative/coinbase/timeseries/MatchCount.yml
       test_control: coinbase_timeseries_match_count
   name: coinbase_timeseries_match_count
   priority: 5
@@ -1086,7 +1086,7 @@ tasks:
       timeout_secs: 86400
   - func: f_run_dsi_workload
     vars:
-      auto_workload_path: PrivateWorkloads/src/workloads/customer_representative/coinbase/timeseries/Query01.yml
+      auto_workload_path: src/PrivateWorkloads/src/workloads/customer_representative/coinbase/timeseries/Query01.yml
       test_control: coinbase_timeseries_query01
   name: coinbase_timeseries_query01
   priority: 5
@@ -1097,7 +1097,7 @@ tasks:
       timeout_secs: 86400
   - func: f_run_dsi_workload
     vars:
-      auto_workload_path: PrivateWorkloads/src/workloads/customer_representative/coinbase/timeseries/Query02.yml
+      auto_workload_path: src/PrivateWorkloads/src/workloads/customer_representative/coinbase/timeseries/Query02.yml
       test_control: coinbase_timeseries_query02
   name: coinbase_timeseries_query02
   priority: 5
@@ -1108,7 +1108,7 @@ tasks:
       timeout_secs: 86400
   - func: f_run_dsi_workload
     vars:
-      auto_workload_path: PrivateWorkloads/src/workloads/customer_representative/coinbase/timeseries/Query03.yml
+      auto_workload_path: src/PrivateWorkloads/src/workloads/customer_representative/coinbase/timeseries/Query03.yml
       test_control: coinbase_timeseries_query03
   name: coinbase_timeseries_query03
   priority: 5
