@@ -287,9 +287,8 @@ AutoRun:
           - replica-all-feature-flags
           - replica-maintenance-events
           - replica-noflowcontrol
-          - single-replica-classic-query-engine
-          - single-replica-sbe
-          - standalone
+          - replica-query-engine-classic
+          - replica-query-engine-sbe
       atlas_setup:
         $neq:
           - M30-repl

@@ -135,9 +135,8 @@ AutoRun:
           - replica-all-feature-flags
           - replica-disable-execution-control
           - replica-noflowcontrol
-          - standalone
-          - standalone-classic-query-engine
-          - standalone-sbe
+          - replica-query-engine-classic
+          - replica-query-engine-sbe
       atlas_setup:
         $neq:
           - M10-repl

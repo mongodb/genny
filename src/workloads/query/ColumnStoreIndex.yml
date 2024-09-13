@@ -705,7 +705,7 @@ Actors:
 # - When:
 #     mongodb_setup:
 #       $eq:
-#       - standalone-all-feature-flags
+#       - replica-all-feature-flags
 #     branch_name:
 #       $neq:
 #       - v4.0
