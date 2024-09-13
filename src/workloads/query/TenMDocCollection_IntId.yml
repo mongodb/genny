@@ -111,9 +111,9 @@ Actors:
   - ActorFromTemplate:
       TemplateName: CrudTemplate
       TemplateParameters:
-        Name: IDFieldPointProject128Threads
+        Name: IDHackEqPointProject128Threads
         Find:
-          # Using $eq turns this from an IDHACK find into a scan find.
+          # Queries of the shape {_id: {$eq: <value>}} are eligible for IDHACK.
           Filter: {_id: {$eq: {^RandomInt: {min: 0, max: 9999999}}}}
           Options:
             Projection: {_id: 1}
