@@ -69,7 +69,7 @@ def main(workspace_root: str, running_in_evergreen: bool) -> None:
         SLOG.info("Cloning the PrivateWorkloads repo to look for tests")
         GitRepo.clone_from(PRIVATE_WORKLOADS_REPO_URL, PRIVATE_WORKLOADS_TMP_PATH)
 
-    for branch_name in PROJECT_FILES.keys():
+    for branch_name in PROJECT_FILES:
         SLOG.info("Creating the configuration", branch_name=branch_name)
         builds = get_builds(branch_name)
         lister = WorkloadLister(

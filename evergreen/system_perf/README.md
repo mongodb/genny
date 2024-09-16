@@ -18,7 +18,8 @@ evergreen patch -p sys-perf -u --include-modules
 ```
 
 Make sure to specify the path to your local Genny repository when the second
-command asks for it.
+command asks for it. Evergreen also caches this setting in your
+`~/.evergreen.yml` config
 
 ## Adding a new Variant in DSI
 
