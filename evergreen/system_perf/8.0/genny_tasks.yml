@@ -1328,28 +1328,6 @@ tasks:
       timeout_secs: 86400
   - func: f_run_dsi_workload
     vars:
-      auto_workload_path: src/genny/src/workloads/query/CsiFragmentedInsertsFlat.yml
-      test_control: csi_fragmented_inserts_flat
-  name: csi_fragmented_inserts_flat
-  priority: 5
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
-      auto_workload_path: src/genny/src/workloads/query/CsiFragmentedInsertsNested.yml
-      test_control: csi_fragmented_inserts_nested
-  name: csi_fragmented_inserts_nested
-  priority: 5
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
       auto_workload_path: src/genny/src/workloads/query/CumulativeWindows.yml
       test_control: cumulative_windows
   name: cumulative_windows

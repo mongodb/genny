@@ -898,8 +898,6 @@ buildvariants:
   - name: coll_scan_simplifiable_predicate_large
   - name: coll_scan_simplifiable_predicate_medium
   - name: coll_scan_simplifiable_predicate_small
-  - name: csi_fragmented_inserts_flat
-  - name: csi_fragmented_inserts_nested
   - name: cumulative_windows
   - name: cumulative_windows_multi_accums
   - name: densify_hours
@@ -1993,28 +1991,6 @@ tasks:
       auto_workload_path: src/genny/src/workloads/query/ConstantFoldArithmetic.yml
       test_control: constant_fold_arithmetic
   name: constant_fold_arithmetic
-  priority: 5
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
-      auto_workload_path: src/genny/src/workloads/query/CsiFragmentedInsertsFlat.yml
-      test_control: csi_fragmented_inserts_flat
-  name: csi_fragmented_inserts_flat
-  priority: 5
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
-      auto_workload_path: src/genny/src/workloads/query/CsiFragmentedInsertsNested.yml
-      test_control: csi_fragmented_inserts_nested
-  name: csi_fragmented_inserts_nested
   priority: 5
 - commands:
   - command: timeout.update
