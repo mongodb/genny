@@ -2,6 +2,9 @@
 
 extends: default
 
+ignore:
+  - evergreen
+
 rules:
   anchors:
     forbid-undeclared-aliases: true

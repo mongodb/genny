@@ -98,9 +98,10 @@ def main(project_files: List[str], workspace_root: str, no_activate: bool) -> No
     for project_file in project_files:
         builds.extend(get_all_builds(global_expansions, project_file))
 
-    lister = WorkloadLister(workspace_root=workspace_root)
+    workload_file_pattern = os.path.join(workspace_root, "src", "*", "src", "workloads", "**", "*.yml")
+    lister = WorkloadLister(workspace_root=workspace_root, workload_file_pattern=workload_file_pattern)
     repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
 
     config = create_configuration(repo, builds, no_activate, activate_tasks)
     output_file = os.path.join(workspace_root, "build", "TaskJSON", "Tasks.json")
-    ConfigWriter.write_config(execution, config, output_file)
+    ConfigWriter.write_config(execution, config, output_file, ConfigWriter.FileFormat.JSON)

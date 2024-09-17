@@ -877,7 +877,7 @@ class AutoTasksTests(BaseTestClass):
             "os.path.exists", return_value=False
         ) as exists_mock:
             config = Configuration()
-            ConfigWriter.write_config(execution=5, config=config, output_file="fakefile123")
+            ConfigWriter.write_config(execution=5, config=config, output_file="fakefile123", file_format=ConfigWriter.FileFormat.JSON)
 
 
 def test_dry_run_all_tasks():
@@ -893,7 +893,8 @@ def test_dry_run_all_tasks():
     try:
         build = CurrentBuildInfo({"build_variant": "Test Variant", "execution": 1})
         op = OpName.from_flag("all_tasks")
-        lister = WorkloadLister(workspace_root=workspace_root)
+        workload_file_pattern = os.path.join(workspace_root, "src", "*", "src", "workloads", "**", "*.yml")
+        lister = WorkloadLister(workspace_root=workspace_root, workload_file_pattern=workload_file_pattern)
         reader = YamlReader()
         repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
         tasks = repo.tasks(op=op, build=build)

@@ -53,12 +53,12 @@ class WorkloadLister:
     Separate from the Repo class for easier testing.
     """
 
-    def __init__(self, workspace_root: str):
+    def __init__(self, workspace_root: str, workload_file_pattern: str):
         self.workspace_root = workspace_root
+        self.workload_file_pattern = workload_file_pattern
 
-    def all_workload_files(self) -> Set[str]:
-        pattern = os.path.join(self.workspace_root, "src", "*", "src", "workloads", "**", "*.yml")
-        return {*glob.glob(pattern, recursive=True)}
+    def all_workload_files(self) -> List[str]:
+        return sorted(list(set(glob.glob(self.workload_file_pattern, recursive=True))))
 
     def modified_workload_files(self) -> Set[str]:
         """Relies on git to find files in src/workloads modified versus origin/master"""
@@ -487,14 +487,17 @@ class Repo:
             raise Exception("Invalid operation mode")
         return tasks
 
-
 class ConfigWriter:
     """
     Takes tasks and converts them to shrub Configuration objects.
     """
 
+    class FileFormat(enum.Enum):
+        JSON = "json"
+        YAML = "yaml"
+
     @staticmethod
-    def write_config(execution: int, config: Configuration, output_file: str) -> None:
+    def write_config(execution: int, config: Configuration, output_file: str, file_format: FileFormat) -> None:
         """
         :param config: The configuration to write
         :param output_file: What file to write to.
@@ -502,7 +505,10 @@ class ConfigWriter:
         success = False
         raised = None
         try:
-            out_text = config.to_json()
+            if file_format == ConfigWriter.FileFormat.JSON:
+                out_text = config.to_json()
+            if file_format == ConfigWriter.FileFormat.YAML:
+                out_text = config.to_yaml()
             os.makedirs(os.path.dirname(output_file), exist_ok=True)
             if os.path.exists(output_file):
                 os.unlink(output_file)
@@ -603,7 +609,8 @@ def main(mode_name: str, dry_run: bool, workspace_root: str) -> None:
             sys.exit(1)
     build = CurrentBuildInfo(expansions)
     op = OpName.from_flag(mode_name)
-    lister = WorkloadLister(workspace_root=workspace_root)
+    workload_file_pattern = os.path.join(workspace_root, "src", "*", "src", "workloads", "**", "*.yml")
+    lister = WorkloadLister(workspace_root=workspace_root, workload_file_pattern=workload_file_pattern)
     repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
     tasks = repo.tasks(op=op, build=build)
 
@@ -612,4 +619,4 @@ def main(mode_name: str, dry_run: bool, workspace_root: str) -> None:
     if dry_run:
         SLOG.debug("Tasks json content", contents=config.to_json)
     else:
-        ConfigWriter.write_config(build.execution, config, output_file)
+        ConfigWriter.write_config(build.execution, config, output_file, ConfigWriter.FileFormat.JSON)
