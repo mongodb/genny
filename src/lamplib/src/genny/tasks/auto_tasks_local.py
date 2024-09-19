@@ -50,7 +50,7 @@ def get_builds(branch_name: str):
     builds = []
     expansions = {"branch_name": branch_name, "execution": FIRST_EXECUTION}
     for project_file in PROJECT_FILES[branch_name]:
-        builds.extend(get_all_builds(expansions, project_file))
+        builds.extend(get_all_builds(expansions, project_file, False))
 
     return builds
 

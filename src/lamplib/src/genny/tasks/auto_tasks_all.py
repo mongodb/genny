@@ -18,7 +18,7 @@ SLOG = structlog.get_logger(__name__)
 
 
 def get_all_builds(
-    global_expansions: dict[str, str], project_file_path: str
+    global_expansions: dict[str, str], project_file_path: str, require_schedule_variant_auto_tasks: bool = True
 ) -> List[CurrentBuildInfo]:
     """
     Attempts to compute the expansions
@@ -29,7 +29,9 @@ def get_all_builds(
     all_builds = []
     for variant in variants:
         contains_auto_task = any(task["name"] == "schedule_variant_auto_tasks" for task in variant["tasks"])
-        if "expansions" in variant and "mongodb_setup" in variant["expansions"] and contains_auto_task:
+        if require_schedule_variant_auto_tasks and not contains_auto_task:
+            continue
+        if "expansions" in variant and "mongodb_setup" in variant["expansions"]:
             build_info_dict = {}
             build_info_dict.update(global_expansions)
             build_info_dict.update(variant["expansions"])
