@@ -30,7 +30,7 @@ def get_all_builds(
     for variant in variants:
         contains_auto_task = any(task["name"] == "schedule_variant_auto_tasks" for task in variant["tasks"])
         if require_schedule_variant_auto_tasks and not contains_auto_task:
-            break
+            continue
         if "expansions" in variant and "mongodb_setup" in variant["expansions"]:
             build_info_dict = {}
             build_info_dict.update(global_expansions)
