@@ -104,7 +104,9 @@ Actors:
                     },
                   ]
 
-  - Name: GroupBucketLevelRewriteOnMeta
+  # Bucket-level writes to use the time field can only be done conditionally.
+  # TODO SERVER-83072: Extend this benchmark for arrays if necessary.
+  - Name: GroupBucketLevelRewriteOnTime
     Type: CrudActor
     Database: *database
     Threads: 10
@@ -131,6 +133,33 @@ Actors:
                     },
                   ]
 
+  # Bucket-level writes to use the meta field can only be done conditionally.
+  - Name: GroupBucketLevelRewriteOnMeta
+    Type: CrudActor
+    Database: *database
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [5]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $group:
+                        {
+                          _id: "$tags.hostname",
+                          min_time: { $min: "$time" },
+                          max_time: { $max: "$time" },
+                        },
+                    },
+                  ]
   - Name: GroupBucketLevelRewriteOnTime
     Type: CrudActor
     Database: *database

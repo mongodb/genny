@@ -15,7 +15,7 @@ GlobalDefaults:
   DocumentCount: &documentCount 1e7
   Repeat: &repeat 200
   Threads: &threads 1
-  MaxPhases: &maxPhases 4
+  MaxPhases: &maxPhases 6
   MetaCount: &metaCount 10
 
 Clients:
@@ -105,6 +105,53 @@ Actors:
           Repeat: 1
           Threads: 1
 
+  # The control.min.time field can be used as an accurate bucket minimum if it's not an object or
+  # an array.
+  - Name: BlockProcessingExtendedRangeMinTime
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: TsBlockExtendedRangeMinTime
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {$project: {time: 1, meta: 1}},
+                    {$group: {_id: "$meta", gb: {$min: "$time"}}}
+                  ]
+
+  # The control.max.time field can only be used as an accurate bucket maximum if its after 1970.
+  - Name: BlockProcessingExtendedRangeMaxTime
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [5]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: TsBlockExtendedRangeMaxTime
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {$project: {time: 1, meta: 1}},
+                    {$group: {_id: "$meta", gb: {$max: "$time"}}}
+                  ]
+
   # The control.max.time field can only be used as an accurate maximum if its after 1970.
   - Name: BlockProcessingExtendedRangeMaxTime
     Type: CrudActor
@@ -112,7 +159,7 @@ Actors:
     Threads: *threads
     Phases:
       OnlyActiveInPhases:
-        Active: [4]
+        Active: [6]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: *repeat
