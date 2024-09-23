@@ -17,13 +17,6 @@ We support several setups of the TPC-H benchmark by varying the schema type and 
 [Q20](./generated/workloads.md#q20-1), [Q21](./generated/workloads.md#q21-1), [Q22](./generated/workloads.md#q22-1),
 [validate](./generated/workloads.md#validate-1)
 
-### Column Store
-- [AvgAcctBal](./generated/phases.md#avgacctbal)
-- [AvgItemCost](./generated/phases.md#avgitemcost)
-- [BiggestOrders](./generated/phases.md#biggestorders)
-- [TotalLineitemRevenue](./generated/phases.md#totallineitemrevenue)
-- [TotalOrderRevenue](./generated/phases.md#totalorderrevenue)
-
 ## Normalized
 ### Scale 1
 [Q1](./generated/workloads.md#q1-2), [Q2](./generated/workloads.md#q2-2), [Q3](./generated/workloads.md#q3-2), [Q4](./generated/workloads.md#q4-2), [Q5](./generated/workloads.md#q5-2), [Q6](./generated/workloads.md#q6-2), [Q7](./generated/workloads.md#q7-2), [Q8](./generated/workloads.md#q8-2), [Q9](./generated/workloads.md#q9-2)

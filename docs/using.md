@@ -1,47 +1,47 @@
 # Using Genny
+
 [go/using-genny](http://go/using-genny)
 
 ## Table of Contents
 
-1.  [Introduction](#orgf1f92f6)
-2.  [Getting Started and Building](#org35e6dff)
-3.  [Core Concepts](#org1140a6b)
-    1.  [What is load generation?](#orgdcd1898)
-	2.  [What other load generation tools are there?](#orgc7988ae)
-    3.  [What is the system under test?](#orgc7904ae)
-    4.  [What is a workload?](#org3610c67)
-        1.  [How are workloads configured?](#orgdecc7ae)
-        2.  [What is an Actor?](#org51d4d33)
-        3.  [What is a phase?](#orgb655d69)
-        4.  [How do I run a workload?](#org32b8ad3)
-    5.  [Outputs](#orgec88ad4)
-        1.  [Analyzing workload output locally](#analyzing-workload-output-locally)
-    6.  [Workload Development](#org0e7c476)
-4.  [Further Concepts](#org61c719c)
-    1.  [Common Actors](#org78b250a)
-    2.  [AutoRun](#org2b04b49)
-        1.  [What is AutoRun?](#orgd0067d1)
-        2.  [Configuring AutoRun](#orgbfb0d8e)
-    3.  [Value Generators](#orgd89f221)
-    4.  [Preprocessor](#org2078b23)
-        1.  [LoadConfig](#orga6d35c7)
-        2.  [ActorTemplate](#orga45b1d8)
-        3.  [OnlyActiveInPhases](#orgf9c328f)
-        4.  [FlattenOnce](#preprocessorflattenonce)
-        5.  [PreprocessorFormatString](#preprocessorformatstring)
-        6.  [NumExpr](#preprocessornumexpr)
-        7.  [Defaults and Overrides](#org22b7a0f)
-    5.  [Connecting to the Server](#orgd6b0450)
-        1.  [Connection Strings and Pools](#orgd2659db)
-        2.  [Multiple Connection Strings](#orga591018)
-        3.  [Default](#org65830c2)
-    6.  [Creating an Actor](#org7e6c6bd)
-    7.  [Enabling Client-Side Field Level Encryption](#org627591d)
-5.  [Pitfalls](#org3aaae9e)
-    1.  [pipe creation failed (24): Too many open files](#orga7ab911)
-    2.  [Actor integration tests fail locally](#orgb084b49)
-    3.  [The Loader agent requires thread count set on both Actor and phase level](#org97681a9)
-
+1. [Introduction](#orgf1f92f6)
+2. [Getting Started and Building](#org35e6dff)
+3. [Core Concepts](#org1140a6b)
+    1. [What is load generation?](#orgdcd1898)
+    2. [What other load generation tools are there?](#orgc7988ae)
+    3. [What is the system under test?](#orgc7904ae)
+    4. [What is a workload?](#org3610c67)
+        1. [How are workloads configured?](#orgdecc7ae)
+        2. [What is an Actor?](#org51d4d33)
+        3. [What is a phase?](#orgb655d69)
+        4. [How do I run a workload?](#org32b8ad3)
+    5. [Outputs](#orgec88ad4)
+        1. [Analyzing workload output locally](#analyzing-workload-output-locally)
+    6. [Workload Development](#org0e7c476)
+4. [Further Concepts](#org61c719c)
+    1. [Common Actors](#org78b250a)
+    2. [AutoRun](#org2b04b49)
+        1. [What is AutoRun?](#orgd0067d1)
+        2. [Configuring AutoRun](#orgbfb0d8e)
+    3. [Value Generators](#orgd89f221)
+    4. [Preprocessor](#org2078b23)
+        1. [LoadConfig](#orga6d35c7)
+        2. [ActorTemplate](#orga45b1d8)
+        3. [OnlyActiveInPhases](#orgf9c328f)
+        4. [FlattenOnce](#preprocessorflattenonce)
+        5. [PreprocessorFormatString](#preprocessorformatstring)
+        6. [NumExpr](#preprocessornumexpr)
+        7. [Defaults and Overrides](#org22b7a0f)
+    5. [Connecting to the Server](#orgd6b0450)
+        1. [Connection Strings and Pools](#orgd2659db)
+        2. [Multiple Connection Strings](#orga591018)
+        3. [Default](#org65830c2)
+    6. [Creating an Actor](#org7e6c6bd)
+    7. [Enabling Client-Side Field Level Encryption](#org627591d)
+5. [Pitfalls](#org3aaae9e)
+    1. [pipe creation failed (24): Too many open files](#orga7ab911)
+    2. [Actor integration tests fail locally](#orgb084b49)
+    3. [The Loader agent requires thread count set on both Actor and phase level](#org97681a9)
 
 <a id="orgf1f92f6"></a>
 
@@ -51,19 +51,18 @@ Hello! These are the docs for Genny specifically. Genny is a workload-generator 
 
 If you have any questions, please reach out to the DEVPROD team in our dedicated slack channel: [#ask-devprod-performance](https://mongodb.slack.com/archives/C01VD0LQZED). If you feel like these docs can be improved in any way, feel free to open a PR and assign someone from DEVPROD. No ticket necessary. This document is intended to be readable straight-through, in addition to serving as a reference on an as-needed basis. If there are any difficulties in flow or discoverability, please let us know.
 
-
 <a id="org35e6dff"></a>
 
 # Getting Started and Building
 
 For build instructions, see the installation guide [here](setup.md).
 
-To try launching Genny, navigate to the root of the Genny repo and run the following: 
+To try launching Genny, navigate to the root of the Genny repo and run the following:
 
 ```bash
 ./run-genny workload src/workloads/docs/HelloWorld.yml
 ```
-	
+
 You should see output similar to the following:
 
 ```
@@ -85,7 +84,6 @@ You should see output similar to the following:
 [curator] 2022/03/24 10:44:58 [p=info]: poplar rpc service terminated
 ```
 
-
 Note that the above test workload does not connect to a remote server, while most do. For more details, see [What is the System Under Test?](#orgc7904ae)
 
 Whenever you have questions about the Genny CLI, you can always use the `-h` option for the top-level Genny CLI or any subcommands:
@@ -95,13 +93,11 @@ Whenever you have questions about the Genny CLI, you can always use the `-h` opt
 ./run-genny workload -h # See args and options for the workload subcommand
 ```
 
-
 <a id="org1140a6b"></a>
 
 # Core Concepts
 
 This section introduces the core concepts used by Genny, the minimal required syntax for its inputs, and builds up a basic example.
-
 
 <a id="orgdcd1898"></a>
 
@@ -114,6 +110,7 @@ Results of a load test can inform developers as to the performance of the test s
 <a id="orgc7988ae"></a>
 
 ### What other load generation tools are there?
+
 At MongoDB, we've historically used [benchrun-based](https://github.com/10gen/workloads) workloads. This legacy tooling was deprecated in favor of Genny in order to provide:
 
 - A standardized [interface](#org3610c67) for workload authoring in yaml.
@@ -136,13 +133,11 @@ By default, Genny will try to connect to a MongoDB server at `localhost:27017`. 
 
 For more details on how Genny handles connections, see [Connecting to the Server](#orgd6b0450).
 
-
 <a id="org3610c67"></a>
 
 ## What is a workload?
 
 A **workload** is a repeatable procedure that Genny uses to generate load against a system under test. Genny workloads are written in yaml configs that describe how **Actors** move through **phases**. This section describes each of these.
-
 
 <a id="orgdecc7ae"></a>
 
@@ -174,13 +169,12 @@ Actors:
 
 Everything under the `Actor` key (where the magic happens) will be explained in the next section. First let's look at the other **required** keys:
 
--   `SchemaVersion` - This is a basic versioning system used for Genny workload syntax. For the moment, any new workloads should have the value `2018-07-01` for this key.
--   `Owner` - This should have an identifier for the team that owns the workload, ideally an @-mentionable GitHub team.
--   `Description` - This should contain a written description of the workload. It's recommended to go into as much detail as possible, since understanding the performance issue behind why a workload was written can be difficult months or years later.
--   `Keywords` - These should be searchable keywords associated with your workload. Include keywords for Actors used, operations performed, qualities of the system under test that are expected, etc.
+- `SchemaVersion` - This is a basic versioning system used for Genny workload syntax. For the moment, any new workloads should have the value `2018-07-01` for this key.
+- `Owner` - This should have an identifier for the team that owns the workload, ideally an @-mentionable GitHub team.
+- `Description` - This should contain a written description of the workload. It's recommended to go into as much detail as possible, since understanding the performance issue behind why a workload was written can be difficult months or years later.
+- `Keywords` - These should be searchable keywords associated with your workload. Include keywords for Actors used, operations performed, qualities of the system under test that are expected, etc.
 
 Workload configurations can be found in [./src/workloads](../src/workloads) from the Genny repo root. Organization of this directory is arbitrary as far as Genny is concerned, though example workloads should be in the `docs` subdir.
-
 
 <a id="org51d4d33"></a>
 
@@ -230,10 +224,10 @@ Note that even though the Actors are listed sequentially, all Actors are concurr
 
 Actor configurations expect the following keys:
 
--   `Name` - The human-understandable name of this particular Actor configuration. This should be unique throughout the workload.
--   `Type` - The kind of Actor to create. This determines the Actor's behavior and possible configuration options.
--   `Threads` - How many threads to allocate for this Actor.
--   `Phases` - A list of phase configurations (described in next section).
+- `Name` - The human-understandable name of this particular Actor configuration. This should be unique throughout the workload.
+- `Type` - The kind of Actor to create. This determines the Actor's behavior and possible configuration options.
+- `Threads` - How many threads to allocate for this Actor.
+- `Phases` - A list of phase configurations (described in next section).
 
 In addition to the universal fields above, individual Actors may have their own configuration keys, such as the `Message` key of the `HelloWorld` Actor, used to determine what message is printed.
 
@@ -245,7 +239,6 @@ Some tips for configuring Actors:
 - Consider whether your Actor will have "lingering" effects after a phase transition. If it does, and if that's not desireable for this workload, consider using the Quiesce Actor.
 
 Actors are written in C++, and creating new Actors or extending existing ones is a common and encouraged workflow when using Genny. These Actors are owned by their authors. For more details, see [Creating an Actor](#org7e6c6bd).
-
 
 <a id="orgb655d69"></a>
 
@@ -296,20 +289,20 @@ Therefore, the logged output of this Actor would show many lines of `Hello Phase
 
 Phase configurations accept the following main keys:
 
--   `Duration` - How long to operate in this phase while holding the phase open.
--   `Repeat` - How many times to repeat the operation while holding the phase open.
--   `Blocking` - This key can be specified with the value `None` to cause the Actor to run as a **background Actor** for this phase. This Actor will act as many times as possible during the phase without holding it open, then move on to the next phase when everyone else is ready.
--   `Nop` - This key can be set with the value `true` to cause the Actor to nop for the duration of the phase.
+- `Duration` - How long to operate in this phase while holding the phase open.
+- `Repeat` - How many times to repeat the operation while holding the phase open.
+- `Blocking` - This key can be specified with the value `None` to cause the Actor to run as a **background Actor** for this phase. This Actor will act as many times as possible during the phase without holding it open, then move on to the next phase when everyone else is ready.
+- `Nop` - This key can be set with the value `true` to cause the Actor to nop for the duration of the phase.
 
 A couple of notes about the above:
 
--   You can specify both `Repeat` and `Duration` for a phase. Whichever lasts longer wins.
--   It is undefined behavior if a given phase does not have some Actor specifying `Repeat` or `Duration`.
+- You can specify both `Repeat` and `Duration` for a phase. Whichever lasts longer wins.
+- It is undefined behavior if a given phase does not have some Actor specifying `Repeat` or `Duration`.
 
-1.  Sleeping
+1. Sleeping
 
     In addition to the above keys, Actors can also be configured to sleep during parts of phases. For example:
-    
+
 ```yaml
 Actors:
 - Name: HelloWorldExample
@@ -321,16 +314,16 @@ Actors:
     Duration: 50 milliseconds
     SleepAfter: 15 milliseconds
 ```
-    
-This will sleep for 10 milliseconds at the beginning of *every* Actor iteration and for 15 milliseconds at the end of every iteration. This time is counted as part of the phase duration. Genny accepts the following sleep configurations:
-    
--   `SleepBefore` - duration to sleep at the beginning of each iteration
--   `SleepAfter` - duration to sleep after each iteration
 
-2.  Rate Limiting
+This will sleep for 10 milliseconds at the beginning of _every_ Actor iteration and for 15 milliseconds at the end of every iteration. This time is counted as part of the phase duration. Genny accepts the following sleep configurations:
+
+- `SleepBefore` - duration to sleep at the beginning of each iteration
+- `SleepAfter` - duration to sleep after each iteration
+
+2. Rate Limiting
 
 By default, Actors will repeat their main loop as quickly as possible. Sometimes you want to restrict how quickly an Actor works. This can be done using a rate limiter:
-    
+
 ```yaml
 Actors:
 - Name: HelloWorldExample
@@ -341,11 +334,11 @@ Actors:
     GlobalRate: 5 per 10 milliseconds
     Duration: 50 milliseconds
 ```
-    
+
 Using the `GlobalRate` configuration, the above Actor will only have 5 threads act every 10 milliseconds, despite having 100 threads that could reasonable act at once. If this workload's outputs were to be analyzed and the intrarun time series were graphed, the user would see only 5 operations occurring every 10 milliseconds. (See [here](#orgec88ad4) for more details about outputs.)
-    
+
 In addition to hard-coding how many threads act and when, you can configure Genny to rate-limit the Actor at a percentage of the detected maximum rate:
-    
+
 ```yaml
 Actors:
 - Name: HelloWorldExample
@@ -356,17 +349,16 @@ Actors:
     GlobalRate: 80%
     Duration: 2 minutes
 ```
-    
-    The above workload will run `HelloWorldExample` at maximum throughput for either 1 minutes or 3 iterations of the Actor's loop, whichever is longer. Afterwards, Genny will use the estimated throughput from that time to limit the Actor to 80% of the max throughput.
-    
-Note that the rate limiter uses a [token bucket algorithm](https://en.wikipedia.org/wiki/Token_bucket). This means that bursty behavior is possible. For example, if we configure `GlobalRate: 5 per 10 milliseconds` then we will have 5 threads act all at once, followed by 9 or so milliseconds without any threads acting, then another burst of 5 threads acting, etc. We can smooth the rate by specifying a tighter yet equivalent rate limit: `GlobalRate: 1 per 2 milliseconds`.
-    
-Since the percentage-based limiting treats the entire estimation period as the duration in the rate specification, it is highly prone to bursty behavior.
-    
-Rate limiting accepts the following configurations:
-    
--   `GlobalRate` - specified as either a rate specification (x per y minutes/seconds/milliseconds/etc) or as a percentage
 
+    The above workload will run `HelloWorldExample` at maximum throughput for either 1 minutes or 3 iterations of the Actor's loop, whichever is longer. Afterwards, Genny will use the estimated throughput from that time to limit the Actor to 80% of the max throughput.
+
+Note that the rate limiter uses a [token bucket algorithm](https://en.wikipedia.org/wiki/Token_bucket). This means that bursty behavior is possible. For example, if we configure `GlobalRate: 5 per 10 milliseconds` then we will have 5 threads act all at once, followed by 9 or so milliseconds without any threads acting, then another burst of 5 threads acting, etc. We can smooth the rate by specifying a tighter yet equivalent rate limit: `GlobalRate: 1 per 2 milliseconds`.
+
+Since the percentage-based limiting treats the entire estimation period as the duration in the rate specification, it is highly prone to bursty behavior.
+
+Rate limiting accepts the following configurations:
+
+- `GlobalRate` - specified as either a rate specification (x per y minutes/seconds/milliseconds/etc) or as a percentage
 
 <a id="org32b8ad3"></a>
 
@@ -382,7 +374,6 @@ If your workload requires a MongoDB connection (most do), then you can pass it i
 
 If you'd like to have your results summarized locally in a JSON format, you can pass in the `-r` flag.
 
-
 <a id="orgec88ad4"></a>
 
 ## Outputs
@@ -391,8 +382,8 @@ Genny's primary output is time-series data. Every time an Actor performs an oper
 
 Genny outputs to `./build/WorkloadOutput`. When running Genny for the first time, you should see two outputs in that directory:
 
--   `CedarMetrics` - a directory full of FTDC files, where each file corresponds to a single time-series metric for a single operation. For more details about the format and contents of these FTDC files, see our tool-agnostic documentation [here](https://github.com/10gen/performance-tooling-docs/blob/main/getting_started/intrarun_data_generation.md). NOTE: this FTDC is different from the [MongoDB server Full Time Diagnostic Data Capture](https://www.mongodb.com/docs/manual/administration/analyzing-mongodb-performance/#full-time-diagnostic-data-capture). This file can also contain a JSON summary of these FTDC files if you pass in the `-r` flag when running the `workload` command.
--   `workload` - a directory containing the preprocessed workload. Learn more about the preprocessor [here](#org2078b23).
+- `CedarMetrics` - a directory full of FTDC files, where each file corresponds to a single time-series metric for a single operation. For more details about the format and contents of these FTDC files, see our tool-agnostic documentation [here](https://github.com/10gen/performance-tooling-docs/blob/main/getting_started/intrarun_data_generation.md). NOTE: this FTDC is different from the [MongoDB server Full Time Diagnostic Data Capture](https://www.mongodb.com/docs/manual/administration/analyzing-mongodb-performance/#full-time-diagnostic-data-capture). This file can also contain a JSON summary of these FTDC files if you pass in the `-r` flag when running the `workload` command.
+- `workload` - a directory containing the preprocessed workload. Learn more about the preprocessor [here](#org2078b23).
 
 If you run Genny and the `CedarMetrics` directory already exists, it will be moved to `CedarMetrics-<current_time>` to avoid overwriting results. The preprocessed workload will be deposited into the `workload` directory, possibly overwriting the existing one. (Or you may end up with multiple workloads in the directory, if they have different names. This has no impact on execution.)
 
@@ -418,20 +409,20 @@ After installing the required Python packages, the tool can be run as in the fol
 python src/workloads/contrib/analysis/test_result_summary.py -m throughput timers.dur -a ".*Sleep.*" -b 3
 SleepTest.SleepTest summary:
         timers.dur (measured in nanoseconds, displayed in milliseconds):
-                count     : 160     
-                average   : 1001.3  
-                median    : 1000.9  
-                mode      : 1000.9  
-                stddev    : 0.4     
+                count     : 160
+                average   : 1001.3
+                median    : 1000.9
+                mode      : 1000.9
+                stddev    : 0.4
                 [min, max]: [1000.4, 1002.5]
                 histogram:
                         [1000,1001): ***************************        (27)
                         [1001,1002): ************************************************************...    (128)
                         [1002,1002]: *****      (5)
         throughput:
-                ops       : 160.0   
+                ops       : 160.0
                 seconds   : 160.213370114
-                ops per second: 0.9987  
+                ops per second: 0.9987
 
 ```
 
@@ -441,20 +432,20 @@ Try using `python test_result_summary.py --help` for more options.
 
 ## Workload Development
 
-1.  Create a yaml file in `./src/workloads` in whatever topical subdirectory you deem appropriate and populate it with appropriate configuration. If you have yaml configuration that may need loading, place it in `./src/phases` (and for more details about what that means, see [here](#org2078b23)). Consider whether existing Actors can be repurposed for your workload, or whether a new one is needed. For the latter, see [here](#org7e6c6bd).
-
+1. Create a yaml file in `./src/workloads` in whatever topical subdirectory you deem appropriate and populate it with appropriate configuration. If you have yaml configuration that may need loading, place it in `./src/phases` (and for more details about what that means, see [here](#org2078b23)). Consider whether existing Actors can be repurposed for your workload, or whether a new one is needed. For the latter, see [here](#org7e6c6bd).
 
     ```bash
     vim src/workloads/[workload_dir]/[workload_name.yml]
     vim src/phases/[phase_dir]/[phases_name.yml] # Only necessary if creating external configuration
     ./run-genny create-new-actor  # Only necessary if creating a new Actor
     ```
-    
+
     Note: The `Owner` field in the workload yaml is expected to be a valid team in the [mothra](https://github.com/10gen/mothra/tree/main/mothra/teams) repo. Each team in Mothra that is referenced in Genny is expected to have a `support_slack_channel_name` and `support_slack_channel_id` in Mothra, if these values are not present you will need to add them before merging your workload.
 
-2.  Run the self-tests:
+2. Run the self-tests:
 
     To run `self-test` it is required that the [Mothra repository](https://github.com/10gen/mothra/) exists at the root of the repository.
+
     ```bash
     git clone https://github.com/10gen/mothra.git
     ```
@@ -476,43 +467,45 @@ Try using `python test_result_summary.py --help` for more options.
 
     If changes have been made to the workload name, description, owners, or keywords you need to generate documentation for the workload. Include the generated documentation with your commit.
 
-4.  (Optional) To double-check which Actors run in each Phase, run your workload in dry-run mode with `debug` log level.
+4. (Optional) To double-check which Actors run in each Phase, run your workload in dry-run mode with `debug` log level.
 This would set up the workload and print it as a list of Phases with the Actors that run in each Phase, then quit:
 
     ```bash
     ./run-genny workload --dry-run --verbosity debug src/workloads/[workload_dir/workload_name.yml]
     ```
 
-5.  (Optional) If you can run your system under test locally, you can test against it as a sanity-check:
+5. (Optional) If you can run your system under test locally, you can test against it as a sanity-check:
 
     ```bash
     ./run-genny workload -u [connection_uri] src/workloads/[workload_dir/workload_name.yml]
     ```
 
-6.  (Optional) If you are using DSI, you can run your workload through it by copying or symlinking your Genny directory into your DSI workdir. See [Running DSI Locally](go/running-dsi-locally) for details:
+6. (Optional) If you are using DSI, you can run your workload through it by copying or symlinking your Genny directory into your DSI workdir. See [Running DSI Locally](go/running-dsi-locally) for details:
 
-	```bash
-	./run-dsi onboarding  # introductory DSI command; see link above for details
-	cd WORK
-	rm -rf src/genny
-	ln -s ~/[path_to_genny]/genny src
-	vim bootstrap.yml
-	```
+ ```bash
+ ./run-dsi onboarding  # introductory DSI command; see link above for details
+ cd WORK
+ rm -rf src/genny
+ ln -s ~/[path_to_genny]/genny src
+ vim bootstrap.yml
+ ```
 
-7.  Before merging, you should run your workload in realistic situations in CI and check the resultant metrics. For Genny workloads run through DSI using [AutoRun](#org2b04b49), you can create a patch using the following:
+7. Before merging, you should run your workload in realistic situations in CI and check the resultant metrics. For Genny workloads run through DSI using [AutoRun](#org2b04b49), you can create a patch using the following:
 
-	```bash
-	cd ~/[path_to_evg_project_repo]
-	evergreen patch -p [evg_project]
-	cd ~/[path_to_genny]/genny
-	evergreen patch-set-module -i [patch_id_number] -m genny
-	```
+    ```bash
+    # Regenerate the autotask definitions
+    cd ~/[path_to_genny_repo]
+    ./run-genny auto-tasks-local
 
-	The `evg_project` above should correspond to the Evergreen project being tested. For example, `sys-perf`.
+    # Create the patch
+    cd ~/[path_to_evg_project_repo]
+    evergreen patch -p [evg_project] --include-modules
+    # In the resulting dialog, specify the location of your local genny repository
+    ```
 
-    You can then select `schedule_patch_auto_tasks` on a variant to schedule any modified or new Genny tasks created by AutoRun. Alternatively, you could select `schedule_variant_auto_tasks` to schedule all Genny tasks on that variant.
+   The `evg_project` above should correspond to the Evergreen project being tested. For example, `sys-perf`.
 
-    *Note:* [Skipping the compile step in sys-perf projects](https://github.com/10gen/performance-tooling-docs/blob/main/patch_testing.md#skipping-compilation-on-sys-perf-projects) can save some time when testing a genny workload.
+    _Note:_ [Skipping the compile step in sys-perf projects](https://github.com/10gen/performance-tooling-docs/blob/main/patch_testing.md#skipping-compilation-on-sys-perf-projects) can save some time when testing a genny workload.
 
 For more details on workload development, please check out our general docs on [Developing and Modifying Workloads](https://github.com/10gen/performance-tooling-docs/blob/main/new_workloads.md) and on [Basic Performance Patch Testing](https://github.com/10gen/performance-tooling-docs/blob/main/patch_testing.md).
 
@@ -520,11 +513,9 @@ Users who would like a second look at their workloads can ask product performanc
 
 Users who would like a private workload should consider putting it in the [PrivateWorkloads repo](https://github.com/10gen/PrivateWorkloads).
 
-
 <a id="org61c719c"></a>
 
 # Further Concepts
-
 
 <a id="org78b250a"></a>
 
@@ -532,18 +523,16 @@ Users who would like a private workload should consider putting it in the [Priva
 
 There are several Actors owned by DEVPROD which are intended for widespread use:
 
--   CrudActor - Used to perform CRUD operations, recording client-side metrics.
--   RunCommand - Execute a command against the remote server. Often used for utility purposes, but metrics are collected as well.
--   Loader - Load many documents into the remote database. Often used early in a workload to set the preconditions for testing.
--   QuiesceActor - Quiesce a cluster, making sure common operations are complete. This is often used to reduce noise between phases.
+- CrudActor - Used to perform CRUD operations, recording client-side metrics.
+- RunCommand - Execute a command against the remote server. Often used for utility purposes, but metrics are collected as well.
+- Loader - Load many documents into the remote database. Often used early in a workload to set the preconditions for testing.
+- QuiesceActor - Quiesce a cluster, making sure common operations are complete. This is often used to reduce noise between phases.
 
 Examples with these and other Actors can be found in [./src/workloads/docs](../src/workloads/docs).
-
 
 <a id="org2b04b49"></a>
 
 ## AutoRun
-
 
 <a id="orgd0067d1"></a>
 
@@ -553,17 +542,11 @@ AutoRun is a utility to allow workload authors to determine scheduling of their 
 
 AutoRun searches in `[workspace]/src/*/src/workloads` and assumes that all workload repos, including Genny itself, are checked out in `[workspace]/src`.
 
-After performing the above integration, your Evergreen project should have a `schedule_variant_auto_tasks` task on each variant, which can be used to schedule all Genny workloads that are configured to run on this variant. There will also be the `schedule_patch_auto_tasks` task which will schedule any new or modified Genny workloads. If you want to run an unmodified workload, make a small edit (such as inserting whitespace) to force it to be picked up by that latter task.
-
-Both of the above tasks will have a dependency on `schedule_global_auto_tasks`, which invokes `./run-genny auto-tasks` to create all possible tasks, viewable in the `TaskJson` directory of that task's DSI artifacts. The variant-specific task generator task will then schedule the appropriate task, based on the workload configurations described below. Note that task execution only occurs once per patch, even if a task is re-executed. If testing changes to task generation configuration, creating a new patch will be necessary.
-
-
-
-<a id="orgbfb0d8e"></a>
+Based on these, Genny generates task defintion files that are used by Evergreen. See [Auto-generated Genny Tasks](evergreen/system_perf/README.md) for more information.
 
 ### Configuring AutoRun
 
-The `schedule_variant_auto_tasks` task automatically runs workloads based on the evergreen environment
+Genny automatically runs workloads based on the evergreen environment
 (variables from `bootstrap.yml` and `runtime.yml` in DSI) and an optional AutoRun
 section in any workload. The AutoRun section is a list of `When`/`ThenRun` blocks,
 where if the When condition is met, tasks are scheduled with additional bootstrap
@@ -610,32 +593,31 @@ we schedule `demo_workload` with no additional params.
 
 A few notes on the syntax:
 
--   Supports multiple `When`/`ThenRun` blocks per `AutoRun`. Each are evaluated independently.
--   `When` blocks can evaluate multiple conditions. All conditions must be true to schedule the task.
--   `When` supports `$eq`, `$neq`, `$gte`, `$gt`, `$lte` and `$lt`.
--   `$eq` and `$neq` can accept either a scalar or list of values.
--   `$gte`, `$gt`, `$lte` and `$lt` can accept only scalar values.
--   For a list of values, `$eq` evaluates to true if it is equal to at least one.
--   For a list of values, `$neq` evaluates to true if it is equal to none of the values.
--   `$gte`, `$gt`, `$lte` and `$lt` use either regular comparison or version comparison.
--   Version comparison is used when both arguments are version strings. Version strings have format
+- Supports multiple `When`/`ThenRun` blocks per `AutoRun`. Each are evaluated independently.
+- `When` blocks can evaluate multiple conditions. All conditions must be true to schedule the task.
+- `When` supports `$eq`, `$neq`, `$gte`, `$gt`, `$lte` and `$lt`.
+- `$eq` and `$neq` can accept either a scalar or list of values.
+- `$gte`, `$gt`, `$lte` and `$lt` can accept only scalar values.
+- For a list of values, `$eq` evaluates to true if it is equal to at least one.
+- For a list of values, `$neq` evaluates to true if it is equal to none of the values.
+- `$gte`, `$gt`, `$lte` and `$lt` use either regular comparison or version comparison.
+- Version comparison is used when both arguments are version strings. Version strings have format
     `vA.B` where `A` and `B` are integers. When comparing two version strings, first `A` values are
     compared and only if they are equal, `B` values are compared.
--   Special strings `master` and `main` are also considered version strings which are greater
+- Special strings `master` and `main` are also considered version strings which are greater
     than all other version strings.
--   `ThenRun` blocks are optional.
-    -   ****Most usecases do not need to use ThenRun****
-    -   If you do use `ThenRun`, please be judicious. If you have a task that is scheduled when
+- `ThenRun` blocks are optional.
+  - ****Most usecases do not need to use ThenRun****
+  - If you do use `ThenRun`, please be judicious. If you have a task that is scheduled when
         `mongodb_setup` == `replica`, it would be confusing if `mongodb_setup` was overwritten to `standalone`.
         But it would be ok to overwrite `mongodb_setup` to `replica-delay-mixed`.
--   Each item in the `ThenRun` list can only support one `{bootstrap_key: bootstrap_value}` pair.
--   If using `ThenRun` but you would also like to schedule a task without any bootstrap overrides,
+- Each item in the `ThenRun` list can only support one `{bootstrap_key: bootstrap_value}` pair.
+- If using `ThenRun` but you would also like to schedule a task without any bootstrap overrides,
     Add an extra pair to `ThenRun` with the original key/value.
--   If using `ThenRun`, the new task name becomes `<taskname>_<bootstrap-value>`. In the `ParallelWorkload` example,
+- If using `ThenRun`, the new task name becomes `<taskname>_<bootstrap-value>`. In the `ParallelWorkload` example,
     the task name becomes `parallel_insert_replica_delay_mixed` (name is automatically converted to snake_case).
     The `bootstrap-key` is not included in the name for the purpose of not changing existing names and
     thus deleting history. This may change after PM-2310.
-
 
 <a id="orgd89f221"></a>
 
@@ -656,9 +638,8 @@ For convenience when developing workloads, Genny offers a preprocessing syntax t
 ```bash
 ./run-genny evaluate src/workloads/[workload_dir/workload_name.yml]
 ```
-	
-This command helps find yaml-based mistakes. Note that we don't do schema-checking for this yaml.
 
+This command helps find yaml-based mistakes. Note that we don't do schema-checking for this yaml.
 
 <a id="orga6d35c7"></a>
 
@@ -693,7 +674,7 @@ UseMe:
   Repeat: {^Parameter: {Name: "Repeat", Default: 1}}
 ```
 
-Using `LoadConfig`, the contents of the `UseMe` key will be placed into the location where the `LoadConfig` was evaluated, with parameters substituted, so we end up with the following ouput from evaluation: 
+Using `LoadConfig`, the contents of the `UseMe` key will be placed into the location where the `LoadConfig` was evaluated, with parameters substituted, so we end up with the following ouput from evaluation:
 
 ```yaml
 Actors:
@@ -709,19 +690,17 @@ Actors:
 
 A few notes:
 
--   The parameter `Repeat` was substituted in. A loaded config can have any number of parameters substituted, at any key's value.
--   The loaded config filepath should be relative to the location of the workload containing `LoadConfig`.
--   The contents of the loaded config are shallow-merged into the location where the `LoadConfig` is evaluated. If there are conflicting keys at the location, the existing key-values are kept. There is no deep dict merge at present.
+- The parameter `Repeat` was substituted in. A loaded config can have any number of parameters substituted, at any key's value.
+- The loaded config filepath should be relative to the location of the workload containing `LoadConfig`.
+- The contents of the loaded config are shallow-merged into the location where the `LoadConfig` is evaluated. If there are conflicting keys at the location, the existing key-values are kept. There is no deep dict merge at present.
 
 The `LoadConfig` keyword can be used to substitute and parameterize anything, including entire workloads! For an example of this, see [here](../src/workloads/docs/HelloWorld-LoadConfig.yml).
-
 
 <a id="orga45b1d8"></a>
 
 ### ActorTemplate
 
 Genny also offers a syntax for templatizing Actors. This is useful if there are many Actors that share common configuration, which need to differ in specific ways. An example of this can be found [here](../src/workloads/docs/HelloWorld-ActorTemplate.yml).
-
 
 <a id="orgf9c328f"></a>
 
@@ -885,12 +864,12 @@ Genny also has an override syntax for configuring workloads. When invoking Genny
 This uses [OmegaConf](https://omegaconf.readthedocs.io/en/2.1_branch/) to merge the override file onto the workload. This functionality
 should only be used to set values that absolutely need to be specified at runtime, such as URIs for systems under test. (See [Connecting to the Server](#orgd6b0450) for details.)
 
-*Warning* - Using overrides and omegaconf syntax and greatly increase workload complexity. Users interested in using overrides files or OmegaConf functionality should come talk to the DEVPROD team.
+_Warning_ - Using overrides and omegaconf syntax and greatly increase workload complexity. Users interested in using overrides files or OmegaConf functionality should come talk to the DEVPROD team.
 
 Furthermore, there is a default Actor that is injected during preprocessing, which has the following configuration:
 
 ```yaml
-Name: PhaseTimingRecorder 
+Name: PhaseTimingRecorder
 Type: PhaseTimingRecorder
 Threads: 1
 ```
@@ -899,20 +878,18 @@ This Actor is used to collect several internal metrics.
 
 When actually evaluating and constructing a workload at runtime, Genny takes the following steps:
 
-1.  Start with the defaults.
-2.  Apply the workload yaml configuration over the defaults, deep merging the yamls and giving priority to the workload yaml.
-3.  Apply the overrides file (if given) over the results of step 2, deep merging the yamls and giving priority to the overrides.
-4.  Use the preprocessor on the resultant config, evaluating all `LoadConfig`, `ActorTemplate`, and other keywords recursively. Injection of the `PhaseTimingRecorder` default Actor occurs while evaluating the `Actors` list.
-5.  Output the result to `./build/WorkloadOutput/workload`.
-6.  Run the workload.
+1. Start with the defaults.
+2. Apply the workload yaml configuration over the defaults, deep merging the yamls and giving priority to the workload yaml.
+3. Apply the overrides file (if given) over the results of step 2, deep merging the yamls and giving priority to the overrides.
+4. Use the preprocessor on the resultant config, evaluating all `LoadConfig`, `ActorTemplate`, and other keywords recursively. Injection of the `PhaseTimingRecorder` default Actor occurs while evaluating the `Actors` list.
+5. Output the result to `./build/WorkloadOutput/workload`.
+6. Run the workload.
 
 Note that the final results of the above can be viewed with `./run-genny evaluate`. This is extremely useful for debugging.
-
 
 <a id="orgd6b0450"></a>
 
 ## Connecting to the Server
-
 
 <a id="orgd2659db"></a>
 
@@ -954,7 +931,6 @@ Clients:
       maxPoolSize: 500
 ```
 
-
 <a id="orga591018"></a>
 
 ### Multiple Connection Strings
@@ -992,7 +968,6 @@ Clients:
 
 Genny's `evaluate` subcommand can always be used to see the result of complex configurations.
 
-
 <a id="org65830c2"></a>
 
 ### Default
@@ -1010,7 +985,6 @@ Clients:
 
 For more information, see [Defaults and Overrides](#org22b7a0f).
 
-
 <a id="org7e6c6bd"></a>
 
 ## Creating an Actor
@@ -1024,7 +998,6 @@ Creating new Actors is a common and encouraged workflow in Genny. To create one,
 This will create new Actor .cpp and .h files, an example workload yaml, as well as Actor integration tests, all with inline comments guiding you through the Actor creation process. You might want to take a look at [Developing Genny](./developing.md) and the [Contribution Guidelines](../CONTRIBUTING.md).
 
 If your configuration wants to use logic, ifs, or anything beyond simple or existing commands in a loop, then consider writing your own Actor. It doesn't need to be super general or even super well-tested or refactored. Genny is open to submissions and you own whatever Actor you write. No need to loop DEVPROD in to your custom actor's PR unless you'd just like a second look.
-
 
 <a id="org627591d"></a>
 
@@ -1067,6 +1040,7 @@ Clients:
       - encrypted_db.fle_encrypted_coll
       - encrypted_db.qe_encrypted_coll
 ```
+
 In the above example, we enable encryption in the `Default` client pool. The `EncryptionOptions` node requires that the namespace of the key vault be specified via the `KeyVaultDatabase` and `KeyVaultCollection` fields. It also requires that the encrypted namespaces that will be operated on through this client be listed under the `EncryptedCollections` field. These namespaces must have a corresponding definition in `Encryption.EncryptedCollections`.
 
 During client pool setup, key vaults in each unique URI are dropped & created once, when the first client pool for that URI is created. Data keys for encrypted namespaces are generated only once, if the associated key vault & URI does not yet contain keys for that namespace. This means that if two client pools have a similar URI and key vault namespace, then the encrypted collections they have in common will be using the same data keys.
@@ -1082,20 +1056,17 @@ For a full example of an encrypted workload, see [here](../src/workloads/docs/Cr
 
 # Pitfalls
 
-
 <a id="orga7ab911"></a>
 
 ## pipe creation failed (24): Too many open files
 
 If you see errors like this locally, try either increasing your ulimit or reducing the number of threads and duration.
 
-
 <a id="orgb084b49"></a>
 
 ## Actor integration tests fail locally
 
 There are currently pathing issues when running integration tests locally. This is tracked in [TIG-3687](https://jira.mongodb.org/browse/TIG-3687). That ticket also lists a workaround for local use.
-
 
 <a id="org97681a9"></a>
 
@@ -1107,5 +1078,5 @@ This is tracked in [TIG-3016](https://jira.mongodb.org/browse/TIG-3016) which wi
 
 ## Two similarly-named workloads are not permitted to coexist
 
-This is tracked in [TIG-3700](https://jira.mongodb.org/browse/TIG-3700) which will correct the issue. 
-Note that the failure symptom when this occurs could be an infractrue provisioning error, even though the issue is unrelated to provisioning. 
+This is tracked in [TIG-3700](https://jira.mongodb.org/browse/TIG-3700) which will correct the issue.
+Note that the failure symptom when this occurs could be an infractrue provisioning error, even though the issue is unrelated to provisioning.
