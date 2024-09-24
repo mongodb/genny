@@ -459,12 +459,6 @@ buildvariants:
   - name: write_one_replica_set
   - name: llt_mixed
   - name: llt_mixed_small
-- name: perf-3-node-replSet.arm.aws.2024-05
-  tasks:
-  - name: read_only_multi_threaded
-- name: perf-3-node-replSet.intel.aws.2024-05
-  tasks:
-  - name: read_only_multi_threaded
 - name: perf-standalone-classic-query-engine.intel.aws.2023-11
   tasks:
   - name: multi_planning
@@ -774,7 +768,6 @@ buildvariants:
 - name: perf-1-node-replSet-test-commands.arm.aws.2023-11
   tasks:
   - name: device_monitoring
-  - name: non_search_hybrid_scoring
 - name: perf-1-node-replSet-fle.arm.aws.2023-11
   tasks:
   - name: exponential_compact
@@ -1011,11 +1004,9 @@ buildvariants:
 - name: perf-1-node-replSet-longRunning.arm.aws.2023-11
   tasks:
   - name: device_monitoring
-  - name: non_search_hybrid_scoring
 - name: perf-1-node-replSet-m60-like-large-volume.arm.aws.2023-11
   tasks:
   - name: device_monitoring
-  - name: non_search_hybrid_scoring
 - name: perf-3-node-replSet-limited-1-query-stats.arm.aws.2023-11
   tasks:
   - name: non_search_hybrid_scoring
