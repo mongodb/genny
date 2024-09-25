@@ -671,13 +671,17 @@ def auto_tasks_all(ctx: click.Context, project_files: List[str], no_activate: bo
     name="auto-tasks-local",
     help=("Regenerate the auto-generated evergreen task defintions."),
 )
+@click.option(
+    "--evergreen", default=False, is_flag=True, help="Don't check out repositories, since we are running in evergreen"
+)
 @click.pass_context
-def auto_tasks_local(ctx: click.Context):
+def auto_tasks_local(ctx: click.Context, evergreen: bool):
     from genny.tasks import auto_tasks_local
     import sys
     print(sys.version)
     auto_tasks_local.main(
-        workspace_root=ctx.obj["WORKSPACE_ROOT"]
+        workspace_root=ctx.obj["WORKSPACE_ROOT"],
+        running_in_evergreen=evergreen
     )
 
 

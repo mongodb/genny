@@ -15,7 +15,9 @@ from genny.tasks.auto_tasks_all import create_configuration, get_all_builds
 
 SLOG = structlog.get_logger("genny.tasks.auto_tasks.local")
 DSI_TMP_PATH = "./dsi"
+DSI_REPO_URL = "https://github.com/10gen/dsi.git"
 PRIVATE_WORKLOADS_TMP_PATH = "./PrivateWorkloads"
+PRIVATE_WORKLOADS_REPO_URL = "https://github.com/10gen/PrivateWorkloads.git"
 WORKLOAD_FILE_PATTERN = os.path.join("**", "src", "workloads", "**", "*.yml")
 FIRST_EXECUTION = 0
 WORKLOAD_PATH_KEY = "auto_workload_path"
@@ -44,22 +46,6 @@ PROJECT_FILES = {
 }
 
 
-def get_dsi_repo_url() -> str:
-    token = os.getenv("dsi_x_access_token")
-    if token:
-        return f"https://x-access-token:{token}@github.com/10gen/dsi.git"
-    else:
-        return "https://github.com/10gen/dsi.git"
-
-
-def get_private_workloads_repo_url() -> str:
-    token = os.getenv("private_workloads_x_access_token")
-    if token:
-        return f"https://x-access-token:{token}@github.com/10gen/PrivateWorkloads.git"
-    else:
-        return "https://github.com/10gen/PrivateWorkloads.git"
-
-
 def get_builds(branch_name: str):
     builds = []
     expansions = {"branch_name": branch_name, "execution": FIRST_EXECUTION}
@@ -76,11 +62,12 @@ def fix_auto_workload_path(command: CommandDefinition):
         command._vars[WORKLOAD_PATH_KEY] = "src/" + command._vars[WORKLOAD_PATH_KEY]
 
 
-def main(workspace_root: str) -> None:
-    SLOG.info("Cloning the DSI repo to look for variants")
-    GitRepo.clone_from(get_dsi_repo_url(), DSI_TMP_PATH)
-    SLOG.info("Cloning the PrivateWorkloads repo to look for tests")
-    GitRepo.clone_from(get_private_workloads_repo_url(), PRIVATE_WORKLOADS_TMP_PATH)
+def main(workspace_root: str, running_in_evergreen: bool) -> None:
+    if not running_in_evergreen:
+        SLOG.info("Cloning the DSI repo to look for variants")
+        GitRepo.clone_from(DSI_REPO_URL, DSI_TMP_PATH)
+        SLOG.info("Cloning the PrivateWorkloads repo to look for tests")
+        GitRepo.clone_from(PRIVATE_WORKLOADS_REPO_URL, PRIVATE_WORKLOADS_TMP_PATH)
 
     for branch_name in PROJECT_FILES:
         SLOG.info("Creating the configuration", branch_name=branch_name)
@@ -109,7 +96,8 @@ def main(workspace_root: str) -> None:
             file_format=ConfigWriter.FileFormat.YAML,
         )
 
-    SLOG.info("Removing the temporary DSI repo")
-    shutil.rmtree(DSI_TMP_PATH)
-    SLOG.info("Removing the temporary PrivateWorkloads repo")
-    shutil.rmtree(PRIVATE_WORKLOADS_TMP_PATH)
+    if not running_in_evergreen:
+        SLOG.info("Removing the temporary DSI repo")
+        shutil.rmtree(DSI_TMP_PATH)
+        SLOG.info("Removing the temporary PrivateWorkloads repo")
+        shutil.rmtree(PRIVATE_WORKLOADS_TMP_PATH)
