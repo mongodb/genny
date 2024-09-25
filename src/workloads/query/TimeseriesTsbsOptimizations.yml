@@ -104,8 +104,9 @@ Actors:
                     },
                   ]
 
-  # Bucket-level rewrites to use the control meta field can only be done conditionally.
-  - Name: GroupBucketLevelRewriteGroupOnMeta
+  # Bucket-level rewrites to use the time field cannot be done due to the field not always being
+  # a true max. However, these queries will be eligible to use block processing.
+  - Name: BucketLevelRewriteGroupOnMetaMaxTime
     Type: CrudActor
     Database: *database
     Threads: 10
@@ -126,15 +127,12 @@ Actors:
                       $group:
                         {
                           _id: "$tags.hostname",
-                          min_time: { $min: "$time" },
                           max_time: { $max: "$time" },
                         },
                     },
                   ]
 
-  # Bucket-level rewrites to use the control time field can only be done conditionally.
-  # TODO SERVER-83072: Extend this benchmark for arrays if necessary.
-  - Name: GroupBucketLevelRewriteGroupOnTime
+  - Name: BucketLevelRewriteGroupOnMetaMinTime
     Type: CrudActor
     Database: *database
     Threads: 10
@@ -154,9 +152,8 @@ Actors:
                     {
                       $group:
                         {
-                          _id: "$time",
-                          min_meta: { $min: "$tags.hostname" },
-                          max_meta: { $max: "$tags.hostname" },
+                          _id: "$tags.hostname",
+                          min_time: { $min: "$time" },
                         },
                     },
                   ]
