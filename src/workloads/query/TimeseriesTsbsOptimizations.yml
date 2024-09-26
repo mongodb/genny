@@ -40,7 +40,7 @@ Actors:
     Database: *database
     Phases:
       OnlyActiveInPhases:
-        Active: [0, 2, 4, 6, 8, 10, 12, 14]
+        Active: [0, 2, 4, 6, 8, 10, 12, 14, 16, 18]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: 1
@@ -104,6 +104,60 @@ Actors:
                     },
                   ]
 
+  # Bucket-level rewrites to use the time field cannot be done due to the field not always being
+  # a true max. However, these queries will be eligible to use block processing.
+  - Name: BucketLevelRewriteGroupOnMetaMaxTime
+    Type: CrudActor
+    Database: *database
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [5]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $group:
+                        {
+                          _id: "$tags.hostname",
+                          max_time: { $max: "$time" },
+                        },
+                    },
+                  ]
+
+  - Name: BucketLevelRewriteGroupOnMetaMinTime
+    Type: CrudActor
+    Database: *database
+    Threads: 10
+    Phases:
+      OnlyActiveInPhases:
+        Active: [7]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {
+                      $group:
+                        {
+                          _id: "$tags.hostname",
+                          min_time: { $min: "$time" },
+                        },
+                    },
+                  ]
+
   # If the following stages after unpack doesn't depend on the fields of the documents, the unpack stage
   # will only return empty documents. The following task tests this optimization.
   - Name: EmptyUnpackWithGroupSum
@@ -112,7 +166,7 @@ Actors:
     Threads: 10
     Phases:
       OnlyActiveInPhases:
-        Active: [5]
+        Active: [9]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: *repeat
@@ -131,7 +185,7 @@ Actors:
     Threads: 10
     Phases:
       OnlyActiveInPhases:
-        Active: [7]
+        Active: [11]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: *repeat
@@ -148,7 +202,7 @@ Actors:
     Threads: 10
     Phases:
       OnlyActiveInPhases:
-        Active: [9]
+        Active: [13]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: *repeat
@@ -176,7 +230,7 @@ Actors:
     Threads: 10
     Phases:
       OnlyActiveInPhases:
-        Active: [11]
+        Active: [15]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: *repeat
@@ -211,7 +265,7 @@ Actors:
     Threads: 8
     Phases:
       OnlyActiveInPhases:
-        Active: [13]
+        Active: [17]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: 100
@@ -243,7 +297,7 @@ Actors:
     Threads: 8
     Phases:
       OnlyActiveInPhases:
-        Active: [15]
+        Active: [19]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: 100
