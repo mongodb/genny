@@ -99,7 +99,7 @@ Actors:
     Database: *database
     Phases:
       OnlyActiveInPhases:
-        Active: [3]
+        Active: [3, 5]
         NopInPhasesUpTo: *maxPhases
         PhaseConfig:
           Repeat: 1
@@ -130,29 +130,6 @@ Actors:
                   ]
 
   # The control.max.time field can only be used as an accurate bucket maximum if its after 1970.
-  - Name: BlockProcessingExtendedRangeMaxTime
-    Type: CrudActor
-    Database: *database
-    Threads: *threads
-    Phases:
-      OnlyActiveInPhases:
-        Active: [5]
-        NopInPhasesUpTo: *maxPhases
-        PhaseConfig:
-          Repeat: *repeat
-          Database: *database
-          Collection: *collection
-          Operations:
-            - OperationMetricsName: TsBlockExtendedRangeMaxTime
-              OperationName: aggregate
-              OperationCommand:
-                Pipeline:
-                  [
-                    {$project: {time: 1, meta: 1}},
-                    {$group: {_id: "$meta", gb: {$max: "$time"}}}
-                  ]
-
-  # The control.max.time field can only be used as an accurate maximum if its after 1970.
   - Name: BlockProcessingExtendedRangeMaxTime
     Type: CrudActor
     Database: *database
