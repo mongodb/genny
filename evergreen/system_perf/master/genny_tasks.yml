@@ -991,10 +991,6 @@ buildvariants:
   - name: time_series_sort_scale
   - name: llt_mixed
   - name: llt_mixed_small
-- name: perf-3-node-replSet-maintenance-events.arm.aws.2023-11
-  tasks:
-  - name: mixed_workloads_genny
-  - name: mixed_workloads_genny_rate_limited
 - name: perf-replSet-auth-delay.arm.aws.2023-11
   tasks:
   - name: transport_layer_connect_timing
