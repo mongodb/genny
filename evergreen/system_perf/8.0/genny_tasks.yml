@@ -339,6 +339,12 @@ buildvariants:
   - name: write_one_replica_set
   - name: llt_mixed
   - name: llt_mixed_small
+- name: perf-3-node-replSet.arm.aws.2024-05
+  tasks:
+  - name: read_only_multi_threaded
+- name: perf-3-node-replSet.intel.aws.2024-05
+  tasks:
+  - name: read_only_multi_threaded
 tasks:
 - commands:
   - command: timeout.update

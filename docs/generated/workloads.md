@@ -3866,11 +3866,11 @@ timeseries, aggregate, group
 
 ## [TimeseriesExtendedRange](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TimeseriesExtendedRange.yml)
 ### Owner 
-Query Execution 
+Query Integration 
 
 
 ### Support Channel
-[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
+[#query-integration](https://mongodb.enterprise.slack.com/archives/C04PDS7GAFM)
 
 
 ### Description

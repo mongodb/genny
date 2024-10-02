@@ -775,7 +775,6 @@ buildvariants:
   - name: llt_mixed
 - name: perf-1-node-replSet-test-commands.arm.aws.2023-11
   tasks:
-  - name: device_monitoring
   - name: non_search_hybrid_scoring
 - name: perf-1-node-replSet-fle.arm.aws.2023-11
   tasks:
@@ -1013,11 +1012,9 @@ buildvariants:
   - name: transport_layer_connect_timing
 - name: perf-1-node-replSet-longRunning.arm.aws.2023-11
   tasks:
-  - name: device_monitoring
   - name: non_search_hybrid_scoring
 - name: perf-1-node-replSet-m60-like-large-volume.arm.aws.2023-11
   tasks:
-  - name: device_monitoring
   - name: non_search_hybrid_scoring
 - name: perf-3-node-replSet-limited-1-query-stats.arm.aws.2023-11
   tasks:

@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: Query Execution
+Owner: Query Integration
 Description: |
   This workload runs queries on time-series collections with data before the unix epoch (extended range).
   Some optimizations can only be made on post-1970 data. This benchmark is intended to give us an idea
