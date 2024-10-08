@@ -39,7 +39,6 @@ buildvariants:
   - name: mixed_workloads_genny_stress_with_scans
 - name: perf-standalone.arm.aws.2023-11
   tasks:
-  - name: device_monitoring
   - name: coinbase_timeseries_group_date_trunc
   - name: coinbase_timeseries_group_date_trunc_memory_limit
   - name: coinbase_timeseries_group_date_trunc_sort
@@ -136,7 +135,7 @@ buildvariants:
   - name: mixed_workloads_genny_rate_limited
   - name: genny_overhead
   - name: write_one_replica_set
-- name: perf-3-shard-fle.arm.aws.2023-11
+- name: perf-shard-lite-fle.arm.aws.2023-11
   tasks:
   - name: ycsb_like_queryable_encrypt1_cf16
   - name: ycsb_like_queryable_encrypt1_cf32
@@ -182,7 +181,6 @@ buildvariants:
   - name: multi_updates_multi_updates
 - name: perf-3-node-replSet.arm.aws.2023-11
   tasks:
-  - name: device_monitoring
   - name: coinbase_timeseries_group_date_trunc
   - name: coinbase_timeseries_group_date_trunc_memory_limit
   - name: coinbase_timeseries_group_date_trunc_sort
@@ -387,7 +385,6 @@ buildvariants:
   - name: multiplanner_varied_selectivity
 - name: perf-3-node-replSet-intel.intel.aws.2023-11
   tasks:
-  - name: device_monitoring
   - name: coinbase_timeseries_group_date_trunc
   - name: coinbase_timeseries_group_date_trunc_memory_limit
   - name: coinbase_timeseries_group_date_trunc_sort
@@ -559,17 +556,6 @@ buildvariants:
   - name: llt_mixed
   - name: llt_mixed_small
 tasks:
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
-      auto_workload_path: src/PrivateWorkloads/src/workloads/customer_representative/DeviceMonitoring.yml
-      test_control: device_monitoring
-  name: device_monitoring
-  priority: 5
 - commands:
   - command: timeout.update
     params:
