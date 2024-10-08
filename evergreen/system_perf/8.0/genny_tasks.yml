@@ -11,13 +11,8 @@ buildvariants:
   - name: union_with
   - name: big_update
   - name: insert_big_docs
-  - name: insert_remove
   - name: large_scale_long_lived
-  - name: load_test
   - name: many_update
-  - name: mixed_workloads_genny
-  - name: mixed_workloads_genny_stress
-  - name: mixed_workloads_genny_stress_with_scans
 - name: perf-atlas-M60-real.intel.azure.2023-11
   tasks:
   - name: create_big_index
@@ -30,13 +25,8 @@ buildvariants:
   - name: union_with
   - name: big_update
   - name: insert_big_docs
-  - name: insert_remove
   - name: large_scale_long_lived
-  - name: load_test
   - name: many_update
-  - name: mixed_workloads_genny
-  - name: mixed_workloads_genny_stress
-  - name: mixed_workloads_genny_stress_with_scans
 - name: perf-standalone.arm.aws.2023-11
   tasks:
   - name: device_monitoring
@@ -45,7 +35,6 @@ buildvariants:
   - name: coinbase_timeseries_group_date_trunc_sort
   - name: coinbase_timeseries_match
   - name: coinbase_timeseries_match_count
-  - name: read_only_multi_threaded
   - name: background_ttl_deletions
   - name: create_big_index
   - name: multi_planning
@@ -95,11 +84,8 @@ buildvariants:
   - name: linear_fill
   - name: locf
   - name: big_update
-  - name: insert_remove
   - name: large_scale_long_lived
   - name: many_update
-  - name: mixed_workloads_genny
-  - name: mixed_workloads_genny_rate_limited
   - name: genny_overhead
   - name: write_one_replica_set
 - name: perf-3-shard.arm.aws.2023-11
@@ -123,7 +109,6 @@ buildvariants:
   - name: coinbase_timeseries_group_date_trunc_sort
   - name: coinbase_timeseries_match
   - name: coinbase_timeseries_match_count
-  - name: read_only_multi_threaded
   - name: parallel_insert_replica
   - name: parallel_insert_replica_delay_mixed
   - name: background_ttl_deletions
@@ -140,9 +125,7 @@ buildvariants:
   - name: update_with_secondary_indexes
   - name: validate_cmd
   - name: validate_cmd_full
-  - name: connection_pool_stress
   - name: connections_buildup
-  - name: commit_latency
   - name: commit_latency_single_update
   - name: service_architecture_workloads
   - name: array_traversal
@@ -204,21 +187,11 @@ buildvariants:
   - name: linear_fill
   - name: locf
   - name: big_update
-  - name: bulk_loading
-  - name: create_drop_view
   - name: insert_big_docs
-  - name: insert_remove
-  - name: large_indexed_ins
   - name: large_indexed_ins_matching_documents
   - name: large_scale_long_lived
-  - name: load_test
   - name: majority_writes10_k_threads
   - name: many_update
-  - name: mass_delete_regression
-  - name: mixed_workloads_genny
-  - name: mixed_workloads_genny_rate_limited
-  - name: mixed_workloads_genny_stress
-  - name: mixed_workloads_genny_stress_with_scans
   - name: mixed_writes_replica
   - name: mixed_writes_replica_delay_mixed
   - name: scan_with_long_lived
@@ -235,7 +208,6 @@ buildvariants:
   - name: coinbase_timeseries_group_date_trunc_sort
   - name: coinbase_timeseries_match
   - name: coinbase_timeseries_match_count
-  - name: read_only_multi_threaded
   - name: parallel_insert_replica
   - name: parallel_insert_replica_delay_mixed
   - name: background_ttl_deletions
@@ -252,9 +224,7 @@ buildvariants:
   - name: update_with_secondary_indexes
   - name: validate_cmd
   - name: validate_cmd_full
-  - name: connection_pool_stress
   - name: connections_buildup
-  - name: commit_latency
   - name: commit_latency_single_update
   - name: service_architecture_workloads
   - name: array_traversal
@@ -316,21 +286,11 @@ buildvariants:
   - name: linear_fill
   - name: locf
   - name: big_update
-  - name: bulk_loading
-  - name: create_drop_view
   - name: insert_big_docs
-  - name: insert_remove
-  - name: large_indexed_ins
   - name: large_indexed_ins_matching_documents
   - name: large_scale_long_lived
-  - name: load_test
   - name: majority_writes10_k_threads
   - name: many_update
-  - name: mass_delete_regression
-  - name: mixed_workloads_genny
-  - name: mixed_workloads_genny_rate_limited
-  - name: mixed_workloads_genny_stress
-  - name: mixed_workloads_genny_stress_with_scans
   - name: mixed_writes_replica
   - name: mixed_writes_replica_delay_mixed
   - name: scan_with_long_lived
@@ -438,17 +398,6 @@ tasks:
       auto_workload_path: src/PrivateWorkloads/src/workloads/customer_representative/coinbase/timeseries/Query03.yml
       test_control: coinbase_timeseries_query03
   name: coinbase_timeseries_query03
-  priority: 5
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
-      auto_workload_path: src/genny/src/workloads/basic/ReadOnlyMultiThreaded.yml
-      test_control: read_only_multi_threaded
-  name: read_only_multi_threaded
   priority: 5
 - commands:
   - command: timeout.update
@@ -921,53 +870,9 @@ tasks:
       timeout_secs: 86400
   - func: f_run_dsi_workload
     vars:
-      auto_workload_path: src/genny/src/workloads/filesystem/Flushing.yml
-      test_control: flushing
-  name: flushing
-  priority: 5
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
-      auto_workload_path: src/genny/src/workloads/issues/ConnectionPoolStress.yml
-      test_control: connection_pool_stress
-  name: connection_pool_stress
-  priority: 5
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
       auto_workload_path: src/genny/src/workloads/issues/ConnectionsBuildup.yml
       test_control: connections_buildup
   name: connections_buildup
-  priority: 5
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
-      auto_workload_path: src/genny/src/workloads/issues/MongosLatency.yml
-      test_control: mongos_latency
-  name: mongos_latency
-  priority: 5
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
-      auto_workload_path: src/genny/src/workloads/networking/CommitLatency.yml
-      test_control: commit_latency
-  name: commit_latency
   priority: 5
 - commands:
   - command: timeout.update
@@ -2373,31 +2278,9 @@ tasks:
       timeout_secs: 86400
   - func: f_run_dsi_workload
     vars:
-      auto_workload_path: src/genny/src/workloads/scale/BulkLoading.yml
-      test_control: bulk_loading
-  name: bulk_loading
-  priority: 5
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
       auto_workload_path: src/genny/src/workloads/scale/ContentionTTLDeletions.yml
       test_control: contention_ttl_deletions
   name: contention_ttl_deletions
-  priority: 5
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
-      auto_workload_path: src/genny/src/workloads/scale/CreateDropView.yml
-      test_control: create_drop_view
-  name: create_drop_view
   priority: 5
 - commands:
   - command: timeout.update
@@ -2428,28 +2311,6 @@ tasks:
       timeout_secs: 86400
   - func: f_run_dsi_workload
     vars:
-      auto_workload_path: src/genny/src/workloads/scale/InsertRemove.yml
-      test_control: insert_remove
-  name: insert_remove
-  priority: 5
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
-      auto_workload_path: src/genny/src/workloads/scale/LargeIndexedIns.yml
-      test_control: large_indexed_ins
-  name: large_indexed_ins
-  priority: 5
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
       auto_workload_path: src/genny/src/workloads/scale/LargeIndexedInsMatchingDocuments.yml
       test_control: large_indexed_ins_matching_documents
   name: large_indexed_ins_matching_documents
@@ -2472,17 +2333,6 @@ tasks:
       timeout_secs: 86400
   - func: f_run_dsi_workload
     vars:
-      auto_workload_path: src/genny/src/workloads/scale/LoadTest.yml
-      test_control: load_test
-  name: load_test
-  priority: 5
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
       auto_workload_path: src/genny/src/workloads/scale/MajorityWrites10KThreads.yml
       test_control: majority_writes10_k_threads
   name: majority_writes10_k_threads
@@ -2497,61 +2347,6 @@ tasks:
       auto_workload_path: src/genny/src/workloads/scale/ManyUpdate.yml
       test_control: many_update
   name: many_update
-  priority: 5
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
-      auto_workload_path: src/genny/src/workloads/scale/MassDeleteRegression.yml
-      test_control: mass_delete_regression
-  name: mass_delete_regression
-  priority: 5
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
-      auto_workload_path: src/genny/src/workloads/scale/MixedWorkloadsGenny.yml
-      test_control: mixed_workloads_genny
-  name: mixed_workloads_genny
-  priority: 5
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
-      auto_workload_path: src/genny/src/workloads/scale/MixedWorkloadsGennyRateLimited.yml
-      test_control: mixed_workloads_genny_rate_limited
-  name: mixed_workloads_genny_rate_limited
-  priority: 5
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
-      auto_workload_path: src/genny/src/workloads/scale/MixedWorkloadsGennyStress.yml
-      test_control: mixed_workloads_genny_stress
-  name: mixed_workloads_genny_stress
-  priority: 5
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
-      auto_workload_path: src/genny/src/workloads/scale/MixedWorkloadsGennyStressWithScans.yml
-      test_control: mixed_workloads_genny_stress_with_scans
-  name: mixed_workloads_genny_stress_with_scans
   priority: 5
 - commands:
   - command: timeout.update
