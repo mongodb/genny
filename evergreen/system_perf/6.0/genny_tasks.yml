@@ -29,6 +29,8 @@ buildvariants:
   - name: many_update
 - name: perf-3-shard.arm.aws.2023-11
   tasks:
+  - name: clustered_collection
+  - name: clustered_collection_large_record_ids
   - name: aggregations_output
   - name: graph_lookup
   - name: graph_lookup_with_only_unsharded_colls
@@ -38,6 +40,7 @@ buildvariants:
   - name: ten_m_doc_collection__object_id__sharded
   - name: reshard_collection_mixed
   - name: reshard_collection_read_heavy
+  - name: would_change_owning_shard_batch_write
   - name: multi_updates_multi_updates__shard_collection
   - name: multi_updates_multi_updates
 - name: perf-3-node-replSet.arm.aws.2023-11
@@ -48,15 +51,16 @@ buildvariants:
   - name: coinbase_timeseries_group_date_trunc_sort
   - name: coinbase_timeseries_match
   - name: coinbase_timeseries_match_count
+  - name: coinbase_timeseries_query01
+  - name: coinbase_timeseries_query02
+  - name: coinbase_timeseries_query03
   - name: parallel_insert_replica
   - name: parallel_insert_replica_delay_mixed
   - name: background_ttl_deletions
   - name: background_validate_cmd
+  - name: clustered_collection
+  - name: clustered_collection_large_record_ids
   - name: create_big_index
-  - name: mixed_multi_deletes_batched
-  - name: mixed_multi_deletes_batched_with_secondary_indexes
-  - name: mixed_multi_deletes_doc_by_doc
-  - name: mixed_multi_deletes_doc_by_doc_with_secondary_indexes
   - name: multi_planning
   - name: ping_command
   - name: secondary_reads_genny
@@ -67,8 +71,8 @@ buildvariants:
   - name: connections_buildup
   - name: commit_latency_single_update
   - name: service_architecture_workloads
+  - name: aggregate_expressions
   - name: array_traversal
-  - name: collection_level_diagnostic_commands
   - name: constant_fold_arithmetic
   - name: cumulative_windows
   - name: cumulative_windows_multi_accums
@@ -85,6 +89,7 @@ buildvariants:
   - name: filter_with_complex_logical_expression_medium
   - name: filter_with_complex_logical_expression_small
   - name: graph_lookup_with_only_unsharded_colls
+  - name: group_like_distinct
   - name: group_spill_to_disk
   - name: group_stages_on_computed_fields
   - name: lookup_nlj
@@ -99,8 +104,11 @@ buildvariants:
   - name: metric_secondary_index_timeseries_collection
   - name: one_m_doc_collection__large_doc_int_id
   - name: pipeline_update
+  - name: query_stats
   - name: query_stats_query_shapes
   - name: repeated_path_traversal
+  - name: repeated_path_traversal_medium
+  - name: repeated_path_traversal_small
   - name: set_window_fields_unbounded
   - name: sliding_windows
   - name: sliding_windows_multi_accums
@@ -113,10 +121,12 @@ buildvariants:
   - name: ten_m_doc_collection__sub_doc_id
   - name: time_series2dsphere
   - name: time_series_group_stages_on_computed_fields
+  - name: time_series_lastpoint
   - name: time_series_sort
   - name: time_series_sort_compound
   - name: time_series_sort_overlapping_buckets
   - name: time_series_telemetry
+  - name: timeseries_stress_unpacking
   - name: union_with
   - name: unwind_group
   - name: update_large_documents
@@ -147,15 +157,16 @@ buildvariants:
   - name: coinbase_timeseries_group_date_trunc_sort
   - name: coinbase_timeseries_match
   - name: coinbase_timeseries_match_count
+  - name: coinbase_timeseries_query01
+  - name: coinbase_timeseries_query02
+  - name: coinbase_timeseries_query03
   - name: parallel_insert_replica
   - name: parallel_insert_replica_delay_mixed
   - name: background_ttl_deletions
   - name: background_validate_cmd
+  - name: clustered_collection
+  - name: clustered_collection_large_record_ids
   - name: create_big_index
-  - name: mixed_multi_deletes_batched
-  - name: mixed_multi_deletes_batched_with_secondary_indexes
-  - name: mixed_multi_deletes_doc_by_doc
-  - name: mixed_multi_deletes_doc_by_doc_with_secondary_indexes
   - name: multi_planning
   - name: ping_command
   - name: secondary_reads_genny
@@ -166,8 +177,8 @@ buildvariants:
   - name: connections_buildup
   - name: commit_latency_single_update
   - name: service_architecture_workloads
+  - name: aggregate_expressions
   - name: array_traversal
-  - name: collection_level_diagnostic_commands
   - name: constant_fold_arithmetic
   - name: cumulative_windows
   - name: cumulative_windows_multi_accums
@@ -184,6 +195,7 @@ buildvariants:
   - name: filter_with_complex_logical_expression_medium
   - name: filter_with_complex_logical_expression_small
   - name: graph_lookup_with_only_unsharded_colls
+  - name: group_like_distinct
   - name: group_spill_to_disk
   - name: group_stages_on_computed_fields
   - name: lookup_nlj
@@ -198,8 +210,11 @@ buildvariants:
   - name: metric_secondary_index_timeseries_collection
   - name: one_m_doc_collection__large_doc_int_id
   - name: pipeline_update
+  - name: query_stats
   - name: query_stats_query_shapes
   - name: repeated_path_traversal
+  - name: repeated_path_traversal_medium
+  - name: repeated_path_traversal_small
   - name: set_window_fields_unbounded
   - name: sliding_windows
   - name: sliding_windows_multi_accums
@@ -212,10 +227,12 @@ buildvariants:
   - name: ten_m_doc_collection__sub_doc_id
   - name: time_series2dsphere
   - name: time_series_group_stages_on_computed_fields
+  - name: time_series_lastpoint
   - name: time_series_sort
   - name: time_series_sort_compound
   - name: time_series_sort_overlapping_buckets
   - name: time_series_telemetry
+  - name: timeseries_stress_unpacking
   - name: union_with
   - name: unwind_group
   - name: update_large_documents

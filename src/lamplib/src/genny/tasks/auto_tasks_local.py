@@ -28,19 +28,16 @@ PROJECT_FILES = {
         os.path.join(DSI_TMP_PATH, "evergreen", "system_perf", "master", "variants.yml"),
         os.path.join(DSI_TMP_PATH, "evergreen", "system_perf", "master", "master_variants.yml"),
     ],
-    "8.0": [
+    "v8.0": [
         os.path.join(DSI_TMP_PATH, "evergreen", "system_perf", "8.0", "variants.yml"),
     ],
-    "7.3": [
-        os.path.join(DSI_TMP_PATH, "evergreen", "system_perf", "7.3", "variants.yml"),
-    ],
-    "7.0": [
+    "v7.0": [
         os.path.join(DSI_TMP_PATH, "evergreen", "system_perf", "7.0", "variants.yml"),
     ],
-    "6.0": [
+    "v6.0": [
         os.path.join(DSI_TMP_PATH, "evergreen", "system_perf", "6.0", "variants.yml"),
     ],
-    "5.0": [
+    "v5.0": [
         os.path.join(DSI_TMP_PATH, "evergreen", "system_perf", "5.0", "variants.yml"),
     ],
 }
@@ -88,7 +85,7 @@ def main(workspace_root: str, running_in_evergreen: bool) -> None:
                     fix_auto_workload_path(command)
 
         SLOG.info("Writing the configuration", branch_name=branch_name)
-        output_file = os.path.join("evergreen", "system_perf", branch_name, "genny_tasks.yml")
+        output_file = os.path.join("evergreen", "system_perf", branch_name.replace("v", ""), "genny_tasks.yml")
         ConfigWriter.write_config(
             execution=FIRST_EXECUTION,
             config=config,
