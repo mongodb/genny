@@ -73,7 +73,6 @@ buildvariants:
   - name: multi_updates_multi_updates
 - name: perf-3-node-replSet.arm.aws.2023-11
   tasks:
-  - name: device_monitoring
   - name: coinbase_timeseries_group_date_trunc
   - name: coinbase_timeseries_group_date_trunc_memory_limit
   - name: coinbase_timeseries_group_date_trunc_sort
@@ -264,7 +263,6 @@ buildvariants:
   - name: multiplanner_varied_selectivity
 - name: perf-3-node-replSet-intel.intel.aws.2023-11
   tasks:
-  - name: device_monitoring
   - name: coinbase_timeseries_group_date_trunc
   - name: coinbase_timeseries_group_date_trunc_memory_limit
   - name: coinbase_timeseries_group_date_trunc_sort
@@ -790,15 +788,8 @@ buildvariants:
   - name: query_stats
   - name: write_one_without_shard_key_sharded_collection
   - name: write_one_without_shard_key_unsharded_collection
-- name: perf-3-node-replSet-last-continuous-fcv.arm.aws.2023-11
-  tasks:
-  - name: device_monitoring
-- name: perf-3-node-replSet-last-lts-fcv.arm.aws.2023-11
-  tasks:
-  - name: device_monitoring
 - name: perf-3-node-replSet-all-feature-flags.arm.aws.2023-11
   tasks:
-  - name: device_monitoring
   - name: coinbase_timeseries_group_date_trunc
   - name: coinbase_timeseries_group_date_trunc_memory_limit
   - name: coinbase_timeseries_group_date_trunc_sort
@@ -946,17 +937,6 @@ buildvariants:
   tasks:
   - name: non_search_hybrid_scoring
 tasks:
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
-      auto_workload_path: src/PrivateWorkloads/src/workloads/customer_representative/DeviceMonitoring.yml
-      test_control: device_monitoring
-  name: device_monitoring
-  priority: 5
 - commands:
   - command: timeout.update
     params:
