@@ -40,9 +40,9 @@ Actors:
         Operations:
           - OperationName: RunCommand
             OperationCommand: {dropDatabase: 1}
-            ReportMetrics: False
+            ReportMetrics: false
           - OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *UpdateColl
               indexes:

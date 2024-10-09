@@ -118,21 +118,21 @@ Actors: {% if not encrypt %}
           Database: *encrypted_db
           Operations:
           - OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *encrypted_coll
               indexes:
               - key: { tm_retail_tx: 1}
                 name: time_index
           - OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *encrypted_coll
               indexes:
               - key: { age_hospitals: 1}
                 name: age_index
           - OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *encrypted_coll
               indexes:

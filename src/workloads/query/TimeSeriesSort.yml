@@ -33,14 +33,14 @@ Actors:
         Operation:
           OperationMetricsName: CreateTimeSeriesCollection
           OperationName: RunCommand
-          ReportMetrics: False
+          ReportMetrics: false
           OperationCommand: {create: &coll Collection0, timeseries: {timeField: "t", metaField: "m"}}
       - Repeat: 1 # Phase 1
         Database: *db
         Operations:
           - OperationMetricsName: DropAllIndexesUponCreation
             OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand:
               dropIndexes: *coll
               index: "*"
@@ -78,7 +78,7 @@ Actors:
         Operations:
           - OperationMetricsName: CreateDescendingTimeIndex
             OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *coll
               indexes:

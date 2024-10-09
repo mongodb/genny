@@ -48,19 +48,19 @@ Actors:
         Database: *db
         Operations:
           - OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand:
               aggregate: Collection0
               pipeline: [{ $out: "Collection0_copy" }]
               cursor: { batchSize: *batchSize }
           - OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand:
               aggregate: Collection1
               pipeline: [{ $out: "Collection1_copy" }]
               cursor: { batchSize: *batchSize }
           - OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand:
               aggregate: Collection0
               pipeline:
@@ -74,7 +74,7 @@ Actors:
                 ]
               cursor: { batchSize: *batchSize }
           - OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand:
               aggregate: Collection0
               pipeline:
@@ -88,7 +88,7 @@ Actors:
                 ]
               cursor: { batchSize: *batchSize }
           - OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand:
               aggregate: Collection1
               pipeline:

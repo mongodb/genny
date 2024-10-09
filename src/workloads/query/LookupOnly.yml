@@ -291,7 +291,7 @@ Actors:
         Database: *db
         Operations:
           - OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand: {dropDatabase: 1}
       - Phase: 1..3
         Nop: true

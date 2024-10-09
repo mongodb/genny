@@ -95,7 +95,7 @@ Actors:
         MetricsName: "indexSecondary"
         Operations:
           - OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *encrypted_coll
               indexes:

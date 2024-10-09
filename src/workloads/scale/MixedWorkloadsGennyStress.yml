@@ -154,7 +154,7 @@ Actors:
         Database: admin
         Operations:
           - OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand: {profile: 0, slowms: 1000, sampleRate: 0.1}
       - &nop {Nop: true}
       - *nop
