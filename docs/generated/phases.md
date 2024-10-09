@@ -235,21 +235,6 @@ Configuration for MultiDeletes workload. This configuration introduces secondary
 
 
 
-## [ConnectionsBuildup](https://www.github.com/mongodb/genny/blob/master/src/phases/issues/ConnectionsBuildup.yml)
-### Owner 
-Product Performance 
-
-
-### Support Channel
-[#performance](https://mongodb.enterprise.slack.com/archives/C0V3KSB52)
-
-
-### Description
-These are the phases used to reproduce SERVER-53853: Large buildup of mongos to mongod connections and
-low performance with secondaryPreferred reads
-
-
-
 ## [AggregateExpressions](https://www.github.com/mongodb/genny/blob/master/src/phases/query/AggregateExpressions.yml)
 ### Owner 
 @mongodb/query 
