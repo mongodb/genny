@@ -64,6 +64,7 @@ Actors:
         Operations:
           - OperationMetricsName: CreateStreamProcessor
             OperationName: RunCommand
+            ReportMetrics: False
             OperationCommand:
               streams_startStreamProcessor: ""
               tenantId: *TenantId
@@ -124,6 +125,7 @@ Actors:
         Operations:
           - OperationMetricsName: Stop
             OperationName: RunCommand
+            ReportMetrics: False
             OperationCommand:
               streams_stopStreamProcessor: ""
               tenantId: *TenantId

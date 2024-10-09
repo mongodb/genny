@@ -32,6 +32,7 @@ Actors:
         Database: &DB test
         Operations:
           - OperationName: RunCommand
+            ReportMetrics: False
             OperationCommand: {dropDatabase: 1}
       - &Nop {Nop: true}
       - *Nop

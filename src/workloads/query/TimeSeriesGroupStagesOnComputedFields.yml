@@ -44,6 +44,7 @@ Actors:
           Operation:
             OperationMetricsName: CreateTimeSeriesCollection
             OperationName: RunCommand
+            ReportMetrics: False
             OperationCommand: {create: *Collection, timeseries: {timeField: "time", metaField: "symbol", granularity: "seconds"}}
 
   - Name: DropAllIndexesUponCreation
@@ -59,6 +60,7 @@ Actors:
           Operation:
             OperationMetricsName: DropAllIndexesUponCreation
             OperationName: RunCommand
+            ReportMetrics: False
             OperationCommand:
               dropIndexes: *Collection
               index: "*"

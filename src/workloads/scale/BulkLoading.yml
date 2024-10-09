@@ -182,6 +182,7 @@ Actors:
           Operations:
             - OperationMetricsName: BuildIndex
               OperationName: RunCommand
+              ReportMetrics: False
               OperationCommand:
                 createIndexes: *CollectionName
                 indexes:
@@ -202,6 +203,7 @@ Actors:
           Database: *DbName
           Operations:
             - OperationName: RunCommand
+              ReportMetrics: False
               OperationCommand:
                 drop: *CollectionName
 
