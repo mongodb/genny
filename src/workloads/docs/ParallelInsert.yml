@@ -118,6 +118,7 @@ Actors:
         Database: test
         Operations:
           - OperationName: RunCommand
+            ReportMetrics: False
             OperationCommand:
               drop: myCollection
               writeConcern: {w: majority}

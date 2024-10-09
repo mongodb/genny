@@ -43,6 +43,7 @@ Actors:
         Operation:
           OperationMetricsName: CreateTimeSeriesCollection
           OperationName: RunCommand
+          ReportMetrics: False
           OperationCommand:
             {
               create: &coll Collection0,
@@ -163,6 +164,7 @@ Actors:
         Operation:
           OperationMetricsName: internalQueryMaxAllowedDensifyDocs
           OperationName: RunCommand
+          ReportMetrics: False
           OperationCommand:
             setParameter: 1
             internalQueryMaxAllowedDensifyDocs: 100000

@@ -231,6 +231,7 @@ Actors:
         Database: *db
         Operations:
           - OperationName: RunCommand
+            ReportMetrics: False
             OperationCommand: {dropDatabase: 1}
       - Phase: 1..4
         Nop: true
@@ -344,6 +345,7 @@ Actors:
         Database: *db
         Operations:
           - OperationName: RunCommand
+            ReportMetrics: False
             OperationCommand:
               createIndexes: *Foreign
               indexes:

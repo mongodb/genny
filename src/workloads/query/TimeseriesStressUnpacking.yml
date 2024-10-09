@@ -131,6 +131,7 @@ Actors:
           Operation:
             OperationMetricsName: CreateTimeSeriesCollection
             OperationName: RunCommand
+            ReportMetrics: False
             OperationCommand:
               { create: *collection, timeseries: { timeField: "time" } }
 

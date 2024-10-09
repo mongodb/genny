@@ -61,6 +61,7 @@ Actors:
           Database: *Database
           Operations:
             - OperationName: RunCommand
+              ReportMetrics: False
               OperationCommand:
                 createIndexes: *Collection
                 indexes: [{ key: { t: 1 }, name: "t" }]

@@ -123,12 +123,14 @@ public:
                       const std::string& databaseName,
                       mongocxx::database database,
                       DocumentGenerator commandExpr,
-                      OpConfig opts)
+                      OpConfig opts,
+                      bool reportMetrics)
         : _databaseName{databaseName},
           _database{std::move(database)},
           _commandExpr{std::move(commandExpr)},
           _options{std::move(opts)},
           _awaitStepdown{opts.awaitStepdown},
+          _reportMetrics{reportMetrics},
           // Record metrics for the operation or the phase depending on
           // whether metricsName is set for the operation.
           //
@@ -148,6 +150,7 @@ public:
                                                      const std::string& database) {
         auto& yamlCommand = node["OperationCommand"];
         auto commandExpr = yamlCommand.to<DocumentGenerator>(context, id);
+        const auto reportMetrics = node["ReportMetrics"] ? node["ReportMetrics"].to<bool>(): true;
 
         auto options =
             node.maybe<DatabaseOperation::OpConfig>().value_or(DatabaseOperation::OpConfig{});
@@ -157,7 +160,8 @@ public:
                                                    database,
                                                    (*client)[database],
                                                    std::move(commandExpr),
-                                                   options);
+                                                   options,
+                                                   reportMetrics);
     };
 
     void run() {
@@ -185,7 +189,7 @@ public:
                 }
 
                 if (maybeWatch) {
-                    maybeWatch->success();
+                    _reportMetrics ? maybeWatch->success() : maybeWatch->discard();
                 }
             } catch (mongocxx::operation_exception& e) {
                 BOOST_THROW_EXCEPTION(MongoException(e, view));
@@ -208,6 +212,7 @@ private:
     mongocxx::database _database;
     DocumentGenerator _commandExpr;
     OpConfig _options;
+    bool _reportMetrics;
 
     std::optional<metrics::Operation> _operation;
     bool _awaitStepdown;
