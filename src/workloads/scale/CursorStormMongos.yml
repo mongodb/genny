@@ -59,6 +59,7 @@ Actors:
           Database: *DBName
           Operations:
             - OperationName: RunCommand
+              ReportMetrics: false
               OperationCommand: {dropDatabase: 1}
 
   # Create collection.
@@ -74,6 +75,7 @@ Actors:
           Database: *DBName
           Operations:
             - OperationName: RunCommand
+              ReportMetrics: false
               OperationCommand:
                 # Loader default collection name.
                 create: Collection0

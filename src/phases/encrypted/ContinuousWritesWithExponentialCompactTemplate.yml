@@ -54,6 +54,7 @@ Actors:
           Database: *encrypted_db
           Operations:
             - OperationName: RunCommand
+              ReportMetrics: false
               OperationCommand:
                 createIndexes: *encrypted_coll
                 indexes:

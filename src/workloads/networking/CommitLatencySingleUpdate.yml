@@ -16,6 +16,7 @@ Actors:
       - Repeat: 1
         Operations:
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               insert: &Collection CommitLatencySingleUpdates
               documents: [{_id: 1, n: 0}]

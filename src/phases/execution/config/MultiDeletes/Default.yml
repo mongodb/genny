@@ -5,4 +5,5 @@ Description: |
 
 InitializeDatabaseOps:
   - OperationName: RunCommand
+    ReportMetrics: false
     OperationCommand: {dropDatabase: 1}

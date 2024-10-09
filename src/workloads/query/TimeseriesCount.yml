@@ -49,6 +49,7 @@ Actors:
           Operation:
             OperationMetricsName: CreateTimeseriesCollection
             OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               {
                 create: *collection,

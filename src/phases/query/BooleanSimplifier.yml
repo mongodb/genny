@@ -196,6 +196,7 @@ Actors:
           Database: *Database
           Operations:
             - OperationName: RunCommand
+              ReportMetrics: false
               OperationCommand:
                 createIndexes: *Coll
                 indexes:

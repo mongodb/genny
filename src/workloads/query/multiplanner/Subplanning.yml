@@ -39,6 +39,7 @@ Actors:
           Database: *db
           Operations:
             - OperationName: RunCommand
+              ReportMetrics: false
               OperationCommand:
                 drop: *coll
 

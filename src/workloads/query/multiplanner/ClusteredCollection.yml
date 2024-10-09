@@ -42,9 +42,11 @@ Actors:
           Database: *db
           Operations:
             - OperationName: RunCommand
+              ReportMetrics: false
               OperationCommand:
                 drop: *coll
             - OperationName: RunCommand
+              ReportMetrics: false
               OperationCommand:
                 create: *coll
                 clusteredIndex: { "key": { _id: 1 }, "unique": true }

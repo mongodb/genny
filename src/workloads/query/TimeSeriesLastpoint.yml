@@ -126,6 +126,7 @@ Actors:
           Operation:
             OperationMetricsName: CreateTimeSeriesCollection
             OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand: {create: *coll, timeseries: {timeField: "timestamp", metaField: "metadata"}}
 
   - Name: InsertData

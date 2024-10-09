@@ -33,6 +33,7 @@ Actors:
         Operation:
           OperationMetricsName: CreateTimeSeriesCollection
           OperationName: RunCommand
+          ReportMetrics: false
           OperationCommand: {create: *coll, timeseries: {timeField: "t", metaField: "m"}}
       - *Nop
       - *Nop
