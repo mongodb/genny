@@ -28,7 +28,7 @@ Actors:
 
           # Simple leaf roles
           - OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand:
               createRole: 'userAcquisitionRoleA'
               roles: ['backup']
@@ -37,7 +37,7 @@ Actors:
                   actions: ['insert']
 
           - OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand:
               createRole: 'userAcquisitionRoleB'
               roles: ['backup']
@@ -46,7 +46,7 @@ Actors:
                   actions: ['insert']
 
           - OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand:
               createRole: 'userAcquisitionRoleC'
               roles: ['backup']
@@ -55,7 +55,7 @@ Actors:
                   actions: ['insert']
 
           - OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand:
               createRole: 'userAcquisitionRoleD'
               roles: ['backup']
@@ -65,7 +65,7 @@ Actors:
 
           # First degree inheritors
           - OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand:
               createRole: 'userAcquisitionRoleAB'
               roles:
@@ -76,7 +76,7 @@ Actors:
                   actions: ['insert']
 
           - OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand:
               createRole: 'userAcquisitionRoleBC'
               roles:
@@ -87,7 +87,7 @@ Actors:
                   actions: ['insert']
 
           - OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand:
               createRole: 'userAcquisitionRoleCD'
               roles:
@@ -98,7 +98,7 @@ Actors:
                   actions: ['insert']
 
           - OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand:
               createRole: 'userAcquisitionRoleDA'
               roles:
@@ -110,7 +110,7 @@ Actors:
 
           # 2nd degree inheritors
           - OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand:
               createRole: 'userAcquisitionRoleABCD'
               roles:
@@ -121,7 +121,7 @@ Actors:
                   actions: ['insert']
 
           - OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand:
               createRole: 'userAcquisitionRoleBCDA'
               roles:
@@ -132,7 +132,7 @@ Actors:
                   actions: ['insert']
 
           - OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand:
               createRole: 'userAcquisitionRoleCDAB'
               roles:
@@ -143,7 +143,7 @@ Actors:
                   actions: ['insert']
 
           - OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand:
               createRole: 'userAcquisitionRoleDABC'
               roles:
@@ -155,7 +155,7 @@ Actors:
 
           # Composite of 2nd degree inheritors
           - OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand:
               createRole: 'userAcquisitionRoleAll'
               roles:
@@ -168,7 +168,7 @@ Actors:
                   actions: ['insert']
 
           - OperationName: RunCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationCommand:
               createUser: 'testUserAcquisition'
               pwd: 'pwd'

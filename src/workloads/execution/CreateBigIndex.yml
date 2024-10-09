@@ -125,7 +125,7 @@ Actors:
         Database: admin
         Operations:
           - OperationMetricsName: LimitIndexBuildMemoryUsageCommand
-            ReportMetrics: False
+            ReportMetrics: false
             OperationName: RunCommand
             OperationCommand:
               setParameter: 1

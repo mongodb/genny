@@ -779,7 +779,7 @@ Actors:
           Collection: *Collection
           Operations:
             - OperationName: RunCommand
-              ReportMetrics: False
+              ReportMetrics: false
               OperationCommand:
                 createIndexes: *Collection
                 indexes:

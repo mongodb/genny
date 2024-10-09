@@ -130,7 +130,7 @@ CacheSizeActor:
         Database: admin
         Operations:
         - OperationName: AdminCommand
-          ReportMetrics: False
+          ReportMetrics: false
           OperationCommand:
             # Configuring the queryStats store size to an arbitrary value which seems reasonable.
             # This ensures that if run on different sized machines, the test will remain the same.
@@ -150,7 +150,7 @@ RateLimitActor:
         Database: admin
         Operations:
         - OperationName: AdminCommand
-          ReportMetrics: False
+          ReportMetrics: false
           OperationCommand:
             setParameter: 1
             internalQueryStatsRateLimit: *RateLimitHz

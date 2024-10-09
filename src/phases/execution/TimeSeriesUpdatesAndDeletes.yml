@@ -35,7 +35,7 @@ CreateTimeSeriesCollectionPhase:
       Database: *db
       Operations:
         - OperationName: RunCommand
-          ReportMetrics: False
+          ReportMetrics: false
           OperationCommand: {
             # Each bucket holds data within one hour time span.
             create: *coll, timeseries: {timeField: "t", metaField: "sensorId", granularity: "seconds"}}
@@ -112,6 +112,6 @@ CleanUpPhase:
       Database: *db
       Operation:
         OperationName: RunCommand
-        ReportMetrics: False
+        ReportMetrics: false
         OperationCommand:
           drop: *coll
