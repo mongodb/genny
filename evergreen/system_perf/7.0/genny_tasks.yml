@@ -295,7 +295,7 @@ buildvariants:
   - name: write_one_replica_set
   - name: llt_mixed
   - name: llt_mixed_small
-- name: perf-shard-lite-fle.arm.aws.2023-11
+- name: perf-3-shard-fle.arm.aws.2023-11
   tasks:
   - name: ycsb_like_queryable_encrypt1_cf16
   - name: ycsb_like_queryable_encrypt1_cf32
