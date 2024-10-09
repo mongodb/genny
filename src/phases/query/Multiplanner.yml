@@ -91,8 +91,9 @@ Hide48IndexesTemplate:
         Repeat: {^Parameter: {Name: "repeat", Default: {unused: "Invalid repeat count."}}}
         Database: {^Parameter: {Name: "database", Default: {unused: "Invalid database name."}}}
         Operations:
-          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: &coll {^Parameter: {Name: "collection", Default: {unused: "Invalid collection name."}}},
-                                                           index: {hidden: true, name: index17}}}
+          - {OperationName: RunCommand, ReportMetrics: false,
+             OperationCommand: {collMod: &coll {^Parameter: {Name: "collection", Default: {unused: "Invalid collection name."}}},
+                                index: {hidden: true, name: index17}}}
           - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index18}}}
           - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index19}}}
           - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index20}}}
@@ -152,8 +153,9 @@ Hide14IndexesTemplate:
         Repeat: {^Parameter: {Name: "repeat", Default: {unused: "Invalid repeat count."}}}
         Database: {^Parameter: {Name: "database", Default: {unused: "Invalid database name."}}}
         Operations:
-          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: &coll2 {^Parameter: {Name: "collection", Default: {unused: "Invalid collection name."}}},
-                                                           index: {hidden: true, name: index3}}}
+          - {OperationName: RunCommand, ReportMetrics: false,
+             OperationCommand: {collMod: &coll2 {^Parameter: {Name: "collection", Default: {unused: "Invalid collection name."}}},
+                                index: {hidden: true, name: index3}}}
           - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index4}}}
           - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index5}}}
           - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index6}}}
