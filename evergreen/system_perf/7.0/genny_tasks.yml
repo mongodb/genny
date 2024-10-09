@@ -57,7 +57,6 @@ buildvariants:
   - name: multi_updates_multi_updates
 - name: perf-3-node-replSet.arm.aws.2023-11
   tasks:
-  - name: device_monitoring
   - name: coinbase_timeseries_group_date_trunc
   - name: coinbase_timeseries_group_date_trunc_memory_limit
   - name: coinbase_timeseries_group_date_trunc_sort
@@ -197,7 +196,6 @@ buildvariants:
   - name: llt_mixed_small
 - name: perf-3-node-replSet-intel.intel.aws.2023-11
   tasks:
-  - name: device_monitoring
   - name: coinbase_timeseries_group_date_trunc
   - name: coinbase_timeseries_group_date_trunc_memory_limit
   - name: coinbase_timeseries_group_date_trunc_sort
@@ -335,7 +333,7 @@ buildvariants:
   - name: write_one_replica_set
   - name: llt_mixed
   - name: llt_mixed_small
-- name: perf-shard-lite-fle.arm.aws.2023-11
+- name: perf-3-shard-fle.arm.aws.2023-11
   tasks:
   - name: ycsb_like_queryable_encrypt1_cf16
   - name: ycsb_like_queryable_encrypt1_cf32
@@ -352,17 +350,6 @@ buildvariants:
   - name: medical_workload_load_unencrypted
   - name: medical_workload_load
 tasks:
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
-      auto_workload_path: src/PrivateWorkloads/src/workloads/customer_representative/DeviceMonitoring.yml
-      test_control: device_monitoring
-  name: device_monitoring
-  priority: 5
 - commands:
   - command: timeout.update
     params:
