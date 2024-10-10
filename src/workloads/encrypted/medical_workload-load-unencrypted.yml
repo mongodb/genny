@@ -87,6 +87,6 @@ AutoRun:
   - When:
       mongodb_setup:
         $eq:
-          - shard-lite-fle
+          - shard-fle
       branch_name:
         $gte: v7.0

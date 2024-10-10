@@ -48,6 +48,6 @@ AutoRun:
       mongodb_setup:
         $eq:
           - single-replica-fle
-          - shard-lite-fle
+          - shard-fle
       branch_name:
         $gte: v7.0
