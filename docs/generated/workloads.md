@@ -4963,6 +4963,27 @@ TODO: TIG-3321
 
 
 
+## [InsertRemove](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/InsertRemove.yml)
+### Owner 
+Product Performance 
+
+
+### Support Channel
+[#performance](https://mongodb.enterprise.slack.com/archives/C0V3KSB52)
+
+
+### Description
+Demonstrate the InsertRemove actor. The InsertRemove actor is a simple actor that inserts and then
+removes the same document from a collection in a loop. Each instance of the actor uses a different
+document, indexed by an integer _id field. The actor records the latency of each insert and each
+remove.
+
+  
+
+### Keywords
+docs, actorInsertRemove, insert, delete 
+
+
 ## [LargeIndexedInsMatchingDocuments](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/LargeIndexedInsMatchingDocuments.yml)
 ### Owner 
 Product Performance 
