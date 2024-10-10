@@ -67,7 +67,6 @@ buildvariants:
   - name: update_with_secondary_indexes
   - name: validate_cmd
   - name: validate_cmd_full
-  - name: connections_buildup
   - name: commit_latency_single_update
   - name: service_architecture_workloads
   - name: aggregate_expressions
@@ -172,7 +171,6 @@ buildvariants:
   - name: update_with_secondary_indexes
   - name: validate_cmd
   - name: validate_cmd_full
-  - name: connections_buildup
   - name: commit_latency_single_update
   - name: service_architecture_workloads
   - name: aggregate_expressions
@@ -805,17 +803,6 @@ tasks:
       auto_workload_path: src/genny/src/workloads/execution/ValidateCmdFull.yml
       test_control: validate_cmd_full
   name: validate_cmd_full
-  priority: 5
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
-      auto_workload_path: src/genny/src/workloads/issues/ConnectionsBuildup.yml
-      test_control: connections_buildup
-  name: connections_buildup
   priority: 5
 - commands:
   - command: timeout.update

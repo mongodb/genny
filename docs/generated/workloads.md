@@ -1764,27 +1764,6 @@ to the validate command, including background validation.
 RunCommand, Loader, validate 
 
 
-## [ConnectionsBuildup](https://www.github.com/mongodb/genny/blob/master/src/workloads/issues/ConnectionsBuildup.yml)
-### Owner 
-Product Performance 
-
-
-### Support Channel
-[#performance](https://mongodb.enterprise.slack.com/archives/C0V3KSB52)
-
-
-### Description
-This workload was created to reproduce SERVER-53853: Large buildup of mongos to mongod connections and
-low performance with secondaryPreferred reads. This workload was originally two separate files,
-ConnectionsBuildup.yml and ConnectionsBuildupNoSharding.yml. It was merged into a single file when
-"OnlyRunInInstance: sharded" became an option.
-
-  
-
-### Keywords
-reproducer, connections, secondaryPreferred, sharding 
-
-
 ## [CommitLatencySingleUpdate](https://www.github.com/mongodb/genny/blob/master/src/workloads/networking/CommitLatencySingleUpdate.yml)
 ### Owner 
 Product Performance 
