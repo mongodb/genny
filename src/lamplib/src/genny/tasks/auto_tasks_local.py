@@ -25,29 +25,30 @@ DSI_TASK_NAME = "f_run_dsi_workload"
 
 PROJECT_FILES = {
     "master": [
-        os.path.join(DSI_TMP_PATH, "evergreen", "system_perf", "master", "variants.yml"),
-        os.path.join(DSI_TMP_PATH, "evergreen", "system_perf", "master", "master_variants.yml"),
+        os.path.join("evergreen", "system_perf", "master", "variants.yml"),
+        os.path.join("evergreen", "system_perf", "master", "master_variants.yml"),
     ],
     "v8.0": [
-        os.path.join(DSI_TMP_PATH, "evergreen", "system_perf", "8.0", "variants.yml"),
+        os.path.join("evergreen", "system_perf", "8.0", "variants.yml"),
     ],
     "v7.0": [
-        os.path.join(DSI_TMP_PATH, "evergreen", "system_perf", "7.0", "variants.yml"),
+        os.path.join("evergreen", "system_perf", "7.0", "variants.yml"),
     ],
     "v6.0": [
-        os.path.join(DSI_TMP_PATH, "evergreen", "system_perf", "6.0", "variants.yml"),
+        os.path.join("evergreen", "system_perf", "6.0", "variants.yml"),
     ],
     "v5.0": [
-        os.path.join(DSI_TMP_PATH, "evergreen", "system_perf", "5.0", "variants.yml"),
+        os.path.join("evergreen", "system_perf", "5.0", "variants.yml"),
     ],
 }
 
 
-def get_builds(branch_name: str):
+def get_builds(branch_name: str, dsi_path: str) :
     builds = []
     expansions = {"branch_name": branch_name, "execution": FIRST_EXECUTION}
     for project_file in PROJECT_FILES[branch_name]:
-        builds.extend(get_all_builds(expansions, project_file, False))
+        project_file_path = os.path.join(dsi_path, project_file)
+        builds.extend(get_all_builds(expansions, project_file_path, False))
 
     return builds
 
@@ -59,16 +60,40 @@ def fix_auto_workload_path(command: CommandDefinition):
         command._vars[WORKLOAD_PATH_KEY] = "src/" + command._vars[WORKLOAD_PATH_KEY]
 
 
-def main(workspace_root: str, running_in_evergreen: bool) -> None:
-    if not running_in_evergreen:
+def set_up_environment(dsi_path, private_workloads_path):
+    if not dsi_path:
         SLOG.info("Cloning the DSI repo to look for variants")
         GitRepo.clone_from(DSI_REPO_URL, DSI_TMP_PATH)
+        dsi_path = DSI_TMP_PATH
+    if not private_workloads_path:
         SLOG.info("Cloning the PrivateWorkloads repo to look for tests")
         GitRepo.clone_from(PRIVATE_WORKLOADS_REPO_URL, PRIVATE_WORKLOADS_TMP_PATH)
+        private_workloads_path = PRIVATE_WORKLOADS_TMP_PATH
+    else:
+        SLOG.info("Creating temporary symlink to the PrivateWorkloads repository")
+        os.symlink(private_workloads_path, PRIVATE_WORKLOADS_TMP_PATH)
+    return dsi_path
+
+
+def cleanup_environment():
+    if os.path.exists(DSI_TMP_PATH):
+        SLOG.info("Removing the temporary DSI repo")
+        shutil.rmtree(DSI_TMP_PATH)
+    if os.path.exists(PRIVATE_WORKLOADS_TMP_PATH):
+        if os.path.islink(PRIVATE_WORKLOADS_TMP_PATH):
+            SLOG.info("Removing the temporary symbolic link for the PrivateWorkloads repo")
+            os.remove(PRIVATE_WORKLOADS_TMP_PATH)
+        else:
+            SLOG.info("Removing the temporary PrivateWorkloads repo")
+            shutil.rmtree(PRIVATE_WORKLOADS_TMP_PATH)
+
+
+def main(workspace_root: str, dsi_path: str = None, private_workloads_path: str = None) -> None:
+    dsi_path = set_up_environment(dsi_path, private_workloads_path)
 
     for branch_name in PROJECT_FILES:
         SLOG.info("Creating the configuration", branch_name=branch_name)
-        builds = get_builds(branch_name)
+        builds = get_builds(branch_name, dsi_path)
         lister = WorkloadLister(
             workspace_root=workspace_root, workload_file_pattern=WORKLOAD_FILE_PATTERN
         )
@@ -93,8 +118,4 @@ def main(workspace_root: str, running_in_evergreen: bool) -> None:
             file_format=ConfigWriter.FileFormat.YAML,
         )
 
-    if not running_in_evergreen:
-        SLOG.info("Removing the temporary DSI repo")
-        shutil.rmtree(DSI_TMP_PATH)
-        SLOG.info("Removing the temporary PrivateWorkloads repo")
-        shutil.rmtree(PRIVATE_WORKLOADS_TMP_PATH)
+    cleanup_environment()
