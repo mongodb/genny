@@ -514,7 +514,7 @@ functions:
         working_dir: src/genny
         script: |
           set -eu
-          versions=("master" "8.0" "7.3" "7.0" "6.0" "5.0")
+          versions=("master" "8.0" "7.0" "6.0" "5.0")
 
           # Move original files to backup locations
           for version in $versions; do
