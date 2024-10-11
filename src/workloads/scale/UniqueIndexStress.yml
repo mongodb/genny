@@ -28,8 +28,10 @@ Actors:
         Collection: &coll test
         Operations:
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand: {dropDatabase: 1}
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *coll
               indexes:
@@ -53,8 +55,10 @@ Actors:
         Collection: *coll
         Operations:
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand: {dropDatabase: 1}
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *coll
               indexes:
@@ -79,8 +83,10 @@ Actors:
         Collection: *coll
         Operations:
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand: {dropDatabase: 1}
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *coll
               indexes:
@@ -106,8 +112,10 @@ Actors:
         Collection: *coll
         Operations:
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand: {dropDatabase: 1}
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *coll
               indexes:
@@ -134,8 +142,10 @@ Actors:
         Collection: *coll
         Operations:
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand: {dropDatabase: 1}
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *coll
               indexes:
@@ -163,8 +173,10 @@ Actors:
         Collection: *coll
         Operations:
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand: {dropDatabase: 1}
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *coll
               indexes:
@@ -193,8 +205,10 @@ Actors:
         Collection: *coll
         Operations:
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand: {dropDatabase: 1}
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *coll
               indexes:
@@ -224,8 +238,10 @@ Actors:
         Collection: *coll
         Operations:
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand: {dropDatabase: 1}
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *coll
               indexes:

@@ -59,6 +59,7 @@ Actors:
         Collection: *Collection
         Operations:
           - OperationMetricsName: hello
+            ReportMetrics: false
             OperationName: RunCommand
             OperationIsQuiet: true
             OperationCommand:

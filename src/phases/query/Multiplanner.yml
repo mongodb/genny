@@ -16,6 +16,7 @@ QueryKnobTemplate:
         Database: admin
         Operations:
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               setParameter: {^Parameter: {Name: "collection", Default: {unused: "Invalid collection name."}}}
               # Disable the plan cache so we multiplan on every request.
@@ -90,54 +91,55 @@ Hide48IndexesTemplate:
         Repeat: {^Parameter: {Name: "repeat", Default: {unused: "Invalid repeat count."}}}
         Database: {^Parameter: {Name: "database", Default: {unused: "Invalid database name."}}}
         Operations:
-          - {OperationName: RunCommand, OperationCommand: {collMod: &coll {^Parameter: {Name: "collection", Default: {unused: "Invalid collection name."}}},
-                                                           index: {hidden: true, name: index17}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index18}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index19}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index20}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index21}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index22}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index23}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index24}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index25}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index26}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index27}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index28}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index29}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index30}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index31}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index32}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index33}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index34}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index35}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index36}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index37}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index38}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index39}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index40}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index41}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index42}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index43}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index44}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index45}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index46}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index47}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index48}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index49}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index50}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index51}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index52}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index53}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index54}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index55}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index56}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index57}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index58}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index59}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index60}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index61}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index62}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll, index: {hidden: true, name: index63}}}
+          - {OperationName: RunCommand, ReportMetrics: false,
+             OperationCommand: {collMod: &coll {^Parameter: {Name: "collection", Default: {unused: "Invalid collection name."}}},
+                                index: {hidden: true, name: index17}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index18}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index19}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index20}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index21}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index22}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index23}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index24}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index25}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index26}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index27}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index28}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index29}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index30}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index31}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index32}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index33}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index34}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index35}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index36}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index37}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index38}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index39}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index40}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index41}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index42}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index43}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index44}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index45}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index46}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index47}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index48}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index49}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index50}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index51}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index52}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index53}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index54}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index55}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index56}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index57}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index58}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index59}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index60}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index61}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index62}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll, index: {hidden: true, name: index63}}}
 
 Hide14IndexesTemplate:
   Name: Hide14Indexes
@@ -151,21 +153,22 @@ Hide14IndexesTemplate:
         Repeat: {^Parameter: {Name: "repeat", Default: {unused: "Invalid repeat count."}}}
         Database: {^Parameter: {Name: "database", Default: {unused: "Invalid database name."}}}
         Operations:
-          - {OperationName: RunCommand, OperationCommand: {collMod: &coll2 {^Parameter: {Name: "collection", Default: {unused: "Invalid collection name."}}},
-                                                           index: {hidden: true, name: index3}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index4}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index5}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index6}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index7}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index8}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index9}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index10}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index11}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index12}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index13}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index14}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index15}}}
-          - {OperationName: RunCommand, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index16}}}
+          - {OperationName: RunCommand, ReportMetrics: false,
+             OperationCommand: {collMod: &coll2 {^Parameter: {Name: "collection", Default: {unused: "Invalid collection name."}}},
+                                index: {hidden: true, name: index3}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index4}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index5}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index6}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index7}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index8}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index9}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index10}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index11}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index12}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index13}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index14}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index15}}}
+          - {OperationName: RunCommand, ReportMetrics: false, OperationCommand: {collMod: *coll2, index: {hidden: true, name: index16}}}
 
 fraction: &frac {^NumExpr: {withExpression: "resultCount / docCount",
                             andValues: {resultCount: &resultCount {^Parameter: {Name: "resultCount", Default: {unused: "Invalid result count."}}},

@@ -50,6 +50,7 @@ Actors:
         Database: *db
         Operations:
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               update: Collection0
               updates:
@@ -73,6 +74,7 @@ Actors:
                   },
                 ]
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               createIndexes: Collection0
               indexes:
