@@ -9,6 +9,7 @@ CreateIndex:
   Operation:
     OperationName: RunCommand
     OperationMetricsName: CreateIndex
+    ReportMetrics: false
     OperationCommand:
       createIndexes: &coll { ^Parameter: { Name: "Collection", Default: "Collection0" } }
       indexes:
@@ -73,6 +74,7 @@ DropIndex:
   Operation:
     OperationMetricsName: DropIndex
     OperationName: RunCommand
+    ReportMetrics: false
     OperationCommand:
       dropIndexes: { ^Parameter: { Name: "Collection", Default: "Collection0" } }
       index: { ^Parameter: { Name: "IndexName", Default: "" } }

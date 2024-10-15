@@ -44,7 +44,7 @@ Clients:
 
 ActorTemplates:
 - TemplateName: InsertTemplate
-  Config: 
+  Config:
     Name: {^Parameter: {Name: "Name", Default: "unused"}}
     Type: CrudActor
     Threads: 1
@@ -73,7 +73,7 @@ ActorTemplates:
     Threads: 1
     Database: *encrypted_db
     ClientName: EncryptedPool
-    
+
     Phases: {% if not encrypt %}
     - *nop {% endif %}
     - *nop
@@ -118,27 +118,30 @@ Actors: {% if not encrypt %}
           Database: *encrypted_db
           Operations:
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *encrypted_coll
               indexes:
               - key: { tm_retail_tx: 1}
                 name: time_index
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *encrypted_coll
               indexes:
               - key: { age_hospitals: 1}
                 name: age_index
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *encrypted_coll
               indexes:
               - key: { bnk_bal: 1}
                 name: bal_index {% endif %}
   {% for t in range(insert_threads) %}
-  - ActorFromTemplate: 
+  - ActorFromTemplate:
       TemplateName: InsertTemplate
-      TemplateParameters: 
+      TemplateParameters:
         Name: InsertActor_Thread{{ t }}
         StartLine: {{t * document_count // insert_threads}}
     {% endfor %}
@@ -163,6 +166,6 @@ AutoRun:
     mongodb_setup:
       $eq:
       - single-replica-fle
-      - shard-lite-fle
+      - shard-fle
     branch_name:
       $gte: v8.0

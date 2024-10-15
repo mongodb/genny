@@ -29,6 +29,7 @@ CreateIdentityView:
         Database: { ^Parameter: { Name: "Database", Default: test } }
         Operations:
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               {
                 create: { ^Parameter: { Name: "View", Default: Collection0 } },

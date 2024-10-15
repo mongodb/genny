@@ -1,10 +1,10 @@
 workload_name: rc_experiment
 patches:
-  {{ patch_id }}: 
-    perf-shard-lite-fle.arm.aws.2023-11: {% for exp_name in experiments %}
+  {{ patch_id }}:
+    perf-3-shard-fle.arm.aws.2023-11: {% for exp_name in experiments %}
     - "qe_range_testing_workloads_evergreen_{{ exp_name }}"{% endfor %}
 genny_metrics:
-  tests: 
+  tests:
 {% for i in range(n_threads) %}
   - "InsertActor_Thread{{i}}.load.inserts"
   - "FSMActor_Thread{{i}}.FSM.range_query"

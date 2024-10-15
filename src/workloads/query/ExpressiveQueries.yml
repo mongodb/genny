@@ -244,6 +244,7 @@ Actors:
         Database: *DB
         Operations:
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               createIndexes: Collection0
               indexes:
