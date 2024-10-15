@@ -45,11 +45,13 @@ Actors:
           Database: *db
           Operations:
             - OperationName: RunCommand
+              ReportMetrics: false
               OperationCommand:
                 drop: *coll
             # Explicitly create the collection, to avoid a special case where empty collections
             # give you an EOF plan.
             - OperationName: RunCommand
+              ReportMetrics: false
               OperationCommand:
                 create: *coll
 

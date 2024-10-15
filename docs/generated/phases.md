@@ -235,21 +235,6 @@ Configuration for MultiDeletes workload. This configuration introduces secondary
 
 
 
-## [ConnectionsBuildup](https://www.github.com/mongodb/genny/blob/master/src/phases/issues/ConnectionsBuildup.yml)
-### Owner 
-Product Performance 
-
-
-### Support Channel
-[#performance](https://mongodb.enterprise.slack.com/archives/C0V3KSB52)
-
-
-### Description
-These are the phases used to reproduce SERVER-53853: Large buildup of mongos to mongod connections and
-low performance with secondaryPreferred reads
-
-
-
 ## [AggregateExpressions](https://www.github.com/mongodb/genny/blob/master/src/phases/query/AggregateExpressions.yml)
 ### Owner 
 @mongodb/query 
@@ -682,45 +667,6 @@ respectively.
 AdminCommand, MonotonicSingleLoader, CrudActor, updateMany, sharding 
 
 
-## [AvgAcctBal](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/AvgAcctBal.yml)
-### Owner 
-@mongodb/product-query 
-
-
-
-### Description
-Run an internal TPC-H query to get the average customer account balance against the denormalized
-schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## [AvgItemCost](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/AvgItemCost.yml)
-### Owner 
-@mongodb/product-query 
-
-
-
-### Description
-Run an internal TPC-H query to get the average cost of item sold against the denormalized schema
-for scale 10. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## [BiggestOrders](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/BiggestOrders.yml)
-### Owner 
-@mongodb/product-query 
-
-
-
-### Description
-Run an internal TPC-H query to get the biggest EUROPE orders against the denormalized schema for
-scale 10. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
 ## [Q1](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q1.yml)
 ### Owner 
 @mongodb/product-query 
@@ -981,32 +927,6 @@ documents remain, which ensures that the query executes in its entirety.
 
 ### Description
 Run TPC-H query 9 against the denormalized schema. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## [TotalLineitemRevenue](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/TotalLineitemRevenue.yml)
-### Owner 
-@mongodb/product-query 
-
-
-
-### Description
-Run an internal TPC-H query to sum up total price across all lineitems against the denormalized
-schema for scale 10. Using an 'executionStats' explain causes each command to run its execution plan until no
-documents remain, which ensures that the query executes in its entirety.
-
-
-
-## [TotalOrderRevenue](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/TotalOrderRevenue.yml)
-### Owner 
-@mongodb/product-query 
-
-
-
-### Description
-Run an internal TPC-H query to sum up total price across all orders against the denormalized
-schema for scale 10. Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
 
 

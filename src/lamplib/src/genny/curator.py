@@ -143,6 +143,13 @@ def calculate_rollups(output_dir: str, workspace_root: str, genny_repo_root: str
         for file in files:
             if file.endswith(".ftdc"):
                 ftdc_file_name = os.path.join(root, file)
+
+                # Curator produces invalid results for emtpy files.
+                # We also need to remove the files to prevent the ftdc_fallback in DSI.
+                if os.path.getsize(ftdc_file_name) == 0:
+                    os.remove(ftdc_file_name)
+                    continue
+
                 rollup_file_name = ftdc_file_name.replace(".ftdc", ".json")
                 SLOG.info(
                     "Creating perf rollup from FTDC file.",

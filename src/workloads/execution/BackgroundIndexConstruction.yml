@@ -76,6 +76,7 @@ Actors:
           Database: *db
           Operations:
             - OperationName: RunCommand
+              ReportMetrics: false
               OperationCommand:
                 createIndexes: *otherColl
                 indexes:
@@ -95,10 +96,12 @@ Actors:
           Database: admin
           Operations:
             - OperationName: AdminCommand
+              ReportMetrics: false
               OperationCommand:
                 setParameter: 1
                 throughputProbingMaxConcurrency: 32
             - OperationMetricsName: LimitIndexBuildMemoryUsageCommand
+              ReportMetrics: false
               OperationName: RunCommand
               OperationCommand:
                 setParameter: 1

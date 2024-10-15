@@ -30,6 +30,7 @@ Actors:
           Database: &Database test
           Operations:
             - OperationName: RunCommand
+              ReportMetrics: false
               OperationCommand:
                 createIndexes: &Collection Collection0
                 indexes:

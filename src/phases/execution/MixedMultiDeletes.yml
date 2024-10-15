@@ -231,6 +231,7 @@ Actors:
           Operation:
             OperationMetricsName: SelectDeleteExecutor
             OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               setParameter: 1
               batchUserMultiDeletes: *UseBatchedDeleteStage

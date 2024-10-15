@@ -17,6 +17,7 @@ Actors:
             OperationCommand:
               serverStatus: 1
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               insert: myCollection
               documents: [{name: {^RandomString: {length: {^RandomInt: {min: 2, max: 5}}}}, rating: 10, address: someAddress, cuisine: italian}]

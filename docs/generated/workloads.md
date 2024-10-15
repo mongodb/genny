@@ -1764,145 +1764,6 @@ to the validate command, including background validation.
 RunCommand, Loader, validate 
 
 
-## [Flushing](https://www.github.com/mongodb/genny/blob/master/src/workloads/filesystem/Flushing.yml)
-### Owner 
-Product Performance 
-
-
-### Support Channel
-[#performance](https://mongodb.enterprise.slack.com/archives/C0V3KSB52)
-
-
-### Description
-Run large insertMany's to stress checkpointing, journal flush and dirty memory with {w:majority}.
-The workload runs a single CrudActor targeting:
-  - 'test' database, configurable via the Database parameter.
-  - 'Collection0' collection, configurable via the Collection parameter.
-  - 10 threads, configurable via the Threads parameter.
-  - 5000 iterations, configurable via the Iterations parameter.
-  - 1500 documents, configurable via the Documents parameter.
-  - {w:majority} insert options, configurable via the Options parameter.
-The default documents have a very simple / flat structure as follows:
-  - _id: ObjectId
-  - x: a ~1KB fixed string
-  - id: 'User%07d' incrementing field.
-There are no additional indexes (just _id).
-The important ftdc metrics to look at are:
-  - ss opcounters insert
-  - ss average latency writes
-  - system memory dirty
-  - ss wt log log sync time duration
-  - ss wt transaction transaction checkpoint currently running
-
-  
-
-### Keywords
-Flushing, IO, bulk insert, stress, checkpoint, journal 
-
-
-## [ConnectionPoolStress](https://www.github.com/mongodb/genny/blob/master/src/workloads/issues/ConnectionPoolStress.yml)
-### Owner 
-Product Performance 
-
-
-### Support Channel
-[#performance](https://mongodb.enterprise.slack.com/archives/C0V3KSB52)
-
-
-### Description
-This workload was created to reproduce issues discovered during sharded stress testing. The workload can cause
-low performance, spikes in latency and excessive connection creation (on mongos processes).
-
-The main metrics to monitor are:
-  * ErrorsTotal / ErrorRate: The total number of errors and rate of errors encountered by the workload. Networking
-    errors are not unexpected in general and they should be recoverable. This work load strives to provide a test to
-    allow us to measure the scale of networking errors in a stressful test and prove if the networking becomes more
-    stable (with lower total errors and a lower error rate).
-  * The Operation latency (more specifically the Latency90thPercentile to Latency99thPercentile metrics)
-  * The Operation Throughput
-  * "ss connections active": the number of connections.
-
-The workload performs the following steps:
-  - Phase 0
-    - Upsert a Single Document in the collection
-    - set ShardingTaskExecutorPoolMaxSize
-    - set ShardingTaskExecutorPoolMinSize
-  - Phase 1
-    - Execute a find command for GlobalConnectionDuration seconds in GlobalConnectionThreads threads.
-
-  
-
-### Keywords
-reproducer, connections, secondaryPreferred, sharding, latency 
-
-
-## [ConnectionsBuildup](https://www.github.com/mongodb/genny/blob/master/src/workloads/issues/ConnectionsBuildup.yml)
-### Owner 
-Product Performance 
-
-
-### Support Channel
-[#performance](https://mongodb.enterprise.slack.com/archives/C0V3KSB52)
-
-
-### Description
-This workload was created to reproduce SERVER-53853: Large buildup of mongos to mongod connections and
-low performance with secondaryPreferred reads. This workload was originally two separate files,
-ConnectionsBuildup.yml and ConnectionsBuildupNoSharding.yml. It was merged into a single file when
-"OnlyRunInInstance: sharded" became an option.
-
-  
-
-### Keywords
-reproducer, connections, secondaryPreferred, sharding 
-
-
-## [MongosLatency](https://www.github.com/mongodb/genny/blob/master/src/workloads/issues/MongosLatency.yml)
-### Owner 
-Product Performance 
-
-
-### Support Channel
-[#performance](https://mongodb.enterprise.slack.com/archives/C0V3KSB52)
-
-
-### Description
-This workload was created to reproduce the issue described in SERVER-58997. The goal
-is to induce periods of latency in the MongoS processes that are not caused by the MongoD processes.
-
-The reproduction comprises of:
-  * A sharded collection of 6000 documents with 4 indexes.
-  * The collection is sharded on the _id field.
-  * A workphase of 270 threads that runs for 60 minutes. Each CrudActor thread
-    executes a mixed workload of 40 interleaved operations (20 Finds and 20 Updates).
-
-The main metrics to monitor are:
-  * The Operation Throughput
-  * The Operation latency
-  * "ss connections active"
-
-
-
-## [CommitLatency](https://www.github.com/mongodb/genny/blob/master/src/workloads/networking/CommitLatency.yml)
-### Owner 
-Product Performance 
-
-
-### Support Channel
-[#performance](https://mongodb.enterprise.slack.com/archives/C0V3KSB52)
-
-
-### Description
-Test latencies for a classic transaction of moving money from one account to another, using
-different write concern, read concern, sessions and transactions.  Based on
-http://henrikingo.github.io/presentations/Highload%202018%20-%20The%20cost%20of%20MongoDB%20ACID%20transactions%20in%20theory%20and%20practice/index.html#/step-24
-
-  
-
-### Keywords
-transactions, sessions, write concern, read concern 
-
-
 ## [CommitLatencySingleUpdate](https://www.github.com/mongodb/genny/blob/master/src/workloads/networking/CommitLatencySingleUpdate.yml)
 ### Owner 
 Product Performance 
@@ -2363,31 +2224,6 @@ This workload measures performance for diagnostic top command.
 top, command, admin, stats 
 
 
-## [ColumnStoreIndex](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/ColumnStoreIndex.yml)
-### Owner 
-Query Execution 
-
-
-### Support Channel
-[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
-
-
-### Description
-This workload compares the query performance with columnar indexes to performances without them.
-
-The workload consists of the following phases and actors:
-  0. Warm up cache.
-  1. Run queries with columnstore indexes.
-  2. Drop columnstore indexes.
-  3. Warm up cache again for regular scans.
-  4. Run queries without columnstore indexes.
-
-  
-
-### Keywords
-columnstore, analytics 
-
-
 ## [ConstantFoldArithmetic](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/ConstantFoldArithmetic.yml)
 ### Owner 
 @mongodb/query 
@@ -2419,89 +2255,6 @@ on the level of associativity in the optimizer.
   MiddleFieldpath should see a speedup that puts its performance in between "no associativity" and "full associativity".
   TailingFieldpath should speed up back to its performance in the "full associativity" case.
 
-
-
-## [CsiFragmentedInsertsFlat](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CsiFragmentedInsertsFlat.yml)
-### Owner 
-Query Execution 
-
-
-### Support Channel
-[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
-
-
-### Description
-This workload compares performance of inserts into a collection with only the default _id index,
-and in presence of the columnstore index. It uses an artificial data set with a wide overall
-schema and narrow individual objects to model fragmented access to CSI, which clusters entries by
-path. The data size is relatively small (1e6 documents yield ~175MB data size and ~105MB storage
-size).
-We would like to be able to correlate the results of this workload with the similar one that uses
-nested data (CsiFragmentedInsertsNested.yml). Please make sure to update both when making changes.
-
-  
-
-### Keywords
-columnstore, insert 
-
-
-## [CsiFragmentedInsertsNested](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CsiFragmentedInsertsNested.yml)
-### Owner 
-Query Execution 
-
-
-### Support Channel
-[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
-
-
-### Description
-This workload compares performance of inserts into a collection with only the default _id index
-and in presence of a full columnstore index. We are not comparing to wildcard index because the
-nested data makes creating of a wildcard index too slow. Before changing any of the parameters in
-this workload please make sure the results can be correlated with 'CsiFragmentedInsertsFlat.yml'.
-As the approach in this workload is the same as in 'CsiFragmentedInsertsFlat.yml' with the exception
-of data used by the loader (and not comparing to the wildcard index), comments are intentionally
-omitted, please refer to the "flat" workload for the details.
-
-  
-
-### Keywords
-columnstore, insert 
-
-
-## [CsiHeavyDiskUsage](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CsiHeavyDiskUsage.yml)
-### Owner 
-Query Execution 
-
-
-### Support Channel
-[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
-
-
-### Description
-This workload measures bulk insert performance against a collection named "coll" in a database
-named "heavy_io". The collection and database must be set up before running the workload. The
-workload itself has no expectations as far as the size or schema of the data are concerned but it
-is only useful when being run against larger datasets to actually generate heavy disk IO.
-
-Because the workload is targeting large external datasets, it's expected that they would need long
-setup time. To avoid setting up twice, we run two, essentially independent, experiments one after
-anoter. We don't expect the internal state of WiredTiger to matter as the experiments involve
-different indexes, and the inserts into the rowstore itself are ammortized over the large number
-of batches in each experiment.
-
-The purpose of this workload is to compare the insert performance in the following two situations:
- - "Default" indexes are present - a set of indexes that are typically present on the target
-   dataset, those that would be useful for the typical query workloads. These indexes should be
-   created prior to running the workload.
- - Only a column store index is present. A column store index isn't expected to realistically
-   replace all other indexes in production, but it could replace some and knowing its relative
-   performance cost could help make that decision.
-
-  
-
-### Keywords
-columnstore, analytics, scale, insert 
 
 
 ## [CumulativeWindows](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CumulativeWindows.yml)
@@ -3427,6 +3180,10 @@ but currently perform differently. In the long run, it would be good to track pe
 of them in case a user typed it a certain way and doesn't realize some performance gains that
 another version of the syntax uses.
 
+  
+
+### Keywords
+unionWith, aggregate, geoNear, sbe, group 
 
 
 ## [OneMDocCollection_LargeDocIntId](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/OneMDocCollection_LargeDocIntId.yml)
@@ -3640,31 +3397,6 @@ share a common prefix. Crucially, these queries never match a document in the co
 This workload stresses the query execution engine by running queries over a set of paths which
 share a common prefix. Crucially, these queries never match a document in the collection.
 
-
-
-## [SSBColumnStoreIndex](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/SSBColumnStoreIndex.yml)
-### Owner 
-Query Execution 
-
-
-### Support Channel
-[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
-
-
-### Description
-This workload compares the query performance of SSB (star schema benchmark) queries with columnar indexes to performances without them.
-
-The workload consists of the following phases and actors:
-  1. Run SSB queries with columnstore indexes.
-  2. Drop columnstore indexes.
-  3. Run SSB queries without columnstore indexes.
-
-The DSI test_control will drop caches inbetween each test to measure cold cache performance.
-
-  
-
-### Keywords
-columnstore, analytics, SSB 
 
 
 ## [SetWindowFieldsUnbounded](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/SetWindowFieldsUnbounded.yml)
@@ -5122,38 +4854,6 @@ version of the test, using 10k collections and 10k documents per collection.
 stress, collections, indexes, update, find, coldData 
 
 
-## [BulkLoading](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/BulkLoading.yml)
-### Owner 
-Product Performance 
-
-
-### Support Channel
-[#performance](https://mongodb.enterprise.slack.com/archives/C0V3KSB52)
-
-
-### Description
-This workload tests the performance of the bulkWrite API, and compares it to normal writes.
-It is modeled as a collection of sensor data. It would be common for this use case to do batching using, e.g., AWS SQS.
-The thread levels for the many connections scenario are tuned for maximum throughput.
-
-It tests the following scenarios:
-- BulkWrite API, ~30GB data in the db, single connection, no index
-- BulkWrite API, ~30GB data in the db, single connection, with index
-
-- BulkWrite API, ~30GB data in the db, many connections, no index
-- BulkWrite API, ~30GB data in the db, many connections, with index
-
-- normal writes, ~30GB data in the db, many connections, no index
-- normal writes, ~30GB data in the db, many connections, with index
-
-- BulkWrite Upserts, ~30GB data in the db, many connections, with index
-
-  
-
-### Keywords
-bulk insert, bulk write, indexes, upsert, stress 
-
-
 ## [CollScan](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/CollScan.yml)
 ### Owner 
 Product Performance 
@@ -5189,25 +4889,6 @@ concurrent crud operations on a second collection to simulate extreme ticket con
 
 ### Keywords
 ttl, stress, indexes, insertMany, CrudActor 
-
-
-## [CreateDropView](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/CreateDropView.yml)
-### Owner 
-Product Performance 
-
-
-### Support Channel
-[#performance](https://mongodb.enterprise.slack.com/archives/C0V3KSB52)
-
-
-### Description
-This workload loads a collection with documents and then repeatedly
-create and drops a view on that collection.
-
-  
-
-### Keywords
-view, create, drop 
 
 
 ## [CursorStormMongos](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/CursorStormMongos.yml)
@@ -5279,30 +4960,6 @@ remove.
 
 ### Keywords
 docs, actorInsertRemove, insert, delete 
-
-
-## [LargeIndexedIns](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/LargeIndexedIns.yml)
-### Owner 
-Product Performance 
-
-
-### Support Channel
-[#performance](https://mongodb.enterprise.slack.com/archives/C0V3KSB52)
-
-
-### Description
-This workload sends bursts of finds that use large $ins. The workload
-causes high CPU load as the server becomes bottlenecked on tcmalloc
-spinlocks during the find operations.
-
-Improvements or regressions in this aspect of the allocator should
-be measurable by the average CPU usage during this test as well as
-the latency of the find operations.
-
-In this workload, large arrays of random strings are generated to use
-for the $in queries.  To avoid a CPU bottleneck on the workload client,
-it uses a ^Once generator to generate the arrays once during initialization.
-
 
 
 ## [LargeIndexedInsMatchingDocuments](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/LargeIndexedInsMatchingDocuments.yml)
@@ -5432,20 +5089,6 @@ that shouldn't be too affected by the long-running queries.
 collections, oltp, query, scale 
 
 
-## [LoadTest](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/LoadTest.yml)
-### Owner 
-Product Performance 
-
-
-### Support Channel
-[#performance](https://mongodb.enterprise.slack.com/archives/C0V3KSB52)
-
-
-### Description
-Based on LongLivedTransactions Insert workload. Using to experiment with bulk load for PERF-2330
-
-
-
 ## [MajorityReads10KThreads](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/MajorityReads10KThreads.yml)
 ### Owner 
 Storage Execution 
@@ -5498,23 +5141,6 @@ sets to determine if any performance changes are due to replication overhead cha
 RunCommand, Loader, CrudActor, updateMany, update, replication, oplogSourceOverhead 
 
 
-## [MassDeleteRegression](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/MassDeleteRegression.yml)
-### Owner 
-Product Performance 
-
-
-### Support Channel
-[#performance](https://mongodb.enterprise.slack.com/archives/C0V3KSB52)
-
-
-### Description
-This workload is a repro of SERVER-48522, a regression in the document
-remove rate. It loads, documents, removes them and then queries for
-the removed documents. A bisect, build, test cycle was run as part of
-PERF-2075 to find the cause of SERVER-48522
-
-
-
 ## [Mixed10KThreads](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/Mixed10KThreads.yml)
 ### Owner 
 Storage Execution 
@@ -5543,110 +5169,6 @@ The metrics to monitor are:
 
 ### Keywords
 scale, insertMany, find 
-
-
-## [MixedWorkloadsGenny](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/MixedWorkloadsGenny.yml)
-### Owner 
-Product Performance 
-
-
-### Support Channel
-[#performance](https://mongodb.enterprise.slack.com/archives/C0V3KSB52)
-
-
-### Description
-This workload is a port of the mixed_workloads in the workloads
-repo. https://github.com/10gen/workloads/blob/master/workloads/mix.js. It runs 4 sets of
-operations, each with dedicated actors/threads. The 4 operations are insertOne, findOne,
-updateOne, and deleteOne. Since each type of operation runs in a dedicated thread it enables
-interesting behavior, such as reads getting faster because of a write regression, or reads being
-starved by writes. The origin of the test was as a reproduction for BF-2385 in which reads were
-starved out by writes.
-
-  
-
-### Keywords
-scale, insertOne, insert, findOne, find, updateOne, update, deleteOne, delete 
-
-
-## [MixedWorkloadsGennyRateLimited](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/MixedWorkloadsGennyRateLimited.yml)
-### Owner 
-Product Performance 
-
-
-### Support Channel
-[#performance](https://mongodb.enterprise.slack.com/archives/C0V3KSB52)
-
-
-### Description
-This workload is a Rate Limited version of  MixedWorkloadsGenny, which is a port of the mixed_workloads in the workloads repo.
-https://github.com/10gen/workloads/blob/master/workloads/mix.js. It runs 4 sets of
-operations with a single dedicated actor/thread. The 4 operations are insertOne, findOne,
-updateOne, and deleteOne. Previously, each type of operation ran in a dedicated thread which resulted in
-high CPU utilization of around 90%. The Update operation was found to cause the highest CPU usage.
-Rate Limits were added to maintain CPU utlization at 30-40%, along with using a higher thread level and decreasing phase number count from 4 to 1.
-
-  
-
-### Keywords
-scale, insertOne, insert, findOne, find, updateOne, update, deleteOne, delete, rateLimited, globalRate 
-
-
-## [MixedWorkloadsGennyStress](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/MixedWorkloadsGennyStress.yml)
-### Owner 
-Product Performance 
-
-
-### Support Channel
-[#performance](https://mongodb.enterprise.slack.com/archives/C0V3KSB52)
-
-
-### Description
-This workload is a more stressful version of MixedWorkloadsGenny.yml, which itself is a port of
-the mixed_workloads in the workloads,
-repo. https://github.com/10gen/workloads/blob/master/workloads/mix.js. It runs 4 sets of
-operations, each with dedicated actors/threads. The 4 operations are insertOne, findOne,
-updateOne, and deleteOne. Since each type of operation runs in a dedicated thread it enables
-interesting behavior, such as reads getting faster because of a write regression, or reads being
-starved by writes. The origin of the test was as a reproduction for BF-2385 in which reads were
-starved out by writes.
-
-This more stressful version of the test only runs one test phase, using 1024 threads per operation
-for 10 minutes.
-
-  
-
-### Keywords
-scale, insertOne, insert, findOne, find, updateOne, update, deleteOne, delete 
-
-
-## [MixedWorkloadsGennyStressWithScans](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/MixedWorkloadsGennyStressWithScans.yml)
-### Owner 
-Product Performance 
-
-
-### Support Channel
-[#performance](https://mongodb.enterprise.slack.com/archives/C0V3KSB52)
-
-
-### Description
-This workload is a more stressful version of MixedWorkloadsGenny.yml, which itself is a port of
-the mixed_workloads in the workloads repo.
-https://github.com/10gen/workloads/blob/master/workloads/mix.js. In particular, this workload
-extends MixedWorkloadsGennyStress.yml by adding aggregations that perform index scans. It runs 5
-sets of operations, each with dedicated actors/threads. The 5 operations are insertOne, findOne,
-updateOne, deleteOne, and aggregate. Since each type of operation runs in a dedicated thread it
-enables interesting behavior, such as reads getting faster because of a write regression, or reads
-being starved by writes. The origin of the test was as a reproduction for BF-2385 in which reads
-were starved out by writes.
-
-This more stressful version of the test only runs one test phase, using 1024 threads per operation
-for 45 minutes.
-
-  
-
-### Keywords
-scale, insertOne, insert, findOne, find, updateOne, update, deleteOne, delete, aggregate, scan 
 
 
 ## [MixedWrites](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/MixedWrites.yml)
@@ -5694,29 +5216,6 @@ The workload tests the server under a "multi-plan storm" situation, by letting m
 
 ### Keywords
 memory stress, multi-planning, sort, skip, oom, out of memory 
-
-
-## [NegativeScalingLoadStress](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/NegativeScalingLoadStress.yml)
-### Owner 
-Product Performance 
-
-
-### Support Channel
-[#performance](https://mongodb.enterprise.slack.com/archives/C0V3KSB52)
-
-
-### Description
-This workload is intended to be used to stress a system that may show negative scaling behaviour.
-The workload will insert 100k documents and then run 100k finds across 256 threads. This workload
-has been shown to identify negative scaling on dual socket instances and was originally created to
-mimic the behvaiour reported in HELP-44821. Key metrics to observe here are operations per second,
-cpu kernel usage and cpu user usage. If we see high CPU kernel usage plus low ops/s, we may be observing
-negative scaling. This workload is not scheduled to run at this time and is intended for adhoc use.
-
-  
-
-### Keywords
-scale, insertOne, insert, findOne, find 
 
 
 ## [OutOfCacheScanner](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/OutOfCacheScanner.yml)

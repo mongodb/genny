@@ -242,6 +242,7 @@ Actors:
         Database: *db
         Operations:
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand: {dropDatabase: 1}
       - Phase: 1..7
         Nop: true
@@ -397,22 +398,27 @@ Actors:
         Database: *db
         Operations:
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *Foreign1500
               indexes: &IndexSpec [{key: {"int_key": 1}, name: "idx"}]
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *Foreign3500
               indexes: *IndexSpec
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *Foreign5500
               indexes: *IndexSpec
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *Foreign7500
               indexes: *IndexSpec
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *Foreign9500
               indexes: *IndexSpec
