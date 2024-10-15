@@ -93,9 +93,8 @@ AutoRun:
           - replica-80-feature-flags
           - replica-all-feature-flags
           - single-replica-15gbwtcache
-          - standalone
-          - standalone-classic-query-engine
-          - standalone-sbe
+          - replica-query-engine-classic
+          - replica-query-engine-sbe
       atlas_setup:
         $neq:
           - M10-repl

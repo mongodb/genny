@@ -7,8 +7,8 @@ Description: |
   for either the SBE or the classic engine aggregation expression
   implementations, depending on environments that it runs on.
 
-  Numbers on the 'standalone-all-feature-flags' environment are for
-  the SBE aggregation expressions and numbers on the 'standalone' environment
+  Numbers on the 'replica-all-feature-flags' environment are for
+  the SBE aggregation expressions and numbers on the 'replica' environment
   for the classic aggregation expressions.
 
 Keywords:
@@ -1470,11 +1470,9 @@ AutoRun:
   - When:
       mongodb_setup:
         $eq:
-          - standalone
-          - standalone-80-feature-flags
-          - standalone-all-feature-flags
-          - standalone-classic-query-engine
-          - standalone-sbe
+          - replica-80-feature-flags
+          - replica-query-engine-classic
+          - replica-query-engine-sbe
           - replica
           - replica-all-feature-flags
       branch_name:

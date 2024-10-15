@@ -41,84 +41,11 @@ buildvariants:
   - name: clustered_collection
   - name: clustered_collection_large_record_ids
   - name: create_big_index
-  - name: multi_planning
   - name: ping_command
   - name: sinusoidal_read_writes
   - name: update_with_secondary_indexes
   - name: validate_cmd
   - name: validate_cmd_full
-  - name: aggregate_expressions
-  - name: boolean_simplifier
-  - name: boolean_simplifier_small_dataset
-  - name: coll_scan_complex_predicate_large
-  - name: coll_scan_complex_predicate_medium
-  - name: coll_scan_complex_predicate_small
-  - name: coll_scan_large_number_of_fields_large
-  - name: coll_scan_large_number_of_fields_medium
-  - name: coll_scan_large_number_of_fields_small
-  - name: coll_scan_on_mixed_data_types_large
-  - name: coll_scan_on_mixed_data_types_medium
-  - name: coll_scan_on_mixed_data_types_small
-  - name: coll_scan_predicate_selectivity_large
-  - name: coll_scan_predicate_selectivity_medium
-  - name: coll_scan_predicate_selectivity_small
-  - name: coll_scan_projection_large
-  - name: coll_scan_projection_medium
-  - name: coll_scan_projection_small
-  - name: coll_scan_simplifiable_predicate_large
-  - name: coll_scan_simplifiable_predicate_medium
-  - name: coll_scan_simplifiable_predicate_small
-  - name: collection_level_diagnostic_commands
-  - name: cumulative_windows
-  - name: cumulative_windows_multi_accums
-  - name: densify_fill_combo
-  - name: densify_timeseries_collection
-  - name: expressive_queries
-  - name: external_sort
-  - name: fill_timeseries_collection
-  - name: group_spill_to_disk
-  - name: group_stages_on_computed_fields
-  - name: in_with_varied_array_size
-  - name: limit_skip
-  - name: lookup_nlj
-  - name: lookup_only
-  - name: lookup_sbe_pushdown
-  - name: lookup_sbe_pushdown_inlj_misc
-  - name: lookup_unwind
-  - name: match_filters
-  - name: match_filters_medium
-  - name: match_filters_small
-  - name: match_with_large_expression
-  - name: non_search_hybrid_scoring
-  - name: one_m_doc_collection__large_doc_int_id
-  - name: pipeline_update
-  - name: project_parse
-  - name: query_stats
-  - name: query_stats_query_shapes
-  - name: repeated_path_traversal
-  - name: repeated_path_traversal_medium
-  - name: repeated_path_traversal_small
-  - name: set_window_fields_unbounded
-  - name: sliding_windows
-  - name: sliding_windows_multi_accums
-  - name: sort_by_expression
-  - name: ten_m_doc_collection__int_id
-  - name: ten_m_doc_collection__int_id__agg
-  - name: ten_m_doc_collection__int_id__identity_view
-  - name: ten_m_doc_collection__int_id__identity_view__agg
-  - name: ten_m_doc_collection__object_id
-  - name: ten_m_doc_collection__sub_doc_id
-  - name: time_series_group_stages_on_computed_fields
-  - name: union_with
-  - name: unwind_group
-  - name: variadic_aggregate_expressions
-  - name: window_with_complex_partition_expression
-  - name: window_with_nested_field_projection
-  - name: linear_fill
-  - name: locf
-  - name: big_update
-  - name: large_scale_long_lived
-  - name: many_update
   - name: genny_overhead
   - name: write_one_replica_set
 - name: perf-3-shard-fle.arm.aws.2023-11
@@ -324,6 +251,72 @@ buildvariants:
   - name: llt_mixed_small
 - name: perf-3-node-replSet-query-engine-classic.arm.aws.2023-11
   tasks:
+  - name: multi_planning
+  - name: aggregate_expressions
+  - name: array_traversal
+  - name: boolean_simplifier
+  - name: boolean_simplifier_small_dataset
+  - name: coll_scan_complex_predicate_large
+  - name: coll_scan_complex_predicate_medium
+  - name: coll_scan_complex_predicate_small
+  - name: coll_scan_large_number_of_fields_large
+  - name: coll_scan_large_number_of_fields_medium
+  - name: coll_scan_large_number_of_fields_small
+  - name: coll_scan_on_mixed_data_types_large
+  - name: coll_scan_on_mixed_data_types_medium
+  - name: coll_scan_on_mixed_data_types_small
+  - name: coll_scan_predicate_selectivity_large
+  - name: coll_scan_predicate_selectivity_medium
+  - name: coll_scan_predicate_selectivity_small
+  - name: coll_scan_projection_large
+  - name: coll_scan_projection_medium
+  - name: coll_scan_projection_small
+  - name: coll_scan_simplifiable_predicate_large
+  - name: coll_scan_simplifiable_predicate_medium
+  - name: coll_scan_simplifiable_predicate_small
+  - name: constant_fold_arithmetic
+  - name: cumulative_windows
+  - name: cumulative_windows_multi_accums
+  - name: expressive_queries
+  - name: external_sort
+  - name: filter_with_complex_logical_expression
+  - name: filter_with_complex_logical_expression_medium
+  - name: filter_with_complex_logical_expression_small
+  - name: graph_lookup_with_only_unsharded_colls
+  - name: group_spill_to_disk
+  - name: group_stages_on_computed_fields
+  - name: in_with_varied_array_size
+  - name: limit_skip
+  - name: lookup_nlj
+  - name: lookup_only
+  - name: lookup_sbe_pushdown
+  - name: lookup_sbe_pushdown_inlj_misc
+  - name: lookup_unwind
+  - name: lookup_with_only_unsharded_colls
+  - name: match_filters
+  - name: match_filters_medium
+  - name: match_filters_small
+  - name: match_with_large_expression
+  - name: percentiles_agg
+  - name: percentiles_expr
+  - name: percentiles_window
+  - name: percentiles_window_spill_to_disk
+  - name: project_parse
+  - name: repeated_path_traversal
+  - name: repeated_path_traversal_medium
+  - name: repeated_path_traversal_small
+  - name: set_window_fields_unbounded
+  - name: sliding_windows
+  - name: sliding_windows_multi_accums
+  - name: sort_by_expression
+  - name: time_series_group_stages_on_computed_fields
+  - name: union_with
+  - name: unwind_group
+  - name: variadic_aggregate_expressions
+  - name: window_with_complex_partition_expression
+  - name: window_with_nested_field_projection
+  - name: linear_fill
+  - name: locf
   - name: multiplanner_blocking_sort
   - name: multiplanner_clustered_collection
   - name: multiplanner_compound_indexes
@@ -338,8 +331,76 @@ buildvariants:
   - name: multiplanner_subplanning
   - name: multiplanner_use_clustered_index
   - name: multiplanner_varied_selectivity
+  - name: big_update
+  - name: large_indexed_ins_matching_documents
+  - name: large_scale_long_lived
+  - name: scan_with_long_lived
+  - name: llt_mixed
 - name: perf-3-node-replSet-query-engine-sbe.arm.aws.2023-11
   tasks:
+  - name: multi_planning
+  - name: aggregate_expressions
+  - name: array_traversal
+  - name: coll_scan_complex_predicate_large
+  - name: coll_scan_complex_predicate_medium
+  - name: coll_scan_complex_predicate_small
+  - name: coll_scan_large_number_of_fields_large
+  - name: coll_scan_large_number_of_fields_medium
+  - name: coll_scan_large_number_of_fields_small
+  - name: coll_scan_on_mixed_data_types_large
+  - name: coll_scan_on_mixed_data_types_medium
+  - name: coll_scan_on_mixed_data_types_small
+  - name: coll_scan_predicate_selectivity_large
+  - name: coll_scan_predicate_selectivity_medium
+  - name: coll_scan_predicate_selectivity_small
+  - name: coll_scan_projection_large
+  - name: coll_scan_projection_medium
+  - name: coll_scan_projection_small
+  - name: coll_scan_simplifiable_predicate_large
+  - name: coll_scan_simplifiable_predicate_medium
+  - name: coll_scan_simplifiable_predicate_small
+  - name: constant_fold_arithmetic
+  - name: cumulative_windows
+  - name: cumulative_windows_multi_accums
+  - name: expressive_queries
+  - name: external_sort
+  - name: filter_with_complex_logical_expression
+  - name: filter_with_complex_logical_expression_medium
+  - name: filter_with_complex_logical_expression_small
+  - name: graph_lookup_with_only_unsharded_colls
+  - name: group_spill_to_disk
+  - name: group_stages_on_computed_fields
+  - name: in_with_varied_array_size
+  - name: limit_skip
+  - name: lookup_nlj
+  - name: lookup_only
+  - name: lookup_sbe_pushdown
+  - name: lookup_sbe_pushdown_inlj_misc
+  - name: lookup_unwind
+  - name: lookup_with_only_unsharded_colls
+  - name: match_filters
+  - name: match_filters_medium
+  - name: match_filters_small
+  - name: match_with_large_expression
+  - name: percentiles_agg
+  - name: percentiles_expr
+  - name: percentiles_window
+  - name: percentiles_window_spill_to_disk
+  - name: project_parse
+  - name: repeated_path_traversal
+  - name: repeated_path_traversal_medium
+  - name: repeated_path_traversal_small
+  - name: set_window_fields_unbounded
+  - name: sliding_windows
+  - name: sliding_windows_multi_accums
+  - name: sort_by_expression
+  - name: union_with
+  - name: unwind_group
+  - name: variadic_aggregate_expressions
+  - name: window_with_complex_partition_expression
+  - name: window_with_nested_field_projection
+  - name: linear_fill
+  - name: locf
   - name: multiplanner_blocking_sort
   - name: multiplanner_clustered_collection
   - name: multiplanner_compound_indexes
@@ -354,6 +415,11 @@ buildvariants:
   - name: multiplanner_subplanning
   - name: multiplanner_use_clustered_index
   - name: multiplanner_varied_selectivity
+  - name: big_update
+  - name: large_indexed_ins_matching_documents
+  - name: large_scale_long_lived
+  - name: scan_with_long_lived
+  - name: llt_mixed
 - name: perf-3-node-replSet-intel.intel.aws.2023-11
   tasks:
   - name: coinbase_timeseries_group_date_trunc

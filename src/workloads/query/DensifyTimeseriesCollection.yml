@@ -329,7 +329,6 @@ AutoRun:
   - When:
       mongodb_setup:
         $eq:
-          - standalone
           - replica
       branch_name:
         $neq:
