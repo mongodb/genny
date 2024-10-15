@@ -25,8 +25,6 @@ end-to-end database performance. Therefore, look for the average throughput and 
 `findOne` commands reported by this benchmark.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/read_only_multi_threaded)
-
 
 
 ### Keywords
@@ -49,8 +47,6 @@ on a cluster with an empty initial dataset, waits for it to transition to
 CEA and then starts inserting documents on the source cluster.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/change_event_application)
-
 
 
 ### Keywords
@@ -70,8 +66,6 @@ Product Performance
 This workload is a short version load used to test Mongosync Collection Copy stage performance.
 The workload starts Mongosync on a cluster with an preloaded initial dataset.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/collection_copy)
 
 
 
@@ -100,8 +94,6 @@ For example:
       Path: ./MongosyncScripts.yml
       Key: StartMongosync
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/mongosync_scripts)
 
 
 
@@ -132,8 +124,6 @@ four phases. Each phase performs one million operations with different request m
 100% deletes
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/e_mr_cf_bench)
-
 
 
 
@@ -159,8 +149,6 @@ of the data set the same (i.e., same number of documents with the same large/sma
 but to cause the WT history store to grow when we run it on a degraded PSA replica set.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/e_mr_cf_grow)
-
 
 
 
@@ -185,8 +173,6 @@ an empty database and populates it with an initial set of documents.  We create 
 of small (50-200 byte) and large (200-1000 byte) documents in a 10:1 ratio.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/e_mr_cf_populate)
-
 
 
 
@@ -203,8 +189,6 @@ Server Security
 Models the QE acceptance criteria workload.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/maps_medical)
-
 
 
 
@@ -220,8 +204,6 @@ Server Security
 ### Description
 This workload evaluates the performance of Queryable Encryption against the established “Queryable Encryption Performance Release Criteria.”
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/patch_config)
 
 
 
@@ -244,8 +226,6 @@ If running in evergreen, the relative path needs to be: ./src/genny/src/workload
 If running locally, the relative path needs to be: ./src/workloads/datasets/.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/choose_from_dataset)
-
 
 
 
@@ -262,8 +242,6 @@ Storage Execution
 A workload to test/document the collection scanner actor which is used to scan collection in a
 given database. It takes numerous configuration options to adjust its behaviour.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/collection_scanner)
 
 
 
@@ -282,8 +260,6 @@ This is a demonstration of the CrudActor. It performs writes, updates, and drops
 to demonstrate the actor.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/crud_actor)
-
 
 
 
@@ -298,8 +274,6 @@ This workload demonstrates using the CrudActor to run an aggregate command. Like
 genny will exhaust the cursor, measuring the initial aggregate command and all subsequent getMore
 operations.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/crud_actor_aggregate)
 
 
 
@@ -380,8 +354,6 @@ on localhost:27020. An alternative option is to set Encryption.UseCryptSharedLib
 provide the path to the mongo_crypt_v1.so shared library file using Encryption.CryptSharedLibPath.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/crud_actor_encrypted)
-
 
 
 
@@ -416,8 +388,6 @@ state of the phones and state changes. The workload (monitoring app) tracks the 
 state in one document per phone (update operations). Note that this is separate than the state
 machinery tracking of state.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/crud_actor_fsm)
 
 
 
@@ -463,8 +433,6 @@ state. The workload also counts the number of transitions from state On to each 
 the other three states (also update operations).
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/crud_actor_fsm_advanced)
-
 
 
 
@@ -481,8 +449,6 @@ Performance Analysis
 This workload provides an example of using the CrudActor with a transaction. The
 behavior is largely the same, nesting operations inside the transaction block.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/crud_actor_transaction)
 
 
 
@@ -504,8 +470,6 @@ one of the first two states. You can track the progress by the inserted document
 includes it's ActorId in the documents.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/crud_fsm_trivial)
-
 
 
 
@@ -523,8 +487,6 @@ A workload to test/document the HotDeleter actor which performs a find_one_and_d
 iteration.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/deleter)
-
 
 
 
@@ -540,8 +502,6 @@ The execution stats of the script will be collected with metrics name "ExternalS
 If the script writes and only writes an integer to stdout as result, the result will be
 collected to the specified metrics name (DefaultMetricsName as default)
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/external_script_actor)
 
 
 
@@ -559,8 +519,6 @@ Performance Analysis
 This workload exhibits various generators, performing insertions to show them off.
 Follow the inline commentary to learn more about them.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/generators)
 
 
 
@@ -583,8 +541,6 @@ To generate a different stream of documents, set the RandomSeed attribute. This 
 the same base workload Generators.yml and varies the RandomSeed and database name.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/generators_seeded)
-
 
 
 
@@ -602,8 +558,6 @@ This workload shows off the actor template utility, which can be used to create 
 actor template which can then be instantiated with parameters substituted.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/hello_world-_actor_template)
-
 
 
 
@@ -620,8 +574,6 @@ Performance Analysis
 This workload demonstrates the general workload substitution utility. You can use "LoadConfig"
 to load anything, even other workloads.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/hello_world-_load_config)
 
 
 
@@ -729,8 +681,6 @@ it takes B to do this.
    time.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/hello_world-_multiple_phases)
-
 
 
 
@@ -747,8 +697,6 @@ Performance Analysis
 This is an introductory workload that shows how to write a workload in Genny.
 This workload writes a few messages to the screen.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/hello_world)
 
 
 
@@ -767,8 +715,6 @@ A basic workload to test/document the HotCollectionUpdater actor type, which add
 designated "hot" collection.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/hot_collection_writer)
-
 
 
 
@@ -785,8 +731,6 @@ Storage Execution
 A workload to test/document the HotDocumentUpdater actor which updates a specified document in a
 specified collection.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/hot_document_writer)
 
 
 
@@ -806,8 +750,6 @@ removes the same document from a collection in a loop. Each instance of the acto
 document, indexed by an integer _id field. The actor records the latency of each insert and each
 remove.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/insert_with_nop)
 
 
 
@@ -853,8 +795,6 @@ In this mode of operation the loader Actor will:
     * raise an InvalidConfiguration exception if Phase.Threads is set.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/loader)
-
 
 
 ### Keywords
@@ -893,8 +833,6 @@ your workload YAML and create a Phase block for
 every Phase that may last longer than a few minutes.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/logging_actor_example)
-
 
 
 
@@ -911,8 +849,6 @@ Storage Execution
 Basic workload to test/document the long lived creator actor which utilizes the loader actor to
 create and populate a set of long lived collections.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/long_lived_creator)
 
 
 
@@ -932,8 +868,6 @@ query actor under the hood. This actor reads a set of long lived collections ove
 time.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/long_lived_reader)
-
 
 
 
@@ -951,8 +885,6 @@ Basic workload to test/document the long lived writer actor, which updates docum
 long lived collections.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/long_lived_writer)
-
 
 
 
@@ -968,8 +900,6 @@ Cluster Scalability
 ### Description
 Loads a large set of documents with a random value assinged to `field`.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/monotonic_single_loader)
 
 
 
@@ -989,8 +919,6 @@ Cluster Scalability
 ### Description
 Shards a test collection and does a random move chunk.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/move_random_chunk_to_random_shard)
 
 
 
@@ -1030,8 +958,6 @@ This workload demonstrates the quiesce actor, used to ensure stable
 database state and reduce noise.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/quiesce_actor)
-
 
 
 
@@ -1049,8 +975,6 @@ A workload to test/document the random sampler actor which reads random records 
 It chooses collections and then documents from that collection using id based lookup. It has a
 ependency on the documents in the collections having monotonically increasing _id's
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/random_sampler)
 
 
 
@@ -1073,8 +997,6 @@ iteration.
 This actor is intended to create a rolling window of collections.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/rolling_collections)
-
 
 
 
@@ -1091,8 +1013,6 @@ Performance Analysis
 This workload demonstrates the RunCommand actor, which can be used
 to execute a command against the server.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/run_command-_simple)
 
 
 
@@ -1111,8 +1031,6 @@ This workload demonstrates the RunCommand and AdminCommand actors, which can be 
 run commands against a target server.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/run_command)
-
 
 
 
@@ -1128,8 +1046,6 @@ actor will take a random sample of a configurable size and re-insert the same do
 option of transforming them with an agg pipeline. It will project out the "_id" field before
 re-inserting to avoid duplicate key errors.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/sampling_loader)
 
 
 
@@ -1148,8 +1064,6 @@ Generates load against a stream processor and has a stats reporter actor that wi
 report stats about that stream processor after the insert phase is complete since
 the processing is fully async.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/stream_stats_reporter)
 
 
 
@@ -2026,8 +1940,6 @@ Server Security
 ### Description
 Measure user acquisition time on UserCache miss.
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/user_acquisition)
-
 
 
 
@@ -2077,7 +1989,6 @@ to the validate command, including background validation.
 RunCommand, Loader, validate
 
 
-
 ## [CommitLatencySingleUpdate](https://www.github.com/mongodb/genny/blob/master/src/workloads/networking/CommitLatencySingleUpdate.yml)
 ### Owner
 Product Performance
@@ -2114,8 +2025,6 @@ are 100 threads allocated to run the find operations, with a rate limit of 1 thr
 microsecond. A stepdown is also initiated during the workload to measure the effects of
 secondary reads during an election.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/secondary_allowed)
 
 
 
@@ -4432,8 +4341,6 @@ The data is set up with the fixed bucketing parameters set to 3600 and the timeF
 and the metaField is "tags". There are 20736000 documents in the collection.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/timeseries_fixed_bucketing)
-
 
 
 ### Keywords
@@ -4487,8 +4394,6 @@ value from randomized generation.
 are random integers between 0-100 we don't expect different fields to have significant runtime differences.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/timeseries_tsbs_expression_query)
-
 
 
 ### Keywords
@@ -4524,8 +4429,6 @@ You need to verify how many buckets are hit for each measurement field predicate
 10. The earliest date is  "2016-01-01T00:00:00Z" and the latest date is "2016-01-24T23:59:50Z".
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/timeseries_tsbs_optimizations)
-
 
 
 ### Keywords
@@ -4555,8 +4458,6 @@ value from randomized generation.
 2. TSBS randomizes which measurement fields to group by, we do not randomize these fields. Since all the fields
 are random integers between 0-100 we don't expect different fields to have significant runtime differences.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/timeseries_tsbs_query)
 
 
 
@@ -5124,8 +5025,6 @@ Replication
 Measures the performance of running dbcheck's modes and its effect on crud operations.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/dbcheck_40_gb)
-
 
 
 ### Keywords
@@ -5163,8 +5062,6 @@ Sample logs:
 +-------------------------------------------------------------------------------------------+
 ```
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/1_0_5_gb)
 
 
 
@@ -5216,8 +5113,6 @@ Sample logs:
 +--------------------------------------------------------+
 ```
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/1_1_5_gb_crud)
 
 
 
@@ -5281,8 +5176,6 @@ Sample logs:
 +------------------------------------------------------------------------------------+
 ```
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/1_2_5_gb_ddl)
 
 
 
@@ -5366,8 +5259,6 @@ Sample logs:
 ```
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/1_3_5_gb_index)
-
 
 
 ### Keywords
@@ -5405,8 +5296,6 @@ Sample logs:
 +-------------------------------------------------------------------------------------------+
 ```
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/2_0_50_gb)
 
 
 
@@ -5458,8 +5347,6 @@ Sample logs:
 +--------------------------------------------------------+
 ```
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/2_1_50_gb_crud)
 
 
 
@@ -5523,8 +5410,6 @@ Sample logs:
 +------------------------------------------------------------------------------------+
 ```
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/2_2_50_gb_ddl)
 
 
 
@@ -5608,8 +5493,6 @@ Sample logs:
 ```
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/2_3_50_gb_index)
-
 
 
 ### Keywords
@@ -5629,8 +5512,6 @@ Replication
 Issues dummy reads against both databases used in the light and the heavy phases.
  To know more about the test phases please refer to 'src/workloads/replication/startup/README.md'.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/3_0__reads)
 
 
 
@@ -5678,13 +5559,10 @@ the collections are queried, and a smaller fraction of collections are updated. 
 version of the test, using 10k collections and 10k documents per collection.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/big_update10k)
-
 
 
 ### Keywords
 stress, collections, indexes, update, find, coldData
-
 
 
 ## [CollScan](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/CollScan.yml)
@@ -5699,8 +5577,6 @@ Product Performance
 ### Description
 This workload loads 10M rows into a collection, then executes collection scans in a single thread.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/coll_scan)
 
 
 
@@ -5730,7 +5606,6 @@ concurrent crud operations on a second collection to simulate extreme ticket con
 ttl, stress, indexes, insertMany, CrudActor
 
 
-
 ## [CursorStormMongos](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/CursorStormMongos.yml)
 ### Owner
 @mongodb/query
@@ -5747,8 +5622,6 @@ The number and size of documents in that collection are tuned such, that the mon
 to exhaust cursors on shards when pre-filling its buffers [<16MB per shard]. As a result,
 memory pressure on the shards remains low, while it's kept large on the mongos.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/cursor_storm_mongos)
 
 
 
@@ -5808,13 +5681,10 @@ document, indexed by an integer _id field. The actor records the latency of each
 remove.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/insert_remove)
-
 
 
 ### Keywords
 docs, actorInsertRemove, insert, delete
-
 
 
 ## [LargeIndexedInsMatchingDocuments](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/LargeIndexedInsMatchingDocuments.yml)
@@ -5898,8 +5768,6 @@ db collections. It is expected to be written at a rate of 10K writes per second 
 reads per second.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/large_scale_model)
-
 
 
 
@@ -5917,8 +5785,6 @@ See LargeScaleSerial.yml for a general overview of what this workload does. The 
 difference here is that the update is parallel with the long-running query and
 multi-collection scan. This adds some concurrent write load.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/large_scale_parallel)
 
 
 
@@ -5953,13 +5819,10 @@ collection scan, which represents a conventional performance-sensitive OLTP work
 that shouldn't be too affected by the long-running queries.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/large_scale_serial)
-
 
 
 ### Keywords
 collections, oltp, query, scale
-
 
 
 ## [MajorityReads10KThreads](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/MajorityReads10KThreads.yml)
@@ -5974,8 +5837,6 @@ Storage Execution
 ### Description
 This workload simulates a case of extreme overload with a majority of reads happening.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/majority_reads10_k_threads)
 
 
 
@@ -6025,7 +5886,6 @@ sets to determine if any performance changes are due to replication overhead cha
 RunCommand, Loader, CrudActor, updateMany, update, replication, oplogSourceOverhead
 
 
-
 ## [Mixed10KThreads](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/Mixed10KThreads.yml)
 ### Owner
 Storage Execution
@@ -6051,13 +5911,10 @@ The metrics to monitor are:
   * "ss connections active": the number of connections.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/mixed10_k_threads)
-
 
 
 ### Keywords
 scale, insertMany, find
-
 
 
 ## [MixedWrites](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/MixedWrites.yml)
@@ -6091,8 +5948,6 @@ Requires at least 3-node replset.
 The workload tests the server under a "multi-plan storm" which results in unbounded growth of the deduplicated set of RecordIds during an index scan. The same query requiring a multi-plan is executed by many threads, each of them triggering a multi-plan. Each of the plans in the multi-plan, on each thread, is index scanning a large number of documents, while maintaining a RecordId set. This causes the memory footprint to increase until the server is eventually OOM killed.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/multi_plan_storm_record_id_dedup_idx_scan)
-
 
 
 ### Keywords
@@ -6109,13 +5964,10 @@ CrudActor, indexes, Loader, memory, planning, scale, stress
 The workload tests the server under a "multi-plan storm" situation, by letting many threads execute a query, which triggers a multi-plan. The large number of indexes on the test collection lets the planner generate numerous candidate plans. Normally, plans involving a sorter would quickly loose, but using a large "skip" attribute with the command delays the end of the best plan contest significantly. This eventually makes the system run out-of-memory, due to each of the plans performing a sort on a large number of documents.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/multi_plan_storm_sort_skip)
-
 
 
 ### Keywords
 memory stress, multi-planning, sort, skip, oom, out of memory
-
 
 
 ## [OutOfCacheScanner](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/OutOfCacheScanner.yml)
@@ -6182,8 +6034,6 @@ memory to be used. Increasing the number of threads should cause the host(s) tha
 process the operations to fail due to out-of-memory errors.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/read_memory_stress_until_failure)
-
 
 
 ### Keywords
@@ -6203,8 +6053,6 @@ Cluster Scalability
 This workload is developed to test the amount of time it takes to remove and re-insert one
 million documents, with a fixed transaction batch size of one hundred.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/replace_million_docs_in_separate_txns)
 
 
 
@@ -6264,8 +6112,6 @@ between the different phases is how many of the indexes are unique. It first doe
 secondary indexes, then 1, 2, up to 7.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/unique_index_stress)
-
 
 
 ### Keywords
@@ -6288,8 +6134,6 @@ limit, so until we add a way to manually increase a transaction's lifetime, we m
 lifetime of all transactions.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/update_million_docs_in_txn)
-
 
 
 ### Keywords
@@ -6309,8 +6153,6 @@ caused by update operations with a high rate of write conflicts. The update oper
 integer field, the command itself is relatively small, so most of the memory pressure should come
 from the query subsystem.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/update_single_large_document_with10k_threads)
 
 
 
@@ -6382,8 +6224,6 @@ it uses a ^Once generator to generate the arrays once during initialization.
 IMPORTANT NOTE: Refer to this wiki if you're changing the number of Clients in
 this workload: https://tinyurl.com/ycyr45fs
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/index_stress)
 
 
 
@@ -6469,8 +6309,6 @@ distincts that are run during the test. After SERVER-43096, the throughput
 is much higher for both of these actors.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/distinct_commands)
-
 
 
 ### Keywords
@@ -6492,8 +6330,6 @@ will be merged on a mongos node. This workload reproduces a SERVER-29446,
 and results in an error when run that says the $sample stage could not
 find a non-duplicate document.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/mongos_merging)
 
 
 
@@ -6691,8 +6527,6 @@ The indexes are:
     ]
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/reshard_collection_with_indexes)
-
 
 
 ### Keywords
@@ -6864,8 +6698,6 @@ The goal is to test the performance of both $addField and streaming pipelines wi
 many stages.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/add_fields)
-
 
 
 ### Keywords
@@ -6895,8 +6727,6 @@ of this workload tests the flush throughput when the window is closed and all th
 are flushed to the sink.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/large_hopping_window)
-
 
 
 ### Keywords
@@ -6925,8 +6755,6 @@ part of this workload tests the flush throughput when the window is closed and a
 are flushed to the sink.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/large_tumbling_window)
-
 
 
 ### Keywords
@@ -6953,8 +6781,6 @@ seconds on a tumbling window with an interval of 1 second and an allow lateness 
 Each window will ingest 1.6M documents, with ~400k unique keys, so each window on close will
 output atmost 400k documents.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/large_window_mixed)
 
 
 
@@ -6984,8 +6810,6 @@ documents will all have an existing auction ID will measure the performance of t
 every document results in updating an existing key in the window.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/large_window_unique_and_existing_keys)
-
 
 
 ### Keywords
@@ -7009,8 +6833,6 @@ BatchSize: 1k
 Simulates the scenario where the input and output of documents for a stream processor is a
 one-to-one ratio. This applies a simple projection on incoming documents (currency conversion).
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/passthrough)
 
 
 
@@ -7038,8 +6860,6 @@ The difference with this workload versus Passthrough.yml is that this uses a mon
 as the source rather than the in-memory source operator.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/passthrough__change_stream_source)
-
 
 
 ### Keywords
@@ -7065,8 +6885,6 @@ one-to-one ratio. This applies a simple projection on incoming documents (curren
 The difference with this workload versus Passthrough.yml is that this uses a $merge MongoDB sink
 rather than the no-op sink operator.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/passthrough__mongo_sink)
 
 
 
@@ -7094,8 +6912,6 @@ are ingested but the $match stage will only match against ~0.3% of the ingested
 documents.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/search)
-
 
 
 ### Keywords
@@ -7121,8 +6937,6 @@ Simulates the scenario where incoming data needs to be merged with a foreign mon
 and then propagated to a tumbling window which groups by a foreign column that was fetched
 from the $lookup (join) on the foreign mongoDB collection.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/streams_lookup)
 
 
 
@@ -7150,8 +6964,6 @@ the top 1k aggregated documents by price. All 8M documents will have a random UR
 assigned to them.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/top_k_per_window)
-
 
 
 ### Keywords
@@ -7168,8 +6980,6 @@ streams
 Run TPC-H query 1 against the denormalized schema for scale 1.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q1)
-
 
 
 
@@ -7182,8 +6992,6 @@ Run TPC-H query 1 against the denormalized schema for scale 1.
 ### Description
 Run TPC-H query 10 against the denormalized schema for scale 1.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q10)
 
 
 
@@ -7198,8 +7006,6 @@ Run TPC-H query 10 against the denormalized schema for scale 1.
 Run TPC-H query 11 against the denormalized schema for scale 1.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q11)
-
 
 
 
@@ -7212,8 +7018,6 @@ Run TPC-H query 11 against the denormalized schema for scale 1.
 ### Description
 Run TPC-H query 12 against the denormalized schema for scale 1.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q12)
 
 
 
@@ -7228,8 +7032,6 @@ Run TPC-H query 12 against the denormalized schema for scale 1.
 Run TPC-H query 13 against the denormalized schema for scale 1.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q13)
-
 
 
 
@@ -7242,8 +7044,6 @@ Run TPC-H query 13 against the denormalized schema for scale 1.
 ### Description
 Run TPC-H query 14 against the denormalized schema for scale 1.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q14)
 
 
 
@@ -7258,8 +7058,6 @@ Run TPC-H query 14 against the denormalized schema for scale 1.
 Run TPC-H query 15 against the denormalized schema for scale 1.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q15)
-
 
 
 
@@ -7272,8 +7070,6 @@ Run TPC-H query 15 against the denormalized schema for scale 1.
 ### Description
 Run TPC-H query 16 against the denormalized schema for scale 1.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q16)
 
 
 
@@ -7288,8 +7084,6 @@ Run TPC-H query 16 against the denormalized schema for scale 1.
 Run TPC-H query 17 against the denormalized schema for scale 1.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q17)
-
 
 
 
@@ -7302,8 +7096,6 @@ Run TPC-H query 17 against the denormalized schema for scale 1.
 ### Description
 Run TPC-H query 18 against the denormalized schema for scale 1.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q18)
 
 
 
@@ -7318,8 +7110,6 @@ Run TPC-H query 18 against the denormalized schema for scale 1.
 Run TPC-H query 19 against the denormalized schema for scale 1.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q19)
-
 
 
 
@@ -7332,8 +7122,6 @@ Run TPC-H query 19 against the denormalized schema for scale 1.
 ### Description
 Run TPC-H query 2 against the denormalized schema for scale 1.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q2)
 
 
 
@@ -7348,8 +7136,6 @@ Run TPC-H query 2 against the denormalized schema for scale 1.
 Run TPC-H query 20 against the denormalized schema for scale 1.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q20)
-
 
 
 
@@ -7362,8 +7148,6 @@ Run TPC-H query 20 against the denormalized schema for scale 1.
 ### Description
 Run TPC-H query 21 against the denormalized schema for scale 1.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q21)
 
 
 
@@ -7378,8 +7162,6 @@ Run TPC-H query 21 against the denormalized schema for scale 1.
 Run TPC-H query 22 against the denormalized schema for scale 1.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q22)
-
 
 
 
@@ -7392,8 +7174,6 @@ Run TPC-H query 22 against the denormalized schema for scale 1.
 ### Description
 Run TPC-H query 3 against the denormalized schema for scale 1.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q3)
 
 
 
@@ -7408,8 +7188,6 @@ Run TPC-H query 3 against the denormalized schema for scale 1.
 Run TPC-H query 4 against the denormalized schema for scale 1.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q4)
-
 
 
 
@@ -7422,8 +7200,6 @@ Run TPC-H query 4 against the denormalized schema for scale 1.
 ### Description
 Run TPC-H query 5 against the denormalized schema for scale 1.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q5)
 
 
 
@@ -7438,8 +7214,6 @@ Run TPC-H query 5 against the denormalized schema for scale 1.
 Run TPC-H query 6 against the denormalized schema for scale 1.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q6)
-
 
 
 
@@ -7452,8 +7226,6 @@ Run TPC-H query 6 against the denormalized schema for scale 1.
 ### Description
 Run TPC-H query 7 against the denormalized schema for scale 1.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q7)
 
 
 
@@ -7468,8 +7240,6 @@ Run TPC-H query 7 against the denormalized schema for scale 1.
 Run TPC-H query 8 against the denormalized schema for scale 1.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q8)
-
 
 
 
@@ -7482,8 +7252,6 @@ Run TPC-H query 8 against the denormalized schema for scale 1.
 ### Description
 Run TPC-H query 9 against the denormalized schema for scale 1.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q9)
 
 
 
@@ -7499,8 +7267,6 @@ Validate TPC_H denormalized queries for scale 1. Note that numeric comparison is
 the AssertiveActor only ensures that any two values of numeric type are approximately equal according to a hard-coded limit.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/validate)
-
 
 
 
@@ -7514,8 +7280,6 @@ the AssertiveActor only ensures that any two values of numeric type are approxim
 Run an artifical TPC-H query to get the average customer account balance against the denormalized
 schema for scale 10.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/avg_acct_bal)
 
 
 
@@ -7531,8 +7295,6 @@ Run an artifical TPC-H query to get the average cost of item sold against the de
 for scale 10.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/avg_item_cost)
-
 
 
 
@@ -7547,8 +7309,6 @@ Run an artifical TPC-H query to get the biggest EUROPE orders against the denorm
 scale 10.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/biggest_orders)
-
 
 
 
@@ -7561,8 +7321,6 @@ scale 10.
 ### Description
 Run TPC-H query 1 against the denormalized schema for scale 10.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q1)
 
 
 
@@ -7577,8 +7335,6 @@ Run TPC-H query 1 against the denormalized schema for scale 10.
 Run TPC-H query 10 against the denormalized schema for scale 10.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q10)
-
 
 
 
@@ -7591,8 +7347,6 @@ Run TPC-H query 10 against the denormalized schema for scale 10.
 ### Description
 Run TPC-H query 11 against the denormalized schema for scale 10.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q11)
 
 
 
@@ -7607,8 +7361,6 @@ Run TPC-H query 11 against the denormalized schema for scale 10.
 Run TPC-H query 12 against the denormalized schema for scale 10.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q12)
-
 
 
 
@@ -7621,8 +7373,6 @@ Run TPC-H query 12 against the denormalized schema for scale 10.
 ### Description
 Run TPC-H query 13 against the denormalized schema for scale 10.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q13)
 
 
 
@@ -7637,8 +7387,6 @@ Run TPC-H query 13 against the denormalized schema for scale 10.
 Run TPC-H query 14 against the denormalized schema for scale 10.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q14)
-
 
 
 
@@ -7651,8 +7399,6 @@ Run TPC-H query 14 against the denormalized schema for scale 10.
 ### Description
 Run TPC-H query 15 against the denormalized schema for scale 10.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q15)
 
 
 
@@ -7667,8 +7413,6 @@ Run TPC-H query 15 against the denormalized schema for scale 10.
 Run TPC-H query 16 against the denormalized schema for scale 10.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q16)
-
 
 
 
@@ -7681,8 +7425,6 @@ Run TPC-H query 16 against the denormalized schema for scale 10.
 ### Description
 Run TPC-H query 17 against the denormalized schema for scale 10.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q17)
 
 
 
@@ -7697,8 +7439,6 @@ Run TPC-H query 17 against the denormalized schema for scale 10.
 Run TPC-H query 18 against the denormalized schema for scale 10.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q18)
-
 
 
 
@@ -7711,8 +7451,6 @@ Run TPC-H query 18 against the denormalized schema for scale 10.
 ### Description
 Run TPC-H query 19 against the denormalized schema for scale 10.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q19)
 
 
 
@@ -7727,8 +7465,6 @@ Run TPC-H query 19 against the denormalized schema for scale 10.
 Run TPC-H query 2 against the denormalized schema for scale 10.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q2)
-
 
 
 
@@ -7741,8 +7477,6 @@ Run TPC-H query 2 against the denormalized schema for scale 10.
 ### Description
 Run TPC-H query 20 against the denormalized schema for scale 10.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q20)
 
 
 
@@ -7757,8 +7491,6 @@ Run TPC-H query 20 against the denormalized schema for scale 10.
 Run TPC-H query 21 against the denormalized schema for scale 10.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q21)
-
 
 
 
@@ -7771,8 +7503,6 @@ Run TPC-H query 21 against the denormalized schema for scale 10.
 ### Description
 Run TPC-H query 22 against the denormalized schema for scale 10.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q22)
 
 
 
@@ -7787,8 +7517,6 @@ Run TPC-H query 22 against the denormalized schema for scale 10.
 Run TPC-H query 3 against the denormalized schema for scale 10.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q3)
-
 
 
 
@@ -7801,8 +7529,6 @@ Run TPC-H query 3 against the denormalized schema for scale 10.
 ### Description
 Run TPC-H query 4 against the denormalized schema for scale 10.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q4)
 
 
 
@@ -7817,8 +7543,6 @@ Run TPC-H query 4 against the denormalized schema for scale 10.
 Run TPC-H query 5 against the denormalized schema for scale 10.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q5)
-
 
 
 
@@ -7831,8 +7555,6 @@ Run TPC-H query 5 against the denormalized schema for scale 10.
 ### Description
 Run TPC-H query 6 against the denormalized schema for scale 10.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q6)
 
 
 
@@ -7847,8 +7569,6 @@ Run TPC-H query 6 against the denormalized schema for scale 10.
 Run TPC-H query 7 against the denormalized schema for scale 10.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q7)
-
 
 
 
@@ -7862,8 +7582,6 @@ Run TPC-H query 7 against the denormalized schema for scale 10.
 Run TPC-H query 8 against the denormalized schema for scale 10.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q8)
-
 
 
 
@@ -7876,8 +7594,6 @@ Run TPC-H query 8 against the denormalized schema for scale 10.
 ### Description
 Run TPC-H query 9 against the denormalized schema for scale 10.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q9)
 
 
 
@@ -7893,8 +7609,6 @@ Run an artifical TPC-H query to sum up total price across all lineitems against 
 schema for scale 10.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/total_lineitem_revenue)
-
 
 
 
@@ -7908,8 +7622,6 @@ schema for scale 10.
 Run an artifical TPC-H query to sum up total price across all orders against the denormalized
 schema for scale 10.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/total_order_revenue)
 
 
 
@@ -7925,8 +7637,6 @@ The test control for TPC-H expects a validate.yml file to exist in all TPC-H sca
 We don't need validation on scale 10, so this is just a Nop.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/validate)
-
 
 
 
@@ -7939,8 +7649,6 @@ We don't need validation on scale 10, so this is just a Nop.
 ### Description
 Run TPC-H query 1 against the normalized schema for scale 1.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q1)
 
 
 
@@ -7955,8 +7663,6 @@ Run TPC-H query 1 against the normalized schema for scale 1.
 Run TPC-H query 10 against the normalized schema for scale 1.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q10)
-
 
 
 
@@ -7969,8 +7675,6 @@ Run TPC-H query 10 against the normalized schema for scale 1.
 ### Description
 Run TPC-H query 11 against the normalized schema for scale 1.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q11)
 
 
 
@@ -7985,8 +7689,6 @@ Run TPC-H query 11 against the normalized schema for scale 1.
 Run TPC-H query 12 against the normalized schema for scale 1.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q12)
-
 
 
 
@@ -7999,8 +7701,6 @@ Run TPC-H query 12 against the normalized schema for scale 1.
 ### Description
 Run TPC-H query 13 against the normalized schema for scale 1.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q13)
 
 
 
@@ -8015,8 +7715,6 @@ Run TPC-H query 13 against the normalized schema for scale 1.
 Run TPC-H query 14 against the normalized schema for scale 1.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q14)
-
 
 
 
@@ -8029,8 +7727,6 @@ Run TPC-H query 14 against the normalized schema for scale 1.
 ### Description
 Run TPC-H query 15 against the normalized schema for scale 1.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q15)
 
 
 
@@ -8045,8 +7741,6 @@ Run TPC-H query 15 against the normalized schema for scale 1.
 Run TPC-H query 16 against the normalized schema for scale 1.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q16)
-
 
 
 
@@ -8059,8 +7753,6 @@ Run TPC-H query 16 against the normalized schema for scale 1.
 ### Description
 Run TPC-H query 17 against the normalized schema for scale 1.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q17)
 
 
 
@@ -8075,8 +7767,6 @@ Run TPC-H query 17 against the normalized schema for scale 1.
 Run TPC-H query 18 against the normalized schema for scale 1.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q18)
-
 
 
 
@@ -8089,8 +7779,6 @@ Run TPC-H query 18 against the normalized schema for scale 1.
 ### Description
 Run TPC-H query 19 against the normalized schema for scale 1.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q19)
 
 
 
@@ -8105,8 +7793,6 @@ Run TPC-H query 19 against the normalized schema for scale 1.
 Run TPC-H query 2 against the normalized schema for scale 1.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q2)
-
 
 
 
@@ -8119,8 +7805,6 @@ Run TPC-H query 2 against the normalized schema for scale 1.
 ### Description
 Run TPC-H query 20 against the normalized schema for scale 1.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q20)
 
 
 
@@ -8135,8 +7819,6 @@ Run TPC-H query 20 against the normalized schema for scale 1.
 Run TPC-H query 21 against the normalized schema for scale 1.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q21)
-
 
 
 
@@ -8149,8 +7831,6 @@ Run TPC-H query 21 against the normalized schema for scale 1.
 ### Description
 Run TPC-H query 22 against the normalized schema for scale 1.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q22)
 
 
 
@@ -8165,8 +7845,6 @@ Run TPC-H query 22 against the normalized schema for scale 1.
 Run TPC-H query 3 against the normalized schema for scale 1.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q3)
-
 
 
 
@@ -8179,8 +7857,6 @@ Run TPC-H query 3 against the normalized schema for scale 1.
 ### Description
 Run TPC-H query 4 against the normalized schema for scale 1.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q4)
 
 
 
@@ -8195,8 +7871,6 @@ Run TPC-H query 4 against the normalized schema for scale 1.
 Run TPC-H query 5 against the normalized schema for scale 1.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q5)
-
 
 
 
@@ -8209,8 +7883,6 @@ Run TPC-H query 5 against the normalized schema for scale 1.
 ### Description
 Run TPC-H query 6 against the normalized schema for scale 1.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q6)
 
 
 
@@ -8225,8 +7897,6 @@ Run TPC-H query 6 against the normalized schema for scale 1.
 Run TPC-H query 7 against the normalized schema for scale 1.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q7)
-
 
 
 
@@ -8240,8 +7910,6 @@ Run TPC-H query 7 against the normalized schema for scale 1.
 Run TPC-H query 8 against the normalized schema for scale 1.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q8)
-
 
 
 
@@ -8254,8 +7922,6 @@ Run TPC-H query 8 against the normalized schema for scale 1.
 ### Description
 Run TPC-H query 9 against the normalized schema for scale 1.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q9)
 
 
 
@@ -8271,8 +7937,6 @@ Validate TPC_H normalized queries for scale 1. Note that numeric comparison is n
 the AssertiveActor only ensures that any two values of numeric type are approximately equal according to a hard-coded limit.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/validate)
-
 
 
 
@@ -8285,8 +7949,6 @@ the AssertiveActor only ensures that any two values of numeric type are approxim
 ### Description
 Run TPC-H query 1 against the normalized schema for scale 10.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q1)
 
 
 
@@ -8301,8 +7963,6 @@ Run TPC-H query 1 against the normalized schema for scale 10.
 Run TPC-H query 10 against the normalized schema for scale 10.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q10)
-
 
 
 
@@ -8315,8 +7975,6 @@ Run TPC-H query 10 against the normalized schema for scale 10.
 ### Description
 Run TPC-H query 11 against the normalized schema for scale 10.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q11)
 
 
 
@@ -8331,8 +7989,6 @@ Run TPC-H query 11 against the normalized schema for scale 10.
 Run TPC-H query 12 against the normalized schema for scale 10.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q12)
-
 
 
 
@@ -8345,8 +8001,6 @@ Run TPC-H query 12 against the normalized schema for scale 10.
 ### Description
 Run TPC-H query 13 against the normalized schema for scale 10.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q13)
 
 
 
@@ -8361,8 +8015,6 @@ Run TPC-H query 13 against the normalized schema for scale 10.
 Run TPC-H query 14 against the normalized schema for scale 10.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q14)
-
 
 
 
@@ -8375,8 +8027,6 @@ Run TPC-H query 14 against the normalized schema for scale 10.
 ### Description
 Run TPC-H query 15 against the normalized schema for scale 10.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q15)
 
 
 
@@ -8391,8 +8041,6 @@ Run TPC-H query 15 against the normalized schema for scale 10.
 Run TPC-H query 16 against the normalized schema for scale 10.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q16)
-
 
 
 
@@ -8405,8 +8053,6 @@ Run TPC-H query 16 against the normalized schema for scale 10.
 ### Description
 Run TPC-H query 17 against the normalized schema for scale 10.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q17)
 
 
 
@@ -8421,8 +8067,6 @@ Run TPC-H query 17 against the normalized schema for scale 10.
 Run TPC-H query 18 against the normalized schema for scale 10.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q18)
-
 
 
 
@@ -8435,8 +8079,6 @@ Run TPC-H query 18 against the normalized schema for scale 10.
 ### Description
 Run TPC-H query 19 against the normalized schema for scale 10.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q19)
 
 
 
@@ -8451,8 +8093,6 @@ Run TPC-H query 19 against the normalized schema for scale 10.
 Run TPC-H query 2 against the normalized schema for scale 10.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q2)
-
 
 
 
@@ -8465,8 +8105,6 @@ Run TPC-H query 2 against the normalized schema for scale 10.
 ### Description
 Run TPC-H query 20 against the normalized schema for scale 10.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q20)
 
 
 
@@ -8481,8 +8119,6 @@ Run TPC-H query 20 against the normalized schema for scale 10.
 Run TPC-H query 21 against the normalized schema for scale 10.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q21)
-
 
 
 
@@ -8495,8 +8131,6 @@ Run TPC-H query 21 against the normalized schema for scale 10.
 ### Description
 Run TPC-H query 22 against the normalized schema for scale 10.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q22)
 
 
 
@@ -8511,8 +8145,6 @@ Run TPC-H query 22 against the normalized schema for scale 10.
 Run TPC-H query 3 against the normalized schema for scale 10.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q3)
-
 
 
 
@@ -8525,8 +8157,6 @@ Run TPC-H query 3 against the normalized schema for scale 10.
 ### Description
 Run TPC-H query 4 against the normalized schema for scale 10.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q4)
 
 
 
@@ -8541,8 +8171,6 @@ Run TPC-H query 4 against the normalized schema for scale 10.
 Run TPC-H query 5 against the normalized schema for scale 10.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q5)
-
 
 
 
@@ -8555,8 +8183,6 @@ Run TPC-H query 5 against the normalized schema for scale 10.
 ### Description
 Run TPC-H query 6 against the normalized schema for scale 10.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q6)
 
 
 
@@ -8571,8 +8197,6 @@ Run TPC-H query 6 against the normalized schema for scale 10.
 Run TPC-H query 7 against the normalized schema for scale 10.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q7)
-
 
 
 
@@ -8585,8 +8209,6 @@ Run TPC-H query 7 against the normalized schema for scale 10.
 ### Description
 Run TPC-H query 8 against the normalized schema for scale 10.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q8)
 
 
 
@@ -8601,8 +8223,6 @@ Run TPC-H query 8 against the normalized schema for scale 10.
 Run TPC-H query 9 against the normalized schema for scale 10.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/q9)
-
 
 
 
@@ -8616,8 +8236,6 @@ Run TPC-H query 9 against the normalized schema for scale 10.
 The test control for TPC-H expects a validate.yml file to exist in all TPC-H scales.
 We don't need validation on scale 10, so this is just a Nop.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/validate)
 
 
 
@@ -8634,8 +8252,6 @@ Product Performance
 ### Description
 Workload to Benchmark the effect of LongLivedTransactions on an Update workload.
 
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/llt_analytics)
 
 
 

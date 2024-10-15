@@ -80,7 +80,9 @@ class DocumentationGenerator:
 
             path = yaml_path.replace(self.genny_repo_root, "")
             team = self.mothra_service.get_team(workload_yaml.get("Owner"))
-            if documentation_type == "workload":
+
+            # Only generate task page for workload files that are actually scheduled
+            if documentation_type == "workload" and "AutoRun" in workload_yaml:
                 workload_name_snake_case = self._workload_camel_to_snake(workload_name)
                 task_page = f"https://evergreen.mongodb.com/task_history/sys-perf/{workload_name_snake_case}"
             else:
