@@ -8,8 +8,8 @@ If you want to update the documentation please update the {{documentation_type}}
 
 {% for workload in workloads %}
 ## [{{ workload.name }}]({{workload.github_link}})
-### Owner 
-{{ workload.owner }} 
+### Owner
+{{ workload.owner }}
 
 {% if workload.support_channel_id and workload.support_channel_name %}
 ### Support Channel
@@ -18,9 +18,12 @@ If you want to update the documentation please update the {{documentation_type}}
 
 ### Description
 {{ workload.description }}
-{% if workload.keywords %}  
+{% if workload.task_page %}
+[Task Page]({{workload.task_page}})
+{% endif %}
 
+{% if workload.keywords %}
 ### Keywords
-{{ workload.keywords|join(", ") }} 
+{{ workload.keywords|join(", ") }}
 {% endif %}
 {% endfor %}
