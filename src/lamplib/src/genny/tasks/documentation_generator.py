@@ -11,6 +11,7 @@ import re
 from tasks.mothra_service import MothraService
 
 SLOG = structlog.get_logger(__name__)
+TASK_PAGE_ROOT = "https://evergreen.mongodb.com/task_history/sys-perf/"
 
 
 class Workload(NamedTuple):
@@ -82,11 +83,7 @@ class DocumentationGenerator:
             team = self.mothra_service.get_team(workload_yaml.get("Owner"))
 
             # Only generate task page for workload files that are actually scheduled
-            if documentation_type == "workload" and "AutoRun" in workload_yaml:
-                workload_name_snake_case = self._workload_camel_to_snake(workload_name)
-                task_page = f"https://evergreen.mongodb.com/task_history/sys-perf/{workload_name_snake_case}"
-            else:
-                task_page = None
+            task_page = self._get_task_page(documentation_type, workload_yaml, workload_name)
 
             return Workload(
                 name=workload_name,
@@ -114,3 +111,10 @@ class DocumentationGenerator:
     def _workload_camel_to_snake(self, workload_name: str) -> str:
         s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', workload_name)
         return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+
+    def _get_task_page(self, documentation_type: str, workload_yaml: dict, workload_name: str) -> Optional[str]:
+        if documentation_type == "workload" and "AutoRun" in workload_yaml:
+            workload_name_snake_case = self._workload_camel_to_snake(workload_name)
+            return f"{TASK_PAGE_ROOT}{workload_name_snake_case}"
+        else:
+            return  None
