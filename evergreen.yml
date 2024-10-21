@@ -127,7 +127,7 @@ buildvariants:
     display_name: Validate Genny Tasks
     modules: [dsi, PrivateWorkloads]
     run_on:
-      - amazon2-arm64
+      - amazon2-arm64-latest-small
     tasks:
       - name: validate_genny_tasks
 
@@ -514,7 +514,7 @@ functions:
         working_dir: src/genny
         script: |
           set -eu
-          versions=("master" "8.0" "7.3" "7.0" "6.0" "5.0")
+          versions=("master" "8.0" "7.0" "6.0" "5.0")
 
           # Move original files to backup locations
           for version in $versions; do
@@ -522,7 +522,7 @@ functions:
           done
 
           # Regenerate the genny task files
-          ./run-genny auto-tasks-local --evergreen
+          ./run-genny auto-tasks-local --dsi-path ../modules/dsi --private-workloads-path ../modules/PrivateWorkloads
 
           # Validate that the files are identical
           for version in $versions; do
@@ -557,8 +557,12 @@ modules:
   - name: dsi
     owner: 10gen
     repo: dsi
+    prefix: ../modules
     branch: master
+    auto_update: true
   - name: PrivateWorkloads
     owner: 10gen
     repo: PrivateWorkloads
+    prefix: ../modules
     branch: production
+    auto_update: true

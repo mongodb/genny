@@ -6,10 +6,12 @@ from typing import NamedTuple, Optional
 from jinja2 import Environment, PackageLoader
 import structlog
 import yaml
+import re
 
 from tasks.mothra_service import MothraService
 
 SLOG = structlog.get_logger(__name__)
+TASK_PAGE_ROOT = "https://evergreen.mongodb.com/task_history/sys-perf/"
 
 
 class Workload(NamedTuple):
@@ -19,6 +21,7 @@ class Workload(NamedTuple):
     keywords: list[str]
     path: str
     github_link: str
+    task_page: Optional[str] = None
     support_channel_id: Optional[str] = None
     support_channel_name: Optional[str] = None
 
@@ -48,7 +51,7 @@ class DocumentationGenerator:
         SLOG.info("Gathering workloads from files.", workload_dirs=workload_dirs)
 
         workloads = [
-            self._get_workload_from_file(yaml_path)
+            self._get_workload_from_file(yaml_path, documentation_type)
             for yaml_path in self._get_workload_files(workload_dirs)
         ]
         # Sort workloads by path to ensure consistent ordering.
@@ -71,12 +74,16 @@ class DocumentationGenerator:
                         yaml_files.append(path.join(dirpath, filename))
         return yaml_files
 
-    def _get_workload_from_file(self, yaml_path: str) -> Workload:
+    def _get_workload_from_file(self, yaml_path: str, documentation_type: str) -> Workload:
         with open(yaml_path, "r") as f:
             workload_yaml = yaml.safe_load(f)
             workload_name = PurePosixPath(yaml_path).stem
+
             path = yaml_path.replace(self.genny_repo_root, "")
             team = self.mothra_service.get_team(workload_yaml.get("Owner"))
+
+            # Only generate task page for workload files that are actually scheduled
+            task_page = self._get_task_page(documentation_type, workload_yaml, workload_name)
 
             return Workload(
                 name=workload_name,
@@ -85,6 +92,7 @@ class DocumentationGenerator:
                 keywords=workload_yaml.get("Keywords", []),
                 path=path,
                 github_link=f"https://www.github.com/mongodb/genny/blob/master{path}",
+                task_page=task_page,
                 support_channel_id=team.support_slack_channel_id if team else None,
                 support_channel_name=team.support_slack_channel_name if team else None,
             )
@@ -99,3 +107,14 @@ class DocumentationGenerator:
     def _write_documentation(self, documentation: str, output_file: str):
         with open(output_file, "w") as f:
             f.write(documentation)
+
+    def _workload_camel_to_snake(self, workload_name: str) -> str:
+        s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', workload_name)
+        return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+
+    def _get_task_page(self, documentation_type: str, workload_yaml: dict, workload_name: str) -> Optional[str]:
+        if documentation_type == "workload" and "AutoRun" in workload_yaml:
+            workload_name_snake_case = self._workload_camel_to_snake(workload_name)
+            return f"{TASK_PAGE_ROOT}{workload_name_snake_case}"
+        else:
+            return  None

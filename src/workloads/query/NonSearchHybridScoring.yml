@@ -534,7 +534,6 @@ AutoRun:
           - standalone
           - shard
           - shard-lite
-          - single-replica
           - replica
           - replica-all-feature-flags
           - replica-query-stats-rate-limit

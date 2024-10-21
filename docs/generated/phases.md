@@ -8,8 +8,8 @@ If you want to update the documentation please update the phase's respective yam
 
 
 ## [ExamplePhase2](https://www.github.com/mongodb/genny/blob/master/src/phases/HelloWorld/ExamplePhase2.yml)
-### Owner 
-Product Performance 
+### Owner
+Product Performance
 
 
 ### Support Channel
@@ -21,9 +21,11 @@ Example phase to illustrate how PhaseConfig composition works.
 
 
 
+
+
 ## [ContinuousWritesWithExponentialCompactTemplate](https://www.github.com/mongodb/genny/blob/master/src/phases/encrypted/ContinuousWritesWithExponentialCompactTemplate.yml)
-### Owner 
-Server Security 
+### Owner
+Server Security
 
 
 ### Support Channel
@@ -43,9 +45,11 @@ Parameters:
 
 
 
+
+
 ## [YCSBLikeActorTemplate](https://www.github.com/mongodb/genny/blob/master/src/phases/encrypted/YCSBLikeActorTemplate.yml)
-### Owner 
-Server Security 
+### Owner
+Server Security
 
 
 ### Support Channel
@@ -70,9 +74,11 @@ Parameters:
 
 
 
+
+
 ## [YCSBLikeEncryptedTemplate](https://www.github.com/mongodb/genny/blob/master/src/phases/encrypted/YCSBLikeEncryptedTemplate.yml)
-### Owner 
-Server Security 
+### Owner
+Server Security
 
 
 ### Support Channel
@@ -90,9 +96,11 @@ Parameters:
 
 
 
+
+
 ## [ClusteredCollection](https://www.github.com/mongodb/genny/blob/master/src/phases/execution/ClusteredCollection.yml)
-### Owner 
-Storage Execution 
+### Owner
+Storage Execution
 
 
 ### Support Channel
@@ -106,9 +114,11 @@ key such as monotonically increasing inserts, range queries and range deletions.
 
 
 
+
+
 ## [CreateIndexPhase](https://www.github.com/mongodb/genny/blob/master/src/phases/execution/CreateIndexPhase.yml)
-### Owner 
-Storage Execution 
+### Owner
+Storage Execution
 
 
 ### Support Channel
@@ -121,9 +131,11 @@ all types of indexes, and IndexCollection creates indexes for each of them, one 
 
 
 
+
+
 ## [MixedMultiDeletes](https://www.github.com/mongodb/genny/blob/master/src/phases/execution/MixedMultiDeletes.yml)
-### Owner 
-Storage Execution 
+### Owner
+Storage Execution
 
 
 ### Support Channel
@@ -142,15 +154,16 @@ comparisons in performance when mass deletions are performed over different size
 The mass deletion namespace is test.Collection0
 The concurrent writes namespace is test.concurrentWritesColl
 
-  
+
+
 
 ### Keywords
-RunCommand, Loader, LoggingActor, CrudActor, insert, delete, batch, deleteMany, latency 
+RunCommand, Loader, LoggingActor, CrudActor, insert, delete, batch, deleteMany, latency
 
 
 ## [TimeSeriesUpdatesAndDeletes](https://www.github.com/mongodb/genny/blob/master/src/phases/execution/TimeSeriesUpdatesAndDeletes.yml)
-### Owner 
-Storage Execution 
+### Owner
+Storage Execution
 
 
 ### Support Channel
@@ -171,9 +184,11 @@ the measurements look like:
 
 
 
+
+
 ## [UpdateWithSecondaryIndexes](https://www.github.com/mongodb/genny/blob/master/src/phases/execution/UpdateWithSecondaryIndexes.yml)
-### Owner 
-Storage Execution 
+### Owner
+Storage Execution
 
 
 ### Support Channel
@@ -185,15 +200,16 @@ Runs a workload that updates a large range of documents.
 Multiple secondary indexes are present.
 Update performed with and without a hint.
 
-  
+
+
 
 ### Keywords
-RunCommand, Loader, LoggingActor, CrudActor, insert, update, latency 
+RunCommand, Loader, LoggingActor, CrudActor, insert, update, latency
 
 
 ## [ValidateCmd](https://www.github.com/mongodb/genny/blob/master/src/phases/execution/ValidateCmd.yml)
-### Owner 
-Storage Execution 
+### Owner
+Storage Execution
 
 
 ### Support Channel
@@ -207,9 +223,11 @@ to the validate command, including background validation.
 
 
 
+
+
 ## [Default](https://www.github.com/mongodb/genny/blob/master/src/phases/execution/config/MultiDeletes/Default.yml)
-### Owner 
-Storage Execution 
+### Owner
+Storage Execution
 
 
 ### Support Channel
@@ -221,9 +239,11 @@ Configuration for the MultiDeletes workload.
 
 
 
+
+
 ## [WithSecondaryIndexes](https://www.github.com/mongodb/genny/blob/master/src/phases/execution/config/MultiDeletes/WithSecondaryIndexes.yml)
-### Owner 
-Storage Execution 
+### Owner
+Storage Execution
 
 
 ### Support Channel
@@ -235,24 +255,11 @@ Configuration for MultiDeletes workload. This configuration introduces secondary
 
 
 
-## [ConnectionsBuildup](https://www.github.com/mongodb/genny/blob/master/src/phases/issues/ConnectionsBuildup.yml)
-### Owner 
-Product Performance 
-
-
-### Support Channel
-[#performance](https://mongodb.enterprise.slack.com/archives/C0V3KSB52)
-
-
-### Description
-These are the phases used to reproduce SERVER-53853: Large buildup of mongos to mongod connections and
-low performance with secondaryPreferred reads
-
 
 
 ## [AggregateExpressions](https://www.github.com/mongodb/genny/blob/master/src/phases/query/AggregateExpressions.yml)
-### Owner 
-@mongodb/query 
+### Owner
+@mongodb/query
 
 
 
@@ -261,9 +268,11 @@ This file defines a template to use in aggregation expression performance tests.
 
 
 
+
+
 ## [BooleanSimplifier](https://www.github.com/mongodb/genny/blob/master/src/phases/query/BooleanSimplifier.yml)
-### Owner 
-Query Optimization 
+### Owner
+Query Optimization
 
 
 ### Support Channel
@@ -276,9 +285,11 @@ the Boolean Simplifier. It is designed to track effectiveness of the simplifier.
 
 
 
+
+
 ## [CollScanComplexPredicate](https://www.github.com/mongodb/genny/blob/master/src/phases/query/CollScanComplexPredicate.yml)
-### Owner 
-@mongodb/query 
+### Owner
+@mongodb/query
 
 
 
@@ -288,9 +299,11 @@ various shapes (CNF, DNF, and mixed predicates with different levels of nestedne
 
 
 
+
+
 ## [CollScanComplexPredicateQueries](https://www.github.com/mongodb/genny/blob/master/src/phases/query/CollScanComplexPredicateQueries.yml)
-### Owner 
-@mongodb/query 
+### Owner
+@mongodb/query
 
 
 
@@ -299,9 +312,11 @@ Defines complex, randomly generated CNF and DNF queries used in 'CollScanComplex
 
 
 
+
+
 ## [CollScanLargeNumberOfFields](https://www.github.com/mongodb/genny/blob/master/src/phases/query/CollScanLargeNumberOfFields.yml)
-### Owner 
-@mongodb/query 
+### Owner
+@mongodb/query
 
 
 
@@ -309,15 +324,16 @@ Defines complex, randomly generated CNF and DNF queries used in 'CollScanComplex
 This workload tests the performance of collection scan queries against a collection containing
 documents with a large number of fields.
 
-  
+
+
 
 ### Keywords
-Loader, CrudActor, QuiesceActor, insert, find 
+Loader, CrudActor, QuiesceActor, insert, find
 
 
 ## [CollScanOnMixedDataTypes](https://www.github.com/mongodb/genny/blob/master/src/phases/query/CollScanOnMixedDataTypes.yml)
-### Owner 
-@mongodb/query 
+### Owner
+@mongodb/query
 
 
 
@@ -326,9 +342,11 @@ This workload runs collscan queries on various data types.
 
 
 
+
+
 ## [CollScanPredicateSelectivity](https://www.github.com/mongodb/genny/blob/master/src/phases/query/CollScanPredicateSelectivity.yml)
-### Owner 
-@mongodb/query 
+### Owner
+@mongodb/query
 
 
 
@@ -339,15 +357,16 @@ of predicates defined by actual selectivities matches the ordering defined by he
 Similarly, an 'indistinguishable' case means that heuristic CE defines the same selectivity for all predicates
 in the query. For this workload, the important metrics to look at are OperationThroughput and all latency measurements.
 
-  
+
+
 
 ### Keywords
-Loader, CrudActor, QuiesceActor, insert, find 
+Loader, CrudActor, QuiesceActor, insert, find
 
 
 ## [CollScanProjection](https://www.github.com/mongodb/genny/blob/master/src/phases/query/CollScanProjection.yml)
-### Owner 
-@mongodb/query 
+### Owner
+@mongodb/query
 
 
 
@@ -356,9 +375,11 @@ This workload runs collscan queries with a large projection on around 20 fields.
 
 
 
+
+
 ## [CollScanSimplifiablePredicate](https://www.github.com/mongodb/genny/blob/master/src/phases/query/CollScanSimplifiablePredicate.yml)
-### Owner 
-@mongodb/query 
+### Owner
+@mongodb/query
 
 
 
@@ -368,9 +389,11 @@ that can be simplified by the optimizer.
 
 
 
+
+
 ## [FilterWithComplexLogicalExpression](https://www.github.com/mongodb/genny/blob/master/src/phases/query/FilterWithComplexLogicalExpression.yml)
-### Owner 
-@mongodb/query 
+### Owner
+@mongodb/query
 
 
 
@@ -393,15 +416,16 @@ Each workload name consists of several parts: '{SyntaxType}{PredicateType}'.
   - 'MissingPathSuffix' means query is searching a path whose suffix cannot be found in the
   document
 
-  
+
+
 
 ### Keywords
-Loader, CrudActor, QuiesceActor, insert, find 
+Loader, CrudActor, QuiesceActor, insert, find
 
 
 ## [GetBsonDate](https://www.github.com/mongodb/genny/blob/master/src/phases/query/GetBsonDate.yml)
-### Owner 
-Query Execution 
+### Owner
+Query Execution
 
 
 ### Support Channel
@@ -416,9 +440,11 @@ TODO PERF-3132 Use the date generator instead of this workaround.
 
 
 
+
+
 ## [GroupStagesOnComputedFields](https://www.github.com/mongodb/genny/blob/master/src/phases/query/GroupStagesOnComputedFields.yml)
-### Owner 
-@mongodb/query 
+### Owner
+@mongodb/query
 
 
 
@@ -428,9 +454,11 @@ time fields.
 
 
 
+
+
 ## [IDHack](https://www.github.com/mongodb/genny/blob/master/src/phases/query/IDHack.yml)
-### Owner 
-@mongodb/query 
+### Owner
+@mongodb/query
 
 
 
@@ -439,9 +467,11 @@ Defines common configurations for IDHack query workloads.
 
 
 
+
+
 ## [LookupCommands](https://www.github.com/mongodb/genny/blob/master/src/phases/query/LookupCommands.yml)
-### Owner 
-Query Execution 
+### Owner
+Query Execution
 
 
 ### Support Channel
@@ -453,9 +483,11 @@ Defines common configurations for 'LookupSBEPushdown' and 'LookupSBEPushdownMisc
 
 
 
+
+
 ## [MatchFilters](https://www.github.com/mongodb/genny/blob/master/src/phases/query/MatchFilters.yml)
-### Owner 
-@mongodb/query 
+### Owner
+@mongodb/query
 
 
 
@@ -463,15 +495,16 @@ Defines common configurations for 'LookupSBEPushdown' and 'LookupSBEPushdownMisc
 This workload tests a set of filters in the match language. The actors below offer basic
 performance coverage for said filters.
 
-  
+
+
 
 ### Keywords
-Loader, CrudActor, QuiesceActor, insert, find 
+Loader, CrudActor, QuiesceActor, insert, find
 
 
 ## [Multiplanner](https://www.github.com/mongodb/genny/blob/master/src/phases/query/Multiplanner.yml)
-### Owner 
-@mongodb/query 
+### Owner
+@mongodb/query
 
 
 
@@ -480,9 +513,11 @@ This file defines templates to use in multiplanner performance tests.
 
 
 
+
+
 ## [RepeatedPathTraversal](https://www.github.com/mongodb/genny/blob/master/src/phases/query/RepeatedPathTraversal.yml)
-### Owner 
-@mongodb/query 
+### Owner
+@mongodb/query
 
 
 
@@ -490,15 +525,16 @@ This file defines templates to use in multiplanner performance tests.
 This workload stresses the query execution engine by running queries over a set of paths which
 share a common prefix. Crucially, these queries never match a document in the collection.
 
-  
+
+
 
 ### Keywords
-Loader, CrudActor, QuiesceActor, insert, find 
+Loader, CrudActor, QuiesceActor, insert, find
 
 
 ## [RunLargeArithmeticOp](https://www.github.com/mongodb/genny/blob/master/src/phases/query/RunLargeArithmeticOp.yml)
-### Owner 
-@mongodb/query 
+### Owner
+@mongodb/query
 
 
 
@@ -508,9 +544,11 @@ the provided arguments.
 
 
 
+
+
 ## [TimeSeriesLastpoint](https://www.github.com/mongodb/genny/blob/master/src/phases/query/TimeSeriesLastpoint.yml)
-### Owner 
-@mongodb/query 
+### Owner
+@mongodb/query
 
 
 
@@ -519,9 +557,11 @@ These are the phases used to measure performance of the last-point-in-time query
 
 
 
+
+
 ## [TimeSeriesSortCommands](https://www.github.com/mongodb/genny/blob/master/src/phases/query/TimeSeriesSortCommands.yml)
-### Owner 
-@mongodb/query 
+### Owner
+@mongodb/query
 
 
 
@@ -530,9 +570,11 @@ These are the phases used to measure performance of the bounded sorter for times
 
 
 
+
+
 ## [Views](https://www.github.com/mongodb/genny/blob/master/src/phases/query/Views.yml)
-### Owner 
-@mongodb/query 
+### Owner
+@mongodb/query
 
 
 
@@ -541,9 +583,11 @@ Defines common configurations for workloads that operate on views.
 
 
 
+
+
 ## [StartupPhasesTemplate](https://www.github.com/mongodb/genny/blob/master/src/phases/replication/startup/StartupPhasesTemplate.yml)
-### Owner 
-Replication 
+### Owner
+Replication
 
 
 ### Support Channel
@@ -555,9 +599,11 @@ Common definitions to support the workloads in replication/startup.
 
 
 
+
+
 ## [DesignDocWorkloadPhases](https://www.github.com/mongodb/genny/blob/master/src/phases/scale/DesignDocWorkloadPhases.yml)
-### Owner 
-Performance Infrastructure 
+### Owner
+Performance Infrastructure
 
 
 ### Support Channel
@@ -575,9 +621,11 @@ measurements.
 
 
 
+
+
 ## [LargeScalePhases](https://www.github.com/mongodb/genny/blob/master/src/phases/scale/LargeScalePhases.yml)
-### Owner 
-Storage Execution 
+### Owner
+Storage Execution
 
 
 ### Support Channel
@@ -592,9 +640,11 @@ be included in each workload as needed via the `ExternalPhaseConfig` functionali
 
 
 
+
+
 ## [MixPhases](https://www.github.com/mongodb/genny/blob/master/src/phases/scale/MixPhases.yml)
-### Owner 
-Product Performance 
+### Owner
+Product Performance
 
 
 ### Support Channel
@@ -610,15 +660,16 @@ interesting behavior, such as reads getting faster because of a write regression
 starved by writes. The origin of the test was as a reproduction for BF-2385 in which reads were
 starved out by writes.
 
-  
+
+
 
 ### Keywords
-scale, insertOne, insert, findOne, find, updateOne, update, deleteOne, delete 
+scale, insertOne, insert, findOne, find, updateOne, update, deleteOne, delete
 
 
 ## [SetClusterParameterTemplate](https://www.github.com/mongodb/genny/blob/master/src/phases/sharding/SetClusterParameterTemplate.yml)
-### Owner 
-Cluster Scalability 
+### Owner
+Cluster Scalability
 
 
 ### Support Channel
@@ -630,9 +681,11 @@ Template for setting a cluster parameter.
 
 
 
+
+
 ## [ShardCollectionTemplate](https://www.github.com/mongodb/genny/blob/master/src/phases/sharding/ShardCollectionTemplate.yml)
-### Owner 
-Cluster Scalability 
+### Owner
+Cluster Scalability
 
 
 ### Support Channel
@@ -644,9 +697,11 @@ Template for sharding a collection.
 
 
 
+
+
 ## [MultiUpdatesTemplate](https://www.github.com/mongodb/genny/blob/master/src/phases/sharding/multi_updates/MultiUpdatesTemplate.yml)
-### Owner 
-Cluster Scalability 
+### Owner
+Cluster Scalability
 
 
 ### Support Channel
@@ -676,15 +731,16 @@ and DocumentUpdater.UpdateOne should be used to evaluate performance when
 updating all documents per command and a single document per command
 respectively.
 
-  
+
+
 
 ### Keywords
-AdminCommand, MonotonicSingleLoader, CrudActor, updateMany, sharding 
+AdminCommand, MonotonicSingleLoader, CrudActor, updateMany, sharding
 
 
 ## [Q1](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q1.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -694,9 +750,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q10](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q10.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -706,9 +764,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q11](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q11.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -718,9 +778,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q12](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q12.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -730,9 +792,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q13](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q13.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -742,9 +806,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q14](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q14.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -754,9 +820,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q15](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q15.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -766,9 +834,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q16](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q16.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -778,9 +848,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q17](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q17.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -790,9 +862,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q18](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q18.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -802,9 +876,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q19](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q19.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -814,9 +890,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q2](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q2.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -826,9 +904,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q20](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q20.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -838,9 +918,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q21](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q21.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -850,9 +932,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q22](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q22.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -862,9 +946,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q3](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q3.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -874,9 +960,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q4](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q4.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -886,9 +974,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q5](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q5.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -898,9 +988,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q6](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q6.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -910,9 +1002,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q7](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q7.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -922,9 +1016,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q8](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q8.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -934,9 +1030,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q9](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/denormalized/Q9.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -946,9 +1044,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q1](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q1.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -959,9 +1059,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q10](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q10.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -972,9 +1074,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q11](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q11.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -985,9 +1089,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q12](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q12.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -998,9 +1104,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q13](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q13.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -1011,9 +1119,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q14](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q14.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -1024,9 +1134,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q15](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q15.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -1037,9 +1149,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q16](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q16.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -1050,9 +1164,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q17](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q17.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -1063,9 +1179,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q18](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q18.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -1076,9 +1194,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q19](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q19.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -1089,9 +1209,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q2](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q2.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -1100,9 +1222,11 @@ Run TPC-H query 2 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v
 
 
 
+
+
 ## [Q20](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q20.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -1113,9 +1237,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q21](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q21.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -1126,9 +1252,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q22](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q22.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -1139,9 +1267,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q3](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q3.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -1152,9 +1282,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q4](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q4.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -1165,9 +1297,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q5](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q5.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -1178,9 +1312,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q6](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q6.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -1191,9 +1327,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q7](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q7.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -1204,9 +1342,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q8](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q8.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -1217,9 +1357,11 @@ documents remain, which ensures that the query executes in its entirety.
 
 
 
+
+
 ## [Q9](https://www.github.com/mongodb/genny/blob/master/src/phases/tpch/normalized/Q9.yml)
-### Owner 
-@mongodb/product-query 
+### Owner
+@mongodb/product-query
 
 
 
@@ -1227,5 +1369,7 @@ documents remain, which ensures that the query executes in its entirety.
 Run TPC-H query 9 (see http://tpc.org/tpc_documents_current_versions/pdf/tpc-h_v3.0.0.pdf) against the normalized schema.
 Using an 'executionStats' explain causes each command to run its execution plan until no
 documents remain, which ensures that the query executes in its entirety.
+
+
 
 
