@@ -2068,35 +2068,6 @@ Command synchronously establishes temporary connections between cluster nodes.
 
 
 
-## [AggregateExpressions](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/AggregateExpressions.yml)
-### Owner
-Query Execution
-
-
-### Support Channel
-[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
-
-
-### Description
-This workload measures aggregation expression performance.
-
-While measuring performances, this workload collects numbers
-for either the SBE or the classic engine aggregation expression
-implementations, depending on environments that it runs on.
-
-Numbers on the 'standalone-all-feature-flags' environment are for
-the SBE aggregation expressions and numbers on the 'standalone' environment
-for the classic aggregation expressions.
-
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/aggregate_expressions)
-
-
-
-### Keywords
-aggregate, sbe
-
-
 ## [AggregationsOutput](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/AggregationsOutput.yml)
 ### Owner
 @mongodb/query
