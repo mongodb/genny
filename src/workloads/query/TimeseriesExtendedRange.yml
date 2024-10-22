@@ -91,6 +91,14 @@ Actors:
                   ^RandomString:
                     length: 6
                     alphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            doubleField1:
+              ^RandomDouble:
+                min: 0
+                max: 1_000_000
+            doubleField2:
+              ^RandomDouble:
+                min: 0
+                max: 1_000_000
 
   # Phase 2: Ensure all data is synced to disk.
   - Name: Quiesce
