@@ -12,8 +12,8 @@ Keywords:
 GlobalDefaults:
   Database: &database test
   Collection: &collection Collection0
-  DocumentCount: &documentCount 1e7
-  Repeat: &repeat 200
+  DocumentCount: &documentCount 2e7
+  Repeat: &repeat 500
   Threads: &threads 1
   MaxPhases: &maxPhases 6
   MetaCount: &metaCount 10
