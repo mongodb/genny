@@ -1,0 +1,171 @@
+SchemaVersion: 2018-07-01
+Owner: Query Integration
+Description: |
+  This workload runs queries on time-series collections with data before the unix epoch (extended range).
+  Some optimizations can only be made on post-1970 data. This benchmark is intended to give us an idea
+  of how much performance we lose on extended range data.
+
+Keywords:
+  - timeseries
+  - aggregate
+
+GlobalDefaults:
+  Database: &database test
+  Collection: &collection Collection0
+  DocumentCount: &documentCount 2e7
+  Repeat: &repeat 500
+  Threads: &threads 1
+  MaxPhases: &maxPhases 6
+  MetaCount: &metaCount 10
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 400
+
+Actors:
+  # Clear any pre-existing collection state.
+  - Name: ClearCollection
+    Type: CrudActor
+    Database: *database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+          Collection: *collection
+          Operations:
+            - OperationName: drop
+
+  - Name: CreateTimeseriesCollection
+    Type: RunCommand
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Database: *database
+          Operation:
+            OperationMetricsName: CreateTimeseriesCollection
+            OperationName: RunCommand
+            OperationCommand:
+              {
+                create: *collection,
+                timeseries:
+                  {
+                    timeField: "time",
+                    metaField: "meta",
+                    granularity: "seconds",
+                  },
+              }
+
+  - Name: InsertData
+    Type: Loader
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+          Database: *database
+          CollectionCount: 1
+          DocumentCount: *documentCount
+          BatchSize: 1000
+          Document:
+            time:
+              ^IncDate:
+                start: 1960-01-01
+                # 100ms step ensures full bucket of 1000 documents under the "seconds" granularity.
+                step: 100
+            meta:
+              ^Cycle:
+                ofLength: *metaCount
+                fromGenerator:
+                  ^RandomString:
+                    length: 6
+                    alphabet: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            doubleField1:
+              ^RandomDouble:
+                min: 0
+                max: 1_000_000
+            doubleField2:
+              ^RandomDouble:
+                min: 0
+                max: 1_000_000
+
+  # Phase 2: Ensure all data is synced to disk.
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3, 5]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+
+  # The control.min.time field can be used as an accurate bucket minimum if it's not an object or
+  # an array.
+  - Name: BlockProcessingExtendedRangeMinTime
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [4]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: TsBlockExtendedRangeMinTime
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {$project: {time: 1, meta: 1}},
+                    {$group: {_id: "$meta", gb: {$min: "$time"}}}
+                  ]
+
+  # The control.max.time field can only be used as an accurate bucket maximum if its after 1970.
+  - Name: BlockProcessingExtendedRangeMaxTime
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [6]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: TsBlockExtendedRangeMaxTime
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [
+                    {$project: {time: 1, meta: 1}},
+                    {$group: {_id: "$meta", gb: {$max: "$time"}}}
+                  ]
+
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - replica-80-feature-flags
+          - replica-all-feature-flags
+      branch_name:
+        $gte: v8.0

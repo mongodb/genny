@@ -209,6 +209,7 @@ buildvariants:
   - name: timeseries_block_processing
   - name: timeseries_count
   - name: timeseries_enum
+  - name: timeseries_extended_range
   - name: timeseries_stress_unpacking
   - name: union_with
   - name: unwind_group
@@ -537,6 +538,7 @@ buildvariants:
   - name: timeseries_block_processing
   - name: timeseries_count
   - name: timeseries_enum
+  - name: timeseries_extended_range
   - name: timeseries_stress_unpacking
   - name: union_with
   - name: unwind_group
@@ -2240,6 +2242,17 @@ tasks:
       auto_workload_path: src/genny/src/workloads/query/TimeseriesEnum.yml
       test_control: timeseries_enum
   name: timeseries_enum
+  priority: 5
+- commands:
+  - command: timeout.update
+    params:
+      exec_timeout_secs: 86400
+      timeout_secs: 86400
+  - func: f_run_dsi_workload
+    vars:
+      auto_workload_path: src/genny/src/workloads/query/TimeseriesExtendedRange.yml
+      test_control: timeseries_extended_range
+  name: timeseries_extended_range
   priority: 5
 - commands:
   - command: timeout.update
