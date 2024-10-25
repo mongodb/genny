@@ -4325,8 +4325,8 @@ timeseries, aggregate, group
 
 
 ## [TimeseriesExtendedRange](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TimeseriesExtendedRange.yml)
-### Owner 
-Query Integration 
+### Owner
+Query Integration
 
 
 ### Support Channel
@@ -4338,10 +4338,13 @@ This workload runs queries on time-series collections with data before the unix 
 Some optimizations can only be made on post-1970 data. This benchmark is intended to give us an idea
 of how much performance we lose on extended range data.
 
-  
+
+[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/timeseries_extended_range)
+
+
 
 ### Keywords
-timeseries, aggregate 
+timeseries, aggregate
 
 
 ## [TimeseriesFixedBucketing](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TimeseriesFixedBucketing.yml)
