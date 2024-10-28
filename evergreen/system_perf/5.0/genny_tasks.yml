@@ -742,17 +742,6 @@ tasks:
       timeout_secs: 86400
   - func: f_run_dsi_workload
     vars:
-      auto_workload_path: src/genny/src/workloads/query/AggregateExpressions.yml
-      test_control: aggregate_expressions
-  name: aggregate_expressions
-  priority: 5
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
       auto_workload_path: src/genny/src/workloads/query/AggregationsOutput.yml
       test_control: aggregations_output
   name: aggregations_output
