@@ -2084,8 +2084,8 @@ While measuring performances, this workload collects numbers
 for either the SBE or the classic engine aggregation expression
 implementations, depending on environments that it runs on.
 
-Numbers on the 'standalone-all-feature-flags' environment are for
-the SBE aggregation expressions and numbers on the 'standalone' environment
+Numbers on the 'replica-all-feature-flags' environment are for
+the SBE aggregation expressions and numbers on the 'replica' environment
 for the classic aggregation expressions.
 
 
@@ -3279,9 +3279,9 @@ While measuring performances, this workload collects numbers for either the SBE 
 engine $lookup implementations, depending on environments that it runs on. Both SBE and classic
 $lookup implementations will be nested loop join for this workload.
 
-Numbers on the 'standalone-sbe' environment are for the SBE $lookup and numbers on the
-'standalone' environment for the classic $lookup until the SBE $lookup pushdown feature will
-be turned on by default.
+Numbers on the 'replica-query-engine-sbe' environment are for the SBE $lookup and numbers on the
+'replica-query-engine-classic' environment for the classic $lookup until the SBE $lookup pushdown
+feature will be turned on by default.
 
 In summary, this workload conducts testing for the following test matrix:
 - JoinType: NLJ
@@ -3366,8 +3366,8 @@ only (index) nested loop join. So we can compare the SBE HJ / NLJ implementation
 engine NLJ implementation and the SBE INLJ implementation to the classic engine INLJ
 implementation.
 
-Numbers on the 'standalone-all-feature-flags' environment are for the SBE $lookup and numbers on
-the 'standalone' environment for the classic $lookup until the SBE $lookup pushdown feature will
+Numbers on the 'replica-all-feature-flags' environment are for the SBE $lookup and numbers on
+the 'replica' environment for the classic $lookup until the SBE $lookup pushdown feature will
 be turned on by default.
 
 In summary, this workload conducts testing for the following test matrix:
@@ -3430,8 +3430,8 @@ why it collects numbers for the INLJ lookup implementation is to compare both im
 the same algorithmic complexity for fairer comparison and yet to minimize the test execution time
 since the INLJ lookup is supposed to be very fast on both the SBE and the classic egnine.
 
-Numbers on the 'standalone-all-feature-flags' environment are for the SBE INLJ lookup and numbers
-on the 'standalone' environment for the classic INLJ lookup until the SBE $lookup feature will be
+Numbers on the 'replica-all-feature-flags' environment are for the SBE INLJ lookup and numbers
+on the 'replica' environment for the classic INLJ lookup until the SBE $lookup feature will be
 turned on by default.
 
 The workload consists of the following phases and actors:
@@ -4497,8 +4497,7 @@ timeseries, aggregate, group, sort
 ### Description
 This workload exercises '$unionWith' with two or more collections in multiple scenarios, including
 collections of high overlap, disjoint collections, multiple sequential unions, nested unions, and
-unions with complex subpipelines. These tests are run on standalones, and replica set
-environments.
+unions with complex subpipelines. These tests are run on replica set environments.
 
 
 [Task Page](https://evergreen.mongodb.com/task_history/sys-perf/union_with)
@@ -4562,8 +4561,8 @@ While measuring performances, this workload collects numbers
 for either the SBE or the classic engine aggregation expression
 implementations, depending on environments that it runs on.
 
-Numbers on the 'standalone-all-feature-flags' environment are for
-the SBE variadic aggregation expressions and numbers on the 'standalone'
+Numbers on the 'replica-all-feature-flags' environment are for
+the SBE variadic aggregation expressions and numbers on the 'replica'
 environment for the classic variadic aggregation expressions.
 
 
