@@ -4324,6 +4324,29 @@ The queries in this workload exercise group stage that uses an enum like field f
 timeseries, aggregate, group
 
 
+## [TimeseriesExtendedRange](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TimeseriesExtendedRange.yml)
+### Owner
+Query Integration
+
+
+### Support Channel
+[#query-integration](https://mongodb.enterprise.slack.com/archives/C04PDS7GAFM)
+
+
+### Description
+This workload runs queries on time-series collections with data before the unix epoch (extended range).
+Some optimizations can only be made on post-1970 data. This benchmark is intended to give us an idea
+of how much performance we lose on extended range data.
+
+
+[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/timeseries_extended_range)
+
+
+
+### Keywords
+timeseries, aggregate
+
+
 ## [TimeseriesFixedBucketing](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TimeseriesFixedBucketing.yml)
 ### Owner
 Query Integration
