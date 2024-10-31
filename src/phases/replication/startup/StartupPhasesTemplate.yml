@@ -162,13 +162,11 @@ CreateIndexesTemplate:
         ThrowOnFailure: false
         Operations:
           - OperationName: RunCommand
-            ReportMetrics: false
             OperationCommand:
               dropIndexes: {^Parameter: {Name: "collection", Default: Collection0}}
               # This will drop all non-essential indexes (_id and any shard key index remain)
               index: '*'
           - OperationName: RunCommand
-            ReportMetrics: false
             OperationCommand:
               createIndexes: {^Parameter: {Name: "collection", Default: Collection0}}
               indexes: {^Parameter: {Name: "indexes", Default: *IndexesForCreateCmd}}
