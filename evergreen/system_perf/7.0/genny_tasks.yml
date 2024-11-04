@@ -77,7 +77,6 @@ buildvariants:
   - name: validate_cmd_full
   - name: commit_latency_single_update
   - name: service_architecture_workloads
-  - name: aggregate_expressions
   - name: array_traversal
   - name: coll_scan_on_mixed_data_types_large
   - name: coll_scan_on_mixed_data_types_medium
@@ -201,7 +200,6 @@ buildvariants:
   - name: validate_cmd_full
   - name: commit_latency_single_update
   - name: service_architecture_workloads
-  - name: aggregate_expressions
   - name: array_traversal
   - name: coll_scan_on_mixed_data_types_large
   - name: coll_scan_on_mixed_data_types_medium
@@ -894,17 +892,6 @@ tasks:
       auto_workload_path: src/genny/src/workloads/networking/TransportLayerConnectTiming.yml
       test_control: transport_layer_connect_timing
   name: transport_layer_connect_timing
-  priority: 5
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
-      auto_workload_path: src/genny/src/workloads/query/AggregateExpressions.yml
-      test_control: aggregate_expressions
-  name: aggregate_expressions
   priority: 5
 - commands:
   - command: timeout.update

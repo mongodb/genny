@@ -103,7 +103,6 @@ buildvariants:
   - name: validate_cmd_full
   - name: commit_latency_single_update
   - name: service_architecture_workloads
-  - name: aggregate_expressions
   - name: array_traversal
   - name: boolean_simplifier
   - name: boolean_simplifier_small_dataset
@@ -232,7 +231,6 @@ buildvariants:
 - name: perf-3-node-replSet-query-engine-classic.arm.aws.2023-11
   tasks:
   - name: multi_planning
-  - name: aggregate_expressions
   - name: array_traversal
   - name: boolean_simplifier
   - name: boolean_simplifier_small_dataset
@@ -319,7 +317,6 @@ buildvariants:
 - name: perf-3-node-replSet-query-engine-sbe.arm.aws.2023-11
   tasks:
   - name: multi_planning
-  - name: aggregate_expressions
   - name: array_traversal
   - name: coll_scan_complex_predicate_large
   - name: coll_scan_complex_predicate_medium
@@ -432,7 +429,6 @@ buildvariants:
   - name: validate_cmd_full
   - name: commit_latency_single_update
   - name: service_architecture_workloads
-  - name: aggregate_expressions
   - name: array_traversal
   - name: boolean_simplifier
   - name: boolean_simplifier_small_dataset
@@ -655,7 +651,6 @@ buildvariants:
   - name: update_with_secondary_indexes
   - name: commit_latency_single_update
   - name: service_architecture_workloads
-  - name: aggregate_expressions
   - name: boolean_simplifier
   - name: boolean_simplifier_small_dataset
   - name: coll_scan_complex_predicate_large
@@ -1365,17 +1360,6 @@ tasks:
       auto_workload_path: src/genny/src/workloads/networking/TransportLayerConnectTiming.yml
       test_control: transport_layer_connect_timing
   name: transport_layer_connect_timing
-  priority: 5
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
-      auto_workload_path: src/genny/src/workloads/query/AggregateExpressions.yml
-      test_control: aggregate_expressions
-  name: aggregate_expressions
   priority: 5
 - commands:
   - command: timeout.update
