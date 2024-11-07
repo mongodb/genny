@@ -26,7 +26,6 @@ GRANDFATHERED_WORKLOADS_WITHOUT_KEYWORDS = set(
         "src/workloads/scale/MassDeleteRegression.yml",
         "src/workloads/serverless/IndexStress.yml",
         "src/workloads/networking/TransportLayerConnectTiming.yml",
-        "src/workloads/networking/ServiceArchitectureWorkloads.yml",
         "src/workloads/networking/SecondaryAllowed.yml",
         "src/workloads/c2c/MongosyncScripts.yml",
         "src/workloads/sharding/ReshardCollection.yml",

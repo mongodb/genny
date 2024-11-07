@@ -820,17 +820,6 @@ tasks:
       timeout_secs: 86400
   - func: f_run_dsi_workload
     vars:
-      auto_workload_path: src/genny/src/workloads/networking/ServiceArchitectureWorkloads.yml
-      test_control: service_architecture_workloads
-  name: service_architecture_workloads
-  priority: 5
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
       auto_workload_path: src/genny/src/workloads/networking/TransportLayerConnectTiming.yml
       test_control: transport_layer_connect_timing
   name: transport_layer_connect_timing
