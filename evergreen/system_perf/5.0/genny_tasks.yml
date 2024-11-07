@@ -2,7 +2,6 @@ buildvariants:
 - name: perf-atlas-M60-real.arm.aws.2023-11
   tasks:
   - name: create_big_index
-  - name: service_architecture_workloads
   - name: expressive_queries
   - name: pipeline_update
   - name: union_with
@@ -13,7 +12,6 @@ buildvariants:
 - name: perf-atlas-M60-real.intel.azure.2023-11
   tasks:
   - name: create_big_index
-  - name: service_architecture_workloads
   - name: expressive_queries
   - name: pipeline_update
   - name: union_with
@@ -46,7 +44,6 @@ buildvariants:
   - name: validate_cmd
   - name: validate_cmd_full
   - name: commit_latency_single_update
-  - name: service_architecture_workloads
   - name: constant_fold_arithmetic
   - name: cumulative_windows
   - name: expressive_queries
@@ -105,7 +102,6 @@ buildvariants:
   - name: validate_cmd
   - name: validate_cmd_full
   - name: commit_latency_single_update
-  - name: service_architecture_workloads
   - name: constant_fold_arithmetic
   - name: cumulative_windows
   - name: expressive_queries

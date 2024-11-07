@@ -2,7 +2,6 @@ buildvariants:
 - name: perf-atlas-M60-real.arm.aws.2023-11
   tasks:
   - name: create_big_index
-  - name: service_architecture_workloads
   - name: expressive_queries
   - name: match_filters
   - name: match_filters_medium
@@ -16,7 +15,6 @@ buildvariants:
 - name: perf-atlas-M60-real.intel.azure.2023-11
   tasks:
   - name: create_big_index
-  - name: service_architecture_workloads
   - name: expressive_queries
   - name: match_filters
   - name: match_filters_medium
@@ -123,7 +121,6 @@ buildvariants:
   - name: validate_cmd
   - name: validate_cmd_full
   - name: commit_latency_single_update
-  - name: service_architecture_workloads
   - name: array_traversal
   - name: boolean_simplifier
   - name: boolean_simplifier_small_dataset
@@ -449,7 +446,6 @@ buildvariants:
   - name: validate_cmd
   - name: validate_cmd_full
   - name: commit_latency_single_update
-  - name: service_architecture_workloads
   - name: array_traversal
   - name: boolean_simplifier
   - name: boolean_simplifier_small_dataset
