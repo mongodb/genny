@@ -1,0 +1,156 @@
+SchemaVersion: 2018-07-01
+Owner: Query Execution
+Description: |
+  TODO
+
+Keywords:
+  - timeseries
+  - aggregate
+
+GlobalDefaults:
+  Database: &database test
+  Collection: &collection Collection0
+  DocumentCount: &documentCount 1
+  Repeat: &repeat 50000
+  Threads: &threads 1
+  MaxPhases: &maxPhases 9
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 400
+
+Actors:
+  # Clear any pre-existing collection state.
+  - Name: ClearCollection
+    Type: CrudActor
+    Database: *database
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [0]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+          Collection: *collection
+          Operations:
+            - OperationName: drop
+
+  - Name: InsertData
+    Type: Loader
+    Threads: 1
+    Phases:
+      OnlyActiveInPhases:
+        Active: [1]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+          Database: *database
+          CollectionCount: 1
+          DocumentCount: *documentCount
+          BatchSize: 1
+          Document:
+            a: 1
+
+  - Name: Quiesce
+    Type: QuiesceActor
+    Threads: 1
+    Database: *database
+    Phases:
+      OnlyActiveInPhases:
+        Active: [2, 4, 6, 8]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: 1
+          Threads: 1
+
+  - Name: ComposedProjections
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [3]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: ComposedProjections
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [{$project: {_id: 0, "foo.bar": 1}}, {$project: {"foo.bar.baz": 0}}]
+
+  - Name: SortOnTemporaryField
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [5]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: SortOnTemporaryField
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [{$project: {_id: 0, foo: 1, bar: 1, key: "$foo.baz"}}, {$sort: {key: 1}}, {$project: {key: 0}}]
+
+  - Name: EarlyFiltering
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [7]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: EarlyFiltering
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [{$sort: {time: 1}}, {$addFields: {t: {$add: ["$time", "$time2"]}}}, {$match: {t: {$ne: null}}}]
+
+
+  - Name: FilterWithRepeatedTraversal
+    Type: CrudActor
+    Database: *database
+    Threads: *threads
+    Phases:
+      OnlyActiveInPhases:
+        Active: [9]
+        NopInPhasesUpTo: *maxPhases
+        PhaseConfig:
+          Repeat: *repeat
+          Database: *database
+          Collection: *collection
+          Operations:
+            - OperationMetricsName: FilterWithRepeatedTraversal
+              OperationName: aggregate
+              OperationCommand:
+                Pipeline:
+                  [{$match: {$or: [{"measurements.throughput": {$lt: 10}}, {"measurements.latency": {$gt: 0.1}}]}}]
+
+
+
+AutoRun:
+  - When:
+      mongodb_setup:
+        $eq:
+          - replica
+          - replica-80-feature-flags
+          - replica-all-feature-flags
+      branch_name:
+        $gte: v8.0
