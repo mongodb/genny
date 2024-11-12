@@ -2,7 +2,6 @@ buildvariants:
 - name: perf-atlas-M60-real.arm.aws.2023-11
   tasks:
   - name: create_big_index
-  - name: service_architecture_workloads
   - name: expressive_queries
   - name: match_filters
   - name: match_filters_medium
@@ -16,7 +15,6 @@ buildvariants:
 - name: perf-atlas-M60-real.intel.azure.2023-11
   tasks:
   - name: create_big_index
-  - name: service_architecture_workloads
   - name: expressive_queries
   - name: match_filters
   - name: match_filters_medium
@@ -68,7 +66,6 @@ buildvariants:
   - name: validate_cmd
   - name: validate_cmd_full
   - name: commit_latency_single_update
-  - name: service_architecture_workloads
   - name: array_traversal
   - name: constant_fold_arithmetic
   - name: cumulative_windows
@@ -171,7 +168,6 @@ buildvariants:
   - name: validate_cmd
   - name: validate_cmd_full
   - name: commit_latency_single_update
-  - name: service_architecture_workloads
   - name: array_traversal
   - name: constant_fold_arithmetic
   - name: cumulative_windows
@@ -812,17 +808,6 @@ tasks:
       auto_workload_path: src/genny/src/workloads/networking/CommitLatencySingleUpdate.yml
       test_control: commit_latency_single_update
   name: commit_latency_single_update
-  priority: 5
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
-      auto_workload_path: src/genny/src/workloads/networking/ServiceArchitectureWorkloads.yml
-      test_control: service_architecture_workloads
-  name: service_architecture_workloads
   priority: 5
 - commands:
   - command: timeout.update

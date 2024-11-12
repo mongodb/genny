@@ -2029,27 +2029,6 @@ secondary reads during an election.
 
 
 
-## [ServiceArchitectureWorkloads](https://www.github.com/mongodb/genny/blob/master/src/workloads/networking/ServiceArchitectureWorkloads.yml)
-### Owner
-Service Arch
-
-
-### Support Channel
-[#server-servicearch](https://mongodb.enterprise.slack.com/archives/CMLKU7Y1M)
-
-
-### Description
-This workload runs find operations with 'primary' readPreference and 'local' readConcern. There
-are 100 threads allocated to run the find operations, with a rate limit of 1 thread acting per
-microsecond. A stepdown is also initiated during the workload to measure the effects of primary
-reads during an election.
-
-
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/service_architecture_workloads)
-
-
-
-
 ## [TransportLayerConnectTiming](https://www.github.com/mongodb/genny/blob/master/src/workloads/networking/TransportLayerConnectTiming.yml)
 ### Owner
 Server Security
