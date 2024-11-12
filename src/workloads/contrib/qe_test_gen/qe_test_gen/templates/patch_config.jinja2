@@ -8,10 +8,6 @@ patches:
       {% for test in testNames %}
       - << test >>
       {% endfor %}
-    linux-shard-lite-fle.2022-11:
-      {% for test in testNames %}
-      - << test >>
-      {% endfor %}
 genny_metrics:
   tests:
   - "InsertActor.load.inserts"
