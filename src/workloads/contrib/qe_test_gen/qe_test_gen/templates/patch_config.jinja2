@@ -8,6 +8,10 @@ patches:
       {% for test in testNames %}
       - << test >>
       {% endfor %}
+    perf-3-shard-fle.arm.aws.2023-11
+      {% for test in testNames %}
+      - << test >>
+      {% endfor %}
 genny_metrics:
   tests:
   - "InsertActor.load.inserts"
