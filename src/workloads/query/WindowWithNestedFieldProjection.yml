@@ -58,7 +58,6 @@ AutoRun:
           - replica
           - replica-80-feature-flags
           - replica-all-feature-flags
-          - shard-lite
       branch_name:
         $neq:
           - v4.0

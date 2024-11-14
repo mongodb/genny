@@ -40,7 +40,7 @@ patches:
       - medical_workload_guid_50_50_unencrypted
       - medical_workload_guid_50_50_unencrypted
       - medical_workload_guid_50_50_unencrypted
-    linux-shard-lite-fle.2022-11:
+    perf-3-shard-fle.arm.aws.2023-11:
       - medical_workload_states_100_0
       - medical_workload_states_95_5
       - medical_workload_states_50_50

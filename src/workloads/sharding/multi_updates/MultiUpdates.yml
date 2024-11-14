@@ -20,4 +20,3 @@ AutoRun:
           - shard
           - shard-80-feature-flags
           - shard-all-feature-flags
-          - shard-lite-80-feature-flags

@@ -128,6 +128,5 @@ AutoRun:
           - shard
           - shard-80-feature-flags
           - shard-all-feature-flags
-          - shard-lite-80-feature-flags
       branch_name:
         $gte: v8.0

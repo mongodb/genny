@@ -141,4 +141,3 @@ AutoRun:
       mongodb_setup:
         $eq:
           - shard-all-feature-flags
-          - shard-lite-80-feature-flags
