@@ -806,18 +806,6 @@ buildvariants:
   tasks:
   - name: lookup
   - name: lookup_only
-- name: perf-1-shard-replica-set-endpoint.arm.aws.2024-11
-  tasks:
-  - name: lookup
-  - name: lookup_only
-- name: perf-1-shard-replica-set-endpoint.pgo.arm.aws.2024-11
-  tasks:
-  - name: lookup
-  - name: lookup_only
-- name: perf-1-shard-replica-set-endpoint.intel.aws.2024-11
-  tasks:
-  - name: lookup
-  - name: lookup_only
 tasks:
 - commands:
   - command: timeout.update
