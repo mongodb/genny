@@ -502,6 +502,10 @@ AutoRun:
           - replica-query-engine-sbe
           - replica
           - replica-all-feature-flags
+          - 1-shard-dedicated.2024-05
+          - 1-shard-embedded.2024-11
+          - 1-shard-collocated.2024-05
+          - 1-shard-1-node-collocated.2024-05
       branch_name:
         $neq:
           - v4.0

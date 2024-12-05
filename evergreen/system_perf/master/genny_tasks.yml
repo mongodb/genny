@@ -770,6 +770,42 @@ buildvariants:
 - name: perf-3-node-replSet-limited-10000-query-stats.arm.aws.2023-11
   tasks:
   - name: non_search_hybrid_scoring
+- name: perf-1-node-replSet-default-sharding.arm.aws.2023-11
+  tasks:
+  - name: lookup
+  - name: lookup_only
+- name: perf-3-node-replSet-default-sharding.arm.aws.2024-05
+  tasks:
+  - name: lookup
+  - name: lookup_only
+- name: perf-3-node-replSet-default-sharding.pgo.arm.aws.2024-05
+  tasks:
+  - name: lookup
+  - name: lookup_only
+- name: perf-default-sharding-1-shard-collocated.intel.aws.2024-05
+  tasks:
+  - name: lookup
+  - name: lookup_only
+- name: perf-3-node-replSet-dedicated-default-sharding.arm.aws.2023-11
+  tasks:
+  - name: lookup
+  - name: lookup_only
+- name: perf-default-sharding-1-shard-dedicated.intel.aws.2024-05
+  tasks:
+  - name: lookup
+  - name: lookup_only
+- name: perf-1-shard-embedded.arm.aws.2024-11
+  tasks:
+  - name: lookup
+  - name: lookup_only
+- name: perf-1-shard-embedded.pgo.arm.aws.2024-11
+  tasks:
+  - name: lookup
+  - name: lookup_only
+- name: perf-1-shard-embedded.intel.aws.2024-11
+  tasks:
+  - name: lookup
+  - name: lookup_only
 tasks:
 - commands:
   - command: timeout.update
