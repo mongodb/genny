@@ -778,10 +778,6 @@ buildvariants:
   tasks:
   - name: lookup
   - name: lookup_only
-- name: perf-3-node-replSet-default-sharding.pgo.arm.aws.2024-05
-  tasks:
-  - name: lookup
-  - name: lookup_only
 - name: perf-default-sharding-1-shard-collocated.intel.aws.2024-05
   tasks:
   - name: lookup
@@ -795,10 +791,6 @@ buildvariants:
   - name: lookup
   - name: lookup_only
 - name: perf-1-shard-embedded.arm.aws.2024-11
-  tasks:
-  - name: lookup
-  - name: lookup_only
-- name: perf-1-shard-embedded.pgo.arm.aws.2024-11
   tasks:
   - name: lookup
   - name: lookup_only
