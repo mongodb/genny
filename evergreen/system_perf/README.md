@@ -1,8 +1,18 @@
 # Auto-generated Genny Tasks
 
+!!! warning AutoRun in Genny is deprecated and no longer used
+
+    AutoRun is no longer available in Genny. This documentation is
+    kept for historical purposes only.
+
+
 This folder contains the task defintions and buildvariant assignments for the
-Genny workloads with `AutoRun` sections. These files are automatically
-generated and should never be updated manually.
+Genny workloads with `AutoRun` sections. They are kept for backwards 
+compatibility purposes only for older versions of the mongo repository, 
+and should not be modified.
+
+Any modifications to what Genny tasks should run should happen in the Evergreen
+Configuration found in the [DSI Repo](https://github.com/10gen/dsi/tree/master/evergreen/system_perf).
 
 ## Patch-testing a new Genny Workload
 
