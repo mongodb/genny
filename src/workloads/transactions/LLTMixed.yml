@@ -600,17 +600,4 @@ Actors:
         Duration: *SnapshotScannerLongDuration
         ScanDuration: *SnapshotScannerLongDuration
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - atlas-like-replica.2022-10
-          - replica
-          - replica-80-feature-flags
-          - replica-all-feature-flags
-          - replica-query-engine-classic
-          - replica-query-engine-sbe
-      branch_name:
-        $neq:
-          - v4.0
-          - v4.2
+HasTasks: true

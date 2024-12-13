@@ -65,8 +65,4 @@ Actors:
               OperationMetricsName: ReadDocs
               ThrowOnFailure: true
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica-ipc-counters.2023-06
+HasTasks: true

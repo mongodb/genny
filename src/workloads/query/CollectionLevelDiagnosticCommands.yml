@@ -179,15 +179,4 @@ Actors:
             OperationCommand:
               Filter: {int: {$eq: 5}}
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica
-      branch_name:
-        $neq:
-          - v4.0
-          - v4.2
-          - v4.4
-          - v5.0
-          - v6.0
+HasTasks: true

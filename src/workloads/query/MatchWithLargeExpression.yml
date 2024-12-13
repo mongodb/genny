@@ -169,14 +169,4 @@ Actors:
 #      ActivePhase: 8
 #      NumberOfClauses: 50000
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica-80-feature-flags
-          - replica-query-engine-classic
-          - replica-query-engine-sbe
-          - replica
-          - replica-all-feature-flags
-      branch_name:
-        $gte: v7.2
+HasTasks: true

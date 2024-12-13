@@ -180,10 +180,4 @@ Actors:
         SrcCollection: *ShardedInputColl
         DstCollection: *ShardedCollOutput
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - shard
-          - shard-80-feature-flags
-          - shard-all-feature-flags
+HasTasks: true

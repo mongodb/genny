@@ -206,14 +206,4 @@ Actors:
         QueryStatsParameters: *HmacParameters
         Suffix: "Hmac-RandomPayload-RateLimited"
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          # TODO PERF-4951 Enable sharded versions with multiple mongos.
-          # - shard
-          - shard-single
-          - replica
-          - atlas-like-replica.2022-10
-      branch_name:
-        $gte: v6.0
+HasTasks: true

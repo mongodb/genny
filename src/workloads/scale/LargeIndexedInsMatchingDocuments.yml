@@ -113,11 +113,4 @@ Actors:
                 }
               }
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica
-          - replica-all-feature-flags
-          - replica-query-engine-classic
-          - replica-query-engine-sbe
+HasTasks: true

@@ -11,13 +11,4 @@ LoadConfig:
     Database: BooleanSimplifier
     DocumentCount: 1e5
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica
-          - replica-all-feature-flags
-          - replica-80-feature-flags
-          - replica-query-engine-classic
-      branch_name:
-        $gte: v7.3
+HasTasks: true

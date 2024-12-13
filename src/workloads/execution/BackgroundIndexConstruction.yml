@@ -225,15 +225,4 @@ Actors:
           LogEvery: 10 minutes
           Blocking: None
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica
-          - single-replica-80-feature-flags
-          - replica-all-feature-flags
-      branch_name:
-        $gte: v7.0
-      infrastructure_provisioning:
-        $neq:
-          - graviton-single-lite.2022-11 # Instance type is slow and times out
+HasTasks: true

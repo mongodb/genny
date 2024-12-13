@@ -23,13 +23,4 @@ Clients:
 LoadConfig:
   Path: "../../phases/execution/UpdateWithSecondaryIndexes.yml"
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica
-          - replica-80-feature-flags
-          - replica-all-feature-flags
-          - standalone
-          - standalone-80-feature-flags
-          - standalone-all-feature-flags
+HasTasks: true

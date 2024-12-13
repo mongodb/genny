@@ -66,9 +66,4 @@ Actors:
                   Level: majority
                   TimeoutMillis: 5000
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica
-          - standalone
+HasTasks: true

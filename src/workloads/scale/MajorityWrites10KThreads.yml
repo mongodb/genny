@@ -16,10 +16,4 @@ LoadConfig:
     WritingThreads: 9000
     ReadingThreads: 1000
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica
-          - replica-80-feature-flags
-          - replica-all-feature-flags
+HasTasks: true

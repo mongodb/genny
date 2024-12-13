@@ -657,12 +657,4 @@ Actors:
                     { $count: "count" },
                   ]
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica
-          - replica-80-feature-flags
-          - replica-all-feature-flags
-      branch_name:
-        $gte: v7.0
+HasTasks: true

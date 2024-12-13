@@ -116,11 +116,4 @@ Actors:
           $and: [{a1: 1}, {a2: 1}, {^Object: {withNEntries: 1, havingKeys: "x0", andValues: {$exists: false}, duplicatedKeys: skip}}]}
         OnlyActiveInPhase: 4
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica-80-feature-flags
-          - replica
-          - replica-all-feature-flags
-          - atlas-like-replica.2022-10
+HasTasks: true

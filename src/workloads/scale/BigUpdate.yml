@@ -123,22 +123,4 @@ Actors:
         Filter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
         Limit: 20
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - atlas
-          - atlas-like-replica.2022-10
-          - replica
-          - replica-1dayhistory-15gbwtcache
-          - replica-80-feature-flags
-          - replica-all-feature-flags
-          - replica-disable-execution-control
-          - replica-noflowcontrol
-          - replica-query-engine-classic
-          - replica-query-engine-sbe
-      atlas_setup:
-        $neq:
-          - M10-repl
-          - M20-repl
-          - M30-repl
+HasTasks: true

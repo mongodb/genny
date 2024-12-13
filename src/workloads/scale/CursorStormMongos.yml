@@ -142,8 +142,4 @@ Actors:
 
 # Commented out because this should not be regularly scheduled, as the task is expected to fail.
 # Uncomment the lines below (and possibly change the build variant) to run the workload.
-# AutoRun:
-# - When:
-#     mongodb_setup:
-#       $eq:
-#       - shard
+# HasTasks: true

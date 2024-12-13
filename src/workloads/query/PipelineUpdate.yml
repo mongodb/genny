@@ -254,18 +254,4 @@ Actors:
               updates: [{q: {t: *partitionIDLarge}, u: [{$replaceWith: *largeDocument}], multi: false}]
               writeConcern: {w: majority}
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - atlas
-          - atlas-like-replica.2022-10
-          - replica-80-feature-flags
-          - replica-all-feature-flags
-          - replica
-      branch_name:
-        $neq:
-          - v4.0
-      atlas_setup:
-        $neq:
-          - M30-repl
+HasTasks: true

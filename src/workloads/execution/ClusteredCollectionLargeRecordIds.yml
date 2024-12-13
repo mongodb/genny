@@ -15,19 +15,4 @@ LoadConfig:
   Parameters:
     RecordIdExtraPadding: *RecordIdExtraPaddingParam
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - standalone
-          - standalone-80-feature-flags
-          - standalone-all-feature-flags
-          - replica
-          - replica-80-feature-flags
-          - replica-all-feature-flags
-          - atlas-like-replica.2022-10
-          - shard
-          - shard-80-feature-flags
-          - shard-all-feature-flags
-      branch_name:
-        $gte: v5.3
+HasTasks: true

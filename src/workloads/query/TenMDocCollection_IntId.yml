@@ -160,11 +160,4 @@ Actors:
         OnlyActiveInPhase: 11
         Threads: 128
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica-80-feature-flags
-          - replica
-          - replica-all-feature-flags
-          - atlas-like-replica.2022-10
+HasTasks: true

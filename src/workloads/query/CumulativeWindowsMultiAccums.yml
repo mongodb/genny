@@ -301,20 +301,4 @@ Actors:
             },
           ]
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica-query-engine-classic
-          - replica-query-engine-sbe
-          - replica
-          - replica-80-feature-flags
-          - replica-all-feature-flags
-      branch_name:
-        $neq:
-          - v4.0
-          - v4.2
-          - v4.4
-          - v5.0
-          - v5.1
-          - v5.2
+HasTasks: true

@@ -21,15 +21,4 @@ Actors:
           x: {^RandomInt: {min: 0, max: 2147483647}}
           string0: {^FastRandomString: {length: 15000000}}
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - atlas
-          - atlas-like-replica.2022-10
-          - replica
-          - replica-80-feature-flags
-          - replica-all-feature-flags
-      atlas_setup:
-        $neq:
-          - M30-repl
+HasTasks: true

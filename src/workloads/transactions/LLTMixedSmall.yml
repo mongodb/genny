@@ -27,16 +27,4 @@ LoadConfig:
     InitialNumDocs: 6000000
     SecondaryNumDocs: 6000000
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - atlas-like-replica.2022-10
-          - replica
-          - replica-80-feature-flags
-          - replica-all-feature-flags
-      branch_name:
-        $neq:
-          - v4.0
-          - v4.2
-
+HasTasks: true

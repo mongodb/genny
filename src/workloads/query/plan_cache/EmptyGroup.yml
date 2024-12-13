@@ -244,10 +244,4 @@ Actors:
                   }},
                 ]
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica
-      branch_name:
-        $gte: v8.0
+HasTasks: true

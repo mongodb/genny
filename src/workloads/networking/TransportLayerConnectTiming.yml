@@ -25,7 +25,4 @@ Actors:
           OperationCommand:
             replSetTestEgress: 1
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq: replica-auth-cluster-delay
+HasTasks: true

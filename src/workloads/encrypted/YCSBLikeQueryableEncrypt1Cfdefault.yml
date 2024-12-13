@@ -35,11 +35,4 @@ LoadConfig:
     Namespace: genny_qebench.testcoll
     ClientName: EncryptedPool
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - single-replica-fle
-          - shard-fle
-      branch_name:
-        $gte: v7.0
+HasTasks: true

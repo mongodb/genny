@@ -234,14 +234,4 @@ Actors:
 # This workload runs only in a replica set with EXACTLY 3 NODES.
 # To use it in a replica set with a different number of nodes, adapt the
 # *number_of_nodes parameter (needs to be >1).
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica
-          - replica-80-feature-flags
-          - replica-all-feature-flags
-          - atlas-like-replica
-      branch_name:
-        $neq:
-          - v4.0
+HasTasks: true

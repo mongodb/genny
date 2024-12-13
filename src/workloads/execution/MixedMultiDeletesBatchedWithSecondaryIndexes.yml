@@ -30,15 +30,4 @@ LoadConfig:
     UseBatchedDeleteStage: 1
     ConfigurationFile: "../../phases/execution/config/MultiDeletes/WithSecondaryIndexes.yml"
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica
-      branch_name:
-        $neq:
-          - v4.2
-          - v4.4
-          - v5.0
-          # 6.0 Does not have the 'batchUserMultiDeletes' server parameter.
-          - v6.0
+HasTasks: true

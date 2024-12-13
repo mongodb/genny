@@ -240,12 +240,4 @@ Actors:
                 - !!merge <<: *UpdateOperationDatabase1
                   Collection: Collection29
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - shard
-          - shard-80-feature-flags
-          - shard-all-feature-flags
-      branch_name:
-        $gte: v7.0
+HasTasks: true

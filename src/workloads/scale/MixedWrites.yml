@@ -35,10 +35,4 @@ Actors:
               WriteConcern: {Level: 3}
               Timeout: 6000 milliseconds
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq: replica
-    ThenRun:
-      - mongodb_setup: replica-delay-mixed
-      - mongodb_setup: replica
+HasTasks: true

@@ -384,12 +384,4 @@ Actors:
         Active: [3, 6, 9, 12, 15, 18, 21, 24]
         MaxPhases: *MaxPhases
 
-AutoRun:
-  - When:
-      branch_name:
-        $gte: v5.3
-      mongodb_setup:
-        $eq:
-          - replica
-          - replica-80-feature-flags
-          - replica-all-feature-flags
+HasTasks: true

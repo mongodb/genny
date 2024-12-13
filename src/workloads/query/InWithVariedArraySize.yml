@@ -231,14 +231,4 @@ Actors:
         repeat: 1000
         filter: { monotonicInt: *ContinuousInArray }
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica-80-feature-flags
-          - replica-query-engine-classic
-          - replica-query-engine-sbe
-          - replica
-          - replica-all-feature-flags
-      branch_name:
-        $gte: v7.0
+HasTasks: true

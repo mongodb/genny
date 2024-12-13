@@ -136,8 +136,4 @@ Actors:
         Collection: *Collection
         Operations: *ReadWriteOperations
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - shard-all-feature-flags
+HasTasks: true

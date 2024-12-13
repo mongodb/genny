@@ -97,11 +97,4 @@ Actors:
           Path: ../../phases/scale/LargeScalePhases.yml
           Key: SnapshotScanner10GigabytesFixedRateCmd
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica-noflowcontrol
-          - replica
-          - replica-query-engine-classic
-          - replica-query-engine-sbe
+HasTasks: true

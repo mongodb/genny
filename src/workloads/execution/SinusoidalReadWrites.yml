@@ -107,13 +107,4 @@ Actors:
         Threads: {^Parameter: {Name: "ReadingThreads", Default: 500}}
         ActivePhases: [1]
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - standalone
-          - standalone-80-feature-flags
-          - standalone-all-feature-flags
-          - replica
-          - replica-80-feature-flags
-          - replica-all-feature-flags
+HasTasks: true

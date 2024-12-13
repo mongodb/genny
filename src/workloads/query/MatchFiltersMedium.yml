@@ -17,22 +17,4 @@ LoadConfig:
     Database: MatchFiltersMedium
     DocumentCount: 1e4
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - atlas
-          - replica
-          - replica-all-feature-flags
-          - replica-80-feature-flags
-          - replica-query-engine-classic
-          - replica-query-engine-sbe
-      atlas_setup:
-        $neq:
-          - M30-repl
-      branch_name:
-        $neq:
-          - v4.0
-          - v4.2
-          - v4.4
-          - v5.0
+HasTasks: true

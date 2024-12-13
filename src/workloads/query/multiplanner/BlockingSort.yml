@@ -392,14 +392,4 @@ Actors:
         collection: *coll
         query: *query
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica
-          - replica-all-feature-flags
-          - replica-query-engine-sbe
-          - replica-query-engine-classic
-          - replica-80-feature-flags
-      branch_name:
-        $gte: v8.0
+HasTasks: true

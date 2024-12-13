@@ -161,14 +161,4 @@ Actors:
       - *Nop
       - *Nop
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica
-      branch_name:
-        $neq:
-          - v4.0
-    ThenRun:
-      - mongodb_setup: replica-delay-mixed
-      - mongodb_setup: replica
+HasTasks: true

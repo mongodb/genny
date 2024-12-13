@@ -113,7 +113,7 @@ class DocumentationGenerator:
         return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
     def _get_task_page(self, documentation_type: str, workload_yaml: dict, workload_name: str) -> Optional[str]:
-        if documentation_type == "workload" and "AutoRun" in workload_yaml:
+        if documentation_type == "workload" and workload_yaml.get("HasTasks"):
             workload_name_snake_case = self._workload_camel_to_snake(workload_name)
             return f"{TASK_PAGE_ROOT}{workload_name_snake_case}"
         else:

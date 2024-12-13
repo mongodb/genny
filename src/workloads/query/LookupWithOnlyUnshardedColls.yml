@@ -128,12 +128,4 @@ Actors:
               Options:
                 BatchSize: *NumDocs
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica
-          - shard
-          - shard-all-feature-flags
-          - replica-query-engine-classic
-          - replica-query-engine-sbe
+HasTasks: true

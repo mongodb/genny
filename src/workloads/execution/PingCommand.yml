@@ -56,9 +56,4 @@ Actors:
         PhaseConfig:
           Repeat: 1
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica
-          - standalone
+HasTasks: true

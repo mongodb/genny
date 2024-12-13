@@ -77,7 +77,4 @@ Actors:
         MetricsName: Scan-History-With-Update
         ScanType: point-in-time
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq: replica-1dayhistory-15gbwtcache
+HasTasks: true

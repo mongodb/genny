@@ -180,16 +180,4 @@ Actors:
           LogEvery: 15 minutes
           Blocking: None
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - shard
-          - shard-80-feature-flags
-          - shard-all-feature-flags
-          - shard-heuristic-bonsai
-      branch_name:
-        $neq:
-          - v4.0
-          - v4.2
-          - v4.4
+HasTasks: true

@@ -264,12 +264,4 @@ Actors:
         Predicate: { $lte: 988000 }
         # Without a $project stage, $_internalUnpackBucket will have an "exclude" parameter.
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica-80-feature-flags
-          - replica-all-feature-flags
-          - replica
-      branch_name:
-        $gte: v6.0
+HasTasks: true

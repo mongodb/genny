@@ -95,9 +95,4 @@ Actors:
         Database: *Database
         Collection: *Collection
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - shard
-          - shard-80-feature-flags
+HasTasks: true

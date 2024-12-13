@@ -325,14 +325,4 @@ Actors:
               Options:
                 BatchSize: *limit
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica
-      branch_name:
-        $neq:
-          - v4.0
-          - v4.2
-          - v4.4
-          - v5.0
+HasTasks: true

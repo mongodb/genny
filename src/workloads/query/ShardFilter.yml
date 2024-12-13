@@ -132,11 +132,4 @@ Actors:
               OperationCommand:
                 Filter: {a: {$gt: -1}}
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - shard
-          - shard-heuristic-bonsai
-      branch_name:
-        $gte: v7.2
+HasTasks: true

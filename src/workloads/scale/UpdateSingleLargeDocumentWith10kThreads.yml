@@ -70,9 +70,4 @@ Actors:
                   Level: majority
 
 # The workload is expected to cause an OOM kill. Keep AutoRun disabled.
-# AutoRun:
-# - When:
-#     mongodb_setup:
-#       $eq:
-#       - replica
-
+# HasTasks: true

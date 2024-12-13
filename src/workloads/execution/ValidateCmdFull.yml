@@ -15,9 +15,4 @@ LoadConfig:
   Parameters:
     FullValidation: true
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - standalone
-          - replica
+HasTasks: true

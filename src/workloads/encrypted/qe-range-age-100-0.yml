@@ -456,11 +456,4 @@ Actors:
         LogEvery: 5 minutes
         Blocking: None
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - single-replica-fle
-          - shard-fle
-      branch_name:
-        $gte: v8.0
+HasTasks: true

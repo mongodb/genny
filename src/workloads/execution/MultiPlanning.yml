@@ -102,12 +102,4 @@ Actors:
             OperationCommand:
               Filter: {a: *NonSelectiveQuery, b: *SelectiveQuery, c: *NonSelectiveQuery}
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica-query-engine-classic
-          - replica-query-engine-sbe
-          - replica
-          - replica-all-feature-flags
-
+HasTasks: true

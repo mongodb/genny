@@ -194,15 +194,4 @@ Actors:
               OperationCommand:
                 Document: *LargeDoc
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - replica
-          - replica-80-feature-flags
-          - replica-all-feature-flags
-      branch_name:
-        $gte: v7.0
-      infrastructure_provisioning:
-        $neq:
-          - graviton-single-lite.2022-11 # Instance runs out of memory and crashes
+HasTasks: true

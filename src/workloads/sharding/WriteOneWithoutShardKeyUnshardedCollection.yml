@@ -84,9 +84,4 @@ Actors:
                   Level: majority
                   TimeoutMillis: 5000
 
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - shard-single
-          - shard-single-stress
+HasTasks: true
