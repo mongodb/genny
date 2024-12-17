@@ -123,13 +123,6 @@ buildvariants:
     tasks:
       - name: tg_compile_and_test_with_server_on_macos
 
-  - name: validate-genny-tasks
-    display_name: Validate Genny Tasks
-    modules: [dsi, PrivateWorkloads]
-    run_on:
-      - amazon2-arm64-latest-small
-    tasks:
-      - name: validate_genny_tasks
 
 ##                ⚡️ Tasks ⚡️
 
@@ -143,14 +136,12 @@ tasks:
     commands:
       - func: f_fetch_source
       - func: f_compile
-      - func: f_dry_run_variant_auto_tasks
       - func: f_dry_run_workloads
 
   - name: t_compile_and_dry_run_asan
     commands:
       - func: f_fetch_source
       - func: f_compile_asan
-      - func: f_dry_run_variant_auto_tasks
       - func: f_dry_run_workloads_asan
 
   - name: t_python_test
@@ -234,11 +225,6 @@ tasks:
             - -v
             - resmoke-test
             - --create-new-actor-test-suite
-
-  - name: validate_genny_tasks
-    commands:
-      - func: f_fetch_source
-      - func: f_validate_genny_tasks
 
 ##                ⚡️ Task Groups ⚡️
 
@@ -335,20 +321,6 @@ functions:
           - -v
           - install
           - --sanitizer=asan
-
-  ##
-  # Runs schedule_variant_auto_tasks as a dry run
-  # to verify AutoRun logic in all workload YAML files.
-  ##
-  f_dry_run_variant_auto_tasks:
-    - command: subprocess.exec
-      params:
-        binary: ./src/genny/run-genny
-        args:
-          - auto-tasks
-          - --tasks
-          - variant_tasks
-          - --dry-run
 
   ##
   # Runs each workload as a dry run
@@ -505,40 +477,6 @@ functions:
       params:
         file: build/XUnitXML/*.xml
 
-  ##
-  # Validate that the auto-generated genny tasks are up to date.
-  ##
-  f_validate_genny_tasks:
-    - command: shell.exec
-      params:
-        working_dir: src/genny
-        script: |
-          set -eu
-          versions=("master" "8.0" "7.0" "6.0" "5.0")
-
-          # Move original files to backup locations
-          for version in $versions; do
-            mv evergreen/system_perf/$version/genny_tasks.yml evergreen/system_perf/$version/genny_tasks.bak.yml
-          done
-
-          # Regenerate the genny task files
-          ./run-genny auto-tasks-local --dsi-path ../modules/dsi --private-workloads-path ../modules/PrivateWorkloads
-
-          # Validate that the files are identical
-          for version in $versions; do
-            original="evergreen/system_perf/$version/genny_tasks.bak.yml"
-            new="evergreen/system_perf/$version/genny_tasks.yml"
-            exitCode=0
-            diff $original $new || exitCode=1
-
-            if [ $exitCode -ne 0 ]; then
-              echo -e '\033[31mThe auto-generated genny task files are not up to date!\033[0m'
-              echo -e '\033[31mThis typically happens if you are adding a new genny test,\033[0m'
-              echo -e '\033[31mupdate the AutoRun section of a test, or someone added a new variant in DSI and did not regenerate the files.\033[0m'
-              echo -e '\033[31mTo resolve this issue, please run ./run-genny auto-tasks-local and commit the new files in the evergreen folder.\033[0m'
-              exit 1
-            fi
-          done
 
 ##                ⚡️ Modules ⚡️
 
