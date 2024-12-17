@@ -11,7 +11,7 @@ Genny workloads with `AutoRun` sections. They are kept for backwards
 compatibility purposes only for older versions of the mongo repository, 
 and should not be modified.
 
-Any modifications to what Genny tasks should run should happen in the Evergreen
+Any modifications regarding which Genny tasks to run should happen in the Evergreen
 Configuration found in the [DSI Repo](https://github.com/10gen/dsi/tree/master/evergreen/system_perf).
 
 ## Patch-testing a new Genny Workload
