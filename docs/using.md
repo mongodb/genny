@@ -542,11 +542,9 @@ AutoRun was a utility to allow workload authors to determine scheduling of their
 
 ### Configuring AutoRun
 
-!!! warning AutoRun in Genny is deprecated and no longer used
-
-    AutoRun is no longer available in Genny.
-    This documentation is kept for historical purposes only.
-    
+> [!WARNING]  
+> AutoRun is deprecated and no longer available in Genny.
+> This documentation is kept for historical purposes only.   
 
 
 Genny automatically runs workloads based on the evergreen environment
