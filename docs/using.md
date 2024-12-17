@@ -538,7 +538,7 @@ Examples with these and other Actors can be found in [./src/workloads/docs](../s
 
 ### What is AutoRun?
 
-AutoRun was a utility to allow workload authors to determine scheduling of their workloads without having to commit to a separate repo. Autorun is now deprecated, and any modifications to what Genny tasks should run should happen in the Evergreen Configuration found in the [DSI Repo](https://github.com/10gen/dsi/tree/master/evergreen/system_perf).
+AutoRun was a utility to allow workload authors to determine scheduling of their workloads without having to commit to a separate repo. Autorun is now deprecated, and any modifications regarding which Genny tasks to run should happen in the Evergreen Configuration found in the [DSI Repo](https://github.com/10gen/dsi/tree/master/evergreen/system_perf).
 
 ### Configuring AutoRun
 
