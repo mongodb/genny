@@ -1,9 +1,8 @@
-from typing import List, Optional
+from typing import Optional
 
 import structlog
-import tempfile
-import shutil
 import os
+import sys
 
 from genny.cmd_runner import run_command
 from genny.curator import poplar_grpc, calculate_rollups
@@ -34,6 +33,12 @@ def main_genny_runner(
         workspace_root=workspace_root,
         genny_repo_root=genny_repo_root,
     ):
+        # Inserting an Info log to gather some information 
+        # about what version of Python Genny is running
+        # This will help inform whether upgrading packages that deprecate
+        # use of Python versions that Genny supports will cause problems
+        SLOG.info(f"Python version being used by Genny", python_version=f'"{sys.version}"')
+
         path = os.path.join(genny_repo_root, "dist", "bin", "genny_core")
         if not os.path.exists(path):
             SLOG.error("genny_core not found. Run install first.", path=path)
