@@ -37,7 +37,7 @@ def main_genny_runner(
         # about what version of Python Genny is running
         # This will help inform whether upgrading packages that deprecate
         # use of Python versions that Genny supports will cause problems
-        SLOG.info(f"Genny is running the Python version: {sys.version}")
+        SLOG.info(f"Python version being used by Genny", python_version=f'"{sys.version}"')
 
         path = os.path.join(genny_repo_root, "dist", "bin", "genny_core")
         if not os.path.exists(path):
