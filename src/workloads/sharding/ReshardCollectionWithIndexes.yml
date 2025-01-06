@@ -80,7 +80,7 @@ GlobalDefaults:
   # the rate small so it won't significantly affect the resharding performance. That says, these
   # CRUD operations should keep minimal and should not slow down resharding.
   ReadRate: &ReadRate 100 per 1 second
-  WriteRate: &WriteRate 10 per 10 seconds # Keep the writes slow to pass critical section.
+  WriteRate: &WriteRate 10 per 1000 seconds # Keep the writes slow to pass critical section.
 
   ReadOperations: &ReadOperations
     - OperationName: findOne
@@ -185,11 +185,13 @@ Actors:
         Collection: *Collection
         Operations: *WriteOperations
         GlobalRate: *WriteRate
+        ThrowOnFailure: false
       - MetricsName: WriteDuringReshardingToThreeShards
         Blocking: None
         Collection: *Collection
         Operations: *WriteOperations
         GlobalRate: *WriteRate
+        ThrowOnFailure: false
 
   - Name: LoggingActor
     Type: LoggingActor

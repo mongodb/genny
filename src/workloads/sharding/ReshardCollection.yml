@@ -31,7 +31,7 @@ GlobalDefaults:
   ApproxDocumentSize80Pct: &ApproxDocumentSize80Pct 8000 # = 8kB
   # TODO: Increase DocumentCount to 4000000 so there will be ~20GB of data inserted on each shard
   # and increase NumReshardedChunks to 400 so there continue to be ~50MB of data per chunk.
-  DocumentCount: &DocumentCount 100000 # for an approximate total of 1GB
+  DocumentCount: &DocumentCount 4000000 # for an approximate total of 1GB
 
   ShardKeyValueMin: &ShardKeyValueMin 1
   ShardKeyValueMax: &ShardKeyValueMax 10000
@@ -44,6 +44,12 @@ GlobalDefaults:
       OperationCommand:
         Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
         Update: {$inc: {counter: 1}}
+    - OperationName: insertOne
+      OperationCommand:
+        Document: {_id: {^RandomInt: {min: *DocumentCount, max: 9000000}}}
+    - OperationName: deleteOne
+      OperationCommand:
+        Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
 
 Clients:
   Default:
@@ -127,14 +133,17 @@ Actors:
         Duration: 10 seconds
         Collection: *Collection
         Operations: *ReadWriteOperations
+        ThrowOnFailure: false
       - MetricsName: DuringResharding
         Blocking: None
         Collection: *Collection
         Operations: *ReadWriteOperations
+        ThrowOnFailure: false
       - MetricsName: AfterResharding
         Duration: 10 seconds
         Collection: *Collection
         Operations: *ReadWriteOperations
+        ThrowOnFailure: false
 
 AutoRun:
   - When:

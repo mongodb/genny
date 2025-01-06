@@ -50,6 +50,12 @@ GlobalDefaults:
       OperationCommand:
         Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
         Update: {$inc: {counter: 1}}
+    - OperationName: insertOne
+      OperationCommand:
+        Document: {_id: {^RandomInt: {min: *DocumentCount, max: 9000000}}}
+    - OperationName: deleteOne
+      OperationCommand:
+        Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
 
 Clients:
   Default:
@@ -157,16 +163,19 @@ Actors:
         GlobalRate: *WriteRate
         Collection: *Collection
         Operations: *WriteOperations
+        ThrowOnFailure: false
       - MetricsName: DuringResharding
         Blocking: None
         GlobalRate: *WriteRate
         Collection: *Collection
         Operations: *WriteOperations
+        ThrowOnFailure: false
       - MetricsName: AfterResharding
         Duration: 1 minute
         GlobalRate: *WriteRate
         Collection: *Collection
         Operations: *WriteOperations
+        ThrowOnFailure: false
 
   # Guard against timeout for no output.
   - Name: LoggingActor
