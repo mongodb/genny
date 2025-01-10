@@ -80,7 +80,7 @@ GlobalDefaults:
   # the rate small so it won't significantly affect the resharding performance. That says, these
   # CRUD operations should keep minimal and should not slow down resharding.
   ReadRate: &ReadRate 100 per 1 second
-  WriteRate: &WriteRate 10 per 1000 seconds # Keep the writes slow to pass critical section.
+  WriteRate: &WriteRate 10 per 10 seconds # Keep the writes slow to pass critical section.
 
   ReadOperations: &ReadOperations
     - OperationName: findOne
@@ -92,6 +92,12 @@ GlobalDefaults:
       OperationCommand:
         Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
         Update: {$inc: {counter: 1}}
+    - OperationName: insertOne
+      OperationCommand:
+        Document: {_id: {^RandomInt: {min: *DocumentCount, max: 2_000_000_000}}}
+    - OperationName: deleteOne
+      OperationCommand:
+        Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
 
 Clients:
   Default:
