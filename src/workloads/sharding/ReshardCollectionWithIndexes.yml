@@ -95,6 +95,7 @@ GlobalDefaults:
     - OperationName: insertOne
       OperationCommand:
         Document: {_id: {^RandomInt: {min: *DocumentCount, max: 2_000_000_000}}}
+      ThrowOnFailure: false
     - OperationName: deleteOne
       OperationCommand:
         Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
@@ -191,13 +192,11 @@ Actors:
         Collection: *Collection
         Operations: *WriteOperations
         GlobalRate: *WriteRate
-        ThrowOnFailure: false
       - MetricsName: WriteDuringReshardingToThreeShards
         Blocking: None
         Collection: *Collection
         Operations: *WriteOperations
         GlobalRate: *WriteRate
-        ThrowOnFailure: false
 
   - Name: LoggingActor
     Type: LoggingActor

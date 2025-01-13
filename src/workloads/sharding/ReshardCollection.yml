@@ -46,6 +46,7 @@ GlobalDefaults:
     - OperationName: insertOne
       OperationCommand:
         Document: {_id: {^RandomInt: {min: *DocumentCount, max: 9000000}}}
+      ThrowOnFailure: false
     - OperationName: deleteOne
       OperationCommand:
         Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
@@ -132,17 +133,14 @@ Actors:
         Duration: 10 seconds
         Collection: *Collection
         Operations: *ReadWriteOperations
-        ThrowOnFailure: false
       - MetricsName: DuringResharding
         Blocking: None
         Collection: *Collection
         Operations: *ReadWriteOperations
-        ThrowOnFailure: false
       - MetricsName: AfterResharding
         Duration: 10 seconds
         Collection: *Collection
         Operations: *ReadWriteOperations
-        ThrowOnFailure: false
 
 AutoRun:
   - When:
