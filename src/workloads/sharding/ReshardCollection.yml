@@ -35,7 +35,7 @@ GlobalDefaults:
   ShardKeyValueMin: &ShardKeyValueMin 1
   ShardKeyValueMax: &ShardKeyValueMax 10000
 
-  ReadWriteOperations: &ReadWriteOperations
+  ReadWriteOperationsExcludingInserts: &ReadWriteOperationsExcludingInserts
     - OperationName: findOne
       OperationCommand:
         Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
@@ -43,16 +43,17 @@ GlobalDefaults:
       OperationCommand:
         Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
         Update: {$inc: {counter: 1}}
+    - OperationName: deleteOne
+      OperationCommand:
+        Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
+
+  InsertOperations: &InsertOperations
     - OperationName: insertOne
       OperationCommand:
         Document:
           _id: {^RandomInt: {min: *DocumentCount, max: 9000000}}
           oldKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
           newKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
-      ThrowOnFailure: false
-    - OperationName: deleteOne
-      OperationCommand:
-        Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
 
 Clients:
   Default:
@@ -125,7 +126,7 @@ Actors:
               key: {newKey: 1}
       - *Nop
 
-  - Name: ReadWriteCollectionBeingResharded
+  - Name: ReadWriteCollectionBeingReshardedExcludingInserts
     Type: CrudActor
     Threads: 100
     Database: *Database
@@ -135,15 +136,38 @@ Actors:
       - MetricsName: BeforeResharding
         Duration: 10 seconds
         Collection: *Collection
-        Operations: *ReadWriteOperations
+        Operations: *ReadWriteOperationsExcludingInserts
       - MetricsName: DuringResharding
         Blocking: None
         Collection: *Collection
-        Operations: *ReadWriteOperations
+        Operations: *ReadWriteOperationsExcludingInserts
       - MetricsName: AfterResharding
         Duration: 10 seconds
         Collection: *Collection
-        Operations: *ReadWriteOperations
+        Operations: *ReadWriteOperationsExcludingInserts
+  
+  - Name: CollectionBeingReshardedInserts
+    Type: CrudActor
+    Threads: 50
+    Database: *Database
+    Phases:
+      - *Nop
+      - *Nop
+      - MetricsName: BeforeResharding
+        Duration: 10 seconds
+        Collection: *Collection
+        Operations: *InsertOperations
+        ThrowOnFailure: false
+      - MetricsName: DuringResharding
+        Blocking: None
+        Collection: *Collection
+        Operations: *InsertOperations
+        ThrowOnFailure: false
+      - MetricsName: AfterResharding
+        Duration: 10 seconds
+        Collection: *Collection
+        Operations: *InsertOperations
+        ThrowOnFailure: false
 
 AutoRun:
   - When:
