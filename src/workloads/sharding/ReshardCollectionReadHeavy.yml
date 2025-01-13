@@ -40,6 +40,11 @@ GlobalDefaults:
   ReadRate: &ReadRate 1 per 105 microseconds # 9524/second
   WriteRate: &WriteRate 1 per 2000 microseconds # 500/second
 
+  # Since the MonotonicSingleLoader will add documents with _ids from 1 to *DocumentCount, 
+  # we need the max _id value for our inserts to be significantly larger than *DocumentCount
+  # to avoid inserting duplicate _ids as much as possible.
+  DocumentIdMaxForInserts: &DocumentIdMaxForInserts 50_000_000
+
   ReadOperations: &ReadOperations
     - OperationName: findOne
       OperationCommand:
@@ -58,7 +63,7 @@ GlobalDefaults:
     - OperationName: insertOne
       OperationCommand:
         Document:
-          _id: {^RandomInt: {min: *DocumentCount, max: 9000000}}
+          _id: {^RandomInt: {min: *DocumentCount, max: *DocumentIdMaxForInserts}}
           oldKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
           newKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
 

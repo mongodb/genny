@@ -29,11 +29,17 @@ GlobalDefaults:
   # fields in the document.
   ApproxDocumentSize: &ApproxDocumentSize 10000 # = 10kB
   ApproxDocumentSize80Pct: &ApproxDocumentSize80Pct 8000 # = 8kB
-  # TODO: Increase NumReshardedChunks to 400 so there continue to be ~50MB of data per chunk.
-  DocumentCount: &DocumentCount 100000 # for an approximate total of 20GB
+  # TODO: Increase DocumentCount to 4000000 so there will be ~20GB of data inserted on each shard
+  # and increase NumReshardedChunks to 400 so there continue to be ~50MB of data per chunk.
+  DocumentCount: &DocumentCount 100000 # for an approximate total of 1GB
 
   ShardKeyValueMin: &ShardKeyValueMin 1
   ShardKeyValueMax: &ShardKeyValueMax 10000
+
+  # Since the MonotonicSingleLoader will add documents with _ids from 1 to *DocumentCount, 
+  # we need the max _id value for our inserts to be significantly larger than *DocumentCount
+  # to avoid inserting duplicate _ids as much as possible.
+  DocumentIdMaxForInserts: &DocumentIdMaxForInserts 1_000_000
 
   ReadWriteOperationsExcludingInserts: &ReadWriteOperationsExcludingInserts
     - OperationName: findOne
@@ -51,7 +57,7 @@ GlobalDefaults:
     - OperationName: insertOne
       OperationCommand:
         Document:
-          _id: {^RandomInt: {min: *DocumentCount, max: 9000000}}
+          _id: {^RandomInt: {min: *DocumentCount, max: *DocumentIdMaxForInserts}}
           oldKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
           newKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
 
