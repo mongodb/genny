@@ -148,7 +148,7 @@ Actors:
   
   - Name: CollectionBeingReshardedInserts
     Type: CrudActor
-    Threads: 50
+    Threads: 100
     Database: *Database
     Phases:
       - *Nop

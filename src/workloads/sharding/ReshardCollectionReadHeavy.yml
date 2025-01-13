@@ -45,21 +45,22 @@ GlobalDefaults:
       OperationCommand:
         Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
 
-  WriteOperations: &WriteOperations
+  WriteOperationsExcludingInserts: &WriteOperationsExcludingInserts
     - OperationName: updateOne
       OperationCommand:
         Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
         Update: {$inc: {counter: 1}}
+    - OperationName: deleteOne
+      OperationCommand:
+        Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
+  
+  InsertOperations: &InsertOperations
     - OperationName: insertOne
       OperationCommand:
         Document:
           _id: {^RandomInt: {min: *DocumentCount, max: 9000000}}
           oldKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
           newKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
-      ThrowOnFailure: false
-    - OperationName: deleteOne
-      OperationCommand:
-        Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
 
 Clients:
   Default:
@@ -155,7 +156,7 @@ Actors:
         Collection: *Collection
         Operations: *ReadOperations
 
-  - Name: WriteCollectionBeingResharded
+  - Name: WriteCollectionBeingReshardedExcludingInserts
     Type: CrudActor
     Threads: 5
     Database: *Database
@@ -166,17 +167,43 @@ Actors:
         Duration: 1 minute
         GlobalRate: *WriteRate
         Collection: *Collection
-        Operations: *WriteOperations
+        Operations: *WriteOperationsExcludingInserts
       - MetricsName: DuringResharding
         Blocking: None
         GlobalRate: *WriteRate
         Collection: *Collection
-        Operations: *WriteOperations
+        Operations: *WriteOperationsExcludingInserts
       - MetricsName: AfterResharding
         Duration: 1 minute
         GlobalRate: *WriteRate
         Collection: *Collection
-        Operations: *WriteOperations
+        Operations: *WriteOperationsExcludingInserts
+  
+  - Name: CollectionBeingReshardedInserts
+    Type: CrudActor
+    Threads: 5
+    Database: *Database
+    Phases:
+      - *Nop
+      - *Nop
+      - MetricsName: BeforeResharding
+        Duration: 1 minute
+        GlobalRate: *WriteRate
+        Collection: *Collection
+        Operations: *InsertOperations
+        ThrowOnFailure: false
+      - MetricsName: DuringResharding
+        Blocking: None
+        GlobalRate: *WriteRate
+        Collection: *Collection
+        Operations: *InsertOperations
+        ThrowOnFailure: false
+      - MetricsName: AfterResharding
+        Duration: 1 minute
+        GlobalRate: *WriteRate
+        Collection: *Collection
+        Operations: *InsertOperations
+        ThrowOnFailure: false
 
   # Guard against timeout for no output.
   - Name: LoggingActor
