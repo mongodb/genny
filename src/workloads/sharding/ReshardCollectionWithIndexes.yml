@@ -94,7 +94,7 @@ GlobalDefaults:
         Update: {$inc: {counter: 1}}
     - OperationName: insertOne
       OperationCommand:
-        Document: 
+        Document:
         _id: {^RandomInt: {min: *DocumentCount, max: 2_000_000_000}}
         shardKey: {^RandomInt: {min: 1, max: 1_000_000}}
       ThrowOnFailure: false
