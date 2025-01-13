@@ -53,7 +53,7 @@ GlobalDefaults:
     - OperationName: deleteOne
       OperationCommand:
         Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
-  
+
   InsertOperations: &InsertOperations
     - OperationName: insertOne
       OperationCommand:
@@ -178,7 +178,7 @@ Actors:
         GlobalRate: *WriteRate
         Collection: *Collection
         Operations: *WriteOperationsExcludingInserts
-  
+
   - Name: CollectionBeingReshardedInserts
     Type: CrudActor
     Threads: 5

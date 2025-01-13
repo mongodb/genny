@@ -145,7 +145,7 @@ Actors:
         Duration: 10 seconds
         Collection: *Collection
         Operations: *ReadWriteOperationsExcludingInserts
-  
+
   - Name: CollectionBeingReshardedInserts
     Type: CrudActor
     Threads: 100
