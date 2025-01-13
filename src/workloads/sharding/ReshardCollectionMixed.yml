@@ -53,7 +53,7 @@ GlobalDefaults:
     - OperationName: insertOne
       OperationCommand:
         Document: {_id: {^RandomInt: {min: *DocumentCount, max: 9000000}}}
-    - OperationName: updateOne
+    - OperationName: deleteOne
       OperationCommand:
         Filter: {_id: {^RandomInt: {min: 1, max: *DocumentCount}}}
 
