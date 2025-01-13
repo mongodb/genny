@@ -52,7 +52,10 @@ GlobalDefaults:
         Update: {$inc: {counter: 1}}
     - OperationName: insertOne
       OperationCommand:
-        Document: {_id: {^RandomInt: {min: *DocumentCount, max: 9000000}}}
+        Document: 
+          _id: {^RandomInt: {min: *DocumentCount, max: 9000000}}
+          oldKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
+          newKey: {^RandomInt: {min: *ShardKeyValueMin, max: *ShardKeyValueMax}}
       ThrowOnFailure: false
     - OperationName: deleteOne
       OperationCommand:
