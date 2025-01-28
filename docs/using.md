@@ -50,9 +50,9 @@
 > [!WARNING]
 > # ⚠️ CRITICAL NOTICE ⚠️
 > ## ALL new workload development MUST use Locust as the workload generator. See the [Locust docs](https://github.com/10gen/performance-tooling-docs/blob/4c908defb42a595f392e2f45215ad784d5a4c171/getting_started/locust-get-started.md).
-> Genny is being depreciated and will no longer be supported.
+> ### Genny is being depreciated and will no longer be supported.
 
-Hello! These are the docs for Genny specifically. Genny is a workload-generator with first-class support for time-series data-collection of operations running against MongoDB. It is recommended for use in all MongoDB load generation. For an overall view of MongoDB's performance testing infrastructure, please look at the [Performance Tooling Docs](https://github.com/10gen/performance-tooling-docs) and the [architecture diagram](https://github.com/10gen/performance-tooling-docs/blob/main/perf_pipeline.md) that shows how Genny fits in the overall performance pipeline with other tools.
+Hello! These are the docs for Genny specifically. Genny is a workload-generator with first-class support for time-series data-collection of operations running against MongoDB. For an overall view of MongoDB's performance testing infrastructure, please look at the [Performance Tooling Docs](https://github.com/10gen/performance-tooling-docs) and the [architecture diagram](https://github.com/10gen/performance-tooling-docs/blob/main/perf_pipeline.md) that shows how Genny fits in the overall performance pipeline with other tools.
 
 If you have any questions, please reach out to the DEVPROD team in our dedicated slack channel: [#ask-devprod-performance](https://mongodb.slack.com/archives/C01VD0LQZED). If you feel like these docs can be improved in any way, feel free to open a PR and assign someone from DEVPROD. No ticket necessary. This document is intended to be readable straight-through, in addition to serving as a reference on an as-needed basis. If there are any difficulties in flow or discoverability, please let us know.
 
