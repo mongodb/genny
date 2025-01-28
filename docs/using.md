@@ -47,6 +47,11 @@
 
 # Introduction
 
+> [!WARNING]
+> # ⚠️ CRITICAL NOTICE ⚠️
+> ## ALL new workload development MUST use Locust as the workload generator. See the [Locust docs](https://github.com/10gen/performance-tooling-docs/blob/4c908defb42a595f392e2f45215ad784d5a4c171/getting_started/locust-get-started.md).
+> Genny is being depreciated and will no longer be supported.
+
 Hello! These are the docs for Genny specifically. Genny is a workload-generator with first-class support for time-series data-collection of operations running against MongoDB. It is recommended for use in all MongoDB load generation. For an overall view of MongoDB's performance testing infrastructure, please look at the [Performance Tooling Docs](https://github.com/10gen/performance-tooling-docs) and the [architecture diagram](https://github.com/10gen/performance-tooling-docs/blob/main/perf_pipeline.md) that shows how Genny fits in the overall performance pipeline with other tools.
 
 If you have any questions, please reach out to the DEVPROD team in our dedicated slack channel: [#ask-devprod-performance](https://mongodb.slack.com/archives/C01VD0LQZED). If you feel like these docs can be improved in any way, feel free to open a PR and assign someone from DEVPROD. No ticket necessary. This document is intended to be readable straight-through, in addition to serving as a reference on an as-needed basis. If there are any difficulties in flow or discoverability, please let us know.
@@ -507,7 +512,7 @@ This would set up the workload and print it as a list of Phases with the Actors 
 
     _Note:_ [Skipping the compile step in sys-perf projects](https://github.com/10gen/performance-tooling-docs/blob/main/patch_testing.md#skipping-compilation-on-sys-perf-projects) can save some time when testing a genny workload.
 
-For more details on workload development, please check out our general docs on [Developing and Modifying Workloads](https://github.com/10gen/performance-tooling-docs/blob/main/new_workloads.md) and on [Basic Performance Patch Testing](https://github.com/10gen/performance-tooling-docs/blob/main/patch_testing.md).
+For more details on workload development, please check out our general docs on [Developing and Modifying Workloads](https://github.com/10gen/performance-tooling-docs/blob/main/workloads/new_workloads.md) and on [Basic Performance Patch Testing](https://github.com/10gen/performance-tooling-docs/blob/main/patch_testing.md).
 
 Users who would like a second look at their workloads can ask product performance. Users who have questions about their Genny usage can ask DEVPROD in #ask-devprod-performance.
 
