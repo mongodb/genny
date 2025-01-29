@@ -21,7 +21,6 @@ AutoRun:
   - When:
       mongodb_setup:
         $eq:
-          - atlas
           - replica
           - replica-all-feature-flags
           - replica-80-feature-flags
