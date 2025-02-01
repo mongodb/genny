@@ -79,7 +79,7 @@ sudo chown $USER /opt/data/mci
 
 ### All Operating Systems
 
-Make sure you have a C++17 compatible compiler and Python 3.7 or newer.
+Make sure you have a C++17 compatible compiler and Python 3.8 or newer.
 The ones from mongodbtoolchain v4 are safe bets if you're
 unsure. (mongodbtoolchain is internal to MongoDB).
 
