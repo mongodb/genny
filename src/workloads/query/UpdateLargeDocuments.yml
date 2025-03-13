@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query"
+Owner: Query Execution
 Description: |
   This workload measures the performance of updating large documents in a replica set. First, it
   inserts large documents, each containing 100 nested objects with 1K fields inside of them. Then it

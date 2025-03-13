@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query"
+Owner: Query Execution
 Description: |
   This test exercises the behavior of $lookup where either the local or foreign collection is
   sharded. When both collections are unsharded, the pipeline should be moved to the

@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query"
+Owner: Query Execution
 Description: |
   This workloads covers $group queries with distinct-like semantics, meaning that only a single document
   is selected from each group. Depending on the details of the query and available indexes, the query might

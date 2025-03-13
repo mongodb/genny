@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query"
+Owner: Query Execution
 Description: |
   This workload tests performance of IDHACK on queries with int _id. Since this workloads loads
   very large documents (average 10KB), you may need to free up disk space before running this

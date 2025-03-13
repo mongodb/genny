@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query"
+Owner: Query Execution
 Description: |
   This test exercises both $out and $merge aggregation stages. It does this based on all combinations of the following:
     A. The src collection is sharded or unsharded.

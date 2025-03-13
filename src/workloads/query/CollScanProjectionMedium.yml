@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query"
+Owner: Query Execution
 Description: |
   This workload runs collscan queries with a large projection on around 20 fields against a
   collection of 10,000 documents.

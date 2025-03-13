@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query"
+Owner: Query Execution
 Description: |
   This test exercises the behavior of a $lookup-only pipeline. We use one "local" collection with
   20000 documents {_id, join_val}, and vary the "foreign" collection to test different document

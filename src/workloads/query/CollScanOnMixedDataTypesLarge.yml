@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query"
+Owner: Query Execution
 Description: |
   This workload runs collscan queries on different data type alone. The queries are run against a
   collection of 1M documents.

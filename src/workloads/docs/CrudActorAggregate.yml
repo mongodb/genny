@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query"
+Owner: Query Execution
 Description: |
   This workload demonstrates using the CrudActor to run an aggregate command. Like find operations,
   genny will exhaust the cursor, measuring the initial aggregate command and all subsequent getMore

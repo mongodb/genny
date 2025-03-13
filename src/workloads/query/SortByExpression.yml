@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query"
+Owner: Query Execution
 Description: |
   This test exercises the scenario of sort by an expression with an $addFields preceding the $sort,
   followed by a $project removing that field. This workload is designed to avoid repeated materialization

@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query"
+Owner: Query Execution
 Description: |
   This workload tests the performance of IDHACK on queries with int _id versus non-IDHACK queries
   on regular int indices.

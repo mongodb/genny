@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query"
+Owner: Query Execution
 Description: |
   This test exercises the behavior of $lookup when followed by $unwind that immediately unwinds the
   lookup result array, which is optimized in the execution engine to avoid materializing this array

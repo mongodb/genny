@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query"
+Owner: Query Execution
 Description: |
   This workload demonstrates using the SamplingLoader to expand the contents of a collection. This
   actor will take a random sample of a configurable size and re-insert the same documents, with the

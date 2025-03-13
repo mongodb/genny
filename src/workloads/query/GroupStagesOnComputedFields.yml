@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query"
+Owner: Query Execution
 Description: |
   The queries in this workload exercise group stage(s) after other stages ($addFields, $match, $sort)
   on computed date fields. The queries are motivated by the work on the SBE prefix pushdown project

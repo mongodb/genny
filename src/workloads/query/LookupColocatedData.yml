@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query"
+Owner: Query Execution
 Description: |
   This test exercises the behavior of $lookup when the local and foreign collection data is
   co-located. In the queries below, for each local document on each shard, the $lookup subpipeline

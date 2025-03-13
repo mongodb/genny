@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query"
+Owner: Query Execution
 Description: |
   This test exercises the behavior of $graphLookup when both the local and foreign collections are
   unsharded. When one of the collections is sharded, the pipeline should be moved to the

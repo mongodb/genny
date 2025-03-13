@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/query"
+Owner: Query Execution
 Description: |
   This workload tests the performance of collection scan queries with complex predicates
   that can be simplified by the optimizer against a large collection (1M documents).
