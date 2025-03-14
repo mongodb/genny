@@ -265,8 +265,11 @@ to demonstrate the actor.
 
 ## [CrudActorAggregate](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/CrudActorAggregate.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -1036,8 +1039,11 @@ run commands against a target server.
 
 ## [SamplingLoader](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/SamplingLoader.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -2049,8 +2055,11 @@ Command synchronously establishes temporary connections between cluster nodes.
 
 ## [AggregationsOutput](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/AggregationsOutput.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -2067,8 +2076,11 @@ This test exercises both $out and $merge aggregation stages. It does this based 
 
 ## [ArrayTraversal](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/ArrayTraversal.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -2214,8 +2226,11 @@ when utilizing the Linux 3-Node ReplSet CPU Cycle Metrics 2023-06 variant
 
 ## [CollScanComplexPredicateLarge](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanComplexPredicateLarge.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -2230,8 +2245,11 @@ various shapes against a collection of 1M items.
 
 ## [CollScanComplexPredicateMedium](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanComplexPredicateMedium.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -2246,8 +2264,11 @@ various shapes against a collection of 10K items.
 
 ## [CollScanComplexPredicateSmall](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanComplexPredicateSmall.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -2262,8 +2283,11 @@ various shapes against a collection of 100 items.
 
 ## [CollScanLargeNumberOfFieldsLarge](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanLargeNumberOfFieldsLarge.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -2278,8 +2302,11 @@ documents with a large number of fields.
 
 ## [CollScanLargeNumberOfFieldsMedium](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanLargeNumberOfFieldsMedium.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -2294,8 +2321,11 @@ documents with a large number of fields.
 
 ## [CollScanLargeNumberOfFieldsSmall](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanLargeNumberOfFieldsSmall.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -2310,8 +2340,11 @@ documents with a large number of fields.
 
 ## [CollScanOnMixedDataTypesLarge](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanOnMixedDataTypesLarge.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -2326,8 +2359,11 @@ collection of 1M documents.
 
 ## [CollScanOnMixedDataTypesMedium](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanOnMixedDataTypesMedium.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -2342,8 +2378,11 @@ collection of 10,000 documents.
 
 ## [CollScanOnMixedDataTypesSmall](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanOnMixedDataTypesSmall.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -2358,8 +2397,11 @@ collection of 100 documents.
 
 ## [CollScanPredicateSelectivityLarge](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanPredicateSelectivityLarge.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -2374,8 +2416,11 @@ predicates matters due to selectivity of the predicates.
 
 ## [CollScanPredicateSelectivityMedium](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanPredicateSelectivityMedium.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -2390,8 +2435,11 @@ predicates matters due to selectivity of the predicates.
 
 ## [CollScanPredicateSelectivitySmall](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanPredicateSelectivitySmall.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -2406,8 +2454,11 @@ predicates matters due to selectivity of the predicates.
 
 ## [CollScanProjectionLarge](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanProjectionLarge.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -2422,8 +2473,11 @@ collection of 1M documents.
 
 ## [CollScanProjectionMedium](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanProjectionMedium.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -2438,8 +2492,11 @@ collection of 10,000 documents.
 
 ## [CollScanProjectionSmall](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanProjectionSmall.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -2454,8 +2511,11 @@ collection of 100 documents.
 
 ## [CollScanSimplifiablePredicateLarge](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanSimplifiablePredicateLarge.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -2470,8 +2530,11 @@ that can be simplified by the optimizer against a large collection (1M documents
 
 ## [CollScanSimplifiablePredicateMedium](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanSimplifiablePredicateMedium.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -2486,8 +2549,11 @@ that can be simplified by the optimizer against a collection of 10K documents.
 
 ## [CollScanSimplifiablePredicateSmall](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/CollScanSimplifiablePredicateSmall.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -2843,8 +2909,11 @@ in timeseries collections.
 
 ## [ExpressiveQueries](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/ExpressiveQueries.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -2861,8 +2930,11 @@ projection, expecting that they will use this index.
 
 ## [ExternalSort](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/ExternalSort.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -2897,8 +2969,11 @@ or the interpolated value (in case of $linearFill).
 
 ## [FilterWithComplexLogicalExpression](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/FilterWithComplexLogicalExpression.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -2931,8 +3006,11 @@ Loader, CrudActor, QuiesceActor, insert, find
 
 ## [FilterWithComplexLogicalExpressionMedium](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/FilterWithComplexLogicalExpressionMedium.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -2965,8 +3043,11 @@ Loader, CrudActor, QuiesceActor, insert, find
 
 ## [FilterWithComplexLogicalExpressionSmall](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/FilterWithComplexLogicalExpressionSmall.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -2999,8 +3080,11 @@ Loader, CrudActor, QuiesceActor, insert, find
 
 ## [GraphLookup](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/GraphLookup.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -3028,8 +3112,11 @@ The workload consists of the following phases:
 
 ## [GraphLookupWithOnlyUnshardedColls](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/GraphLookupWithOnlyUnshardedColls.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -3055,8 +3142,11 @@ The workload consists of the following phases:
 
 ## [GroupLikeDistinct](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/GroupLikeDistinct.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -3075,8 +3165,11 @@ Distinct, Group, First, Last, Top, Bottom, timeseries, aggregate
 
 ## [GroupSpillToDisk](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/GroupSpillToDisk.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -3093,8 +3186,11 @@ Loader, CrudActor, QuiesceActor, insert, aggregate, group, spill
 
 ## [GroupStagesOnComputedFields](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/GroupStagesOnComputedFields.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -3159,8 +3255,11 @@ limit, skip, cache, parametrization, classic, sbe
 
 ## [Lookup](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/Lookup.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -3188,8 +3287,11 @@ The workload consists of the following phases:
 
 ## [LookupColocatedData](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/LookupColocatedData.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -3260,8 +3362,11 @@ lookup, aggregate, sbe
 
 ## [LookupOnly](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/LookupOnly.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -3407,8 +3512,11 @@ lookup, aggregate, sbe
 
 ## [LookupUnwind](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/LookupUnwind.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -3446,8 +3554,11 @@ lookup, unwind, aggregate
 
 ## [LookupWithOnlyUnshardedColls](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/LookupWithOnlyUnshardedColls.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -3472,8 +3583,11 @@ The workload consists of the following phases:
 
 ## [MatchFilters](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/MatchFilters.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -3491,8 +3605,11 @@ Loader, CrudActor, QuiesceActor, insert, find
 
 ## [MatchFiltersMedium](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/MatchFiltersMedium.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -3510,8 +3627,11 @@ Loader, CrudActor, QuiesceActor, insert, find
 
 ## [MatchFiltersSmall](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/MatchFiltersSmall.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -3611,8 +3731,11 @@ unionWith, aggregate, geoNear, sbe, group
 
 ## [OneMDocCollection_LargeDocIntId](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/OneMDocCollection_LargeDocIntId.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -3742,8 +3865,11 @@ setWindowFields, percentile, spill
 
 ## [PipelineUpdate](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/PipelineUpdate.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -3819,8 +3945,11 @@ It can be run with and without queryStats for comparison.
 
 ## [RepeatedPathTraversal](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/RepeatedPathTraversal.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -3835,8 +3964,11 @@ share a common prefix. Crucially, these queries never match a document in the co
 
 ## [RepeatedPathTraversalMedium](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/RepeatedPathTraversalMedium.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -3851,8 +3983,11 @@ share a common prefix. Crucially, these queries never match a document in the co
 
 ## [RepeatedPathTraversalSmall](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/RepeatedPathTraversalSmall.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -3896,8 +4031,11 @@ We can divide this up into 4 cases:
 
 ## [ShardFilter](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/ShardFilter.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -3945,8 +4083,11 @@ $topN, $firstN, etc) and $top/$bottom which are not present in v5.0
 
 ## [SortByExpression](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/SortByExpression.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -3962,8 +4103,11 @@ after every projection in SBE.
 
 ## [TenMDocCollection_IntId](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TenMDocCollection_IntId.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -3978,8 +4122,11 @@ on regular int indices.
 
 ## [TenMDocCollection_IntId_Agg](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TenMDocCollection_IntId_Agg.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -3994,8 +4141,11 @@ framework.
 
 ## [TenMDocCollection_IntId_IdentityView](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TenMDocCollection_IntId_IdentityView.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -4009,8 +4159,11 @@ This workload tests the performance of IDHACK on queries with int _id over a no-
 
 ## [TenMDocCollection_IntId_IdentityView_Agg](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TenMDocCollection_IntId_IdentityView_Agg.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -4025,8 +4178,11 @@ using the aggregation framework.
 
 ## [TenMDocCollection_ObjectId](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TenMDocCollection_ObjectId.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -4040,8 +4196,11 @@ This workload tests performance of IDHACK on queries with OID _id.
 
 ## [TenMDocCollection_ObjectId_Sharded](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TenMDocCollection_ObjectId_Sharded.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -4055,8 +4214,11 @@ This workload tests performance of IDHACK on queries with OID _id on a sharded c
 
 ## [TenMDocCollection_SubDocId](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TenMDocCollection_SubDocId.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -4440,8 +4602,11 @@ timeseries, aggregate, group, sort
 
 ## [UnionWith](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/UnionWith.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -4457,8 +4622,11 @@ unions with complex subpipelines. These tests are run on replica set environment
 
 ## [UnwindGroup](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/UnwindGroup.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -4477,8 +4645,11 @@ unwind, group, aggregate
 
 ## [UpdateLargeDocuments](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/UpdateLargeDocuments.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -5580,8 +5751,11 @@ ttl, stress, indexes, insertMany, CrudActor
 
 ## [CursorStormMongos](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/CursorStormMongos.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -6114,8 +6288,11 @@ transactions, stress, time
 
 ## [UpdateSingleLargeDocumentWith10kThreads](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/UpdateSingleLargeDocumentWith10kThreads.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description

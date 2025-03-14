@@ -259,8 +259,11 @@ Configuration for MultiDeletes workload. This configuration introduces secondary
 
 ## [AggregateExpressions](https://www.github.com/mongodb/genny/blob/master/src/phases/query/AggregateExpressions.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -393,8 +396,11 @@ that can be simplified by the optimizer.
 
 ## [FilterWithComplexLogicalExpression](https://www.github.com/mongodb/genny/blob/master/src/phases/query/FilterWithComplexLogicalExpression.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -444,8 +450,11 @@ TODO PERF-3132 Use the date generator instead of this workaround.
 
 ## [GroupStagesOnComputedFields](https://www.github.com/mongodb/genny/blob/master/src/phases/query/GroupStagesOnComputedFields.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -458,8 +467,11 @@ time fields.
 
 ## [IDHack](https://www.github.com/mongodb/genny/blob/master/src/phases/query/IDHack.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -487,8 +499,11 @@ Defines common configurations for 'LookupSBEPushdown' and 'LookupSBEPushdownMisc
 
 ## [MatchFilters](https://www.github.com/mongodb/genny/blob/master/src/phases/query/MatchFilters.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -517,8 +532,11 @@ This file defines templates to use in multiplanner performance tests.
 
 ## [RepeatedPathTraversal](https://www.github.com/mongodb/genny/blob/master/src/phases/query/RepeatedPathTraversal.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
@@ -534,8 +552,11 @@ Loader, CrudActor, QuiesceActor, insert, find
 
 ## [RunLargeArithmeticOp](https://www.github.com/mongodb/genny/blob/master/src/phases/query/RunLargeArithmeticOp.yml)
 ### Owner
-@mongodb/query
+Query Execution
 
+
+### Support Channel
+[#query-execution](https://mongodb.enterprise.slack.com/archives/CKABWR2CT)
 
 
 ### Description
