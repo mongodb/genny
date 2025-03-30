@@ -22,10 +22,14 @@
 
 #include <mongocxx/client.hpp>
 #include <mongocxx/collection.hpp>
+#include <mongocxx/exception/bulk_write_exception.hpp>
+#include <mongocxx/exception/query_exception.hpp>
 
 #include <boost/log/trivial.hpp>
 #include <boost/throw_exception.hpp>
 
+#include <bsoncxx/builder/basic/array.hpp>
+#include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/json.hpp>
 #include <bsoncxx/string/to_string.hpp>
 
@@ -37,6 +41,9 @@
 #include <value_generators/DocumentGenerator.hpp>
 #include <value_generators/PipelineGenerator.hpp>
 
+#include <random>
+#include <string>
+
 using BsonView = bsoncxx::document::view;
 using CrudActor = genny::actor::CrudActor;
 using bsoncxx::type;
@@ -44,6 +51,7 @@ using bsoncxx::type;
 namespace {
 
 using namespace genny;
+std::string getDbName(const PhaseContext& phaseContext);
 
 enum class ThrowMode {
     kSwallow,
@@ -672,6 +680,400 @@ private:
     metrics::Operation _operation;
 };
 
+/**
+ * Example usage:
+ *    Operations:
+ *    - OperationName: matView
+ *      OperationCommand:
+ *        WriteOp: insertOne or insertMany
+ *        InsertCount: 10
+ *        InsertDocument:
+ *          k: {^Inc: {start: 0}}
+ *        OnSession: false
+ *        TransactionOptions:
+ *          MaxCommitTime: 500 milliseconds
+ *          WriteConcern:
+ *            Level: majority
+ *            Journal: true
+ *          ReadConcern:
+ *            Level: snapshot
+ *          ReadPreference:
+ *            ReadMode: primaryPreferred
+ *            MaxStaleness: 1000 seconds
+ *        NumMatViews: 2
+ *        MatViewMaintenance: fullRefresh #fullRefresh or incremental
+ */
+struct MatViewOperation : public BaseOperation {
+    MatViewOperation(const Node& opNode,
+                     bool onSession,
+                     mongocxx::collection collection,
+                     metrics::Operation operation,
+                     PhaseContext& context,
+                     ActorId id)
+        : BaseOperation(context, opNode),
+          _dbName{opNode["Database"].to<std::string>()},
+          _isTransactional{onSession},
+          _collection{std::move(collection)},
+          _operation{operation},
+          _isInsertMany{opNode["WriteOp"].to<std::string>() == "insertMany"},
+          _insertCount{opNode["InsertCount"].to<IntegerSpec>()},
+          _insertDocumentExpr{opNode["InsertDocument"].to<DocumentGenerator>(context, id)} {
+        if (opNode["TransactionOptions"]) {
+            _transactionOptions = opNode["TransactionOptions"].to<mongocxx::options::transaction>();
+        }
+        if (opNode["NumMatViews"]) {
+            _numMatViews = opNode["NumMatViews"].to<IntegerSpec>();
+            if (opNode["MatViewMaintenance"]) {
+                _matViewMaintenanceMode = opNode["MatViewMaintenance"].to<std::string>();
+            }
+        }
+
+        if (opNode["Debug"]) {
+            _isDebug = opNode["Debug"].to<std::string>() == "true";
+        } else {
+            std::cout << "opNode[Debug] does not exist!" << std::endl;
+        }
+    }
+
+    std::string generateRandStr(int max_length) {
+        thread_local std::string possible_characters =
+            "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        thread_local std::random_device rd;
+        thread_local std::mt19937 engine(rd());
+        thread_local std::uniform_int_distribution<> dist(0, possible_characters.size() - 1);
+        std::string ret = "";
+        for (int i = 0; i < max_length; i++) {
+            int random_index = dist(engine);  // get index between 0 and
+                                              // possible_characters.size()-1
+            ret += possible_characters[random_index];
+        }
+        return ret;
+    }
+
+    std::unordered_map<int, std::tuple<bsoncxx::types::b_oid, int>> combineInsertedDocs(
+        const std::vector<bsoncxx::document::view_or_value>& insertedDocs,
+        std::map<std::size_t, bsoncxx::types::b_oid> insertedIds,
+        size_t matViewIdx) {
+        std::unordered_map<int, std::tuple<bsoncxx::types::b_oid, int>> combined;
+        size_t i = 0;
+        for (const auto& doc : insertedDocs) {
+            auto y = doc.view()["y"].get_int64();
+            auto t = doc.view()["t" + std::to_string(matViewIdx)].get_int64();
+            auto it = combined.find(y);
+            if (it != combined.end()) {
+                auto [_id, existing_t] = it->second;
+                it->second = std::make_tuple(_id, existing_t + t);
+            } else {
+                combined[y] = std::make_tuple(insertedIds[i], t);
+            }
+            ++i;
+        }
+        return combined;
+    }
+
+
+    void run(mongocxx::client_session& runSession) override {
+        using namespace bsoncxx::builder::basic;
+
+        static auto sampleViewDoc = make_document(kvp("_id", 0), kvp("t0_sum", 0));
+
+        std::vector<bsoncxx::document::view_or_value> writeOps;
+        size_t bytes = 0;
+        for (size_t i = 0; i < _insertCount; ++i) {
+            auto doc = _insertDocumentExpr();
+            bytes += doc.view().length();
+            writeOps.emplace_back(std::move(doc));
+        }
+
+        mongocxx::write_concern wc;
+        wc.journal(true);
+        wc.acknowledge_level(mongocxx::write_concern::level::k_majority);
+
+        mongocxx::options::insert insertOptions;
+        insertOptions.ordered(false);
+        if (!_isTransactional) {
+            insertOptions.write_concern(wc);
+        }
+
+        this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
+            auto run_view_maintenance([&](mongocxx::client_session& session,
+                                          const std::vector<bsoncxx::document::view_or_value>&
+                                              insertedDocs,
+                                          std::map<std::size_t, bsoncxx::types::b_oid>
+                                              insertedIds) {
+                mongocxx::read_concern rc;
+                rc.acknowledge_level(mongocxx::read_concern::level::k_snapshot);
+
+                mongocxx::options::aggregate aggOptions;
+                if (!_isTransactional) {
+                    aggOptions.read_concern(rc);
+                    aggOptions.write_concern(wc);
+                }
+                aggOptions.allow_disk_use(true);
+
+                mongocxx::options::update updateOptions;
+                if (!_isTransactional) {
+                    updateOptions.write_concern(wc);
+                }
+                updateOptions.upsert(true);
+
+                mongocxx::options::delete_options deleteOptions;
+                if (!_isTransactional) {
+                    deleteOptions.write_concern(wc);
+                }
+
+                auto db = session.client().database(_dbName);
+                if (_matViewMaintenanceMode == "sync-incremental") {
+                    if (_isDebug) {
+                        std::cout << "Running sync-incremental view maintenance..." << std::endl;
+                    }
+                    for (size_t matViewIdx = 0; matViewIdx < _numMatViews; ++matViewIdx) {
+                        std::string targetViewName =
+                            "Collection0MatView" + std::to_string(matViewIdx) + "_";
+                        auto combinedInsertedDocs =
+                            combineInsertedDocs(insertedDocs, insertedIds, matViewIdx);
+                        for (const auto& combinedDoc : combinedInsertedDocs) {
+                            auto yVal = combinedDoc.first;
+                            auto [_, tVal] = combinedDoc.second;
+                            const auto& updateFind = make_document(kvp("_id", yVal));
+                            const auto& updateExpr = make_document(
+                                kvp("$inc",
+                                    make_document(
+                                        kvp("t" + std::to_string(matViewIdx) + "_sum", tVal))));
+                            auto coll = db.collection(targetViewName);
+                            auto updateRes = _isTransactional
+                                ? coll.update_one(
+                                      session, updateFind.view(), updateExpr.view(), updateOptions)
+                                : coll.update_one(
+                                      updateFind.view(), updateExpr.view(), updateOptions);
+                            if (!updateRes ||
+                                (updateRes->modified_count() != 1 && !updateRes->upserted_id())) {
+                                // BOOST_THROW_EXCEPTION(
+                                //     std::runtime_error("Incremental MatView
+                                //     failded."));
+                                std::cout << "error: Incremental MatView failded." << std::endl;
+                            } else {
+                                ctx.addDocuments(1);
+                                ctx.addBytes(sampleViewDoc.view().length());
+                            }
+                        }
+                    }
+                } else if (_matViewMaintenanceMode == "async-incremental-result-delta" ||
+                           _matViewMaintenanceMode == "async-inc-result-delta-nc") {
+                    bool isResultDeltaColocated = true;
+                    if (_matViewMaintenanceMode == "async-inc-result-delta-nc") {
+                        isResultDeltaColocated = false;
+                    }
+                    if (_isDebug) {
+                        std::cout << "Running async-incremental-result-delta view maintenance..."
+                                  << std::endl;
+                    }
+                    for (size_t matViewIdx = 0; matViewIdx < _numMatViews; ++matViewIdx) {
+                        std::string targetViewDeltaName = "Collection0MatView" +
+                            std::to_string(matViewIdx) +
+                            (isResultDeltaColocated ? "_CODelta"    // Colocated Delta
+                                                    : "_NCDelta");  // Non-Colocated Delta
+                        auto combinedInsertedDocs =
+                            combineInsertedDocs(insertedDocs, insertedIds, matViewIdx);
+                        std::vector<bsoncxx::document::view_or_value> deltaOutputDocs;
+                        for (const auto& combinedDoc : combinedInsertedDocs) {
+                            auto yVal = combinedDoc.first;
+                            auto [idVal, tVal] = combinedDoc.second;
+                            bsoncxx::document::view_or_value doc = isResultDeltaColocated
+                                ? make_document(kvp("_id", idVal),
+                                                kvp("y", yVal),
+                                                kvp("t" + std::to_string(matViewIdx), tVal))
+                                : make_document(kvp("y",
+                                                    yVal),  // the collection is sharded on y
+                                                kvp("t" + std::to_string(matViewIdx), tVal));
+                            deltaOutputDocs.push_back(doc);
+                            ctx.addDocuments(1);
+                            ctx.addBytes(doc.view().length());
+                        }
+                        if (_isTransactional) {
+                            db.collection(targetViewDeltaName)
+                                .insert_many(session, deltaOutputDocs, insertOptions);
+                        } else {
+                            db.collection(targetViewDeltaName)
+                                .insert_many(deltaOutputDocs, insertOptions);
+                        }
+                    }
+                } else if (_matViewMaintenanceMode == "async-incremental-base-delta") {
+                    if (_isDebug) {
+                        std::cout << "Running async-incremental-base-delta view maintenance..."
+                                  << std::endl;
+                    }
+                    std::string targetBaseDeltaName = "Collection0_Delta";
+                    if (_isTransactional) {
+                        db.collection(targetBaseDeltaName)
+                            .insert_many(session, insertedDocs, insertOptions);
+                    } else {
+                        db.collection(targetBaseDeltaName).insert_many(insertedDocs, insertOptions);
+                    }
+                } else if (_matViewMaintenanceMode == "full-refresh") {
+                    if (_isDebug) {
+                        std::cout << "Running full-refresh view maintenance..." << std::endl;
+                    }
+                    for (size_t matViewIdx = 0; matViewIdx < _numMatViews; ++matViewIdx) {
+                        std::string targetViewName =
+                            "Collection0MatView" + std::to_string(matViewIdx);
+
+                        mongocxx::pipeline p{};
+                        p.group(make_document(
+                            kvp("_id", "$y"),
+                            kvp("t" + std::to_string(matViewIdx) + "_sum",
+                                make_document(kvp("$sum", "$t" + std::to_string(matViewIdx))))));
+                        if (_isTransactional) {
+                            std::string tempCollName = "tempColl" + generateRandStr(10);
+                            auto aggOutRes = _collection.aggregate(session, p, aggOptions);
+
+
+                            std::vector<bsoncxx::document::view_or_value> aggOutDocs;
+                            for (auto doc : aggOutRes) {
+                                aggOutDocs.push_back(doc);
+                            }
+                            if (aggOutDocs.size() != 0L) {
+                                auto templColl =
+                                    db.create_collection(tempCollName, make_document() /*, wc*/);
+                                auto insertRes = (_isTransactional)
+                                    ? templColl.insert_many(session, aggOutDocs, insertOptions)
+                                    : templColl.insert_many(aggOutDocs, insertOptions);
+
+                                if (!insertRes ||
+                                    insertRes->inserted_count() != aggOutDocs.size()) {
+                                    // BOOST_THROW_EXCEPTION(
+                                    //     std::runtime_error("Inserting full-refresh results into "
+                                    //                        "temp collection failed."));
+                                    std::cout << "error: Inserting full-refresh results into temp "
+                                                 "collection failed."
+                                              << std::endl;
+                                }
+
+                                ctx.addDocuments(aggOutDocs.size());
+                                ctx.addBytes(aggOutDocs.size() * sampleViewDoc.view().length());
+                                templColl.rename(targetViewName, true, wc);
+                            } else {
+                                auto deleteManyRes =
+                                    db.collection(targetViewName)
+                                        .delete_many(session, make_document(), deleteOptions);
+                                if (!deleteManyRes) {
+                                    // BOOST_THROW_EXCEPTION(
+                                    //     std::runtime_error("Deleting existing documents from the
+                                    //     "
+                                    //                        "mat-view failed (in
+                                    //                        full-refresh)."));
+                                    std::cout << "error: Deleting existing documents from the "
+                                                 "mat-view failed (in full-refresh)."
+                                              << std::endl;
+                                } else {
+                                    ctx.addDocuments(deleteManyRes->deleted_count());
+                                }
+                            }
+                        } else {
+                            p.merge(make_document(kvp("into", targetViewName), kvp("on", "_id")));
+
+                            auto aggOutRes = _collection.aggregate(p, aggOptions);
+                            // TODO: validate aggOutRes
+                        }
+                    }
+                } else if (_matViewMaintenanceMode == "none" ||
+                           _matViewMaintenanceMode == "wild-card-index") {
+                    if (_isDebug) {
+                        std::cout << "No view maintenance: " << _matViewMaintenanceMode
+                                  << std::endl;
+                    }
+                } else {
+                    BOOST_THROW_EXCEPTION(
+                        std::runtime_error("Unknown view maintenance: " + _matViewMaintenanceMode));
+                }
+            });
+            auto run_txn_ops([&](mongocxx::client_session* session) {
+                if (_isInsertMany) {
+                    if (_isDebug) {
+                        std::cout << "InsertMany(insert_count = " << _insertCount
+                                  << ", writeOps = " << writeOps.size()
+                                  << ", _isTransactional = " << _isTransactional << ")"
+                                  << std::endl;
+                    }
+                    auto result = (_isTransactional)
+                        ? _collection.insert_many(*session, writeOps, insertOptions)
+                        : _collection.insert_many(writeOps, insertOptions);
+                    if (result) {
+                        ctx.addDocuments(result->inserted_count());
+                        std::map<std::size_t, bsoncxx::types::b_oid> insertedIds;
+                        for (const auto insertedId : result->inserted_ids()) {
+                            insertedIds[insertedId.first] = insertedId.second.get_oid();
+                        }
+                        run_view_maintenance(*session, writeOps, insertedIds);
+                    } else {
+                        // BOOST_THROW_EXCEPTION(std::runtime_error("InsertMany failded in
+                        // MatView."));
+                        std::cout << "error: InsertMany failded in MatView." << std::endl;
+                    }
+                } else {
+                    size_t i = 0;
+                    for (auto&& document : writeOps) {
+                        if (_isDebug) {
+                            std::cout << (++i) << " - InsertOne(insert_count = " << _insertCount
+                                      << ", writeOps = " << writeOps.size()
+                                      << ", _isTransactional = " << _isTransactional << ")"
+                                      << std::endl;
+                        }
+                        auto result = (_isTransactional)
+                            ? _collection.insert_one(*session, document.view(), insertOptions)
+                            : _collection.insert_one(document.view(), insertOptions);
+                        if (result) {
+                            ctx.addDocuments(1);
+                            run_view_maintenance(*session,
+                                                 {document},
+                                                 std::map<std::size_t, bsoncxx::types::b_oid>{
+                                                     {0, result->inserted_id().get_oid()}});
+                        } else {
+                            // BOOST_THROW_EXCEPTION(
+                            //     std::runtime_error("InsertOne failded in MatView."));
+                            std::cout << "error: InsertOne failded in MatView." << std::endl;
+                        }
+                    }
+                }
+                ctx.addBytes(bytes);
+            });
+            try {
+                if (_isTransactional) {
+                    if (_isDebug) {
+                        std::cout << "== Started run with transaction" << std::endl;
+                    }
+                    runSession.with_transaction(run_txn_ops, _transactionOptions);
+                } else {
+                    if (_isDebug) {
+                        std::cout << "== Started run OUTSIDE transaction" << std::endl;
+                    }
+                    run_txn_ops(&runSession);
+                }
+                if (_isDebug) {
+                    std::cout << "== Finished run" << std::endl;
+                }
+            } catch (mongocxx::operation_exception e) {
+                std::cout << "error >> " << e.what() << std::endl;
+                BOOST_THROW_EXCEPTION(e);
+            }
+            return std::nullopt;
+        });
+    }
+
+private:
+    bool _isTransactional;
+    std::string _dbName;
+    mongocxx::collection _collection;
+    metrics::Operation _operation;
+    bool _isInsertMany;
+    int64_t _insertCount;
+    DocumentGenerator _insertDocumentExpr;
+    mongocxx::options::transaction _transactionOptions;
+    int64_t _numMatViews = 0;
+    std::string _matViewMaintenanceMode;
+    bool _isDebug = false;
+};
+
 struct EstimatedDocumentCountOperation : public BaseOperation {
     EstimatedDocumentCountOperation(const Node& opNode,
                                     bool onSession,
@@ -765,6 +1167,95 @@ private:
     std::optional<DocumentGenerator> _projection;
     std::optional<DocumentGenerator> _let;
     metrics::Operation _operation;
+};
+
+struct AggregateOperation : public BaseOperation {
+    AggregateOperation(const Node& opNode,
+                       bool onSession,
+                       mongocxx::collection collection,
+                       metrics::Operation operation,
+                       PhaseContext& context,
+                       ActorId id)
+        : BaseOperation(context, opNode),
+          _onSession{onSession},
+          _collection{std::move(collection)},
+          _operation{operation},
+          _pipeline{opNode["Pipeline"].to<DocumentGenerator>(context, id)} {
+        if (opNode["Options"]) {
+            _options = opNode["Options"].to<mongocxx::options::aggregate>();
+        }
+    }
+
+    void run(mongocxx::client_session& session) override {
+        auto pipelineExpr = _pipeline();
+        bsoncxx::array::view pipelineArr{pipelineExpr.view()["array"].get_array().value};
+        mongocxx::pipeline pipeline{};
+        pipeline.append_stages(std::move(pipelineArr));
+        this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
+            auto cursor = (_onSession) ? _collection.aggregate(session, pipeline, _options)
+                                       : _collection.aggregate(pipeline, _options);
+            std::cout << "Here 111 " << std::endl;
+            for (auto&& doc : cursor) {
+                std::cout << "Here 222 " << std::endl;
+                ctx.addDocuments(1);
+                ctx.addBytes(doc.length());
+            }
+            std::cout << "Here 333 " << std::endl;
+            return std::make_optional(pipelineExpr);
+        });
+    }
+
+
+private:
+    bool _onSession;
+    mongocxx::collection _collection;
+    mongocxx::options::aggregate _options;
+    DocumentGenerator _pipeline;
+    metrics::Operation _operation;
+};
+
+struct RenameCollectionOperation : public BaseOperation {
+    RenameCollectionOperation(const Node& opNode,
+                              bool onSession,
+                              mongocxx::collection collection,
+                              metrics::Operation operation,
+                              PhaseContext& context,
+                              ActorId id)
+        : BaseOperation(context, opNode),
+          _onSession{onSession},
+          _operation{operation},
+          _context{context},
+          _fromCollection{opNode["From"].to<std::string>()},
+          _toCollection{opNode["To"].to<std::string>()},
+          _dropTarget{opNode["DropTarget"].maybe<bool>().value_or(false)} {
+        if (opNode["WriteConcern"]) {
+            _writeConcern = opNode["WriteConcern"].to<mongocxx::write_concern>();
+        }
+    }
+
+    void run(mongocxx::client_session& session) override {
+        this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
+            auto fromColl = session.client()[getDbName(_context)][_fromCollection];
+            if (_onSession) {
+                fromColl.rename(session, _toCollection, _dropTarget, _writeConcern);
+            } else {
+                fromColl.rename(_toCollection, _dropTarget, _writeConcern);
+            }
+            auto builder = bsoncxx::builder::basic::document();
+            bsoncxx::document::value doc_value = builder.extract();
+            return std::make_optional(doc_value);
+        });
+    }
+
+
+private:
+    bool _onSession;
+    std::string _fromCollection;
+    std::string _toCollection;
+    bool _dropTarget;
+    bsoncxx::stdx::optional<mongocxx::write_concern> _writeConcern;
+    metrics::Operation _operation;
+    PhaseContext& _context;
 };
 
 struct FindOneOperation : public BaseOperation {
@@ -1193,7 +1684,8 @@ private:
             "startTransaction", "commitTransaction", "withTransaction"};
         if (excludeSet.find(opName) != excludeSet.end()) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                "Operation '" + opName + "' not supported inside a 'with_transaction' operation."));
+                "Operation '" + opName +
+                "' not supported inside a 111 'with_transaction' operation."));
         }
 
         std::string database =
@@ -1207,7 +1699,8 @@ private:
         auto opConstructor = opConstructors.find(opName);
         if (opConstructor == opConstructors.end()) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                "Operation '" + opName + "' not supported inside a 'with_transaction' operation."));
+                "Operation '" + opName +
+                "' not supported inside a 222 'with_transaction' operation."));
         }
         auto createOp = opConstructor->second;
         auto& yamlCommand = txnOp["OperationCommand"];
@@ -1266,6 +1759,42 @@ private:
 /**
  * Example usage:
  *    Operations:
+ *    - OperationName: setWriteConcern
+ *      OperationCommand:
+ *        WriteConcern:
+ *          Level: majority
+ *          Journal: true
+ */
+
+struct SetWriteConcernOperation : public BaseOperation {
+    SetWriteConcernOperation(const Node& opNode,
+                             bool onSession,
+                             mongocxx::collection collection,
+                             metrics::Operation operation,
+                             PhaseContext& context,
+                             ActorId id)
+        : BaseOperation(context, opNode),
+          _collection{std::move(collection)},
+          _operation{operation} {
+        _writeConcern = opNode["WriteConcern"].to<mongocxx::write_concern>();
+    }
+
+    void run(mongocxx::client_session& session) override {
+        this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
+            _collection.write_concern(_writeConcern);
+            return std::nullopt;
+        });
+    }
+
+private:
+    mongocxx::collection _collection;
+    mongocxx::write_concern _writeConcern;
+    metrics::Operation _operation;
+};
+
+/**
+ * Example usage:
+ *    Operations:
  *    - OperationName: drop
  *      OperationCommand:
  *        OnSession: false
@@ -1314,6 +1843,7 @@ std::unordered_map<std::string, OpCallback&> getOpConstructors() {
         {"commitTransaction", baseCallback<BaseOperation, OpCallback, CommitTransactionOperation>},
         {"aggregate", baseCallback<BaseOperation, OpCallback, AggregateOperation>},
         {"countDocuments", baseCallback<BaseOperation, OpCallback, CountDocumentsOperation>},
+        {"matView", baseCallback<BaseOperation, OpCallback, MatViewOperation>},
         {"estimatedDocumentCount",
          baseCallback<BaseOperation, OpCallback, EstimatedDocumentCountOperation>},
         {"createIndex", baseCallback<BaseOperation, OpCallback, CreateIndexOperation>},
@@ -1324,13 +1854,16 @@ std::unordered_map<std::string, OpCallback&> getOpConstructors() {
         {"findOneAndReplace", baseCallback<BaseOperation, OpCallback, FindOneAndReplaceOperation>},
         {"insertMany", baseCallback<BaseOperation, OpCallback, InsertManyOperation>},
         {"setReadConcern", baseCallback<BaseOperation, OpCallback, SetReadConcernOperation>},
+        {"setWriteConcern", baseCallback<BaseOperation, OpCallback, SetWriteConcernOperation>},
         {"drop", baseCallback<BaseOperation, OpCallback, DropOperation>},
         {"insertOne", baseCallback<BaseOperation, OpCallback, InsertOneOperation>},
         {"deleteOne", baseCallback<BaseOperation, OpCallback, DeleteOneOperation>},
         {"deleteMany", baseCallback<BaseOperation, OpCallback, DeleteManyOperation>},
         {"updateOne", baseCallback<BaseOperation, OpCallback, UpdateOneOperation>},
         {"updateMany", baseCallback<BaseOperation, OpCallback, UpdateManyOperation>},
-        {"replaceOne", baseCallback<BaseOperation, OpCallback, ReplaceOneOperation>}};
+        {"replaceOne", baseCallback<BaseOperation, OpCallback, ReplaceOneOperation>},
+        {"aggregate", baseCallback<BaseOperation, OpCallback, AggregateOperation>},
+        {"renameCollection", baseCallback<BaseOperation, OpCallback, RenameCollectionOperation>}};
 
     return opConstructors;
 }
