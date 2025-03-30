@@ -48,9 +48,9 @@ def _python_version_string():
 
 def _validate_python_installation():
     # Check Python version
-    if not sys.version_info >= (3, 7):
+    if not sys.version_info >= (3, 8):
         raise OSError(
-            f"Detected Python version {_python_version_string()} less than 3.7. Please delete "
+            f"Detected Python version {_python_version_string()} less than 3.8. Please delete "
             "the virtualenv and run lamp again."
         )
 
