@@ -34,7 +34,7 @@ def dry_run_workload(
         "YCSBLikeQueryableEncrypt5Cf32.yml",
         "YCSBLikeQueryableEncrypt5Cfdefault.yml",
         "ExponentialCompact.yml",
-        "CursorStormMongos.yml"
+        "CursorStormMongos.yml",
     ]:
         SLOG.info(f"EVG-21054 skipping dry run for {yaml_file_basename}.", file=yaml_file_path)
         return

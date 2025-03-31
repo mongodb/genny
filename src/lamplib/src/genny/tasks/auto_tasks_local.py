@@ -43,7 +43,7 @@ PROJECT_FILES = {
 }
 
 
-def get_builds(branch_name: str, dsi_path: str) :
+def get_builds(branch_name: str, dsi_path: str):
     builds = []
     expansions = {"branch_name": branch_name, "execution": FIRST_EXECUTION}
     for project_file in PROJECT_FILES[branch_name]:
@@ -110,7 +110,9 @@ def main(workspace_root: str, dsi_path: str = None, private_workloads_path: str 
                     fix_auto_workload_path(command)
 
         SLOG.info("Writing the configuration", branch_name=branch_name)
-        output_file = os.path.join("evergreen", "system_perf", branch_name.replace("v", ""), "genny_tasks.yml")
+        output_file = os.path.join(
+            "evergreen", "system_perf", branch_name.replace("v", ""), "genny_tasks.yml"
+        )
         ConfigWriter.write_config(
             execution=FIRST_EXECUTION,
             config=config,

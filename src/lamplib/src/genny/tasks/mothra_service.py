@@ -5,7 +5,7 @@ import structlog
 import yaml
 
 TEAMS_DIR = "mothra/teams"
-TEAMS_FILES = ["cloud.yaml", "database.yaml", "rnd_dev_prod.yaml", "star.yaml"]
+TEAMS_FILES = ["cloud.yaml", "database.yaml", "devprod.yaml", "star.yaml"]
 TEAMS_FILES_PATHS = [f"{TEAMS_DIR}/{file}" for file in TEAMS_FILES]
 SLOG = structlog.get_logger(__name__)
 
