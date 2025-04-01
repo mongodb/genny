@@ -33,7 +33,7 @@ def main_genny_runner(
         workspace_root=workspace_root,
         genny_repo_root=genny_repo_root,
     ):
-        # Inserting an Info log to gather some information 
+        # Inserting an Info log to gather some information
         # about what version of Python Genny is running
         # This will help inform whether upgrading packages that deprecate
         # use of Python versions that Genny supports will cause problems

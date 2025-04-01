@@ -487,6 +487,7 @@ class Repo:
             raise Exception("Invalid operation mode")
         return tasks
 
+
 class ConfigWriter:
     """
     Takes tasks and converts them to shrub Configuration objects.
@@ -497,7 +498,9 @@ class ConfigWriter:
         YAML = "yaml"
 
     @staticmethod
-    def write_config(execution: int, config: Configuration, output_file: str, file_format: FileFormat) -> None:
+    def write_config(
+        execution: int, config: Configuration, output_file: str, file_format: FileFormat
+    ) -> None:
         """
         :param config: The configuration to write
         :param output_file: What file to write to.
@@ -609,8 +612,12 @@ def main(mode_name: str, dry_run: bool, workspace_root: str) -> None:
             sys.exit(1)
     build = CurrentBuildInfo(expansions)
     op = OpName.from_flag(mode_name)
-    workload_file_pattern = os.path.join(workspace_root, "src", "*", "src", "workloads", "**", "*.yml")
-    lister = WorkloadLister(workspace_root=workspace_root, workload_file_pattern=workload_file_pattern)
+    workload_file_pattern = os.path.join(
+        workspace_root, "src", "*", "src", "workloads", "**", "*.yml"
+    )
+    lister = WorkloadLister(
+        workspace_root=workspace_root, workload_file_pattern=workload_file_pattern
+    )
     repo = Repo(lister=lister, reader=reader, workspace_root=workspace_root)
     tasks = repo.tasks(op=op, build=build)
 
@@ -619,4 +626,6 @@ def main(mode_name: str, dry_run: bool, workspace_root: str) -> None:
     if dry_run:
         SLOG.debug("Tasks json content", contents=config.to_json)
     else:
-        ConfigWriter.write_config(build.execution, config, output_file, ConfigWriter.FileFormat.JSON)
+        ConfigWriter.write_config(
+            build.execution, config, output_file, ConfigWriter.FileFormat.JSON
+        )

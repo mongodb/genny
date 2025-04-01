@@ -672,17 +672,21 @@ def auto_tasks_all(ctx: click.Context, project_files: List[str], no_activate: bo
     help=("Regenerate the auto-generated evergreen task defintions."),
 )
 @click.option(
-    "--dsi-path", "dsi_path", default=None,
-    help="Use an existing DSI repo instead of cloning."
+    "--dsi-path", "dsi_path", default=None, help="Use an existing DSI repo instead of cloning."
 )
 @click.option(
-    "--private-workloads-path", "private_workloads_path", default=None,
-    help="Use an existing PrivateWorkloads repo instead of cloning."
+    "--private-workloads-path",
+    "private_workloads_path",
+    default=None,
+    help="Use an existing PrivateWorkloads repo instead of cloning.",
 )
 @click.pass_context
-def auto_tasks_local(ctx: click.Context, dsi_path: Optional[str], private_workloads_path: Optional[str]):
+def auto_tasks_local(
+    ctx: click.Context, dsi_path: Optional[str], private_workloads_path: Optional[str]
+):
     from genny.tasks import auto_tasks_local
     import sys
+
     print(sys.version)
     auto_tasks_local.main(
         workspace_root=ctx.obj["WORKSPACE_ROOT"],
