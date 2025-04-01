@@ -18,10 +18,10 @@
 /.vscode          @mongodb/devprod-performance-infrastructure james.littlejohn@mongodb.com
 
 # Workload Configuration
-/src/workloads    @mongodb/devprod-performance-infrastructure
-/src/phases       @mongodb/devprod-performance-infrastructure
+/src/workloads    @mongodb/performance
+/src/phases       @mongodb/performance
 # There is a list of workloads in this file that needs to be kept up to date
-src/lamplib/src/genny/tasks/dry_run.py @mongodb/devprod-performance-infrastructure
+src/lamplib/src/genny/tasks/dry_run.py @mongodb/performance
 
 
 # Genny Core Components
@@ -30,7 +30,7 @@ src/lamplib/src/genny/tasks/dry_run.py @mongodb/devprod-performance-infrastructu
 /pyproject.toml   @mongodb/devprod-performance-infrastructure
 
 # Workload-related C++ Components
-/src/value_generators    @mongodb/devprod-performance-infrastructure @mongodb/devprod-performance-infrastructure
+/src/value_generators    @mongodb/performance @mongodb/devprod-performance-infrastructure
 
 # Generated files owned by nobody that don't require review. These files are
 # modifiable without review by anybody with write access to the repository.
