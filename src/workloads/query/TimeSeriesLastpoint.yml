@@ -10,8 +10,8 @@ Description: |
     3. any of the above pipelines with a preceding match predicate on a meta field.
 
 # Parameters reused in multiple Actors.
-db: &db test
-coll: &coll Collection0
+db: &db cpu
+coll: &coll point_data
 phasePath: &phasePath ../../phases/query/TimeSeriesLastpoint.yml
 MaxPhases: &MaxPhases 26
 
@@ -23,38 +23,51 @@ LastpointQueryMetaAscTimeDesc: &LastpointQueryMetaAscTimeDesc
     Key: RunLastPointQuery
     Parameters:
       Collection: *coll
-      SortPattern: &sortPatternMetaAscTimeDesc {"metadata.sensorId": 1, timestamp: -1}
-      GroupPattern: {_id: "$metadata.sensorId", timestamp: {$first: "$timestamp"}, temp: {$first: "$temp"}}
+      SortPattern: &sortPatternMetaAscTimeDesc {"tags.hostname": 1, "time": -1}
+      GroupPattern: &groupByFirst {
+                          _id: { "hostname": "$tags.hostname" },
+                          time: { $first: "$time" },
+                          measurement: { $first: "$measurement" },
+                        }
       GroupPatternTopOrBottom:
         $top:
           sortBy: *sortPatternMetaAscTimeDesc
-          output: &output {timestamp: "$timestamp", temp: "$temp"}
+          output: &output {timestamp: "$time", 
+                           measurement: "$measurement",                           
+          }
+
 LastpointQueryMetaDescTimeDesc: &LastpointQueryMetaDescTimeDesc
   LoadConfig:
     Path: *phasePath
     Key: RunLastPointQuery
     Parameters:
       Collection: *coll
-      SortPattern: &sortPatternMetaDescTimeDesc {"metadata.sensorId": -1, timestamp: -1}
-      GroupPattern: {_id: "$metadata.sensorId", timestamp: {$first: "$timestamp"}, temp: {$first: "$temp"}}
+      SortPattern: &sortPatternMetaDescTimeDesc {"tags.hostname": -1, "time": -1}
+      GroupPattern: *groupByFirst
       GroupPatternTopOrBottom: {$top: {sortBy: *sortPatternMetaDescTimeDesc, output: *output}}
+
 LastpointQueryMetaDescTimeAsc: &LastpointQueryMetaDescTimeAsc
   LoadConfig:
     Path: *phasePath
     Key: RunLastPointQuery
     Parameters:
       Collection: *coll
-      SortPattern: &sortPatternMetaDescTimeAsc {"metadata.sensorId": -1, timestamp: 1}
-      GroupPattern: {_id: "$metadata.sensorId", timestamp: {$last: "$timestamp"}, temp: {$last: "$temp"}}
+      SortPattern: &sortPatternMetaDescTimeAsc {"tags.hostname": -1, "time": 1}
+      GroupPattern: &groupByLast {
+                          _id: { "hostname": "$tags.hostname" },
+                          time: { $last: "$time" },
+                          measurement: { $last: "$measurement" },
+                        }
       GroupPatternTopOrBottom: {$bottom: {sortBy: *sortPatternMetaDescTimeAsc, output: *output}}
+
 LastpointQueryMetaAscTimeAsc: &LastpointQueryMetaAscTimeAsc
   LoadConfig:
     Path: *phasePath
     Key: RunLastPointQuery
     Parameters:
       Collection: *coll
-      SortPattern: &sortPatternMetaAscTimeAsc {"metadata.sensorId": 1, timestamp: 1}
-      GroupPattern: {_id: "$metadata.sensorId", timestamp: {$last: "$timestamp"}, temp: {$last: "$temp"}}
+      SortPattern: &sortPatternMetaAscTimeAsc {"tags.hostname": 1, "time": 1}
+      GroupPattern: *groupByLast
       GroupPatternTopOrBottom: {$bottom: {sortBy: *sortPatternMetaAscTimeAsc, output: *output}}
 
 LastpointQueryMetaAscTimeDescRepeat100: &LastpointQueryMetaAscTimeDescRepeat100
@@ -65,7 +78,7 @@ LastpointQueryMetaAscTimeDescRepeat100: &LastpointQueryMetaAscTimeDescRepeat100
       Repeat: 100
       Collection: *coll
       SortPattern: *sortPatternMetaAscTimeDesc
-      GroupPattern: {_id: "$metadata.sensorId", timestamp: {$first: "$timestamp"}, temp: {$first: "$temp"}}
+      GroupPattern: *groupByFirst 
       GroupPatternTopOrBottom: {$top: {sortBy: *sortPatternMetaAscTimeDesc, output: *output}}
 LastpointQueryMetaDescTimeDescRepeat100: &LastpointQueryMetaDescTimeDescRepeat100
   LoadConfig:
@@ -75,7 +88,7 @@ LastpointQueryMetaDescTimeDescRepeat100: &LastpointQueryMetaDescTimeDescRepeat10
       Repeat: 100
       Collection: *coll
       SortPattern: *sortPatternMetaDescTimeDesc
-      GroupPattern: {_id: "$metadata.sensorId", timestamp: {$first: "$timestamp"}, temp: {$first: "$temp"}}
+      GroupPattern: *groupByFirst 
       GroupPatternTopOrBottom: {$top: {sortBy: *sortPatternMetaDescTimeDesc, output: *output}}
 LastpointQueryMetaDescTimeAscRepeat100: &LastpointQueryMetaDescTimeAscRepeat100
   LoadConfig:
@@ -85,7 +98,7 @@ LastpointQueryMetaDescTimeAscRepeat100: &LastpointQueryMetaDescTimeAscRepeat100
       Repeat: 100
       Collection: *coll
       SortPattern: *sortPatternMetaDescTimeAsc
-      GroupPattern: {_id: "$metadata.sensorId", timestamp: {$last: "$timestamp"}, temp: {$last: "$temp"}}
+      GroupPattern: *groupByLast
       GroupPatternTopOrBottom: {$bottom: {sortBy: *sortPatternMetaDescTimeAsc, output: *output}}
 LastpointQueryMetaAscTimeAscRepeat100: &LastpointQueryMetaAscTimeAscRepeat100
   LoadConfig:
@@ -95,61 +108,42 @@ LastpointQueryMetaAscTimeAscRepeat100: &LastpointQueryMetaAscTimeAscRepeat100
       Repeat: 100
       Collection: *coll
       SortPattern: *sortPatternMetaAscTimeAsc
-      GroupPattern: {_id: "$metadata.sensorId", timestamp: {$last: "$timestamp"}, temp: {$last: "$temp"}}
+      GroupPattern: *groupByLast
       GroupPatternTopOrBottom: {$bottom: {sortBy: *sortPatternMetaAscTimeAsc, output: *output}}
 
 Actors:
-  - Name: DropTimeSeriesCollection
-    Type: CrudActor
-    Threads: 1
+  - Name: DropExistingIndexForMetaTime
+    Type: RunCommand
+    Database: *db
     Phases:
       OnlyActiveInPhases:
         Active: [0]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
-          Repeat: 1
-          Database: *db
-          Collection: *coll
-          Operation:
-            OperationName: drop
+          LoadConfig:
+            Path: *phasePath
+            Key: DropIndex
+            Parameters:
+              Collection: *coll
+              IndexName: "tags_1_time_1"
 
-  - Name: CreateTimeSeriesCollection
+  - Name: DropExistingIndexForMetaHostNameTime
     Type: RunCommand
-    Threads: 1
+    Database: *db
     Phases:
       OnlyActiveInPhases:
         Active: [1]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
-          Repeat: 1
-          Database: *db
-          Operation:
-            OperationMetricsName: CreateTimeSeriesCollection
-            OperationName: RunCommand
-            ReportMetrics: false
-            OperationCommand: {create: *coll, timeseries: {timeField: "timestamp", metaField: "metadata"}}
+          LoadConfig:
+            Path: *phasePath
+            Key: DropIndex
+            Parameters:
+              Collection: *coll
+              IndexName: "tags.hostname_1_time_-1"
 
-  - Name: InsertData
-    Type: Loader
-    Threads: 1
-    Phases:
-      OnlyActiveInPhases:
-        Active: [2]
-        NopInPhasesUpTo: *MaxPhases
-        PhaseConfig:
-          Repeat: 1
-          Database: *db
-          Collection: *coll
-          Threads: 1
-          CollectionCount: 1
-          DocumentCount: 1_000_000
-          BatchSize: 100
-          Document:
-            timestamp: {^RandomDate: {min: "2022-01-01", max: "2022-03-01"}}
-            metadata: {sensorId: {^RandomInt: {min: 0, max: 100}}, type: "temperature"}
-            temp: {^RandomDouble: {min: -30, max: 120}}
 
-  # QuiesceActor will run in phase 3.
+  # QuiesceActor will run in phase 2 and 3.
 
   # Lastpoint query with a sort and group with meta subfield descending and time ascending, but no index.
   - Name: RunLastpointQueryWithMetaSubfieldAscendingTimeDescendingNoIndex

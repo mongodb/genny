@@ -5,13 +5,13 @@ Description: |
 
 CreateIndex:
   Repeat: 1
-  Database: &db test
+  Database: &db cpu 
   Operation:
     OperationName: RunCommand
     OperationMetricsName: CreateIndex
     ReportMetrics: false
     OperationCommand:
-      createIndexes: &coll { ^Parameter: { Name: "Collection", Default: "Collection0" } }
+      createIndexes: &coll { ^Parameter: { Name: "Collection", Default: "point_data" } }
       indexes:
         - key: { ^Parameter: { Name: "IndexPattern", Default: {} } }
           name: { ^Parameter: { Name: "IndexName", Default: "" } }
@@ -39,7 +39,7 @@ RunLastPointQuery:
       OperationCommand:
         Pipeline:
           [
-            { $match: { "metadata.sensorId": { $gt: 10 } } },
+            { $match: { "tags.hostname": { $gt: 9 } } }, #hostname is from [0,99]
             *sortStage,
             *groupStage,
           ]
@@ -49,7 +49,7 @@ RunLastPointQuery:
       OperationCommand:
         Pipeline:
           [
-            { $match: { "metadata.sensorId": { $lt: 10 } } },
+            { $match: { "tags.hostname": { $lt: 10 } } },
             *sortStage,
             *groupStage,
           ]
@@ -62,7 +62,7 @@ RunLastPointQuery:
             {
               $group:
                 {
-                  _id: "$metadata.sensorId",
+                  _id: "$tags.hostname",
                   mostRecent: { ^Parameter: { Name: "GroupPatternTopOrBottom", Default: {} } }
                 },
             },
@@ -76,7 +76,7 @@ DropIndex:
     OperationName: RunCommand
     ReportMetrics: false
     OperationCommand:
-      dropIndexes: { ^Parameter: { Name: "Collection", Default: "Collection0" } }
+      dropIndexes: { ^Parameter: { Name: "Collection", Default: "point_data" } }
       index: { ^Parameter: { Name: "IndexName", Default: "" } }
 
 QuiesceActor:
@@ -86,7 +86,7 @@ QuiesceActor:
   Database: { ^Parameter: { Name: "Database", Default: admin } }
   Phases:
     OnlyActiveInPhases:
-      Active: { ^Parameter: { Name: "Active", Default: [3, 6, 9, 12, 15, 18, 21, 24] } }
+      Active: { ^Parameter: { Name: "Active", Default: [2, 3, 6, 9, 12, 15, 18, 21, 24] } }
       NopInPhasesUpTo: { ^Parameter: { Name: "MaxPhases", Default: -1 } }
       PhaseConfig:
         SleepBefore: 1 seconds
