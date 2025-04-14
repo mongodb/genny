@@ -2132,17 +2132,6 @@ tasks:
       timeout_secs: 86400
   - func: f_run_dsi_workload
     vars:
-      auto_workload_path: src/genny/src/workloads/query/TimeSeriesLastpoint.yml
-      test_control: time_series_lastpoint
-  name: time_series_lastpoint
-  priority: 5
-- commands:
-  - command: timeout.update
-    params:
-      exec_timeout_secs: 86400
-      timeout_secs: 86400
-  - func: f_run_dsi_workload
-    vars:
       auto_workload_path: src/genny/src/workloads/query/TimeSeriesSort.yml
       test_control: time_series_sort
   name: time_series_sort

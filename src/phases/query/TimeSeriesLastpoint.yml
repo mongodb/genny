@@ -39,7 +39,7 @@ RunLastPointQuery:
       OperationCommand:
         Pipeline:
           [
-            { $match: { "tags.hostname": { $gt: 9 } } }, #hostname is from [0,99]
+            { $match: { "tags.hostname": {$regex: '/^host_(?![0-9]$)/' } } }, #hostname is from [host_0, host_99]
             *sortStage,
             *groupStage,
           ]
@@ -49,7 +49,7 @@ RunLastPointQuery:
       OperationCommand:
         Pipeline:
           [
-            { $match: { "tags.hostname": { $lt: 10 } } },
+            { $match: { "tags.hostname": {$regex: 'host_(0|1|2|3|4|5|6|7|8|9)$'} } },
             *sortStage,
             *groupStage,
           ]
@@ -86,7 +86,7 @@ QuiesceActor:
   Database: { ^Parameter: { Name: "Database", Default: admin } }
   Phases:
     OnlyActiveInPhases:
-      Active: { ^Parameter: { Name: "Active", Default: [2, 3, 6, 9, 12, 15, 18, 21, 24] } }
+      Active: { ^Parameter: { Name: "Active", Default: [0, 3, 6, 9, 12, 15, 18, 21, 24] } }
       NopInPhasesUpTo: { ^Parameter: { Name: "MaxPhases", Default: -1 } }
       PhaseConfig:
         SleepBefore: 1 seconds
