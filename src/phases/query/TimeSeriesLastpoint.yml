@@ -5,7 +5,7 @@ Description: |
 
 CreateIndex:
   Repeat: 1
-  Database: &db cpu 
+  Database: &db cpu
   Operation:
     OperationName: RunCommand
     OperationMetricsName: CreateIndex

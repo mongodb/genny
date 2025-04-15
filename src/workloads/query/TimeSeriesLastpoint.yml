@@ -24,17 +24,11 @@ LastpointQueryMetaAscTimeDesc: &LastpointQueryMetaAscTimeDesc
     Parameters:
       Collection: *coll
       SortPattern: &sortPatternMetaAscTimeDesc {"tags.hostname": 1, "time": -1}
-      GroupPattern: &groupByFirst {
-                          _id: { "hostname": "$tags.hostname" },
-                          time: { $first: "$time" },
-                          usage_system: { $first: "$usage_system" },
-                        }
+      GroupPattern: &groupByFirst { _id: { "hostname": "$tags.hostname" }, time: { $first: "$time" }, usage_system: { $first: "$usage_system" }}
       GroupPatternTopOrBottom:
         $top:
           sortBy: *sortPatternMetaAscTimeDesc
-          output: &output {timestamp: "$time", 
-                           usage_system: "$usage_system",                           
-          }
+          output: &output {timestamp: "$time", usage_system: "$usage_system"}
 
 LastpointQueryMetaDescTimeDesc: &LastpointQueryMetaDescTimeDesc
   LoadConfig:
@@ -53,11 +47,7 @@ LastpointQueryMetaDescTimeAsc: &LastpointQueryMetaDescTimeAsc
     Parameters:
       Collection: *coll
       SortPattern: &sortPatternMetaDescTimeAsc {"tags.hostname": -1, "time": 1}
-      GroupPattern: &groupByLast {
-                          _id: { "hostname": "$tags.hostname" },
-                          time: { $last: "$time" },
-                          usage_system: { $last: "$usage_system" },
-                        }
+      GroupPattern: &groupByLast {_id: { "hostname": "$tags.hostname" }, time: { $last: "$time" }, usage_system: { $last: "$usage_system" }}
       GroupPatternTopOrBottom: {$bottom: {sortBy: *sortPatternMetaDescTimeAsc, output: *output}}
 
 LastpointQueryMetaAscTimeAsc: &LastpointQueryMetaAscTimeAsc
@@ -78,7 +68,7 @@ LastpointQueryMetaAscTimeDescRepeat100: &LastpointQueryMetaAscTimeDescRepeat100
       Repeat: 100
       Collection: *coll
       SortPattern: *sortPatternMetaAscTimeDesc
-      GroupPattern: *groupByFirst 
+      GroupPattern: *groupByFirst
       GroupPatternTopOrBottom: {$top: {sortBy: *sortPatternMetaAscTimeDesc, output: *output}}
 LastpointQueryMetaDescTimeDescRepeat100: &LastpointQueryMetaDescTimeDescRepeat100
   LoadConfig:
@@ -88,7 +78,7 @@ LastpointQueryMetaDescTimeDescRepeat100: &LastpointQueryMetaDescTimeDescRepeat10
       Repeat: 100
       Collection: *coll
       SortPattern: *sortPatternMetaDescTimeDesc
-      GroupPattern: *groupByFirst 
+      GroupPattern: *groupByFirst
       GroupPatternTopOrBottom: {$top: {sortBy: *sortPatternMetaDescTimeDesc, output: *output}}
 LastpointQueryMetaDescTimeAscRepeat100: &LastpointQueryMetaDescTimeAscRepeat100
   LoadConfig:
@@ -146,7 +136,7 @@ Actors:
 
 
   # QuiesceActor will run in phase 3.
-  
+
   # Lastpoint query with a sort and group with meta subfield descending and time ascending, but no index.
   - Name: RunLastpointQueryWithMetaSubfieldAscendingTimeDescendingNoIndex
     Type: CrudActor
