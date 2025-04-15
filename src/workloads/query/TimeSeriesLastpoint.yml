@@ -27,13 +27,13 @@ LastpointQueryMetaAscTimeDesc: &LastpointQueryMetaAscTimeDesc
       GroupPattern: &groupByFirst {
                           _id: { "hostname": "$tags.hostname" },
                           time: { $first: "$time" },
-                          measurement: { $first: "$measurement" },
+                          usage_system: { $first: "$usage_system" },
                         }
       GroupPatternTopOrBottom:
         $top:
           sortBy: *sortPatternMetaAscTimeDesc
           output: &output {timestamp: "$time", 
-                           measurement: "$measurement",                           
+                           usage_system: "$usage_system",                           
           }
 
 LastpointQueryMetaDescTimeDesc: &LastpointQueryMetaDescTimeDesc
@@ -56,7 +56,7 @@ LastpointQueryMetaDescTimeAsc: &LastpointQueryMetaDescTimeAsc
       GroupPattern: &groupByLast {
                           _id: { "hostname": "$tags.hostname" },
                           time: { $last: "$time" },
-                          measurement: { $last: "$measurement" },
+                          usage_system: { $last: "$usage_system" },
                         }
       GroupPatternTopOrBottom: {$bottom: {sortBy: *sortPatternMetaDescTimeAsc, output: *output}}
 

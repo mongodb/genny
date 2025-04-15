@@ -39,7 +39,7 @@ RunLastPointQuery:
       OperationCommand:
         Pipeline:
           [
-            { $match: { "tags.hostname": {$regex: '/^host_(?![0-9]$)/' } } }, #hostname is from [host_0, host_99]
+            { $match: { "tags.hostname": {$regex: '^host_([1-9][0-9])$' } } }, # hostname is from [host_0, host_99], match host_10 through host_99
             *sortStage,
             *groupStage,
           ]
@@ -49,7 +49,7 @@ RunLastPointQuery:
       OperationCommand:
         Pipeline:
           [
-            { $match: { "tags.hostname": {$regex: 'host_(0|1|2|3|4|5|6|7|8|9)$'} } },
+            { $match: { "tags.hostname": {$regex: '^host_[0-9]$' } } }, # match hostname host_0 through host_9
             *sortStage,
             *groupStage,
           ]
