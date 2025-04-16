@@ -9,6 +9,12 @@ Description: |
        field and only $last accumulators.
     3. any of the above pipelines with a preceding match predicate on a meta field.
 
+Keywords:
+  - timeseries
+  - aggregate
+  - group
+  - sort
+
 # Parameters reused in multiple Actors.
 db: &db cpu
 coll: &coll point_data
@@ -24,11 +30,11 @@ LastpointQueryMetaAscTimeDesc: &LastpointQueryMetaAscTimeDesc
     Parameters:
       Collection: *coll
       SortPattern: &sortPatternMetaAscTimeDesc {"tags.hostname": 1, "time": -1}
-      GroupPattern: &groupByFirst { _id: { "hostname": "$tags.hostname" }, time: { $first: "$time" }, usage_system: { $first: "$usage_system" }}
+      GroupPattern: &groupByFirst { _id: "$tags.hostname", time: { $first: "$time" }, usage_system: { $first: "$usage_system" }}
       GroupPatternTopOrBottom:
         $top:
           sortBy: *sortPatternMetaAscTimeDesc
-          output: &output {timestamp: "$time", usage_system: "$usage_system"}
+          output: &output {time: "$time", usage_system: "$usage_system"}
 
 LastpointQueryMetaDescTimeDesc: &LastpointQueryMetaDescTimeDesc
   LoadConfig:
@@ -47,7 +53,7 @@ LastpointQueryMetaDescTimeAsc: &LastpointQueryMetaDescTimeAsc
     Parameters:
       Collection: *coll
       SortPattern: &sortPatternMetaDescTimeAsc {"tags.hostname": -1, "time": 1}
-      GroupPattern: &groupByLast {_id: { "hostname": "$tags.hostname" }, time: { $last: "$time" }, usage_system: { $last: "$usage_system" }}
+      GroupPattern: &groupByLast {_id: "$tags.hostname", time: { $last: "$time" }, usage_system: { $last: "$usage_system" }}
       GroupPatternTopOrBottom: {$bottom: {sortBy: *sortPatternMetaDescTimeAsc, output: *output}}
 
 LastpointQueryMetaAscTimeAsc: &LastpointQueryMetaAscTimeAsc
@@ -104,6 +110,7 @@ LastpointQueryMetaAscTimeAscRepeat100: &LastpointQueryMetaAscTimeAscRepeat100
 Actors:
   # The data is already loaded into the collection from the dsi configuration.
   # QuiesceActor will run for phase 0.
+
   - Name: DropExistingIndexForMetaTime
     Type: RunCommand
     Database: *db
@@ -133,7 +140,6 @@ Actors:
             Parameters:
               Collection: *coll
               IndexName: "tags.hostname_1_time_-1"
-
 
   # QuiesceActor will run in phase 3.
 
