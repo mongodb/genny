@@ -19,7 +19,7 @@ Keywords:
 db: &db cpu
 coll: &coll point_data
 phasePath: &phasePath ../../phases/query/TimeSeriesLastpoint.yml
-MaxPhases: &MaxPhases 26
+MaxPhases: &MaxPhases 25
 
 # Operations reused in multiple Phases.
 Nop: &Nop {Nop: true}
@@ -111,7 +111,7 @@ Actors:
   # The data is already loaded into the collection from the dsi configuration.
   # QuiesceActor will run for phase 0.
 
-  - Name: DropExistingIndexForMetaTime
+  - Name: DropExistingIndexForMetaHostNameTime
     Type: RunCommand
     Database: *db
     Phases:
@@ -124,24 +124,9 @@ Actors:
             Key: DropIndex
             Parameters:
               Collection: *coll
-              IndexName: "tags_1_time_1"
-
-  - Name: DropExistingIndexForMetaHostNameTime
-    Type: RunCommand
-    Database: *db
-    Phases:
-      OnlyActiveInPhases:
-        Active: [2]
-        NopInPhasesUpTo: *MaxPhases
-        PhaseConfig:
-          LoadConfig:
-            Path: *phasePath
-            Key: DropIndex
-            Parameters:
-              Collection: *coll
               IndexName: "tags.hostname_1_time_-1"
 
-  # QuiesceActor will run in phase 3.
+  # QuiesceActor will run in phase 2.
 
   # Lastpoint query with a sort and group with meta subfield descending and time ascending, but no index.
   - Name: RunLastpointQueryWithMetaSubfieldAscendingTimeDescendingNoIndex
@@ -149,7 +134,7 @@ Actors:
     Database: *db
     Phases:
       OnlyActiveInPhases:
-        Active: [4]
+        Active: [3]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           *LastpointQueryMetaAscTimeDesc
@@ -159,7 +144,7 @@ Actors:
     Database: *db
     Phases:
       OnlyActiveInPhases:
-        Active: [5]
+        Active: [4]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           LoadConfig:
@@ -170,7 +155,7 @@ Actors:
               IndexName: &metaAscTimeDesc "MetaSubfieldAscendingTimeDescending"
               IndexPattern: *sortPatternMetaAscTimeDesc
 
-  # QuiesceActor will run in phase 6.
+  # QuiesceActor will run in phase 5.
 
   # Lastpoint query with a sort and group on meta subfield ascending and time descending.
   - Name: RunLastpointQueryWithMetaSubfieldAscendingTimeDescending
@@ -178,7 +163,7 @@ Actors:
     Database: *db
     Phases:
       OnlyActiveInPhases:
-        Active: [7]
+        Active: [6]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           *LastpointQueryMetaAscTimeDescRepeat100
@@ -188,7 +173,7 @@ Actors:
     Database: *db
     Phases:
       OnlyActiveInPhases:
-        Active: [8]
+        Active: [7]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           LoadConfig:
@@ -198,7 +183,7 @@ Actors:
               Collection: *coll
               IndexName: *metaAscTimeDesc
 
-  # QuiesceActor will run in phase 9.
+  # QuiesceActor will run in phase 8.
 
   # Lastpoint query with a sort and group with meta subfield descending and time ascending, but no index.
   - Name: RunLastpointQueryWithMetaSubfieldDescendingTimeDescendingNoIndex
@@ -206,7 +191,7 @@ Actors:
     Database: *db
     Phases:
       OnlyActiveInPhases:
-        Active: [10]
+        Active: [9]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           *LastpointQueryMetaDescTimeDesc
@@ -216,7 +201,7 @@ Actors:
     Database: *db
     Phases:
       OnlyActiveInPhases:
-        Active: [11]
+        Active: [10]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           LoadConfig:
@@ -227,7 +212,7 @@ Actors:
               IndexName: &metaDescTimeDesc "MetaSubfieldDescendingTimeDescending"
               IndexPattern: *sortPatternMetaDescTimeDesc
 
-  # QuiesceActor will run in phase 12.
+  # QuiesceActor will run in phase 11.
 
   # Lastpoint query with a compound index with meta subfield descending and time descending.
   - Name: RunLastpointQueryWithMetaSubfieldDescendingTimeDescending
@@ -235,7 +220,7 @@ Actors:
     Database: *db
     Phases:
       OnlyActiveInPhases:
-        Active: [13]
+        Active: [12]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           *LastpointQueryMetaDescTimeDescRepeat100
@@ -245,7 +230,7 @@ Actors:
     Database: *db
     Phases:
       OnlyActiveInPhases:
-        Active: [14]
+        Active: [13]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           LoadConfig:
@@ -255,7 +240,7 @@ Actors:
               Collection: *coll
               IndexName: *metaDescTimeDesc
 
-  # QuiesceActor will run in phase 15.
+  # QuiesceActor will run in phase 14.
 
   # Lastpoint query with a sort and group with meta subfield descending and time ascending, but no index.
   - Name: RunLastpointQueryWithMetaSubfieldDescendingTimeAscendingNoIndex
@@ -263,7 +248,7 @@ Actors:
     Database: *db
     Phases:
       OnlyActiveInPhases:
-        Active: [16]
+        Active: [15]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           *LastpointQueryMetaDescTimeAsc
@@ -273,7 +258,7 @@ Actors:
     Database: *db
     Phases:
       OnlyActiveInPhases:
-        Active: [17]
+        Active: [16]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           LoadConfig:
@@ -284,7 +269,7 @@ Actors:
               IndexName: *metaAscTimeDesc   # We need to flip the direction for the lastpoint query
               IndexPattern: *sortPatternMetaAscTimeDesc
 
-  # QuiesceActor will run in phase 18.
+  # QuiesceActor will run in phase 17.
 
   # Lastpoint query with a compound index with meta subfield descending and time ascending.
   - Name: RunLastpointQueryWithMetaSubfieldDescendingTimeAscending
@@ -292,7 +277,7 @@ Actors:
     Database: *db
     Phases:
       OnlyActiveInPhases:
-        Active: [19]
+        Active: [18]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           *LastpointQueryMetaDescTimeAscRepeat100
@@ -302,7 +287,7 @@ Actors:
     Database: *db
     Phases:
       OnlyActiveInPhases:
-        Active: [20]
+        Active: [19]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           LoadConfig:
@@ -312,7 +297,7 @@ Actors:
               Collection: *coll
               IndexName: *metaAscTimeDesc
 
-  # QuiesceActor will run in phase 21.
+  # QuiesceActor will run in phase 20.
 
   # Lastpoint query with a sort and group with meta subfield ascending and time ascending, but no index.
   - Name: RunLastpointQueryWithMetaSubfieldAscendingTimeAscendingNoIndex
@@ -320,7 +305,7 @@ Actors:
     Database: *db
     Phases:
       OnlyActiveInPhases:
-        Active: [22]
+        Active: [21]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           *LastpointQueryMetaAscTimeAsc
@@ -330,7 +315,7 @@ Actors:
     Database: *db
     Phases:
       OnlyActiveInPhases:
-        Active: [23]
+        Active: [22]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           LoadConfig:
@@ -341,7 +326,7 @@ Actors:
               IndexName: *metaDescTimeDesc   # We need to flip the direction for the lastpoint query
               IndexPattern: *sortPatternMetaDescTimeDesc
 
-  # QuiesceActor will run in phase 24.
+  # QuiesceActor will run in phase 23.
 
   # Lastpoint query with a compound index with meta subfield ascending and time ascending.
   - Name: RunLastpointQueryWithMetaSubfieldAscendingTimeAscending
@@ -349,7 +334,7 @@ Actors:
     Database: *db
     Phases:
       OnlyActiveInPhases:
-        Active: [25]
+        Active: [24]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           *LastpointQueryMetaAscTimeAscRepeat100
@@ -359,7 +344,7 @@ Actors:
     Database: *db
     Phases:
       OnlyActiveInPhases:
-        Active: [26]
+        Active: [25]
         NopInPhasesUpTo: *MaxPhases
         PhaseConfig:
           LoadConfig:
@@ -373,5 +358,5 @@ Actors:
       Path: *phasePath
       Key: QuiesceActor
       Parameters:
-        Active: [0, 3, 6, 9, 12, 15, 18, 21, 24]
+        Active: [0, 2, 5, 8, 11, 14, 17, 20, 23]
         MaxPhases: *MaxPhases
