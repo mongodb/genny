@@ -4126,9 +4126,10 @@ currently supported lastpoint aggregate pipelines that are tested here include:
   3. any of the above pipelines with a preceding match predicate on a meta field.
 
 
-[Task Page](https://evergreen.mongodb.com/task_history/sys-perf/time_series_lastpoint)
 
 
+### Keywords
+timeseries, aggregate, group, sort
 
 
 ## [TimeSeriesSort](https://www.github.com/mongodb/genny/blob/master/src/workloads/query/TimeSeriesSort.yml)
