@@ -159,7 +159,7 @@ Actors:
 
   # Lastpoint query with a sort and group on meta subfield ascending and time descending.
   - Name: RunLastpointQueryWithMetaSubfieldAscendingTimeDescending
-    Type: CrudActor CHECKED!!
+    Type: CrudActor
     Database: *db
     Phases:
       OnlyActiveInPhases:
