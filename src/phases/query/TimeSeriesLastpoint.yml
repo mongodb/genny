@@ -39,7 +39,6 @@ RunLastPointQuery:
       OperationCommand:
         Pipeline:
           [
-            # hostname is from [host_0, host_99], match host_10 through host_99
             { $match: { "tags.hostname": { $nin: ["host_0", "host_1", "host_2", "host_3", "host_4", "host_5", "host_6", "host_7", "host_8", "host_9"] } } },
             *sortStage,
             *groupStage,
@@ -50,7 +49,6 @@ RunLastPointQuery:
       OperationCommand:
         Pipeline:
           [
-            # match hostname host_0 through host_9
             { $match: { "tags.hostname": { $in: ["host_0", "host_1", "host_2", "host_3", "host_4", "host_5", "host_6", "host_7", "host_8", "host_9"] } } },
             *sortStage,
             *groupStage,

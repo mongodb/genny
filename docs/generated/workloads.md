@@ -4117,7 +4117,7 @@ timeseries, aggregate, sbe
 
 
 ### Description
-This test exercises the behavior of lastpoint type queries on time-series collections. The
+This test exercises the behavior of lastpoint-type queries on time-series collections. The
 currently supported lastpoint aggregate pipelines that are tested here include:
   1. a $sort on a meta field (both ascending and descending) and time (descending) and $group with _id on the meta
      field and only $first accumulators.

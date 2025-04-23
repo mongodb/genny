@@ -1,7 +1,7 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/query"
 Description: |
-  This test exercises the behavior of lastpoint type queries on time-series collections. The
+  This test exercises the behavior of lastpoint-type queries on time-series collections. The
   currently supported lastpoint aggregate pipelines that are tested here include:
     1. a $sort on a meta field (both ascending and descending) and time (descending) and $group with _id on the meta
        field and only $first accumulators.
@@ -159,7 +159,7 @@ Actors:
 
   # Lastpoint query with a sort and group on meta subfield ascending and time descending.
   - Name: RunLastpointQueryWithMetaSubfieldAscendingTimeDescending
-    Type: CrudActor
+    Type: CrudActor CHECKED!!
     Database: *db
     Phases:
       OnlyActiveInPhases:
@@ -216,7 +216,7 @@ Actors:
 
   # Lastpoint query with a compound index with meta subfield descending and time descending.
   - Name: RunLastpointQueryWithMetaSubfieldDescendingTimeDescending
-    Type: CrudActor
+    Type: CrudActor #CHECKED
     Database: *db
     Phases:
       OnlyActiveInPhases:
@@ -273,7 +273,7 @@ Actors:
 
   # Lastpoint query with a compound index with meta subfield descending and time ascending.
   - Name: RunLastpointQueryWithMetaSubfieldDescendingTimeAscending
-    Type: CrudActor
+    Type: CrudActor #checked!
     Database: *db
     Phases:
       OnlyActiveInPhases:
