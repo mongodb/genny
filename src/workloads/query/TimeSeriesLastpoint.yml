@@ -216,7 +216,7 @@ Actors:
 
   # Lastpoint query with a compound index with meta subfield descending and time descending.
   - Name: RunLastpointQueryWithMetaSubfieldDescendingTimeDescending
-    Type: CrudActor #CHECKED
+    Type: CrudActor
     Database: *db
     Phases:
       OnlyActiveInPhases:
@@ -273,7 +273,7 @@ Actors:
 
   # Lastpoint query with a compound index with meta subfield descending and time ascending.
   - Name: RunLastpointQueryWithMetaSubfieldDescendingTimeAscending
-    Type: CrudActor #checked!
+    Type: CrudActor
     Database: *db
     Phases:
       OnlyActiveInPhases:
