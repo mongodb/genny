@@ -251,9 +251,6 @@ given database. It takes numerous configuration options to adjust its behaviour.
 Performance Analysis
 
 
-### Support Channel
-[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
-
 
 ### Description
 This is a demonstration of the CrudActor. It performs writes, updates, and drops
@@ -441,9 +438,6 @@ the other three states (also update operations).
 Performance Analysis
 
 
-### Support Channel
-[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
-
 
 ### Description
 This workload provides an example of using the CrudActor with a transaction. The
@@ -511,9 +505,6 @@ collected to the specified metrics name (DefaultMetricsName as default)
 Performance Analysis
 
 
-### Support Channel
-[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
-
 
 ### Description
 This workload exhibits various generators, performing insertions to show them off.
@@ -527,9 +518,6 @@ Follow the inline commentary to learn more about them.
 ### Owner
 Performance Analysis
 
-
-### Support Channel
-[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
 
 
 ### Description
@@ -549,9 +537,6 @@ the same base workload Generators.yml and varies the RandomSeed and database nam
 Performance Analysis
 
 
-### Support Channel
-[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
-
 
 ### Description
 This workload shows off the actor template utility, which can be used to create a general
@@ -566,9 +551,6 @@ actor template which can then be instantiated with parameters substituted.
 Performance Analysis
 
 
-### Support Channel
-[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
-
 
 ### Description
 This workload demonstrates the general workload substitution utility. You can use "LoadConfig"
@@ -582,9 +564,6 @@ to load anything, even other workloads.
 ### Owner
 Performance Analysis
 
-
-### Support Channel
-[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
 
 
 ### Description
@@ -688,9 +667,6 @@ it takes B to do this.
 ### Owner
 Performance Analysis
 
-
-### Support Channel
-[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
 
 
 ### Description
@@ -805,9 +781,6 @@ docs, loader
 ### Owner
 Performance Analysis
 
-
-### Support Channel
-[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
 
 
 ### Description
@@ -949,9 +922,6 @@ TODO: TIG-3321
 Performance Analysis
 
 
-### Support Channel
-[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
-
 
 ### Description
 This workload demonstrates the quiesce actor, used to ensure stable
@@ -1005,9 +975,6 @@ This actor is intended to create a rolling window of collections.
 Performance Analysis
 
 
-### Support Channel
-[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
-
 
 ### Description
 This workload demonstrates the RunCommand actor, which can be used
@@ -1021,9 +988,6 @@ to execute a command against the server.
 ### Owner
 Performance Analysis
 
-
-### Support Channel
-[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
 
 
 ### Description
@@ -5895,9 +5859,6 @@ scale, insertMany, find
 Performance Analysis
 
 
-### Support Channel
-[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
-
 
 ### Description
 Does w:2 writes for a Phase followed
@@ -6137,9 +6098,6 @@ CrudActor, Loader, memory, scale, stress, updateOne, WriteConflict
 ### Owner
 Performance Analysis
 
-
-### Support Channel
-[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
 
 
 ### Description
