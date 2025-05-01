@@ -6,7 +6,7 @@ Genny
 > [!WARNING]  
 > Adding new workloads in Genny is deprecated. If you would like 
 > to create or modify a workload, please consider using 
-> [locust](https://docs.devprod.prod.corp.mongodb.com/performance/workloads/locust_tests).
+> [locust](https://docs.devprod.prod.corp.mongodb.com/weta/getting_started).
 > 
 > If you need to modify or create a Genny workload, please reach out
 > in the [#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
