@@ -16,7 +16,7 @@ progressbar==2.5
 
 numpy==1.23.5
 
-numexpr==2.8.4
+numexpr==2.8.5
 
 jinja2==3.1.5
 
