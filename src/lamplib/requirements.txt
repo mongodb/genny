@@ -10,7 +10,7 @@ requests==2.32.2
 yamllint==1.35.1
 shrub.py==3.0.7
 black==22.10.0
-setuptools==65.7.0
+setuptools==78.1.1
 pytest==7.2.0
 progressbar==2.5
 
