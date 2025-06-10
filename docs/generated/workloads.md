@@ -5713,9 +5713,6 @@ reads per second.
 Performance Infrastructure
 
 
-### Support Channel
-[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
-
 
 ### Description
 See LargeScaleSerial.yml for a general overview of what this workload does. The main
@@ -5733,9 +5730,6 @@ collections, oltp, update, query, scale
 ### Owner
 Performance Infrastructure
 
-
-### Support Channel
-[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
 
 
 ### Description
@@ -6135,9 +6129,6 @@ be run with the smallest MongoDB setup.
 ### Owner
 Atlas Serverless II
 
-
-### Support Channel
-[#ask-cloud-atlas-serverless](https://mongodb.enterprise.slack.com/archives/C050UC5MF1Q)
 
 
 ### Description
