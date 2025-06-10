@@ -189,8 +189,9 @@ def poplar_grpc(cleanup_metrics: bool, workspace_root: str, genny_repo_root: str
             try:
                 os.chdir(prior_cwd)
                 connected = False
-                for i in range(10):
-                    time.sleep(0.2)  # sleep to let curator get started. This is a heuristic.
+                for i in range(50):
+                    # sleep to let curator get started. This is a heuristic.
+                    time.sleep(0.2)
                     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     try:
                         sock.connect(("127.0.0.1", poplar_port))
