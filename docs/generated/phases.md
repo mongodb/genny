@@ -606,9 +606,6 @@ Common definitions to support the workloads in replication/startup.
 Performance Infrastructure
 
 
-### Support Channel
-[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
-
 
 ### Description
 Common definitions to support the workloads in scale/LargeScale. See
