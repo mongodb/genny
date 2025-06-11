@@ -82,7 +82,6 @@ Actors:
       - *Nop
       - *Nop
       - Repeat: 1000
-        Threads: 50
         Duration: 3 minutes
         Collection: Collection0
         Operations:
