@@ -1,5 +1,0 @@
-# Genny is deprecated so we don't want Dependabot to open PRs anymore
-# This is intended to disable Dependabot without changing the repo-level setting
-# because it is configured at the organization level
-version: 2
-updates: []
