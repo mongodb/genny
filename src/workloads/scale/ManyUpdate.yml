@@ -32,6 +32,7 @@ Actors:
         Database: &DB test
         Operations:
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand: {dropDatabase: 1}
       - &Nop {Nop: true}
       - *Nop
@@ -82,7 +83,6 @@ AutoRun:
           - replica-1dayhistory-15gbwtcache
           - replica-80-feature-flags
           - replica-all-feature-flags
-          - standalone
       atlas_setup:
         $neq:
           - M30-repl

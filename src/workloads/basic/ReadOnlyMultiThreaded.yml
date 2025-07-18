@@ -59,6 +59,7 @@ Actors:
         Collection: *Collection
         Operations:
           - OperationMetricsName: hello
+            ReportMetrics: false
             OperationName: RunCommand
             OperationIsQuiet: true
             OperationCommand:
@@ -89,12 +90,3 @@ Actors:
       - *Nop
       - LogEvery: 2 minutes
         Blocking: None
-
-AutoRun:
-  - When:
-      mongodb_setup:
-        $eq:
-          - standalone
-          - replica
-          - replica.2024-05
-          - shard-single

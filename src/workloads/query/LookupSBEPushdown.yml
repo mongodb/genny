@@ -12,8 +12,8 @@ Description: |
   engine NLJ implementation and the SBE INLJ implementation to the classic engine INLJ
   implementation.
 
-  Numbers on the 'standalone-all-feature-flags' environment are for the SBE $lookup and numbers on
-  the 'standalone' environment for the classic $lookup until the SBE $lookup pushdown feature will
+  Numbers on the 'replica-all-feature-flags' environment are for the SBE $lookup and numbers on
+  the 'replica' environment for the classic $lookup until the SBE $lookup pushdown feature will
   be turned on by default.
 
   In summary, this workload conducts testing for the following test matrix:
@@ -242,6 +242,7 @@ Actors:
         Database: *db
         Operations:
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand: {dropDatabase: 1}
       - Phase: 1..7
         Nop: true
@@ -397,22 +398,27 @@ Actors:
         Database: *db
         Operations:
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *Foreign1500
               indexes: &IndexSpec [{key: {"int_key": 1}, name: "idx"}]
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *Foreign3500
               indexes: *IndexSpec
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *Foreign5500
               indexes: *IndexSpec
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *Foreign7500
               indexes: *IndexSpec
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *Foreign9500
               indexes: *IndexSpec
@@ -434,11 +440,9 @@ AutoRun:
   - When:
       mongodb_setup:
         $eq:
-          - standalone
-          - standalone-80-feature-flags
-          - standalone-all-feature-flags
-          - standalone-classic-query-engine
-          - standalone-sbe
+          - replica-80-feature-flags
+          - replica-query-engine-classic
+          - replica-query-engine-sbe
           - replica
           - replica-all-feature-flags
       branch_name:

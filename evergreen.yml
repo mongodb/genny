@@ -506,3 +506,15 @@ modules:
     owner: 10gen
     repo: mothra
     branch: main
+  - name: dsi
+    owner: 10gen
+    repo: dsi
+    prefix: ../modules
+    branch: master
+    auto_update: true
+  - name: PrivateWorkloads
+    owner: 10gen
+    repo: PrivateWorkloads
+    prefix: ../modules
+    branch: production
+    auto_update: true

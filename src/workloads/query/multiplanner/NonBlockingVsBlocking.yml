@@ -38,6 +38,7 @@ Actors:
           Database: *db
           Operations:
             - OperationName: RunCommand
+              ReportMetrics: false
               OperationCommand:
                 drop: *coll
 
@@ -222,6 +223,6 @@ AutoRun:
           - replica-all-feature-flags
           - replica-query-engine-sbe
           - replica-query-engine-classic
-          - standalone-80-feature-flags
+          - replica-80-feature-flags
       branch_name:
         $gte: v8.0

@@ -43,6 +43,7 @@ Actors:
         Operation:
           OperationMetricsName: CreateTimeSeriesCollection
           OperationName: RunCommand
+          ReportMetrics: false
           OperationCommand:
             {
               create: &coll Collection0,
@@ -163,6 +164,7 @@ Actors:
         Operation:
           OperationMetricsName: internalQueryMaxAllowedDensifyDocs
           OperationName: RunCommand
+          ReportMetrics: false
           OperationCommand:
             setParameter: 1
             internalQueryMaxAllowedDensifyDocs: 100000
@@ -413,7 +415,6 @@ AutoRun:
   - When:
       mongodb_setup:
         $eq:
-          - standalone
           - replica
       branch_name:
         $neq:

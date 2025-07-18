@@ -66,6 +66,7 @@ Actors:
         Operation:
           OperationMetricsName: CreateTimeSeriesCollection
           OperationName: RunCommand
+          ReportMetrics: false
           OperationCommand: {
             # We have to call the collection 'Collection0' because that's the name that Loader
             # chooses implicitly.

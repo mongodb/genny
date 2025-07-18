@@ -37,8 +37,8 @@ AutoRun:
       mongodb_setup:
         $eq:
           - replica
-          - standalone-sbe
-          - standalone-classic-query-engine
+          - replica-query-engine-sbe
+          - replica-query-engine-classic
       branch_name:
         $neq:
           - v4.0

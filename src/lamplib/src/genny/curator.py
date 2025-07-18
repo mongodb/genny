@@ -143,6 +143,13 @@ def calculate_rollups(output_dir: str, workspace_root: str, genny_repo_root: str
         for file in files:
             if file.endswith(".ftdc"):
                 ftdc_file_name = os.path.join(root, file)
+
+                # Curator produces invalid results for emtpy files.
+                # We also need to remove the files to prevent the ftdc_fallback in DSI.
+                if os.path.getsize(ftdc_file_name) == 0:
+                    os.remove(ftdc_file_name)
+                    continue
+
                 rollup_file_name = ftdc_file_name.replace(".ftdc", ".json")
                 SLOG.info(
                     "Creating perf rollup from FTDC file.",
@@ -182,8 +189,9 @@ def poplar_grpc(cleanup_metrics: bool, workspace_root: str, genny_repo_root: str
             try:
                 os.chdir(prior_cwd)
                 connected = False
-                for i in range(10):
-                    time.sleep(0.2)  # sleep to let curator get started. This is a heuristic.
+                for i in range(50):
+                    # sleep to let curator get started. This is a heuristic.
+                    time.sleep(0.2)
                     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     try:
                         sock.connect(("127.0.0.1", poplar_port))

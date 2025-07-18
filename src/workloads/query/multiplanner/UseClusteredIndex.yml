@@ -41,9 +41,11 @@ Actors:
           Database: *db
           Operations:
             - OperationName: RunCommand
+              ReportMetrics: false
               OperationCommand:
                 drop: *coll
             - OperationName: RunCommand
+              ReportMetrics: false
               OperationCommand:
                 create: *coll
                 clusteredIndex: { "key": { _id: 1 }, "unique": true }
@@ -414,6 +416,6 @@ AutoRun:
           - replica-all-feature-flags
           - replica-query-engine-sbe
           - replica-query-engine-classic
-          - standalone-80-feature-flags
+          - replica-80-feature-flags
       branch_name:
         $gte: v8.0

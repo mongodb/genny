@@ -10,9 +10,9 @@ Description: |
   engine $lookup implementations, depending on environments that it runs on. Both SBE and classic
   $lookup implementations will be nested loop join for this workload.
 
-  Numbers on the 'standalone-sbe' environment are for the SBE $lookup and numbers on the
-  'standalone' environment for the classic $lookup until the SBE $lookup pushdown feature will
-  be turned on by default.
+  Numbers on the 'replica-query-engine-sbe' environment are for the SBE $lookup and numbers on the
+  'replica-query-engine-classic' environment for the classic $lookup until the SBE $lookup pushdown
+  feature will be turned on by default.
 
   In summary, this workload conducts testing for the following test matrix:
   - JoinType: NLJ
@@ -254,6 +254,7 @@ Actors:
         Database: *db
         Operations:
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand: {dropDatabase: 1}
       - Phase: 1..3
         Nop: true
@@ -334,11 +335,9 @@ AutoRun:
   - When:
       mongodb_setup:
         $eq:
-          - standalone
-          - standalone-80-feature-flags
-          - standalone-all-feature-flags
-          - standalone-classic-query-engine
-          - standalone-sbe
+          - replica-80-feature-flags
+          - replica-query-engine-classic
+          - replica-query-engine-sbe
           - replica
           - replica-all-feature-flags
       branch_name:

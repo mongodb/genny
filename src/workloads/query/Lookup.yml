@@ -326,4 +326,7 @@ AutoRun:
         $eq:
           - shard
           - shard-all-feature-flags
-          - shard-lite-80-feature-flags
+          - 1-shard-dedicated.2024-05
+          - 1-shard-embedded.2024-11
+          - 1-shard-collocated.2024-05
+          - 1-shard-1-node-collocated.2024-05

@@ -1,3 +1,13 @@
+
+> [!WARNING]  
+> Adding new workloads in Genny is deprecated. If you would like 
+> to create or modify a workload, please consider using 
+> [locust](https://docs.devprod.prod.corp.mongodb.com/performance/workloads/locust_tests).
+> 
+> If you need to modify or create a Genny workload, please reach out
+> in the [#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
+> Slack channel for advice
+
 These are the docs for Genny specifically! For an overall view of MongoDB's performance testing infrastructure, please
 look at the [Performance Tooling Docs](https://github.com/10gen/performance-tooling-docs).
 

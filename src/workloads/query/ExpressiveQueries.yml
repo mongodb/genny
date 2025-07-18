@@ -244,6 +244,7 @@ Actors:
         Database: *DB
         Operations:
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               createIndexes: Collection0
               indexes:
@@ -326,9 +327,8 @@ AutoRun:
           - replica
           - replica-80-feature-flags
           - replica-all-feature-flags
-          - standalone
-          - standalone-classic-query-engine
-          - standalone-sbe
+          - replica-query-engine-classic
+          - replica-query-engine-sbe
       atlas_setup:
         $neq:
           - M30-repl

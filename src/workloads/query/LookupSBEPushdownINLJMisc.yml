@@ -17,8 +17,8 @@ Description: |
   the same algorithmic complexity for fairer comparison and yet to minimize the test execution time
   since the INLJ lookup is supposed to be very fast on both the SBE and the classic egnine.
 
-  Numbers on the 'standalone-all-feature-flags' environment are for the SBE INLJ lookup and numbers
-  on the 'standalone' environment for the classic INLJ lookup until the SBE $lookup feature will be
+  Numbers on the 'replica-all-feature-flags' environment are for the SBE INLJ lookup and numbers
+  on the 'replica' environment for the classic INLJ lookup until the SBE $lookup feature will be
   turned on by default.
 
   The workload consists of the following phases and actors:
@@ -231,6 +231,7 @@ Actors:
         Database: *db
         Operations:
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand: {dropDatabase: 1}
       - Phase: 1..4
         Nop: true
@@ -344,6 +345,7 @@ Actors:
         Database: *db
         Operations:
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               createIndexes: *Foreign
               indexes:
@@ -383,11 +385,9 @@ AutoRun:
   - When:
       mongodb_setup:
         $eq:
-          - standalone
-          - standalone-80-feature-flags
-          - standalone-all-feature-flags
-          - standalone-classic-query-engine
-          - standalone-sbe
+          - replica-80-feature-flags
+          - replica-query-engine-classic
+          - replica-query-engine-sbe
           - replica
           - replica-all-feature-flags
       branch_name:

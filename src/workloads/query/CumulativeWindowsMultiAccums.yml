@@ -61,6 +61,7 @@ Actors:
           Database: *Database
           Operations:
             - OperationName: RunCommand
+              ReportMetrics: false
               OperationCommand:
                 createIndexes: *Collection
                 indexes: [{ key: { t: 1 }, name: "t" }]
@@ -304,11 +305,8 @@ AutoRun:
   - When:
       mongodb_setup:
         $eq:
-          - standalone
-          - standalone-80-feature-flags
-          - standalone-all-feature-flags
-          - standalone-classic-query-engine
-          - standalone-sbe
+          - replica-query-engine-classic
+          - replica-query-engine-sbe
           - replica
           - replica-80-feature-flags
           - replica-all-feature-flags

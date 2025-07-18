@@ -210,7 +210,6 @@ AutoRun:
   - When:
       mongodb_setup:
         $eq:
-          - standalone
           # TODO PERF-4951 Enable sharded versions with multiple mongos.
           # - shard
           - shard-single

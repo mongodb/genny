@@ -175,9 +175,7 @@ class ToolchainDownloader(Downloader):
     # If we were 💅 we could do the string logic here in python, but we're not that fancy.
     #
 
-    TOOLCHAIN_BUILD_ID = (
-        "fd7e48a1ad502b2ee383583a099e1207f04c67fc_24_08_16_15_36_08"
-    )
+    TOOLCHAIN_BUILD_ID = "fd7e48a1ad502b2ee383583a099e1207f04c67fc_24_08_16_15_36_08"
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
 
     def __init__(

@@ -44,6 +44,7 @@ Actors:
           Operation:
             OperationMetricsName: CreateTimeSeriesCollection
             OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand: {create: *Collection, timeseries: {timeField: "time", metaField: "symbol", granularity: "seconds"}}
 
   - Name: DropAllIndexesUponCreation
@@ -59,6 +60,7 @@ Actors:
           Operation:
             OperationMetricsName: DropAllIndexesUponCreation
             OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               dropIndexes: *Collection
               index: "*"
@@ -113,11 +115,9 @@ AutoRun:
   - When:
       mongodb_setup:
         $eq:
-          - standalone
-          - standalone-classic-query-engine
-          # TODO: Enable the following variants when timeseries is eligible to run on SBE
-          # - standalone-all-feature-flags
-          # - standalone-sbe
+          - replica-query-engine-classic
+          # TODO: Enable the following variant when timeseries is eligible to run on SBE
+          # - replica-query-engine-sbe
           - replica
           - replica-80-feature-flags
           - replica-all-feature-flags

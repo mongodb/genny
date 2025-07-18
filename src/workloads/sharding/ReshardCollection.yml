@@ -34,7 +34,7 @@ GlobalDefaults:
   DocumentCount: &DocumentCount 100000 # for an approximate total of 1GB
 
   ShardKeyValueMin: &ShardKeyValueMin 1
-  ShardKeyValueMax: &ShardKeyValueMax 100
+  ShardKeyValueMax: &ShardKeyValueMax 10000
 
   ReadWriteOperations: &ReadWriteOperations
     - OperationName: findOne
@@ -141,4 +141,3 @@ AutoRun:
       mongodb_setup:
         $eq:
           - shard-all-feature-flags
-          - shard-lite-80-feature-flags

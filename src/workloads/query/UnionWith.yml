@@ -3,8 +3,7 @@ Owner: "@mongodb/query"
 Description: |
   This workload exercises '$unionWith' with two or more collections in multiple scenarios, including
   collections of high overlap, disjoint collections, multiple sequential unions, nested unions, and
-  unions with complex subpipelines. These tests are run on standalones, and replica set
-  environments.
+  unions with complex subpipelines. These tests are run on replica set environments.
 
 Actors:
   - Name: InsertData
@@ -48,16 +47,19 @@ Actors:
         Database: *db
         Operations:
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               aggregate: Collection0
               pipeline: [{ $out: "Collection0_copy" }]
               cursor: { batchSize: *batchSize }
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               aggregate: Collection1
               pipeline: [{ $out: "Collection1_copy" }]
               cursor: { batchSize: *batchSize }
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               aggregate: Collection0
               pipeline:
@@ -71,6 +73,7 @@ Actors:
                 ]
               cursor: { batchSize: *batchSize }
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               aggregate: Collection0
               pipeline:
@@ -84,6 +87,7 @@ Actors:
                 ]
               cursor: { batchSize: *batchSize }
           - OperationName: RunCommand
+            ReportMetrics: false
             OperationCommand:
               aggregate: Collection1
               pipeline:
@@ -531,9 +535,8 @@ AutoRun:
           - replica
           - replica-80-feature-flags
           - replica-all-feature-flags
-          - standalone
-          - standalone-classic-query-engine
-          - standalone-sbe
+          - replica-query-engine-classic
+          - replica-query-engine-sbe
       atlas_setup:
         $neq:
           - M30-repl

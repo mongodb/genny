@@ -64,6 +64,7 @@ Actors:
           Database: *db
           Operations:
             - OperationName: RunCommand
+              ReportMetrics: false
               OperationCommand:
                 createIndexes: &otherColl otherColl
                 indexes:
@@ -198,7 +199,7 @@ AutoRun:
       mongodb_setup:
         $eq:
           - replica
-          - single-replica-80-feature-flags
+          - replica-80-feature-flags
           - replica-all-feature-flags
       branch_name:
         $gte: v7.0
