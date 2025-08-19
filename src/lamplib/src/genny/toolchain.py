@@ -173,9 +173,8 @@ class ToolchainDownloader(Downloader):
     # https://spruce.mongodb.com/task/genny_toolchain_macos_1100_arm64_t_compile_patch_87457e6fec1d98f270c84d915f83bec53554ecee_6451d23fc9ec4441c9ce233d_23_05_03_03_17_20
     # =>                                                                         patch_87457e6fec1d98f270c84d915f83bec53554ecee_6451d23fc9ec4441c9ce233d_23_05_03_03_17_20
     # If we were 💅 we could do the string logic here in python, but we're not that fancy.
-    #
 
-    TOOLCHAIN_BUILD_ID = "fd7e48a1ad502b2ee383583a099e1207f04c67fc_24_08_16_15_36_08"
+    TOOLCHAIN_BUILD_ID = "patch_fd7e48a1ad502b2ee383583a099e1207f04c67fc_68a3fbdb696f5b0007289fd8_25_08_19_04_22_17"
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
 
     def __init__(
