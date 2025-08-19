@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: Performance Analysis
+Owner: DevProd Performance Infrastructure
 
 Description: |
   This workload measures the overhead of Genny itself. There are 2 different
