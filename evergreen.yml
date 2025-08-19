@@ -107,21 +107,21 @@ buildvariants:
     tasks:
       - name: tg_compile
 
-  - name: macos-1100
-    display_name: macOS Big Sur x64
-    modules: [mongo, mothra]
-    run_on:
-      - macos-1100
-    tasks:
-      - name: tg_compile_and_test_with_server_on_macos
+  # - name: macos-1100
+  #   display_name: macOS Big Sur x64
+  #   modules: [mongo, mothra]
+  #   run_on:
+  #     - macos-1100
+  #   tasks:
+  #     - name: tg_compile_and_test_with_server_on_macos
 
-  - name: macos-1100-arm64
-    display_name: macOS Big Sur arm64
-    modules: [mongo, mothra]
-    run_on:
-      - macos-1100-arm64
-    tasks:
-      - name: tg_compile_and_test_with_server_on_macos
+  # - name: macos-1100-arm64
+  #   display_name: macOS Big Sur arm64
+  #   modules: [mongo, mothra]
+  #   run_on:
+  #     - macos-1100-arm64
+  #   tasks:
+  #     - name: tg_compile_and_test_with_server_on_macos
 
 ##                ⚡️ Tasks ⚡️
 
