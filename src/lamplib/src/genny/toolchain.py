@@ -217,7 +217,7 @@ class ToolchainDownloader(Downloader):
         else:
             prefix = self._linux_distro
         return (
-            "https://s3.amazonaws.com/mciuploads/genny-toolchain/"
+            "https://s3.amazonaws.com/mciuploads/dsi/genny-toolchain/"
             "genny_toolchain_{}_{}/gennytoolchain.tgz".format(
                 prefix, ToolchainDownloader.TOOLCHAIN_BUILD_ID
             )
