@@ -603,8 +603,11 @@ Common definitions to support the workloads in replication/startup.
 
 ## [DesignDocWorkloadPhases](https://www.github.com/mongodb/genny/blob/master/src/phases/scale/DesignDocWorkloadPhases.yml)
 ### Owner
-Performance Infrastructure
+DevProd Performance Infrastructure
 
+
+### Support Channel
+[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
 
 
 ### Description

@@ -248,8 +248,11 @@ given database. It takes numerous configuration options to adjust its behaviour.
 
 ## [CrudActor](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/CrudActor.yml)
 ### Owner
-Performance Analysis
+DevProd Performance Infrastructure
 
+
+### Support Channel
+[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
 
 
 ### Description
@@ -435,8 +438,11 @@ the other three states (also update operations).
 
 ## [CrudActorTransaction](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/CrudActorTransaction.yml)
 ### Owner
-Performance Analysis
+DevProd Performance Infrastructure
 
+
+### Support Channel
+[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
 
 
 ### Description
@@ -502,8 +508,11 @@ collected to the specified metrics name (DefaultMetricsName as default)
 
 ## [Generators](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/Generators.yml)
 ### Owner
-Performance Analysis
+DevProd Performance Infrastructure
 
+
+### Support Channel
+[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
 
 
 ### Description
@@ -516,8 +525,11 @@ Follow the inline commentary to learn more about them.
 
 ## [GeneratorsSeeded](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/GeneratorsSeeded.yml)
 ### Owner
-Performance Analysis
+DevProd Performance Infrastructure
 
+
+### Support Channel
+[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
 
 
 ### Description
@@ -534,8 +546,11 @@ the same base workload Generators.yml and varies the RandomSeed and database nam
 
 ## [HelloWorld-ActorTemplate](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/HelloWorld-ActorTemplate.yml)
 ### Owner
-Performance Analysis
+DevProd Performance Infrastructure
 
+
+### Support Channel
+[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
 
 
 ### Description
@@ -548,8 +563,11 @@ actor template which can then be instantiated with parameters substituted.
 
 ## [HelloWorld-LoadConfig](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/HelloWorld-LoadConfig.yml)
 ### Owner
-Performance Analysis
+DevProd Performance Infrastructure
 
+
+### Support Channel
+[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
 
 
 ### Description
@@ -562,8 +580,11 @@ to load anything, even other workloads.
 
 ## [HelloWorld-MultiplePhases](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/HelloWorld-MultiplePhases.yml)
 ### Owner
-Performance Analysis
+DevProd Performance Infrastructure
 
+
+### Support Channel
+[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
 
 
 ### Description
@@ -665,8 +686,11 @@ it takes B to do this.
 
 ## [HelloWorld](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/HelloWorld.yml)
 ### Owner
-Performance Analysis
+DevProd Performance Infrastructure
 
+
+### Support Channel
+[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
 
 
 ### Description
@@ -779,8 +803,11 @@ docs, loader
 
 ## [LoggingActorExample](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/LoggingActorExample.yml)
 ### Owner
-Performance Analysis
+DevProd Performance Infrastructure
 
+
+### Support Channel
+[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
 
 
 ### Description
@@ -919,8 +946,11 @@ TODO: TIG-3321
 
 ## [QuiesceActor](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/QuiesceActor.yml)
 ### Owner
-Performance Analysis
+DevProd Performance Infrastructure
 
+
+### Support Channel
+[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
 
 
 ### Description
@@ -972,8 +1002,11 @@ This actor is intended to create a rolling window of collections.
 
 ## [RunCommand-Simple](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/RunCommand-Simple.yml)
 ### Owner
-Performance Analysis
+DevProd Performance Infrastructure
 
+
+### Support Channel
+[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
 
 
 ### Description
@@ -986,8 +1019,11 @@ to execute a command against the server.
 
 ## [RunCommand](https://www.github.com/mongodb/genny/blob/master/src/workloads/docs/RunCommand.yml)
 ### Owner
-Performance Analysis
+DevProd Performance Infrastructure
 
+
+### Support Channel
+[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
 
 
 ### Description
@@ -5710,8 +5746,11 @@ reads per second.
 
 ## [LargeScaleParallel](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/LargeScaleParallel.yml)
 ### Owner
-Performance Infrastructure
+DevProd Performance Infrastructure
 
+
+### Support Channel
+[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
 
 
 ### Description
@@ -5728,8 +5767,11 @@ collections, oltp, update, query, scale
 
 ## [LargeScaleSerial](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/LargeScaleSerial.yml)
 ### Owner
-Performance Infrastructure
+DevProd Performance Infrastructure
 
+
+### Support Channel
+[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
 
 
 ### Description
@@ -5850,8 +5892,11 @@ scale, insertMany, find
 
 ## [MixedWrites](https://www.github.com/mongodb/genny/blob/master/src/workloads/scale/MixedWrites.yml)
 ### Owner
-Performance Analysis
+DevProd Performance Infrastructure
 
+
+### Support Channel
+[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
 
 
 ### Description
@@ -6090,8 +6135,11 @@ CrudActor, Loader, memory, scale, stress, updateOne, WriteConflict
 
 ## [GennyOverhead](https://www.github.com/mongodb/genny/blob/master/src/workloads/selftests/GennyOverhead.yml)
 ### Owner
-Performance Analysis
+DevProd Performance Infrastructure
 
+
+### Support Channel
+[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
 
 
 ### Description
@@ -6127,8 +6175,11 @@ be run with the smallest MongoDB setup.
 
 ## [IndexStress](https://www.github.com/mongodb/genny/blob/master/src/workloads/serverless/IndexStress.yml)
 ### Owner
-Atlas Serverless II
+DevProd Performance Infrastructure
 
+
+### Support Channel
+[#ask-devprod-performance](https://mongodb.enterprise.slack.com/archives/C01VD0LQZED)
 
 
 ### Description
