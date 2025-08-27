@@ -95,7 +95,7 @@ Actors:
                 {$emit: {connectionName: "__noopSink"}}
               ]
               connections: [{name: "db", type: "atlas", options: {uri: {^ClientURI: {Name: "Default"}}}}]
-              options: { featureFlags: {} }
+              options: { featureFlags: { enforceMemResi dentForOutOfMemoryErrors: false } }
       - Phase: 2
         Nop: true
       - Phase: 3
