@@ -102,7 +102,7 @@ Actors:
                 },
                 {$emit: {connectionName: "__noopSink"}}]
               connections: [{name: "__testMemory", type: "in_memory", options: {}}]
-              options: { featureFlags: { enforceMemResi dentForOutOfMemoryErrors: false } }
+              options: { featureFlags: { enforceMemResidentForOutOfMemoryErrors: false } }
       - Phase: 1..2
         Nop: true
       - Phase: 3
