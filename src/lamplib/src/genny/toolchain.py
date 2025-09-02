@@ -173,8 +173,7 @@ class ToolchainDownloader(Downloader):
     # https://spruce.mongodb.com/task/genny_toolchain_macos_1100_arm64_t_compile_patch_87457e6fec1d98f270c84d915f83bec53554ecee_6451d23fc9ec4441c9ce233d_23_05_03_03_17_20
     # =>                                                                         patch_87457e6fec1d98f270c84d915f83bec53554ecee_6451d23fc9ec4441c9ce233d_23_05_03_03_17_20
     # If we were 💅 we could do the string logic here in python, but we're not that fancy.
-
-    TOOLCHAIN_BUILD_ID = "patch_fd7e48a1ad502b2ee383583a099e1207f04c67fc_68a43309339f6a0007de7520_25_08_19_08_18_56"
+    TOOLCHAIN_BUILD_ID = "a2381a8139f73029cd14b28f2dabbacd1ff98c7d_25_09_01_06_23_38"
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
 
     def __init__(
@@ -216,7 +215,7 @@ class ToolchainDownloader(Downloader):
         else:
             prefix = self._linux_distro
         return (
-            "https://s3.amazonaws.com/mciuploads/dsi/genny-toolchain/"
+            "https://dsi-donot-remove.s3.us-west-2.amazonaws.com/genny-toolchain/"
             "genny_toolchain_{}_{}/gennytoolchain.tgz".format(
                 prefix, ToolchainDownloader.TOOLCHAIN_BUILD_ID
             )
