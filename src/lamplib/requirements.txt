@@ -1,4 +1,4 @@
-wheel==0.40.0
+wheel==0.46.2
 pymongo==4.3.3
 click==8.1.2
 click-option-group==0.5.5
