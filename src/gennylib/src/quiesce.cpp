@@ -70,7 +70,7 @@ bool waitOplog(v1::Topology& topology) {
             // before it is replicated.
             auto collection = admin["wait_oplog"];
             mongocxx::write_concern wc;
-            wc.nodes(desc.nodes.size());
+            wc.majority(std::chrono::milliseconds(0));
             wc.journal(true);
             mongocxx::options::insert opts;
             opts.write_concern(wc);
