@@ -79,7 +79,7 @@ ActorTemplates:
                     ]
 
 Actors:
-  - Name: InsertData
+  - Name: Setup
     Type: Loader
     Threads: 1
     Phases:
